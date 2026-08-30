@@ -14,7 +14,7 @@ Version 1.1.x has no supported public Java API. Public implementation types are 
 
 Read `SECURITY.md` before reporting a duplication exploit, permission bypass, malformed-packet issue, denial of service, or other security-sensitive defect. Do not place exploit details, secrets, player UUIDs, server addresses, personal paths, or unrelated logs in a public issue or pull request. Use the issue forms for ordinary bugs and exact mod-compatibility cases, and redact diagnostic output before posting it.
 
-Use `.github/ISSUE_TEMPLATE/bug_report.yml` for ordinary defects, `.github/ISSUE_TEMPLATE/mod_compatibility.yml` for a reproducible conflict with an exact mod version, and `.github/PULL_REQUEST_TEMPLATE.md` for changes. Blank issues remain available when neither form fits. The templates guide reporting; they do not replace the sensitive-reporting restrictions in `SECURITY.md`.
+Use the [GitHub issue chooser](https://github.com/chedidandrew/Resource-Multiplier/issues/new/choose): `.github/ISSUE_TEMPLATE/bug_report.yml` covers ordinary defects and `.github/ISSUE_TEMPLATE/mod_compatibility.yml` covers a reproducible conflict with an exact mod version. Use `.github/PULL_REQUEST_TEMPLATE.md` for changes. Blank issues remain available when neither form fits. The templates guide reporting; they do not replace the sensitive-reporting restrictions in `SECURITY.md`.
 
 ## Change checklist
 

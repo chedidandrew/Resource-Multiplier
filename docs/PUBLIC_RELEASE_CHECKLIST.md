@@ -12,8 +12,10 @@
 - [ ] Verify `/smartdrops shearing status`, all operator mutations, `/smartdrops inspect entity [verbose]`, and `/smartdrops validate [verbose]` on an actual dedicated server; reject non-operator writes.
 - [ ] Verify `/reload` changes current safe/special classification without restart and no missing production shearing tags are reported.
 - [x] Verify the Resource Multiplier name is visible in the real Mod Menu list/detail view, configuration screen, and reset confirmation; compatibility validators and mapped tests keep `smart_resource_drops` configs/schema/migrations, world provenance, payload IDs, `/smartdrops` commands, Java packages, and datapack IDs unchanged.
-- [x] Validate the clean 248-entry source-package contract and inspect the playable candidate JAR for exact production shearing tags/mixins/classes and absence of GameTest fixtures, local config/world/log/cache/build data and nested dependencies; standalone server startup confirms Mod Menu is absent from its 43-mod classpath.
-- [ ] Only after every required automated, runtime, and manual gate passes: bump all metadata from `1.1.0` to `1.2.0`, rebuild, record final path/size/entry count/SHA-256, and publish. Until then, do not describe the candidate as released.
+- [x] Verify the canonical GitHub repository is public with Issues enabled and recognized as MIT; expose exact homepage, Issues, and source URLs through Fabric/Mod Menu metadata; scan tracked files for credentials/generated data; replace personal local artifact paths; and pin public workflow actions to immutable commits.
+- [x] Keep the GitHub release workflow locked with `release_ready=false`; require full Git history and prove the tagged commit is contained in `origin/main` before any publication step can run.
+- [x] Validate the exact 248-file Git-tracked source-package contract, secret/runtime deny rules, deterministic modes, and empty-output requirement; inspect the playable candidate JAR for every production top-level class plus exact entrypoint/mixin/dependency/tag/icon/contact/MIT contracts and absence of GameTest fixtures, local config/world/log/cache/build data and nested dependencies; standalone server startup confirms Mod Menu is absent from its 43-mod classpath.
+- [ ] Only after every required automated, runtime, and manual gate passes: bump all metadata from `1.1.0` to `1.2.0`, rebuild, record final path/size/entry count/SHA-256, set `release_ready=true` in that exact tested commit, merge it to `main`, wait for the required clean-checkout workflow, and tag that commit for publication. Until then, keep the latch false and do not describe the candidate as released.
 
 ## 1.1.0 final hardening release evidence under the former public name
 
@@ -115,8 +117,8 @@ Still required on the eventual source-control checkout and release artifact:
 - [x] Confirm the final JAR's embedded `fabric.mod.json` reports version 1.0.3, the compiled class major is Java 25's 69, and no JUnit/GameTest, bundled Mod Menu/Fabric API, or nested dependency JAR content is present.
 - [ ] Confirm the checksum published beside the release matches the uploaded JAR.
 - [x] Generate and independently inspect the final deterministic source ZIP after the final clean build: 129 entries, one versioned top-level directory, required Gradle bootstrap files present, `gradlew` mode `755`, and no forbidden generated/runtime paths.
-- [ ] Restore or initialize Git; the supplied working directory currently has no `.git` metadata.
-- [ ] Establish and verify the canonical GitHub repository URL, replace `YOUR_REPOSITORY_URL` in the upload instructions, and only then populate `fabric.mod.json` contact fields such as `homepage`, `sources`, and `issues`. This source tree contains no `.git` remote or project-owned GitHub URL, so release metadata must not guess one.
+- [x] Restored Git in the canonical public checkout on 2026-08-30; `main` tracks `origin/main` at `chedidandrew/Resource-Multiplier`.
+- [x] Verified the canonical public GitHub URL, replaced the placeholder upload instructions, and populated exact `homepage`, `sources`, and `issues` metadata with regression coverage.
 
 ## In-game smoke matrix
 

@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import stat
+import subprocess
 import zipfile
 from collections.abc import Iterable, Sequence
 from pathlib import Path, PurePosixPath
@@ -16,6 +17,21 @@ FIXED_TIME = (2026, 8, 29, 0, 0, 0)
 PUBLIC_MOD_NAME = "Resource Multiplier"
 PUBLIC_ARCHIVE_BASE = "ResourceMultiplier"
 PLAYABLE_JAR_BASE = "resource-multiplier"
+PROJECT_HOMEPAGE = "https://github.com/chedidandrew/Resource-Multiplier"
+PROJECT_ISSUES = f"{PROJECT_HOMEPAGE}/issues"
+EXPECTED_CONTACT = {
+    "homepage": PROJECT_HOMEPAGE,
+    "issues": PROJECT_ISSUES,
+    "sources": PROJECT_HOMEPAGE,
+}
+EXPECTED_ENTRYPOINTS = {
+    "main": ["com.chedidandrew.smartresourcedrops.SmartResourceDrops"],
+    "client": ["com.chedidandrew.smartresourcedrops.client.SmartResourceDropsClient"],
+    "modmenu": [
+        "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsModMenuIntegration"
+    ],
+}
+EXPECTED_MIXIN_DECLARATIONS = ["smart_resource_drops.mixins.json"]
 REQUIRED_SOURCE_FILES = frozenset(
     {
         ".gitignore",
@@ -105,40 +121,60 @@ REQUIRED_SOURCE_FILES = frozenset(
 )
 EXCLUDED_PARTS = frozenset(
     {
-    ".build",
-    ".git",
-    ".gradle",
-    ".gradle-wrapper",
-    ".idea",
-    ".fleet",
-    ".vs",
-    ".vscode",
-    "__pycache__",
-    "build",
-    "dist",
-    "out",
-    "run",
-    "logs",
-    "world",
+        ".build",
+        ".git",
+        ".gradle",
+        ".gradle-wrapper",
+        ".idea",
+        ".fleet",
+        ".vs",
+        ".vscode",
+        "__pycache__",
+        "build",
+        "dist",
+        "out",
+    }
+)
+EXCLUDED_ROOT_PARTS = frozenset(
+    {
+        "backups",
+        "config",
+        "crash-reports",
+        "logs",
+        "mods",
+        "resourcepacks",
+        "run",
+        "saves",
+        "screenshots",
+        "shaderpacks",
+        "world",
+        "worlds",
     }
 )
 EXCLUDED_FILE_NAMES = frozenset(
     {
         ".classpath",
+        ".env",
         ".project",
         ".DS_Store",
         "Thumbs.db",
         "command_history.txt",
+        "credentials.json",
         "eula.txt",
+        "id_ed25519",
+        "id_rsa",
         "ops.json",
         "options.txt",
+        "secrets.json",
         "server.properties",
         "servers.dat",
         "usercache.json",
         "whitelist.json",
     }
 )
-EXCLUDED_SUFFIXES = frozenset({".class", ".iml", ".ipr", ".iws", ".log", ".pyc"})
+EXCLUDED_SUFFIXES = frozenset(
+    {".class", ".iml", ".ipr", ".iws", ".jks", ".key", ".keystore", ".log", ".p12", ".pem", ".pfx", ".pyc"}
+)
 EXCLUDED_ENDINGS = (".log.gz", ".tmp")
 JAR_BUILD_INPUT_FILES = (
     "LICENSE",
@@ -203,6 +239,12 @@ REQUIRED_RELEASE_JAR_ENTRIES = frozenset(
         "data/smart_resource_drops/tags/entity_type/shearing/special.json",
     }
 )
+REQUIRED_PRODUCTION_CLASS_ENTRIES = frozenset(
+    path.relative_to(source_root).with_suffix(".class").as_posix()
+    for source_root in (ROOT / "src/main/java", ROOT / "src/client/java")
+    for path in source_root.rglob("*.java")
+)
+REQUIRED_RELEASE_JAR_ENTRIES = REQUIRED_RELEASE_JAR_ENTRIES | REQUIRED_PRODUCTION_CLASS_ENTRIES
 FORBIDDEN_RELEASE_JAR_PREFIXES = (
     "com/terraformersmc/",
     "com/google/",
@@ -303,7 +345,8 @@ def write_file(
     mode: int | None = None,
 ) -> None:
     if mode is None:
-        mode = source.stat().st_mode & 0o777
+        # Git's ordinary-file mode is stable across platforms; host umasks are not.
+        mode = 0o644
     archive.writestr(zip_info(archive_name, mode), source.read_bytes())
 
 
@@ -313,6 +356,8 @@ def is_forbidden_source_path(relative: Path | PurePosixPath) -> bool:
         return True
     if any(part in EXCLUDED_PARTS for part in parts[:-1]):
         return True
+    if parts[0] in EXCLUDED_ROOT_PARTS:
+        return True
 
     name = parts[-1]
     if name in {item.casefold() for item in EXCLUDED_FILE_NAMES}:
@@ -321,13 +366,11 @@ def is_forbidden_source_path(relative: Path | PurePosixPath) -> bool:
         return True
     if name.endswith(EXCLUDED_ENDINGS):
         return True
+    if name.startswith(".env."):
+        return True
     if name.startswith("smart_resource_drops.broken-"):
         return True
     if name.startswith("smart_resource_drops.oversized-"):
-        return True
-
-    # Runtime configuration belongs to a Minecraft instance, never a source release.
-    if parts[0] == "config" and name.startswith("smart_resource_drops"):
         return True
 
     # Do not recursively package artifacts when an output directory is placed in the project.
@@ -382,21 +425,49 @@ def validate_source_entries(relative_names: Iterable[str]) -> tuple[str, ...]:
     return tuple(sorted(normalized))
 
 
+def git_file_names(*arguments: str) -> tuple[str, ...]:
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "-z", *arguments],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+        )
+    except OSError as exc:
+        raise ReleasePackageError(f"Git is required to create a public source package: {exc}") from exc
+    if result.returncode != 0:
+        detail = result.stderr.decode(errors="replace").strip()
+        raise ReleasePackageError(f"Could not read the Git source manifest: {detail or 'git ls-files failed'}")
+    return tuple(
+        Path(os.fsdecode(raw_name)).as_posix()
+        for raw_name in result.stdout.split(b"\0")
+        if raw_name
+    )
+
+
 def source_files() -> list[Path]:
+    untracked = sorted(git_file_names("--others", "--exclude-standard"))
+    if untracked:
+        preview = ", ".join(untracked[:20])
+        suffix = "" if len(untracked) <= 20 else f" (and {len(untracked) - 20} more)"
+        raise ReleasePackageError(
+            "Untracked, non-ignored files are not source-package eligible; add or ignore them first: "
+            f"{preview}{suffix}"
+        )
+
+    relative_names = validate_source_entries(git_file_names("--cached"))
     files: list[Path] = []
-    for path in ROOT.rglob("*"):
+    for relative_name in relative_names:
+        path = ROOT / Path(relative_name)
         if path.is_symlink():
             raise ReleasePackageError(
-                f"Symbolic links are not supported in the source package: {path.relative_to(ROOT)}"
+                f"Symbolic links are not supported in the source package: {relative_name}"
             )
         if not path.is_file():
-            continue
-        relative = path.relative_to(ROOT)
-        if is_forbidden_source_path(relative):
-            continue
+            raise ReleasePackageError(
+                f"Tracked source-package entry is missing or is not a regular file: {relative_name}"
+            )
         files.append(path)
-    files.sort(key=lambda item: item.relative_to(ROOT).as_posix())
-    validate_source_entries(path.relative_to(ROOT).as_posix() for path in files)
     return files
 
 
@@ -468,6 +539,14 @@ def validate_release_jar(
                 errors.append(f"missing required production JAR entries: {', '.join(missing)}")
 
             try:
+                embedded_license = archive.read("LICENSE_resource-multiplier")
+            except KeyError:
+                pass
+            else:
+                if embedded_license != (ROOT / "LICENSE").read_bytes():
+                    errors.append("embedded release JAR license differs from the repository MIT license")
+
+            try:
                 metadata = json.loads(archive.read("fabric.mod.json"))
             except (KeyError, json.JSONDecodeError) as exc:
                 errors.append(f"invalid release JAR metadata: {exc}")
@@ -482,13 +561,24 @@ def validate_release_jar(
                         "release JAR metadata uses display name "
                         f"{metadata.get('name')!r} instead of {PUBLIC_MOD_NAME!r}"
                     )
+                if metadata.get("contact") != EXPECTED_CONTACT:
+                    errors.append(
+                        "release JAR contact metadata does not expose the canonical "
+                        "homepage, issues, and sources URLs"
+                    )
+                if metadata.get("license") != "MIT":
+                    errors.append("release JAR metadata does not declare the MIT license")
+                if metadata.get("icon") != "assets/smart_resource_drops/icon.png":
+                    errors.append("release JAR metadata does not reference the production icon")
                 if expected_version is not None and metadata.get("version") != expected_version:
                     errors.append(
                         f"release JAR version {metadata.get('version')!r} does not match "
                         f"gradle.properties {expected_version!r}"
                     )
 
-                entrypoints = metadata.get("entrypoints", {})
+                entrypoints = metadata.get("entrypoints")
+                if entrypoints != EXPECTED_ENTRYPOINTS:
+                    errors.append("release JAR metadata does not declare the exact main, client, and Mod Menu entrypoints")
                 if isinstance(entrypoints, dict):
                     for group, declarations in entrypoints.items():
                         if not isinstance(declarations, list):
@@ -508,7 +598,12 @@ def validate_release_jar(
                                     f"missing declared {group!r} entrypoint class {class_entry!r}"
                                 )
 
-                mixin_declarations = metadata.get("mixins", [])
+                else:
+                    errors.append("release JAR entrypoints metadata is not an object")
+
+                mixin_declarations = metadata.get("mixins")
+                if mixin_declarations != EXPECTED_MIXIN_DECLARATIONS:
+                    errors.append("release JAR metadata does not declare the production mixin configuration")
                 if isinstance(mixin_declarations, list):
                     for declaration in mixin_declarations:
                         config_name = declaration if isinstance(declaration, str) else (
@@ -522,6 +617,9 @@ def validate_release_jar(
                         except (KeyError, json.JSONDecodeError) as exc:
                             errors.append(f"invalid declared mixin config {config_name!r}: {exc}")
                             continue
+                        if not isinstance(mixin_config, dict):
+                            errors.append(f"declared mixin config {config_name!r} is not an object")
+                            continue
                         mixin_package = mixin_config.get("package")
                         if not isinstance(mixin_package, str) or not mixin_package:
                             errors.append(f"declared mixin config {config_name!r} has no package")
@@ -531,6 +629,8 @@ def validate_release_jar(
                             if not isinstance(classes, list):
                                 errors.append(f"invalid {side!r} list in {config_name!r}")
                                 continue
+                            if side == "mixins" and not classes:
+                                errors.append(f"declared mixin config {config_name!r} has no production mixins")
                             for class_name in classes:
                                 if not isinstance(class_name, str) or not class_name:
                                     errors.append(f"invalid mixin class in {config_name!r}")
@@ -542,6 +642,20 @@ def validate_release_jar(
                                     errors.append(
                                         f"missing declared mixin class {class_entry!r}"
                                     )
+                else:
+                    errors.append("release JAR mixins metadata is not a list")
+
+                properties = parse_properties(ROOT / "gradle.properties")
+                expected_depends = {
+                    "fabricloader": f">={properties['loader_version']}",
+                    "minecraft": f"~{properties['minecraft_version']}",
+                    "java": ">=25",
+                    "fabric-api": f">={properties['fabric_version']}",
+                }
+                if metadata.get("depends") != expected_depends:
+                    errors.append("release JAR metadata does not declare the exact supported runtime dependencies")
+                if metadata.get("suggests") != {"modmenu": f">={properties['modmenu_version']}"}:
+                    errors.append("release JAR metadata does not keep the exact optional Mod Menu suggestion")
 
                 for tag_entry in sorted(
                     entry for entry in REQUIRED_RELEASE_JAR_ENTRIES
@@ -666,9 +780,20 @@ def build_bundle(output: Path, files: list[Path]) -> None:
             write_file(archive, path, path.name)
 
 
+def require_empty_output_directory(output_dir: Path) -> None:
+    existing = sorted(path.name for path in output_dir.iterdir())
+    if existing:
+        preview = ", ".join(existing[:20])
+        suffix = "" if len(existing) <= 20 else f" (and {len(existing) - 20} more)"
+        raise ReleasePackageError(
+            "Release output directory must be empty so stale artifacts cannot be uploaded: "
+            f"{preview}{suffix}"
+        )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Create deterministic Resource Multiplier release packages.")
-    parser.add_argument("--output-dir", type=Path, default=ROOT.parent)
+    parser.add_argument("--output-dir", type=Path, default=ROOT / "dist")
     parser.add_argument(
         "--source-only",
         action="store_true",
@@ -688,6 +813,10 @@ def main() -> None:
 
     output_dir = args.output_dir.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        require_empty_output_directory(output_dir)
+    except ReleasePackageError as exc:
+        raise SystemExit(f"Release output validation failed: {exc}") from exc
 
     source_output = output_dir / source_name
     try:

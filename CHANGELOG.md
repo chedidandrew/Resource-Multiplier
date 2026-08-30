@@ -7,6 +7,9 @@ All notable changes are documented here.
 ### Changed
 
 - Changed the public name from **Smart Resource Drops** to **Resource Multiplier**. This is a branding-only compatibility change: the mod ID remains `smart_resource_drops`; `config/smart_resource_drops.json`, saved-world provenance, `/smartdrops` and `/smartdropsgui`, and `smart_resource_drops:*` datapack IDs remain compatible. Existing configurations, worlds, commands, and datapacks require no rename migration.
+- Published the canonical project homepage/source and Issues URLs in Fabric metadata so Mod Menu exposes working **Website** and **Issues** actions. Release validation now locks those URLs, the production icon path, and the SPDX `MIT` declaration.
+- Hardened the public GitHub workflows by pinning every third-party action to a verified immutable commit, disabling persisted checkout credentials, and bounding job runtimes.
+- Hardened public packaging so source archives contain exactly Git-tracked files, reject untracked or secret/runtime paths, normalize cross-platform permissions, require an empty output directory, and fail closed unless every production class plus the exact entrypoint, mixin, dependency, icon, contact, and embedded-license contract is present. Tagged publication is additionally locked behind an explicit `release_ready` latch and main-branch ancestry check.
 
 ### Added
 
@@ -27,6 +30,7 @@ All notable changes are documented here.
 ### Verification status
 
 - The serialized Java 25 automated chain passes: 158 JUnit tests in 24 suites, all 66 dedicated GameTests (44 focused on shearing), the 40-second real client GameTest with Mod Menu present, the 30-second clean Loom build, all six package/static/core validators, standalone server/client startup smokes, and direct Mod Menu/configuration/reset-title captures. The nested runtime installs non-capturing barrier frames for disabled, fixed-1x, and untrusted re-entrant actions, preventing a same-target inner source from inheriting an eligible outer multiplier.
+- The canonical-repository safety pass reran the cache-free clean build in 26 seconds with 158/158 JUnit tests and 66/66 GameTests, passed the 37-second real client GameTest plus all package/Mod Menu/release/core validators, produced and validated the tracked-only deterministic source/release bundle, and inspected the final 311-entry JAR for exact MIT/contact/icon/entrypoint/mixin/dependency metadata, every production top-level class, and embedded-license identity.
 - This work intentionally retains `1.1.0` metadata. The hands-on client/gameplay/multiplayer matrix, a real in-running-game datapack reload cycle, and representative third-party custom shearables/tools/machines remain required before changing the version to `1.2.0` or publishing an artifact. No release claim is made by this entry.
 
 ## 1.1.0 - 2026-08-30

@@ -106,6 +106,20 @@ for name in required_child_names:
 require(fabric.get("id") == "smart_resource_drops", "The stable mod id must remain smart_resource_drops")
 require(fabric.get("name") == public_name, "fabric.mod.json must expose the Resource Multiplier name")
 require(
+    fabric.get("contact")
+    == {
+        "homepage": "https://github.com/chedidandrew/Resource-Multiplier",
+        "issues": "https://github.com/chedidandrew/Resource-Multiplier/issues",
+        "sources": "https://github.com/chedidandrew/Resource-Multiplier",
+    },
+    "Mod Menu metadata must expose the canonical website, issue tracker, and source repository",
+)
+require(fabric.get("license") == "MIT", "Mod Menu metadata must expose the MIT license")
+require(
+    fabric.get("icon") == "assets/smart_resource_drops/icon.png",
+    "Mod Menu metadata must reference the packaged production icon",
+)
+require(
     lang.get("modmenu.nameTranslation.smart_resource_drops") == public_name,
     "Mod Menu must display Resource Multiplier",
 )

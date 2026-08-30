@@ -1,5 +1,11 @@
 # Implementation log
 
+## 2026-08-30, canonical public repository and release metadata
+
+The canonical project is now the public [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier) repository with GitHub Issues enabled. Fabric metadata publishes the exact homepage, source, and issue-tracker URLs consumed by Mod Menu, while package, Mod Menu, and release-JAR validators prevent those links, the production icon path, or the SPDX `MIT` declaration from drifting. GitHub recognizes the repository license as MIT; the bundled license contains the permission grant, retained-notice condition, and warranty disclaimer. MIT keeps this project openly reusable but does not impose a source-publication requirement on downstream forks.
+
+The public-source audit found no credential/token/private-key signatures, tracked runtime/build/cache/world files, symlinks, or suspicious oversized binaries. Historical local artifact paths were converted to repository-relative paths. Source packaging now consumes exactly the Git-tracked manifest, rejects stray non-ignored files plus common secret/runtime paths, uses stable cross-platform modes, and refuses a non-empty destination. The playable-JAR gate requires every production top-level class and exact entrypoint, mixin, runtime-dependency, icon, contact, and byte-identical embedded-license contracts. GitHub Actions keep least-privilege job permissions, disable persisted checkout credentials, impose timeouts, pin every third-party action to an immutable commit, and refuse tagged publication unless the explicit release latch is enabled on a commit contained in `origin/main`. These publication checks do not close the remaining hands-on gameplay, multiplayer, datapack-reload, or third-party compatibility gates for the unreleased shearing candidate.
+
 ## 2026-08-30, Resource Multiplier public-name transition
 
 The public-facing mod name changed to **Resource Multiplier** across Fabric and Mod Menu metadata, client configuration and reset screens, commands and diagnostics, documentation, support templates, build artifacts, and release packaging. This is deliberately a presentation-only change: the `smart_resource_drops` mod ID and datapack/network namespace, `com.chedidandrew.smartresourcedrops` Java package, `config/smart_resource_drops.json` schema and keys, saved-world provenance identifiers, and `/smartdrops` and `/smartdropsgui` commands remain unchanged. Existing configurations, worlds, provenance data, commands, and datapacks therefore require no migration. The final rename pass passed 158 JUnit tests, all 66 dedicated GameTests, the real client GameTest with Mod Menu present, all six static/core validators, standalone server/client checks, direct Mod Menu/configuration/reset captures, final JAR inspection, and deterministic source/release-package generation.
@@ -166,7 +172,7 @@ Final automated validation passes: all five static/package/UI validators, 90 cor
 - The full real client GameTest passed in 34 seconds. It exercises local confirmation/non-mutation/Cancel/Escape/confirm behavior, integrated-server authority, dedicated operator success, dedicated non-operator rejection, and stale/pending queue invalidation.
 - Static package, Mod Menu, and reset-contract audits passed, including checks for the dedicated payload, server permission and revision gates, queue invalidation, confirmation copy/tooltip, and the absence of provenance/statistics reset calls.
 - Package validation counted 62 production Java sources, all 47 JUnit tests and 42 dependency-free core assertions passed, and the clean `test runGameTest build` pipeline completed successfully.
-- Reset checkpoint artifact: `C:\Users\Andrew\Documents\GitHub\SmartResourceDrops\build\libs\smart-resource-drops-1.0.3.jar`, 269,733 bytes, SHA-256 `4e0614b0735f87383968278d9eacec9185ac01e40fb8fa8ae39779fb0924797d`.
+- Reset checkpoint artifact: `build/libs/smart-resource-drops-1.0.3.jar`, 269,733 bytes, SHA-256 `4e0614b0735f87383968278d9eacec9185ac01e40fb8fa8ae39779fb0924797d`.
 - Manual-only limitations remain: a true JVM/world restart followed by provenance chunk reload, interoperability between separately installed multiplayer client/server instances, and human visual/focus inspection at multiple GUI scales. No separate manual `runClient` result is recorded for this feature.
 
 ## 2026-08-29, hierarchical configuration GUI redesign
@@ -223,7 +229,7 @@ Verified against the completed redesign on 2026-08-29:
 - `gradlew --no-daemon runClientGameTest` completed with `BUILD SUCCESSFUL` in a real Minecraft 26.2 client.
 - The final client suite exercised General protection/source/XP round trips; a populated 44-block Logs category; diamond display-name search; exact `minecraft:diamond_ore` ID search; acacia search; the broad-query 200-row cap; focused category and block editors; concrete `0x` versus inheritance; retained query/scroll state after Back; exact block-filter add/remove/revert; non-mutating preset preview; bounded widget/row construction; and local, integrated, dedicated non-operator/operator, Apply, acknowledgement, cooldown, and disconnect authority behavior.
 - An earlier real Mod Menu-enabled `runClient` launch succeeded and its screenshots were inspected. The latest client GameTest screenshots additionally show the 44-block Logs category and diamond search results.
-- GUI-redesign checkpoint artifact: `C:\Users\Andrew\Documents\GitHub\SmartResourceDrops\build\libs\smart-resource-drops-1.0.3.jar`, 256,580 bytes, SHA-256 `7ea0dd2dc48143756ceb6e2535f03941a7e2bb8d37102bd02556057337716f49`.
+- GUI-redesign checkpoint artifact: `build/libs/smart-resource-drops-1.0.3.jar`, 256,580 bytes, SHA-256 `7ea0dd2dc48143756ceb6e2535f03941a7e2bb8d37102bd02556057337716f49`.
 
 The following remain genuine manual/fixture limitations, not failed automated gates:
 

@@ -10,7 +10,7 @@ This source snapshot does not currently identify a verified project-owned privat
 
 If the canonical repository visibly enables a private vulnerability-reporting facility in the future, use that facility and verify that this policy names it before sending sensitive details. Until then, retain the sensitive details; an ordinary public bug report may state only that a security-sensitive issue exists and provide non-sensitive version/context information. Include full Minecraft, Fabric Loader, Fabric API, and mod versions with any eventual private report.
 
-Ordinary non-security bugs and exact mod-compatibility reports should use the repository issue forms. Redact player UUIDs, account identifiers, server addresses, access tokens, personal filesystem paths, and unrelated log content.
+Ordinary non-security bugs and exact mod-compatibility reports should use the [repository issue forms](https://github.com/chedidandrew/Resource-Multiplier/issues). Redact player UUIDs, account identifiers, server addresses, access tokens, personal filesystem paths, and unrelated log content.
 
 ## Security model
 

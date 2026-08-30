@@ -10,6 +10,26 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 ERRORS: list[str] = []
+PROJECT_HOMEPAGE = "https://github.com/chedidandrew/Resource-Multiplier"
+PROJECT_ISSUES = f"{PROJECT_HOMEPAGE}/issues"
+EXPECTED_CONTACT = {
+    "homepage": PROJECT_HOMEPAGE,
+    "issues": PROJECT_ISSUES,
+    "sources": PROJECT_HOMEPAGE,
+}
+EXPECTED_ENTRYPOINTS = {
+    "main": ["com.chedidandrew.smartresourcedrops.SmartResourceDrops"],
+    "client": ["com.chedidandrew.smartresourcedrops.client.SmartResourceDropsClient"],
+    "modmenu": [
+        "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsModMenuIntegration"
+    ],
+}
+EXPECTED_SOURCE_DEPENDS = {
+    "fabricloader": ">=${loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=25",
+    "fabric-api": ">=${fabric_version}",
+}
 
 
 def fail(message: str) -> None:
@@ -145,13 +165,55 @@ for marker in (
     if marker not in security_text:
         fail(f"SECURITY.md is missing honest privacy/reporting guidance: {marker}")
 
+license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
+for marker in (
+    "MIT License",
+    "Copyright (c) 2026 Andrew Chedid",
+    "Permission is hereby granted, free of charge, to any person obtaining a copy",
+    "The above copyright notice and this permission notice shall be included",
+    'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND',
+):
+    if marker not in license_text:
+        fail(f"LICENSE is missing required MIT text: {marker}")
+
 issue_config = (ROOT / ".github/ISSUE_TEMPLATE/config.yml").read_text(encoding="utf-8")
 if not re.search(r"(?m)^blank_issues_enabled:\s*true\s*$", issue_config):
     fail("Issue-template config must allow blank issues")
 if not re.search(r"(?m)^contact_links:\s*\[\]\s*$", issue_config):
-    fail("Issue-template config must use an empty contact_links list until a real route exists")
+    fail("Issue-template config must keep external contact links empty unless a verified route is added")
 if "http://" in issue_config or "https://" in issue_config:
-    fail("Issue-template config must not publish an unverified contact link")
+    fail("Issue-template config must not publish an unreviewed external contact link")
+
+workflow_paths = (
+    ROOT / ".github/workflows/build.yml",
+    ROOT / ".github/workflows/release.yml",
+)
+for workflow_path in workflow_paths:
+    workflow_text = workflow_path.read_text(encoding="utf-8")
+    action_refs = re.findall(r"(?m)^\s*uses:\s*[^@\s]+@([^\s#]+)", workflow_text)
+    if not action_refs:
+        fail(f"{workflow_path.relative_to(ROOT)} declares no GitHub Actions")
+    for action_ref in action_refs:
+        if re.fullmatch(r"[0-9a-f]{40}", action_ref) is None:
+            fail(
+                f"{workflow_path.relative_to(ROOT)} uses mutable action ref {action_ref!r}; "
+                "pin third-party actions to full commit SHAs"
+            )
+    if "actions/checkout@" in workflow_text and "persist-credentials: false" not in workflow_text:
+        fail(f"{workflow_path.relative_to(ROOT)} must disable persisted checkout credentials")
+
+public_text_paths = (
+    ROOT / "README.md",
+    ROOT / "BUILD_STATUS.md",
+    ROOT / "CHANGELOG.md",
+    ROOT / "CONTRIBUTING.md",
+    ROOT / "SECURITY.md",
+    *sorted((ROOT / "docs").glob("*.md")),
+)
+personal_path_pattern = re.compile(r"(?:[A-Za-z]:\\Users\\|/home/[^/\s]+/|/Users/[^/\s]+/)")
+for public_text_path in public_text_paths:
+    if personal_path_pattern.search(public_text_path.read_text(encoding="utf-8")):
+        fail(f"Public documentation contains a personal absolute path: {public_text_path.relative_to(ROOT)}")
 
 form_markers = {
     ".github/ISSUE_TEMPLATE/bug_report.yml": (
@@ -220,6 +282,10 @@ expected_properties = {
 for key, expected in expected_properties.items():
     if properties.get(key) != expected:
         fail(f"gradle.properties {key} must be {expected!r}, found {properties.get(key)!r}")
+if properties.get("release_ready") not in {"true", "false"}:
+    fail("gradle.properties release_ready must be exactly 'true' or 'false'")
+if properties.get("mod_version") == "1.1.0" and properties.get("release_ready") != "false":
+    fail("The unreleased 1.1.0-metadata shearing candidate must keep release_ready=false")
 
 fabric = read_json(ROOT / "src/main/resources/fabric.mod.json")
 if isinstance(fabric, dict):
@@ -232,14 +298,20 @@ if isinstance(fabric, dict):
     for key, expected in checks.items():
         if fabric.get(key) != expected:
             fail(f"fabric.mod.json {key} mismatch")
+    if fabric.get("contact") != EXPECTED_CONTACT:
+        fail("fabric.mod.json must expose the canonical homepage, issues, and sources URLs")
+    if fabric.get("license") != "MIT":
+        fail("fabric.mod.json must declare the SPDX MIT license identifier")
+    if fabric.get("icon") != "assets/smart_resource_drops/icon.png":
+        fail("fabric.mod.json must reference the packaged production icon")
     depends = fabric.get("depends", {})
-    if not isinstance(depends, dict) or depends.get("java") != ">=25":
-        fail("fabric.mod.json must require Java 25")
-    if not isinstance(depends, dict) or depends.get("fabric-api") != ">=${fabric_version}":
-        fail("fabric.mod.json must require the pinned compatible Fabric API minimum")
-    entrypoints = fabric.get("entrypoints", {})
-    if not isinstance(entrypoints, dict) or "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsModMenuIntegration" not in entrypoints.get("modmenu", []):
-        fail("fabric.mod.json is missing the Mod Menu entrypoint")
+    if depends != EXPECTED_SOURCE_DEPENDS:
+        fail("fabric.mod.json must declare the exact loader, Minecraft, Java, and Fabric API constraints")
+    entrypoints = fabric.get("entrypoints")
+    if entrypoints != EXPECTED_ENTRYPOINTS:
+        fail("fabric.mod.json must declare the exact main, client, and Mod Menu entrypoints")
+    if fabric.get("mixins") != ["smart_resource_drops.mixins.json"]:
+        fail("fabric.mod.json must declare the production mixin configuration")
     suggests = fabric.get("suggests", {})
     if not isinstance(suggests, dict) or suggests.get("modmenu") != ">=${modmenu_version}":
         fail("fabric.mod.json must keep Mod Menu optional through suggests")
@@ -374,11 +446,15 @@ for java_root in java_roots:
 
 mixin = read_json(ROOT / "src/main/resources/smart_resource_drops.mixins.json")
 if isinstance(mixin, dict):
+    if mixin.get("required") is not True:
+        fail("Production mixin configuration must be required")
     if mixin.get("compatibilityLevel") != "JAVA_25":
         fail("Mixin compatibility level must be JAVA_25")
     package_name = mixin.get("package", "")
-    listed = mixin.get("mixins", [])
+    listed = mixin.get("mixins")
     if isinstance(listed, list):
+        if not listed:
+            fail("Production mixin configuration must not be empty")
         for obsolete in ("BlockItemPlacementMixin", "LevelSetBlockMixin"):
             if obsolete in listed:
                 fail(f"Legacy provenance mixin must not be enabled: {obsolete}")
@@ -393,6 +469,10 @@ if isinstance(mixin, dict):
             source = ROOT / "src/main/java" / Path(*package_name.split(".")) / f"{name}.java"
             if not source.is_file():
                 fail(f"Mixin listed without source: {name}")
+    else:
+        fail("Production mixin configuration must contain a mixins list")
+else:
+    fail("Production mixin configuration must be a JSON object")
 
 config = read_json(ROOT / "config-examples/default.json")
 required_config_keys = {
@@ -761,6 +841,14 @@ for workflow in (".github/workflows/build.yml", ".github/workflows/release.yml")
 release_workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
 if "tools/package_release.py --output-dir dist" not in release_workflow or "dist/*" not in release_workflow:
     fail("The release workflow must create and publish the validated deterministic release bundle")
+for required_release_gate in (
+    'test "$release_ready" = "true"',
+    "git merge-base --is-ancestor",
+    "refs/remotes/origin/main",
+    "fetch-depth: 0",
+):
+    if required_release_gate not in release_workflow:
+        fail(f"The release workflow is missing its publication safety gate: {required_release_gate}")
 
 java_files = list((ROOT / "src/main/java").rglob("*.java")) + list((ROOT / "src/client/java").rglob("*.java"))
 if len(java_files) < 20:

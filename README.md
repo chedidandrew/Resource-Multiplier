@@ -2,6 +2,8 @@
 
 Resource Multiplier is a focused Fabric utility mod that speeds up gathering without turning placed blocks, equipment, special entity transformations, or entity inventories into accidental duplication paths.
 
+[Project website and source](https://github.com/chedidandrew/Resource-Multiplier) · [Report an issue](https://github.com/chedidandrew/Resource-Multiplier/issues) · [MIT license](LICENSE)
+
 The current unreleased candidate adopts the new public name **Resource Multiplier**. Compatibility identifiers do not change: the Fabric mod ID remains `smart_resource_drops`, the configuration remains `config/smart_resource_drops.json`, saved-world provenance remains valid, commands remain under `/smartdrops` and `/smartdropsgui`, and datapack IDs remain in the `smart_resource_drops` namespace. Existing configurations, worlds, commands, and datapacks need no rename migration; the former public name is recorded only in the historical changelog.
 
 The stable block path multiplies Minecraft's calculated block loot after enchantments and loot tables are applied. Version 1.1.0 adds a separate, default-off entity path that multiplies only final standard `LivingEntity` death-table loot. The current unreleased 1.2 work adds a third narrowly scoped path for certified standard entity shearing output. Minecraft evaluates the shearing loot once; Resource Multiplier multiplies only final helper-produced stacks, while the state transition, sound/event path, and tool damage happen once. Unknown modded shearables and special transformations remain fixed at vanilla `1x`.
@@ -321,7 +323,7 @@ python scripts/polish_regression_tests.py
 
 The POSIX equivalent uses `bash tools/run_core_tests.sh` and `./gradlew`; CI runs the client GameTest under Xvfb. Project sources compile with `-Xlint:deprecation` so obsolete Minecraft/Fabric calls remain visible, without promoting third-party dependency warnings to fatal errors. The current cleanup uses `BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(...)` for entity holders and the supported `makeMockServerPlayer(GameType)` GameTest API through shared helpers instead of broad warning suppressions.
 
-The release gate includes every source/package validator, the complete core and mapped-Minecraft JUnit suites, all required dedicated-server Fabric GameTests, the real client GUI/authority GameTest, and the Loom build. Packaging checks reject nested JARs; common shaded dependency, test, and fixture namespaces; undeclared or missing entrypoint/mixin/tag assets; and root-level source, config, logs, worlds, caches, or packaged-release leaks from the playable JAR. The deterministic source bundle must retain the issue forms, pull-request template, scope/security documentation, wrapper, protected-output tag, and key source assets. Exact final counts and artifact identity are recorded only after the final build in [BUILD_STATUS.md](BUILD_STATUS.md).
+The release gate includes every source/package validator, the complete core and mapped-Minecraft JUnit suites, all required dedicated-server Fabric GameTests, the real client GUI/authority GameTest, and the Loom build. Packaging checks reject nested JARs; common shaded dependency, test, and fixture namespaces; undeclared or missing entrypoint/mixin/tag assets; and root-level source, config, logs, worlds, caches, or packaged-release leaks from the playable JAR. The deterministic source bundle contains exactly Git-tracked files, rejects stray untracked or secret/runtime paths, and must retain the issue forms, pull-request template, scope/security documentation, wrapper, protected-output tag, and key source assets. Tagged publication stays locked unless an explicitly release-ready commit is on `main`. Exact final counts and artifact identity are recorded only after the final build in [BUILD_STATUS.md](BUILD_STATUS.md).
 
 ## Scope
 
@@ -356,7 +358,7 @@ Ordinary defects should use the structured bug form, exact third-party conflicts
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Resource Multiplier is open source under the permissive [MIT License](LICENSE). Anyone may use, copy, modify, publish, distribute, sublicense, or sell the software as long as the copyright and permission notices are retained. MIT does not require downstream modified versions to publish their source code.
 
 ## Verification and release gate
 

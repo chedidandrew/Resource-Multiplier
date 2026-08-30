@@ -25,6 +25,15 @@ spec.loader.exec_module(package_release)
 require(package_release.PUBLIC_MOD_NAME == "Resource Multiplier", "Public mod name contract changed")
 require(package_release.PUBLIC_ARCHIVE_BASE == "ResourceMultiplier", "Release archive base changed")
 require(package_release.PLAYABLE_JAR_BASE == "resource-multiplier", "Playable JAR base changed")
+require(
+    package_release.EXPECTED_CONTACT
+    == {
+        "homepage": "https://github.com/chedidandrew/Resource-Multiplier",
+        "issues": "https://github.com/chedidandrew/Resource-Multiplier/issues",
+        "sources": "https://github.com/chedidandrew/Resource-Multiplier",
+    },
+    "Public project contact metadata changed",
+)
 
 
 def write_minimum_release_entries(
@@ -32,13 +41,18 @@ def write_minimum_release_entries(
     *,
     omitted: str | None = None,
     mixin_classes: list[str] | None = None,
+    mixin_config_overrides: dict[str, object] | None = None,
     metadata_overrides: dict[str, object] | None = None,
+    license_payload: bytes | None = None,
 ) -> None:
     metadata = {
         "schemaVersion": 1,
         "id": "smart_resource_drops",
         "name": "Resource Multiplier",
         "version": "test",
+        "contact": dict(package_release.EXPECTED_CONTACT),
+        "license": "MIT",
+        "icon": "assets/smart_resource_drops/icon.png",
         "entrypoints": {
             "main": ["com.chedidandrew.smartresourcedrops.SmartResourceDrops"],
             "client": ["com.chedidandrew.smartresourcedrops.client.SmartResourceDropsClient"],
@@ -47,23 +61,43 @@ def write_minimum_release_entries(
             ],
         },
         "mixins": ["smart_resource_drops.mixins.json"],
+        "depends": {
+            "fabricloader": ">=0.19.3",
+            "minecraft": "~26.2",
+            "java": ">=25",
+            "fabric-api": ">=0.158.0+26.2",
+        },
+        "suggests": {"modmenu": ">=20.0.0"},
     }
     if metadata_overrides is not None:
         metadata.update(metadata_overrides)
     if omitted != "fabric.mod.json":
         archive.writestr("fabric.mod.json", json.dumps(metadata).encode())
     if omitted != "smart_resource_drops.mixins.json":
+        mixin_config = {
+            "package": "com.chedidandrew.smartresourcedrops.mixin",
+            "mixins": (
+                [
+                    "PlayerShearingContextMixin",
+                    "ShearsDispenseItemBehaviorMixin",
+                    "LivingEntityShearingLootMixin",
+                ]
+                if mixin_classes is None
+                else mixin_classes
+            ),
+        }
+        if mixin_config_overrides is not None:
+            mixin_config.update(mixin_config_overrides)
         archive.writestr(
             "smart_resource_drops.mixins.json",
-            json.dumps({
-                "package": "com.chedidandrew.smartresourcedrops.mixin",
-                "mixins": mixin_classes or [],
-            }).encode(),
+            json.dumps(mixin_config).encode(),
         )
     for required in package_release.REQUIRED_RELEASE_JAR_ENTRIES:
         if required == omitted or required in {"fabric.mod.json", "smart_resource_drops.mixins.json"}:
             continue
-        if required == "data/smart_resource_drops/tags/item/protected_entity_loot.json":
+        if required == "LICENSE_resource-multiplier":
+            payload = (ROOT / "LICENSE").read_bytes() if license_payload is None else license_payload
+        elif required == "data/smart_resource_drops/tags/item/protected_entity_loot.json":
             payload = json.dumps({
                 "replace": False,
                 "values": ["minecraft:saddle", "minecraft:totem_of_undying"],
@@ -136,6 +170,13 @@ for forbidden in (
     ".vs/SmartResourceDrops/v17/.suo",
     "tools/__pycache__/package_release.cpython-313.pyc",
     "config/smart_resource_drops_stats.json",
+    "config/other_mod.json",
+    "credentials.json",
+    ".env.local",
+    "private.pem",
+    "mods/private-test.jar",
+    "saves/MyWorld/playerdata/player.dat",
+    "screenshots/private.png",
     "world/level.dat",
     "server.properties",
     ".vscode/settings.json",
@@ -147,6 +188,10 @@ for forbidden in (
 
 source_files = package_release.source_files()
 source_relatives = tuple(path.relative_to(ROOT).as_posix() for path in source_files)
+require(
+    source_relatives == tuple(sorted(package_release.git_file_names("--cached"))),
+    "Source package must contain exactly the Git-tracked manifest",
+)
 
 for missing_source in (
     ".github/ISSUE_TEMPLATE/bug_report.yml",
@@ -272,6 +317,13 @@ with tempfile.TemporaryDirectory(prefix="resource-multiplier-source-test-") as t
     for field, replacement, expected_error in (
         ("name", "Smart Resource" + " Drops", "display name"),
         ("id", "resource_multiplier", "mod id"),
+        ("contact", {"homepage": "https://example.invalid"}, "contact"),
+        ("license", "All-Rights-Reserved", "license"),
+        ("icon", "assets/resource_multiplier/icon.png", "icon"),
+        ("entrypoints", {}, "entrypoint"),
+        ("mixins", [], "mixin"),
+        ("depends", {}, "dependencies"),
+        ("suggests", {}, "mod menu"),
     ):
         invalid_metadata_jar = temp_root / f"invalid_{field}.jar"
         with zipfile.ZipFile(invalid_metadata_jar, "w") as archive:
@@ -288,6 +340,30 @@ with tempfile.TemporaryDirectory(prefix="resource-multiplier-source-test-") as t
             )
         else:
             raise AssertionError(f"Playable JAR accepted invalid metadata field {field}")
+
+    for label, overrides in (
+        ("empty", {"mixins": []}),
+        ("wrong_type", {"mixins": "LivingEntityShearingLootMixin"}),
+    ):
+        invalid_mixin_config_jar = temp_root / f"invalid_mixin_config_{label}.jar"
+        with zipfile.ZipFile(invalid_mixin_config_jar, "w") as archive:
+            write_minimum_release_entries(archive, mixin_config_overrides=overrides)
+        try:
+            package_release.validate_release_jar(invalid_mixin_config_jar, "test")
+        except package_release.ReleasePackageError as exc:
+            require("mixin" in str(exc).lower(), f"Invalid mixin config failure was not explicit for {label}")
+        else:
+            raise AssertionError(f"Playable JAR accepted {label} production mixin configuration")
+
+    wrong_license_jar = temp_root / "wrong_embedded_license.jar"
+    with zipfile.ZipFile(wrong_license_jar, "w") as archive:
+        write_minimum_release_entries(archive, license_payload=b"All Rights Reserved\n")
+    try:
+        package_release.validate_release_jar(wrong_license_jar, "test")
+    except package_release.ReleasePackageError as exc:
+        require("license" in str(exc).lower(), "Embedded-license mismatch failure was not explicit")
+    else:
+        raise AssertionError("Playable JAR accepted a mismatched embedded license")
 
     forbidden_jar_entries = (
         "com/chedidandrew/smartresourcedrops/gametest/EntityFixture.class",
@@ -319,6 +395,7 @@ with tempfile.TemporaryDirectory(prefix="resource-multiplier-source-test-") as t
             raise AssertionError(f"Playable JAR accepted forbidden entry {forbidden_entry}")
 
     for missing_entry in (
+        "LICENSE_resource-multiplier",
         "com/chedidandrew/smartresourcedrops/client/SmartResourceDropsClient.class",
         "smart_resource_drops.mixins.json",
         "assets/smart_resource_drops/icon.png",
@@ -361,12 +438,23 @@ with tempfile.TemporaryDirectory(prefix="resource-multiplier-source-test-") as t
     else:
         raise AssertionError("Playable JAR accepted a missing declared mixin class")
 
+    empty_output = temp_root / "empty-output"
+    empty_output.mkdir()
+    package_release.require_empty_output_directory(empty_output)
+    (empty_output / "stale.jar").write_bytes(b"legacy")
+    try:
+        package_release.require_empty_output_directory(empty_output)
+    except package_release.ReleasePackageError as exc:
+        require("stale" in str(exc).lower(), "Stale-output failure was not explicit")
+    else:
+        raise AssertionError("Release packager accepted a non-empty output directory")
+
 for built_jar in sorted((ROOT / "build/libs").glob("resource-multiplier-*.jar")):
     if not built_jar.name.endswith("-sources.jar"):
         package_release.validate_release_jar(built_jar)
 
 print(
-    "PASS: deterministic source ZIP excludes generated/runtime data, playable JARs reject "
+    "PASS: Git-tracked deterministic source ZIP excludes secrets/generated/runtime data, playable JARs reject "
     "test fixtures/nested or shaded dependencies/source/runtime leaks, require publication "
     "templates/scope-security docs and declared entrypoint/mixin/protected-tag/key assets, "
     "and preserve all required wrapper files "

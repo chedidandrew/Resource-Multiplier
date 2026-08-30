@@ -2,7 +2,7 @@
 
 ## Unreleased shearing candidate status — 2026-08-30
 
-The tree now contains schema-3 safe entity-shearing work while deliberately retaining `1.1.0` metadata. This directory still has no `.git` metadata, so no baseline commit, branch, tag, or remote can be reported and no push/release has been performed.
+The tree now contains schema-3 safe entity-shearing work while deliberately retaining `1.1.0` metadata. It is a Git checkout on `main` tracking the public canonical repository at `https://github.com/chedidandrew/Resource-Multiplier`; GitHub reports that the repository is public, Issues are enabled, and the license is MIT.
 
 The candidate's public name is now **Resource Multiplier**. The rename does not change the `smart_resource_drops` mod ID, configuration path, saved-world provenance, commands, or datapack namespace. Historical artifact filenames remain exact where they identify evidence; the former public phrase itself is retained only in `CHANGELOG.md`.
 
@@ -11,14 +11,16 @@ Before the shearing edits, the real Java 25 baseline was rerun: `clean test`, al
 - `compileGametestJava --rerun-tasks` succeeded against the mapped Minecraft 26.2 APIs.
 - The final `test` task passed 158 JUnit tests in 24 suites with zero failures, errors, or skips.
 - The dedicated runner passed all 66 required GameTests: the existing 22 plus 44 focused shearing tests. Coverage includes real sheep/manual/dispenser paths, all five audited special vanilla implementations, direct-output isolation, blocks/beehive/leash non-regressions, budgets, consumer preservation, commands, inspection, mixin loading, and same-target nested-source isolation.
-- `runClientGameTest -Pinclude_modmenu_runtime=true --rerun-tasks` completed with `BUILD SUCCESSFUL` in 40 seconds after exercising title-screen, integrated-server, dedicated-server editor/authority, configuration-title, and reset-confirmation paths with Mod Menu 20.0.0 present.
-- The final `clean build --rerun-tasks --warning-mode all` completed with `BUILD SUCCESSFUL` in 30 seconds and reran the 158 JUnit tests and all 66 dedicated GameTests.
+- `runClientGameTest --no-build-cache --rerun-tasks --warning-mode all` completed with `BUILD SUCCESSFUL` in 37 seconds after exercising title-screen, integrated-server, dedicated-server editor/authority, configuration-title, and reset-confirmation paths.
+- The final `clean build --no-build-cache --rerun-tasks --warning-mode all` completed with `BUILD SUCCESSFUL` in 26 seconds and reran the 158 JUnit tests and all 66 dedicated GameTests.
 - All six static/local validators passed: package/source validation (118 Java sources), deterministic release-packaging tests (248 source entries), Mod Menu integration, edge-case audit, polish regressions, and all 90 dependency-free core assertions.
 - Standalone `runServer` loaded 43 mods without Mod Menu, initialized Resource Multiplier, reached `Done (0.287s)`, returned the renamed `/smartdrops` status and `Resource Multiplier Validation`, rejected console-only block inspection with the expected legacy-compatible `/smartdrops inspect` guidance, accepted `stop`, and completed with `BUILD SUCCESSFUL` in 54 seconds.
 - Standalone `runClient -Pinclude_modmenu_runtime=true` loaded Mod Menu 20.0.0 and completed resource, audio, and texture-atlas initialization. Direct captures verified the Mod Menu list/detail entry, configuration title, and `Reset Resource Multiplier?` confirmation; the destructive reset was not confirmed and the client was intentionally interrupted after verification.
-- Full release-package generation succeeded in a temporary verification directory with `resource-multiplier-1.1.0.jar`, `ResourceMultiplier-1.1.0-source.zip`, `ResourceMultiplier-1.1.0-SHA256SUMS.txt`, and `ResourceMultiplier-1.1.0-release-bundle.zip`.
+- Full release-package generation succeeded in a fresh empty temporary directory with `resource-multiplier-1.1.0.jar`, the exact 248-file Git-tracked `ResourceMultiplier-1.1.0-source.zip`, checksums, and the release bundle. Its source-archive hash remains external in the generated checksum manifest so the source ZIP is not self-referential.
+- The public-repository audit verified through GitHub's API that the canonical repository is public, Issues are enabled, and GitHub recognizes MIT. No high-confidence credential/private-key signatures, tracked runtime/build/world data, symlinks, or personal absolute documentation paths remain. Every workflow action is pinned to an immutable commit, checkout credentials are not persisted, and workflow runtimes are bounded.
+- Source packaging now takes its manifest from Git, rejects non-ignored untracked files and common secret/runtime paths, normalizes archive permissions, and refuses non-empty output directories. Release-JAR validation requires all 118 production top-level classes and the exact main/client/Mod Menu entrypoints, production mixin configuration, supported dependency constraints, icon, contact URLs, MIT declaration, and byte-identical embedded license. `release_ready=false` keeps tagged publication locked while manual gates remain open.
 
-The inspected candidate artifact is `C:\Users\Andrew\Documents\GitHub\SmartResourceDrops\build\libs\resource-multiplier-1.1.0.jar`: 559,870 bytes, 311 ZIP entries, SHA-256 `C88AF403D2BD245E946AD3114156537CDEF2026393A73AD1246C8F6F78E77A78`, embedded mod ID `smart_resource_drops`, public name `Resource Multiplier`, version 1.1.0, Java class major 69, `LICENSE_resource-multiplier`, the stable `data/smart_resource_drops` namespace, and zero GameTest classes or nested JARs. The legacy-name same-version JAR under `dist\` is an older historical 1.1.0 artifact with no shearing classes and must not be used as this candidate.
+The freshly rebuilt candidate artifact is `build/libs/resource-multiplier-1.1.0.jar`: 601,048 bytes, 311 ZIP entries, SHA-256 `3D59AEFACA9041726F3B1FDE505B6EC50E1F9B3F201259EB80C66ED14137CDF4`, embedded mod ID `smart_resource_drops`, public name `Resource Multiplier`, version 1.1.0, Java class major 69, exact root-matching `LICENSE_resource-multiplier`, canonical homepage/source/Issues metadata, the stable `data/smart_resource_drops` namespace, and zero GameTest classes or nested JARs. The legacy-name same-version JAR under `dist/` is an older historical 1.1.0 artifact with no shearing classes and must not be used as this candidate.
 
 Open release gates:
 
@@ -53,7 +55,7 @@ Verified target: Minecraft Java 26.2, Fabric Loader 0.19.3, Fabric API 0.158.0+2
 - Standalone `runServer --warning-mode all` loads 43 mods without Mod Menu or a client-only classloading failure, reaches `Done (0.313s)`, executes both `/smartdrops validate` forms from the console with status `Valid`, reports no missing tag warnings or data changes, accepts `stop`, and completes with `BUILD SUCCESSFUL` in 45 seconds.
 - Standalone `runClient -Pinclude_modmenu_runtime=true` loads the then-current 1.1.0 display name and Mod Menu 20.0.0 and completes resource, audio, and texture-atlas initialization before an intentional interrupt. This is historical startup evidence only, not an interactive GUI or in-world manual pass.
 
-The inspected playable artifact is `C:\Users\Andrew\Documents\GitHub\SmartResourceDrops\build\libs\smart-resource-drops-1.1.0.jar`:
+The inspected playable artifact is `build/libs/smart-resource-drops-1.1.0.jar`:
 
 - 483,638 bytes and 272 ZIP entries
 - SHA-256 `E3A6A38ADB3412F081ED546089C0E61C932AC8E0D507AB5B33F9A94A5DF66EBA`
@@ -81,7 +83,7 @@ Completed evidence:
 - Standalone `runClient` loads the 1.1.0 artifact and completes resource, audio, and texture-atlas initialization before an intentional interrupt. This is a startup smoke, not interactive gameplay.
 - Standalone `runServer` without Mod Menu loads the 1.1.0 artifact, reaches `Done (0.436s)`, accepts `stop`, saves all dimensions, and finishes with `BUILD SUCCESSFUL` in 32 seconds without a client-only classloading failure.
 
-The inspected playable artifact is `C:\Users\Andrew\Documents\GitHub\SmartResourceDrops\build\libs\smart-resource-drops-1.1.0.jar`:
+The inspected playable artifact is `build/libs/smart-resource-drops-1.1.0.jar`:
 
 - 426,260 bytes and 242 ZIP entries
 - SHA-256 `6AC0002F1615AB2FFF6248DFABE356A50EC65825D59190A57B9AE219DD3A1866`
@@ -119,7 +121,7 @@ Final measured inspection results:
 - The final clean build completed with `BUILD SUCCESSFUL` in 17 seconds, and the real Minecraft 26.2 client GameTest completed with `BUILD SUCCESSFUL` in 34 seconds.
 - Standalone `runServer` without Mod Menu reached `Done`, stopped cleanly, showed no client-only classloading failure, and completed with `BUILD SUCCESSFUL` in 33 seconds.
 
-The final inspection-feature playable artifact is `C:\Users\Andrew\Documents\GitHub\SmartResourceDrops\build\libs\smart-resource-drops-1.0.3.jar`:
+The final inspection-feature playable artifact is `build/libs/smart-resource-drops-1.0.3.jar`:
 
 - 291,391 bytes and 173 ZIP entries
 - SHA-256 `1F4FBF54C13C544909BA61F0800FFB76C073E2ED04EB0F95FF10B33849565A1B`
@@ -147,14 +149,14 @@ The POSIX core launcher was not executed because this Windows host has no instal
 - `PLAYER_PLACED_ONLY` now excludes natural blocks with placement protection either on or off. `NATURAL_ONLY` excludes placed blocks only while protection is on; with protection off it treats both provenance states as eligible. `ALL` admits both. Independent source toggles and safety/filter rules still apply.
 - `minecraft:dragon_egg` is included in the authoritative default blacklist and shipped example. It is not hard-coded in `RuleEngine`; an administrator may remove it and use normal rule resolution.
 - Every child screen displays subtle shared-session dirty state near Back. Apply Changes remains available only on the General/root screen, which still switches Done to Discard Changes while dirty. Apply remains one bounded `ConfigPatch`; reset remains a distinct permission-checked, revision-checked atomic operation.
-- `fabric.mod.json` contact metadata remains `{}` because this directory has no `.git` metadata or verifiable project-owned URL. `docs/PUBLIC_RELEASE_CHECKLIST.md` records the exact homepage/sources/issues TODO.
+- At this historical 1.0.x checkpoint, `fabric.mod.json` contact metadata remained `{}` because the then-supplied directory had no `.git` metadata or verifiable project-owned URL. The canonical repository and contact metadata were established later and are recorded in the current status section.
 - Mob/entity drops remain deliberately absent from 1.0.x. `docs/ROADMAP.md` contains only a conservative, optional 1.1 design note.
 
 ## Final clean build and artifact
 
 The final exact `gradlew.bat --no-daemon clean build` completed with `BUILD SUCCESSFUL` in 15 seconds. It compiled every Java 25 source set, restored the input-identical JUnit result from Gradle's verified cache, and launched the dedicated-server GameTest runner, which passed all six required tests. The immediately preceding clean build in the same final pass executed the 47-test JUnit task directly and also completed successfully; the XML result contains 12 suites, 47 tests, zero failures, zero errors, and zero skipped tests.
 
-The inspected playable artifact is `C:\Users\Andrew\Documents\GitHub\SmartResourceDrops\build\libs\smart-resource-drops-1.0.3.jar`:
+The inspected playable artifact is `build/libs/smart-resource-drops-1.0.3.jar`:
 
 - 272,738 bytes and 169 ZIP entries
 - SHA-256 `41A0604C6D907E1619F5A468487FB0984C3A7863C56F3333D0F9F31CE7697CCC`
