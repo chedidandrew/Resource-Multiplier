@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:end_stone",
+    "minecraft:purpur_block",
+    "minecraft:purpur_pillar",
+    "minecraft:chorus_plant",
+    "minecraft:chorus_flower"
+  ]
+}

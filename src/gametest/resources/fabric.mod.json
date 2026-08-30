@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "smart_resource_drops_gametest",
+  "version": "1.0.0",
+  "name": "Resource Multiplier GameTests",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.chedidandrew.smartresourcedrops.gametest.fixture.GameTestEntityFixtures",
+      "com.chedidandrew.smartresourcedrops.gametest.fixture.GameTestBlockLootFixtures"
+    ],
+    "fabric-gametest": [
+      "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsGameTests",
+      "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsEntityGameTests",
+      "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsBlockBudgetGameTests",
+      "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsShearingGameTests"
+    ],
+    "fabric-client-gametest": [
+      "com.chedidandrew.smartresourcedrops.gametest.SmartDropsClientGameTest"
+    ]
+  },
+  "depends": {
+    "fabricloader": "*",
+    "minecraft": "26.2",
+    "fabric-gametest-api-v1": "*",
+    "fabric-client-gametest-api-v1": "*",
+    "smart_resource_drops": "*"
+  }
+}

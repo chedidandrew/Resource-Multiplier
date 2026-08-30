@@ -1,0 +1,144 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+    id 'maven-publish'
+}
+
+def modVersionValue = providers.gradleProperty('mod_version').get()
+def minecraftVersionValue = providers.gradleProperty('minecraft_version').get()
+def loaderVersionValue = providers.gradleProperty('loader_version').get()
+def fabricVersionValue = providers.gradleProperty('fabric_version').get()
+def modMenuVersionValue = providers.gradleProperty('modmenu_version').get()
+def archivesBaseNameValue = providers.gradleProperty('archives_base_name').get()
+def mavenGroupValue = providers.gradleProperty('maven_group').get()
+def junitVersionValue = providers.gradleProperty('junit_version').get()
+
+version = modVersionValue
+group = mavenGroupValue
+
+base {
+    archivesName = archivesBaseNameValue
+}
+
+def gameTestSourceSet = sourceSets.create('gametest')
+gameTestSourceSet.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+gameTestSourceSet.runtimeClasspath += sourceSets.main.runtimeClasspath
+
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        smart_resource_drops {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+        smart_resource_drops_gametest {
+            sourceSet gameTestSourceSet
+        }
+    }
+}
+
+gameTestSourceSet.compileClasspath += sourceSets.client.output + sourceSets.client.compileClasspath
+
+fabricApi {
+    configureTests {
+        createSourceSet = false
+        enableGameTests = true
+        enableClientGameTests = true
+        eula = true
+    }
+}
+
+loom.runs.named('gameTest') {
+    source gameTestSourceSet
+}
+
+loom.runs.named('clientGameTest') {
+    source gameTestSourceSet
+}
+
+// Keep client classes out of the dedicated GameTest runtime while exposing them to the client-only runner.
+tasks.named('runClientGameTest') {
+    classpath += sourceSets.client.runtimeClasspath
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'TerraformersMC'
+        url = 'https://maven.terraformersmc.com/'
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraftVersionValue}"
+    implementation "net.fabricmc:fabric-loader:${loaderVersionValue}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabricVersionValue}"
+
+    // Compile-only keeps optional client integration off dedicated-server tests and published POMs.
+    compileOnly "com.terraformersmc:modmenu:${modMenuVersionValue}"
+
+    // Opt-in only for the real client smoke test; omitted from normal builds and dedicated-server runs.
+    if (providers.gradleProperty('include_modmenu_runtime').map { it.toBoolean() }.getOrElse(false)) {
+        localRuntime "com.terraformersmc:modmenu:${modMenuVersionValue}"
+    }
+
+    testImplementation platform("org.junit:junit-bom:${junitVersionValue}")
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+processResources {
+    inputs.property 'version', modVersionValue
+    inputs.property 'minecraft_version', minecraftVersionValue
+    inputs.property 'loader_version', loaderVersionValue
+    inputs.property 'fabric_version', fabricVersionValue
+    inputs.property 'modmenu_version', modMenuVersionValue
+
+    filesMatching('fabric.mod.json') {
+        expand(
+            version: modVersionValue,
+            minecraft_version: minecraftVersionValue,
+            loader_version: loaderVersionValue,
+            fabric_version: fabricVersionValue,
+            modmenu_version: modMenuVersionValue
+        )
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+    options.encoding = 'UTF-8'
+    // Report deprecated APIs used by this project's compiled source without making warnings fatal.
+    options.compilerArgs.add('-Xlint:deprecation')
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+}
+
+tasks.named('wrapper', Wrapper) {
+    gradleVersion = '9.5.1'
+    distributionType = Wrapper.DistributionType.BIN
+    distributionSha256Sum = 'bafc141b619ad6350fd975fc903156dd5c151998cc8b058e8c1044ab5f7b031f'
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+    from('LICENSE') {
+        rename { licenseName -> "${licenseName}_${archivesBaseNameValue}" }
+    }
+}
+
+publishing {
+    publications {
+        create('mavenJava', MavenPublication) {
+            artifactId = archivesBaseNameValue
+            from components.java
+        }
+    }
+}

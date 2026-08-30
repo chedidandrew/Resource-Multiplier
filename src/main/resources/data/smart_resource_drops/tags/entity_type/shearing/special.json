@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:bogged",
+    "minecraft:copper_golem",
+    "minecraft:mooshroom",
+    "minecraft:snow_golem",
+    "minecraft:sulfur_cube"
+  ]
+}

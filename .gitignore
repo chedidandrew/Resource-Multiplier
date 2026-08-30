@@ -1,0 +1,80 @@
+# Gradle, Loom, and compiled output
+.gradle/
+.gradle-wrapper/
+build/
+.build/
+out/
+*.class
+
+# Generated release artifacts
+dist/
+
+# Minecraft development/runtime data
+run/
+logs/
+/config/
+/crash-reports/
+/saves/
+/world/
+/screenshots/
+/mods/
+/resourcepacks/
+/shaderpacks/
+/options.txt
+/servers.dat
+/servers.dat_old
+/eula.txt
+/server.properties
+/ops.json
+/whitelist.json
+/banned-players.json
+/banned-ips.json
+/usercache.json
+/session.lock
+*.log
+*.log.gz
+hs_err_pid*.log
+replay_pid*.log
+*.hprof
+
+# IntelliJ IDEA, VS Code, Eclipse, and other editors
+.idea/
+.vs/
+.vscode/
+.fleet/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.factorypath
+.externalToolBuilders/
+
+# Python caches used by repository validators
+__pycache__/
+*.pyc
+*.pyo
+
+# Local environment and temporary files
+.env
+.env.*
+!.env.example
+*.tmp
+*.bak
+*.swp
+*.swo
+*.orig
+*.rej
+*~
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# These bootstrap files are source and must remain publishable.
+!gradlew
+!gradlew.bat
+!gradle/wrapper/gradle-wrapper.properties
+!gradle/wrapper/gradle-wrapper.jar

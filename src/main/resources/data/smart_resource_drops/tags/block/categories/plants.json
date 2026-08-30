@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:flowers",
+    "#minecraft:saplings",
+    "#minecraft:small_flowers",
+    "#minecraft:replaceable_by_trees",
+    "minecraft:vine",
+    "minecraft:glow_lichen",
+    "minecraft:seagrass",
+    "minecraft:tall_seagrass"
+  ]
+}

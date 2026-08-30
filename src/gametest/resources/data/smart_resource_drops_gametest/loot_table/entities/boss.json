@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:entity",
+  "pools": [
+    {"rolls": 1.0, "entries": [{"type": "minecraft:item", "name": "minecraft:gold_ingot"}]},
+    {"rolls": 1.0, "entries": [{"type": "minecraft:item", "name": "minecraft:saddle"}]},
+    {"rolls": 1.0, "entries": [{"type": "minecraft:item", "name": "minecraft:totem_of_undying"}]}
+  ]
+}

@@ -1,0 +1,117 @@
+name: Bug report
+description: Report a reproducible Resource Multiplier defect.
+title: "[Bug] "
+labels: []
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem. Do not disclose duplication exploits, permission bypasses, malformed-packet attacks, denial-of-service details, secrets, player data, or unredacted server addresses here; read SECURITY.md first. Review logs for personal information and never upload an entire development world.
+  - type: input
+    id: smartdrops-version
+    attributes:
+      label: Resource Multiplier version
+      placeholder: 1.1.0
+    validations:
+      required: true
+  - type: input
+    id: minecraft-version
+    attributes:
+      label: Minecraft version
+      placeholder: "26.2"
+    validations:
+      required: true
+  - type: input
+    id: loader-version
+    attributes:
+      label: Fabric Loader version
+      placeholder: "0.19.3"
+    validations:
+      required: true
+  - type: input
+    id: fabric-api-version
+    attributes:
+      label: Fabric API version
+      placeholder: "0.158.0+26.2"
+    validations:
+      required: true
+  - type: input
+    id: java-version
+    attributes:
+      label: Java version
+      placeholder: "25"
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Singleplayer or integrated server
+        - Dedicated server
+        - Multiplayer client connected to a remote server
+        - Build, package, or development environment
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Block drops and provenance
+        - Entity death loot or experience
+        - Configuration or migration
+        - Commands or inspection
+        - Client configuration screen
+        - Multiplayer authority or networking
+        - Build or packaging
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Give the smallest repeatable sequence, including relevant commands and configuration changes.
+      placeholder: |
+        1. Start a new world with ...
+        2. Run ...
+        3. Break or kill ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Relevant configuration section
+      description: Include only settings needed to reproduce the issue. Remove player UUID overrides and unrelated values.
+      render: json
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log excerpt
+      description: Paste only the smallest useful excerpt. Redact account IDs, player UUIDs, IP addresses, tokens, paths containing personal names, and unrelated log content.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I reproduced this with the smallest practical mod set and checked that it is not already documented.
+          required: true
+        - label: I checked whether the issue reproduces with only Resource Multiplier and its required dependencies.
+          required: true
+        - label: This report contains no security-sensitive details or private server/player information.
+          required: true

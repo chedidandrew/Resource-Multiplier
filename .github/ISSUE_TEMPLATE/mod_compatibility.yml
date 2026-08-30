@@ -1,0 +1,136 @@
+name: Mod compatibility report
+description: Report an interaction with a specific third-party mod or data pack.
+title: "[Compatibility] "
+labels: []
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Compatibility is evaluated against exact named versions and a minimal reproduction. Do not include security-sensitive details or unredacted server/player information; read SECURITY.md first. Review logs for personal information and never upload an entire development world.
+  - type: input
+    id: other-mod
+    attributes:
+      label: Other mod or data-pack name
+      placeholder: Exact project name
+    validations:
+      required: true
+  - type: input
+    id: other-mod-version
+    attributes:
+      label: Other mod or data-pack version
+      placeholder: Exact installed version
+    validations:
+      required: true
+  - type: input
+    id: other-mod-link
+    attributes:
+      label: Link to the other project
+      placeholder: Public project page or source repository
+    validations:
+      required: true
+  - type: input
+    id: smartdrops-version
+    attributes:
+      label: Resource Multiplier version
+      placeholder: 1.1.0
+    validations:
+      required: true
+  - type: input
+    id: platform-versions
+    attributes:
+      label: Minecraft, Fabric Loader, Fabric API, and Java versions
+    validations:
+      required: true
+  - type: dropdown
+    id: interaction
+    attributes:
+      label: Interaction type
+      options:
+        - Block loot table, tag, or final-drop modification
+        - Automated block breaking
+        - Entity loot table, tag, or final-drop modification
+        - Custom entity death or direct item output
+        - Configuration screen or Mod Menu
+        - Networking or dedicated-server loading
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: registry-id
+    attributes:
+      label: Relevant block or entity registry ID
+      placeholder: modid:block_name or modid:entity_name
+  - type: input
+    id: inspection-category
+    attributes:
+      label: Category shown by inspection
+      placeholder: Category and classification evidence shown by the verbose inspection command
+  - type: checkboxes
+    id: implementation-shape
+    attributes:
+      label: Other project behavior involved
+      description: Select every behavior that may participate in the reproduction.
+      options:
+        - label: Custom block placer or placement system
+        - label: Custom miner or automated block breaker
+        - label: Custom loot table, loot modifier, or loot system
+        - label: Custom mob or death handling
+        - label: Boss or progression-sensitive output
+        - label: Inventory-bearing entity or direct inventory insertion
+        - label: Direct ItemEntity output that bypasses standard loot
+  - type: textarea
+    id: minimal-set
+    attributes:
+      label: Minimal installed mod and data-pack set
+      description: List every enabled mod/data pack needed to reproduce the interaction and its exact version.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Include relevant Resource Multiplier settings and whether the behavior occurs without the other project installed.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected integration behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual integration behavior
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Verbose inspection output
+      description: Include `/smartdrops inspect verbose` or `/smartdrops inspect entity verbose` when applicable.
+      render: text
+  - type: textarea
+    id: validation
+    attributes:
+      label: "`/smartdrops validate` output"
+      description: Include compact or verbose validation output. Review it for identifiers you do not want to disclose.
+      render: text
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log excerpt
+      description: Paste only the smallest useful excerpt. Redact UUIDs, server addresses, tokens, personal paths, and unrelated log content.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I verified the behavior with only the minimum required projects enabled.
+          required: true
+        - label: I am reporting one exact compatibility case, not assuming broad support for a category of mods.
+          required: true
+        - label: This report contains no security-sensitive details or private server/player information.
+          required: true

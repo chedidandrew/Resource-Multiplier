@@ -1,0 +1,19 @@
+{
+  "replace": false,
+  "values": [
+    "smart_resource_drops_gametest:category_only",
+    "smart_resource_drops_gametest:boss",
+    "smart_resource_drops_gametest:equipment",
+    "smart_resource_drops_gametest:carrying",
+    "smart_resource_drops_gametest:inventory",
+    "smart_resource_drops_gametest:component_rich",
+    "smart_resource_drops_gametest:direct_output",
+    "smart_resource_drops_gametest:nested_outer",
+    "smart_resource_drops_gametest:exception",
+    "smart_resource_drops_gametest:duplicate_hook",
+    "smart_resource_drops_gametest:looting_final",
+    "smart_resource_drops_gametest:cooked_final",
+    "smart_resource_drops_gametest:empty",
+    "smart_resource_drops_gametest:unstackable"
+  ]
+}

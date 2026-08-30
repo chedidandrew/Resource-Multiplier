@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "smart_resource_drops",
+  "version": "${version}",
+  "name": "Resource Multiplier",
+  "description": "Configurable block, entity death-loot, and safe supported shearing multipliers with persistent anti-dupe protection.",
+  "authors": [
+    "Andrew Chedid"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/smart_resource_drops/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.chedidandrew.smartresourcedrops.SmartResourceDrops"
+    ],
+    "client": [
+      "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsClient"
+    ],
+    "modmenu": [
+      "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "smart_resource_drops.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=25",
+    "fabric-api": ">=${fabric_version}"
+  },
+  "suggests": {
+    "modmenu": ">=${modmenu_version}"
+  }
+}
