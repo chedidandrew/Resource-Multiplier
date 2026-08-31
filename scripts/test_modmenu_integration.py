@@ -212,13 +212,225 @@ for key in (
     "smart_resource_drops.gui.placement_protection_label",
     "smart_resource_drops.gui.multiplier_source",
     "smart_resource_drops.gui.multiply_xp",
-    "smart_resource_drops.gui.categories",
+    "smart_resource_drops.gui.root_block_categories",
     "smart_resource_drops.gui.block_overrides",
     "smart_resource_drops.gui.dimensions",
-    "smart_resource_drops.gui.filters",
+    "smart_resource_drops.gui.root_block_filters",
     "smart_resource_drops.gui.advanced",
+    "smart_resource_drops.gui.entity_drops",
 ):
     require(key in root_screen, f"General screen is missing its control/navigation key: {key}")
+
+# This clarity pass deliberately changes only two root navigation labels. The
+# shared Categories/Filters keys remain the child-screen titles.
+root_navigation = method_body(root_screen, "addNavigation")
+root_label_contract = {
+    "smart_resource_drops.gui.root_block_categories": "Block Categories",
+    "smart_resource_drops.gui.root_block_filters": "Block Filters",
+}
+for key, expected in root_label_contract.items():
+    require(lang.get(key) == expected, f"Root navigation label changed unexpectedly: {key}")
+    require(
+        f'Component.translatable("{key}")' in root_navigation,
+        f"Root navigation must use its root-specific label key: {key}",
+    )
+for shared_key in (
+    "smart_resource_drops.gui.categories",
+    "smart_resource_drops.gui.filters",
+):
+    require(
+        f'Component.translatable("{shared_key}")' not in root_navigation,
+        f"Root navigation must not reuse the child-screen title key: {shared_key}",
+    )
+
+rule_list_screen = children["RuleListScreen.java"]
+filter_config_screen = children["FilterConfigScreen.java"]
+require(
+    re.search(
+        r'super\s*\(\s*Component\.translatable\(\s*kind\s*==\s*Kind\.CATEGORY\s*'
+        r'\?\s*"smart_resource_drops\.gui\.categories"\s*'
+        r':\s*"smart_resource_drops\.gui\.dimensions"\s*\)',
+        rule_list_screen,
+    )
+    is not None,
+    "The Categories child-screen title must keep using the shared Categories key",
+)
+require(
+    re.search(
+        r'super\s*\(\s*Component\.translatable\(\s*'
+        r'"smart_resource_drops\.gui\.filters"\s*\)',
+        filter_config_screen,
+    )
+    is not None,
+    "The Filters child-screen title must keep using the shared Filters key",
+)
+require(
+    lang.get("smart_resource_drops.gui.categories") == "Categories"
+    and lang.get("smart_resource_drops.gui.filters") == "Filters",
+    "Shared child-screen titles must remain Categories and Filters",
+)
+
+root_navigation_tooltips = {
+    "smart_resource_drops.gui.root_dimensions_tooltip": (
+        "Configure block-drop multipliers for specific dimensions."
+    ),
+    "smart_resource_drops.gui.root_advanced_tooltip": (
+        "Configure presets, block sources, block-entity safety, piston handling, "
+        "personal overrides, and runtime statistics."
+    ),
+    "smart_resource_drops.gui.root_entity_drops_tooltip": (
+        "Configure entity death loot, mob XP, and supported entity shearing. "
+        "These settings are separate from block drops."
+    ),
+}
+for key, expected in root_navigation_tooltips.items():
+    require(lang.get(key) == expected, f"Root navigation tooltip changed unexpectedly: {key}")
+    require(
+        re.search(
+            rf'Component\.translatable\(\s*"{re.escape(key)}"\s*\)',
+            root_navigation,
+        )
+        is not None,
+        f"Root navigation button is missing its tooltip key: {key}",
+    )
+require(
+    root_navigation.count(".tooltip(Tooltip.create(Component.translatable(") == 3,
+    "Only Dimensions, Advanced, and Entity Drops should gain root navigation tooltips",
+)
+
+block_xp_tooltips = {
+    "smart_resource_drops.gui.multiply_xp_tooltip": (
+        "Multiply XP produced by eligible block breaks."
+    ),
+    "smart_resource_drops.gui.xp_multiplier_tooltip": (
+        "Sets the multiplier for XP produced by eligible block breaks when block XP "
+        "multiplication is enabled."
+    ),
+}
+for key, expected in block_xp_tooltips.items():
+    require(lang.get(key) == expected, f"Block-XP tooltip changed unexpectedly: {key}")
+    require(key in root_screen, f"The root block-XP control must keep using its tooltip key: {key}")
+
+advanced_screen = children["AdvancedConfigScreen.java"]
+advanced_rows = method_body(advanced_screen, "refreshRows")
+advanced_boolean_body = method_body(advanced_screen, "addBooleanRow")
+advanced_tooltip_contract = (
+    (
+        "smart_resource_drops.gui.enabled",
+        "smart_resource_drops.gui.enabled_tooltip",
+        "Master switch for Resource Multiplier. Saved settings remain unchanged while multiplication is disabled.",
+    ),
+    (
+        "smart_resource_drops.gui.player_mining",
+        "smart_resource_drops.gui.player_mining_tooltip",
+        "Allow eligible block drops caused by player mining to use block multipliers.",
+    ),
+    (
+        "smart_resource_drops.gui.explosions",
+        "smart_resource_drops.gui.explosions_tooltip",
+        "Allow eligible block drops caused by explosions to use block multipliers.",
+    ),
+    (
+        "smart_resource_drops.gui.automated_mining",
+        "smart_resource_drops.gui.automated_mining_tooltip",
+        "Allow supported non-player Block.dropResources paths to use block multipliers. "
+        "Systems that create or insert items directly remain unchanged.",
+    ),
+    (
+        "smart_resource_drops.gui.protect_block_entities",
+        "smart_resource_drops.gui.protect_block_entities_tooltip",
+        "Keep blocks with block entities at vanilla 1x unless explicitly allowlisted, "
+        "protecting inventories and special data.",
+    ),
+    (
+        "smart_resource_drops.gui.piston_safety",
+        "smart_resource_drops.gui.piston_safety_tooltip",
+        "Treat piston-moved destination blocks as protected so placement provenance "
+        "cannot be lost or exploited.",
+    ),
+    (
+        "smart_resource_drops.gui.player_overrides",
+        "smart_resource_drops.gui.player_overrides_tooltip",
+        "Allow players to use personal block multipliers within the limits configured by the server.",
+    ),
+    (
+        "smart_resource_drops.gui.statistics",
+        "smart_resource_drops.gui.statistics_tooltip",
+        "Track block-multiplication activity in memory for the current server session. "
+        "This does not change drop behavior.",
+    ),
+)
+for label_key, tooltip_key, expected in advanced_tooltip_contract:
+    require(
+        lang.get(tooltip_key) == expected,
+        f"Advanced explanatory tooltip changed unexpectedly: {tooltip_key}",
+    )
+    require(
+        re.search(
+            rf'Component\.translatable\("{re.escape(label_key)}"\)\s*,\s*'
+            rf'Component\.translatable\("{re.escape(tooltip_key)}"\)',
+            advanced_rows,
+        )
+        is not None,
+        f"Advanced row must pair {label_key} with {tooltip_key}",
+    )
+require(
+    re.search(
+        r"\baddBooleanRow\s*\([^)]*\bfinal\s+Component\s+tooltip\s*,",
+        advanced_screen,
+    )
+    is not None
+    and re.search(r"rightDetail\s*,\s*tooltip\s*,", advanced_boolean_body) is not None,
+    "Advanced boolean rows must pass their setting-specific tooltip into StructuredConfigList",
+)
+require(
+    'Component.literal(": ")' not in advanced_boolean_body
+    and re.search(r"\.append\s*\(\s*label\s*\)", advanced_boolean_body) is None,
+    "Advanced tooltips must not regress to the generic label-plus-ON/OFF construction",
+)
+
+require(
+    lang.get("smart_resource_drops.gui.source_all_tooltip")
+    == "All eligible blocks can receive multiplied drops regardless of placement history.",
+    "The already-clear All Blocks tooltip must remain unchanged",
+)
+preserved_tooltips = {
+    "smart_resource_drops.gui.global_multiplier_tooltip": (
+        "Default multiplier used when no more specific override exists."
+    ),
+    "smart_resource_drops.gui.placement_protection_tooltip": (
+        "In Natural Blocks Only mode, prevents multiplied drops from blocks previously placed by a player."
+    ),
+    "smart_resource_drops.gui.block_multiplier_tooltip": (
+        "Overrides this block only. Inherit uses its category, dimension, then Global."
+    ),
+    "smart_resource_drops.gui.filter_blacklist_tooltip": (
+        "All eligible blocks are multiplied except blocks or tags added to the blacklist."
+    ),
+    "smart_resource_drops.gui.entity_default_multiplier_tooltip": (
+        "Used when no exact entity or category override exists. Inherit uses Global."
+    ),
+    "smart_resource_drops.gui.entity_kill_requirement_tooltip": (
+        "Controls which authoritative death attributions qualify for entity items and mob XP."
+    ),
+    "smart_resource_drops.gui.multiply_mob_xp_tooltip": (
+        "Separately multiplies XP from qualifying living-entity deaths."
+    ),
+    "smart_resource_drops.gui.boss_drops_tooltip": (
+        "Allows configured multipliers for normal boss loot-table output; special rewards remain excluded."
+    ),
+    "smart_resource_drops.gui.manual_shearing_tooltip": (
+        "Multiply certified standard shearing loot produced by a player's entity interaction."
+    ),
+    "smart_resource_drops.gui.shearing_safety_tooltip": (
+        "Unknown and special shearables cannot receive overrides. Shearing output safety limits cannot be disabled."
+    ),
+    "smart_resource_drops.gui.preset_warning": (
+        "This preset replaces all block, category, and dimension multiplier overrides."
+    ),
+}
+for key, expected in preserved_tooltips.items():
+    require(lang.get(key) == expected, f"Existing detailed tooltip must remain unchanged: {key}")
 
 for obsolete in (
     "BuiltInRegistries",
@@ -793,6 +1005,7 @@ required_language_keys = (
     "smart_resource_drops.gui.configure",
     # Dedicated category/block/dimension/filter/advanced flows.
     "smart_resource_drops.gui.categories",
+    "smart_resource_drops.gui.root_block_categories",
     "smart_resource_drops.gui.categories_search",
     "smart_resource_drops.gui.category_blocks",
     "smart_resource_drops.gui.view_category_blocks",
@@ -804,8 +1017,10 @@ required_language_keys = (
     "smart_resource_drops.gui.blocks_result_limit",
     "smart_resource_drops.gui.block_category",
     "smart_resource_drops.gui.dimensions",
+    "smart_resource_drops.gui.root_dimensions_tooltip",
     "smart_resource_drops.gui.dimensions_search",
     "smart_resource_drops.gui.filters",
+    "smart_resource_drops.gui.root_block_filters",
     "smart_resource_drops.gui.filters_search",
     "smart_resource_drops.gui.filter_mode_blacklist",
     "smart_resource_drops.gui.filter_mode_whitelist",
@@ -818,6 +1033,7 @@ required_language_keys = (
     "smart_resource_drops.gui.filter_none",
     "smart_resource_drops.gui.filter_tag_read_only",
     "smart_resource_drops.gui.advanced",
+    "smart_resource_drops.gui.root_advanced_tooltip",
     "smart_resource_drops.gui.presets",
     "smart_resource_drops.gui.preset_preview",
     "smart_resource_drops.gui.preset_warning",
@@ -830,13 +1046,22 @@ required_language_keys = (
     "smart_resource_drops.gui.preset_fast_progression_summary",
     "smart_resource_drops.gui.reset_override",
     "smart_resource_drops.gui.enabled",
+    "smart_resource_drops.gui.enabled_tooltip",
     "smart_resource_drops.gui.player_mining",
+    "smart_resource_drops.gui.player_mining_tooltip",
     "smart_resource_drops.gui.explosions",
+    "smart_resource_drops.gui.explosions_tooltip",
     "smart_resource_drops.gui.automated_mining",
+    "smart_resource_drops.gui.automated_mining_tooltip",
     "smart_resource_drops.gui.protect_block_entities",
+    "smart_resource_drops.gui.protect_block_entities_tooltip",
     "smart_resource_drops.gui.piston_safety",
+    "smart_resource_drops.gui.piston_safety_tooltip",
     "smart_resource_drops.gui.player_overrides",
+    "smart_resource_drops.gui.player_overrides_tooltip",
     "smart_resource_drops.gui.statistics",
+    "smart_resource_drops.gui.statistics_tooltip",
+    "smart_resource_drops.gui.root_entity_drops_tooltip",
     "smart_resource_drops.gui.read_only_value",
 )
 for key in required_language_keys:

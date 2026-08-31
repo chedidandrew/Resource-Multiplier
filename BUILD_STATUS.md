@@ -13,7 +13,19 @@ Compatibility-critical identifiers remain unchanged:
 - Commands: `/smartdrops` and `/smartdropsgui`
 - Saved-world provenance, network identifiers, schema, and migrations
 
-## Current verified production code
+## Configuration clarity pass - local validation complete
+
+The current working tree contains a deliberately narrow client-presentation correction. The root navigation uses **Block Categories** and **Block Filters** while the child titles remain **Categories** and **Filters**. Dimensions, Advanced, and Entity Drops receive scoped navigation help; the two root XP descriptions explicitly refer to eligible block breaks; and the eight Advanced boolean settings use setting-specific explanations rather than repeating their label and ON/OFF state. Existing detailed tooltips are intentionally preserved.
+
+Resource Multiplier remains `1.2.0-rc.1` with `release_ready=false`. This pass changes no gameplay, default value, configuration field or JSON key, schema or migration, authority rule, persistence behavior, network payload, command, Java package, mod ID, datapack namespace, or saved-world provenance identifier.
+
+Focused label, tooltip, layout, and authority regressions pass. All six repository validators, all 90 dependency-free core assertions, 158 mapped JUnit tests in 24 suites, all 66 dedicated GameTests, the Mod Menu-enabled real client GameTest, the cache-free Java 25 Loom build, standalone server status/validation, and fresh-empty-directory release packaging complete successfully. The client suite covers 320x180, 426x240, 640x360, and 1280x720 tooltip bounds plus local-default, integrated-server, dedicated-operator, and dedicated-non-operator authority. It produced 19 current screenshots; only `docs/images/general-config.webp` changed, while the Block Overrides and Shearing captures remain byte-for-byte unchanged.
+
+The current local playable JAR is `build/libs/resource-multiplier-1.2.0-rc.1.jar`: 601,761 bytes, 311 ZIP entries, SHA-256 `27F73D54F8CD6EFE17F68DFB3C76D11B67BEAB3AB6DF4725F0D398E4D0E5F9C7`. Fresh packaging validates 257 source entries and creates the source ZIP, byte-identical playable JAR, checksum manifest, and five-entry release bundle. A standalone server loads 43 mods without Mod Menu, reaches `Done (0.280s)`, returns general and shearing status, reports `Status: Valid` in compact and verbose validation, confirms no configuration or world data changed, and stops cleanly with `BUILD SUCCESSFUL` in 42 seconds.
+
+An exact clean-checkout GitHub Actions run for the clarity commit remains pending until that commit is pushed. The prior clean-checkout evidence below is preserved and is not attributed to this uncommitted pass.
+
+## Prior verified production-code checkpoint
 
 The latest production-code correction is commit:
 
@@ -38,7 +50,7 @@ The successful clean-checkout run validated 118 production Java sources and 254 
 
 ## Artifact identities
 
-### Current clean GitHub Actions artifact
+### Prior clean GitHub Actions artifact
 
 Artifact name:
 
@@ -85,7 +97,7 @@ The development-only `smart_resource_drops_gametest` module now expands the proj
 
 ## Remaining release gates
 
-The clean-checkout automated and artifact gate has passed. The remaining gates require hands-on or named third-party evidence:
+The prior `325cc6a6fcafe5810000f3c377e9e96ea5bd68c9` clean-checkout automated and artifact gate passed. The clarity commit still requires its own successful clean-checkout GitHub Actions run after push. Beyond that automated gate, the remaining release gates require hands-on or named third-party evidence:
 
 - real block, entity death-loot, XP, explosion, provenance, and output-budget gameplay;
 - real player and dispenser shearing at disabled, `0x`, `1x`, normal multiplied, and maximum values;

@@ -1,8 +1,10 @@
 package com.chedidandrew.smartresourcedrops.gametest;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -34,11 +36,16 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.narration.NarrationThunk;
+import net.minecraft.client.gui.screens.inventory.tooltip.MenuTooltipPositioner;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
+import org.joml.Vector2ic;
 
 /** End-to-end GUI and authority checks in real Minecraft client/server runtimes. */
 @SuppressWarnings("UnstableApiUsage")
@@ -49,10 +56,10 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
     private static final String BACK_KEY = "Back";
     private static final String DONE_KEY = "Done";
     private static final String DISCARD_CHANGES_KEY = "Discard Changes";
-    private static final String CATEGORIES_KEY = "Categories";
+    private static final String CATEGORIES_KEY = "Block Categories";
     private static final String BLOCK_OVERRIDES_KEY = "Block Overrides";
     private static final String DIMENSIONS_KEY = "Dimensions";
-    private static final String FILTERS_KEY = "Filters";
+    private static final String FILTERS_KEY = "Block Filters";
     private static final String ADVANCED_KEY = "Advanced";
     private static final String ENTITY_DROPS_KEY = "Entity Drops";
     private static final String SHEARING_DROPS_KEY = "Shearing Drops";
@@ -60,14 +67,55 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
     private static final String RESET_KEY = "Reset All Settings";
     private static final String RESET_EVERYTHING_KEY = "Reset Everything";
     private static final String CANCEL_KEY = "Cancel";
-    private static final Set<String> ROOT_NAVIGATION_LABELS = Set.of(
-            "Categories",
-            "Block Overrides",
-            "Dimensions",
-            "Filters",
-            "Advanced",
+    private static final String GLOBAL_MULTIPLIER_TOOLTIP =
+            "Default multiplier used when no more specific override exists.";
+    private static final String MULTIPLY_XP_TOOLTIP =
+            "Multiply XP produced by eligible block breaks.";
+    private static final String XP_MULTIPLIER_TOOLTIP =
+            "Sets the multiplier for XP produced by eligible block breaks when block XP multiplication is enabled.";
+    private static final Map<String, String> ROOT_NAVIGATION_TOOLTIPS = Map.of(
+            DIMENSIONS_KEY,
+            "Configure block-drop multipliers for specific dimensions.",
+            ADVANCED_KEY,
+            "Configure presets, block sources, block-entity safety, piston handling, personal overrides, and runtime statistics.",
             ENTITY_DROPS_KEY,
-            "Done");
+            "Configure entity death loot, mob XP, and supported entity shearing. These settings are separate from block drops.");
+    private static final Set<String> ROOT_NAVIGATION_WITHOUT_TOOLTIPS = Set.of(
+            CATEGORIES_KEY,
+            BLOCK_OVERRIDES_KEY,
+            FILTERS_KEY);
+    private static final Map<String, String> ADVANCED_TOOLTIPS = Map.of(
+            "Mod Enabled",
+            "Master switch for Resource Multiplier. Saved settings remain unchanged while multiplication is disabled.",
+            "Player Mining",
+            "Allow eligible block drops caused by player mining to use block multipliers.",
+            "Explosion Drops",
+            "Allow eligible block drops caused by explosions to use block multipliers.",
+            "Automated Mining",
+            "Allow supported non-player Block.dropResources paths to use block multipliers. Systems that create or insert items directly remain unchanged.",
+            "Protect Block Entities",
+            "Keep blocks with block entities at vanilla 1x unless explicitly allowlisted, protecting inventories and special data.",
+            "Conservative Piston Safety",
+            "Treat piston-moved destination blocks as protected so placement provenance cannot be lost or exploited.",
+            "Allow Player Overrides",
+            "Allow players to use personal block multipliers within the limits configured by the server.",
+            "Collect Session Statistics",
+            "Track block-multiplication activity in memory for the current server session. This does not change drop behavior.");
+    private static final Map<String, String> PRESET_TOOLTIPS = Map.of(
+            "Vanilla Plus",
+            "Vanilla Plus\nGlobal 1x; Ores and Logs 2x.",
+            "Faster Survival",
+            "Faster Survival\nGlobal 2x; Logs 3x; Ores, Stone, and Crops 2x.",
+            "Fast Progression",
+            "Fast Progression\nGlobal 4x with no category, block, or dimension overrides.");
+    private static final Set<String> ROOT_NAVIGATION_LABELS = Set.of(
+            CATEGORIES_KEY,
+            BLOCK_OVERRIDES_KEY,
+            DIMENSIONS_KEY,
+            FILTERS_KEY,
+            ADVANCED_KEY,
+            ENTITY_DROPS_KEY,
+            DONE_KEY);
 
     @Override
     public void runTest(final ClientGameTestContext context) {
@@ -81,6 +129,8 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         context.waitForScreen(SmartDropsConfigScreen.class);
         SmartDropsConfigScreen root = currentConfigScreen(context);
         assertGeneralRoot(root, true);
+        assertRootClarityTooltips(context, root);
+        assertRootTooltipLayouts(context, root);
         assertXpControlsDisabledWhileOff(context, root);
         assertGlobalDirtyRoundTrip(context, root);
         assertCommonControlRoundTrips(context, root);
@@ -399,6 +449,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                     SmartDropsConfigScreen root = currentConfigScreen(context);
                     assertGeneralRoot(root, false);
                     assertReadOnlyRoot(root);
+                    assertRootClarityTooltips(context, root);
                     verifyReadOnlyChildNavigation(context, root);
                     takeRequiredScreenshot(context, "smart-drops-dedicated-nonop-general");
 
@@ -640,6 +691,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         child = openChild(context, ADVANCED_KEY, "AdvancedConfigScreen", "Advanced");
         final StructuredConfigList advanced = onlyList(child);
         require(advanced.rowCount() == 11, "Advanced screen did not show eight settings and three presets");
+        context.runOnClient(client -> assertAdvancedTooltips(client, advanced, false));
         assertBoundedChild(child, 16);
         takeRequiredScreenshot(context, "smart-drops-advanced");
         final StructuredConfigList.Row presetRow = advanced.rows().get(8);
@@ -973,6 +1025,21 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         }
         returnToSameRoot(context, root, session);
 
+        final Screen advancedScreen = openChild(
+                context,
+                ADVANCED_KEY,
+                "AdvancedConfigScreen",
+                "Advanced");
+        final StructuredConfigList advanced = onlyList(advancedScreen);
+        context.runOnClient(client -> assertAdvancedTooltips(client, advanced, true));
+        final SmartDropsConfig beforeAdvancedActions = session.workingSnapshot();
+        context.runOnClient(client -> advanced.rows().subList(0, 8)
+                .forEach(row -> row.action().run()));
+        require(sameConfiguration(beforeAdvancedActions, session.workingSnapshot())
+                        && !session.isDirty(),
+                "Read-only Advanced rows accepted a staged mutation");
+        returnToSameRoot(context, root, session);
+
         final Screen entityDrops = openChild(
                 context,
                 ENTITY_DROPS_KEY,
@@ -1039,7 +1106,192 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         for (String navigationLabel : ROOT_NAVIGATION_LABELS) {
             require(labels.contains(navigationLabel), "Missing General navigation button: " + navigationLabel);
         }
+        require(!labels.contains("Categories") && !labels.contains("Filters"),
+                "Root navigation reused a child-only Categories or Filters title");
         require(labels.contains(RESET_KEY), "General screen omitted Reset All Settings");
+    }
+
+    private static void assertRootClarityTooltips(
+            final ClientGameTestContext context,
+            final SmartDropsConfigScreen screen
+    ) {
+        context.runOnClient(client -> assertRootClarityTooltips(client, screen));
+    }
+
+    private static void assertRootClarityTooltips(
+            final Minecraft client,
+            final SmartDropsConfigScreen screen
+    ) {
+        for (Map.Entry<String, String> expected : ROOT_NAVIGATION_TOOLTIPS.entrySet()) {
+            assertWidgetTooltip(
+                    buttonWithLabel(screen, expected.getKey()),
+                    expected.getValue(),
+                    "Root navigation tooltip for " + expected.getKey());
+        }
+        for (String label : ROOT_NAVIGATION_WITHOUT_TOOLTIPS) {
+            require(tooltipText(buttonWithLabel(screen, label)).isEmpty(),
+                    "Self-explanatory root navigation unexpectedly gained a tooltip: " + label);
+        }
+
+        final Button multiplyExperience = buttons(screen).stream()
+                .filter(button -> button.getMessage().getString().startsWith("Multiply Experience:"))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Root omitted Multiply Experience"));
+        assertWidgetTooltip(
+                multiplyExperience,
+                MULTIPLY_XP_TOOLTIP,
+                "Multiply Experience block-XP tooltip");
+        assertMultiplierTooltipPropagation(
+                client,
+                screen,
+                "Global Multiplier",
+                GLOBAL_MULTIPLIER_TOOLTIP);
+        assertMultiplierTooltipPropagation(
+                client,
+                screen,
+                "Experience Multiplier",
+                XP_MULTIPLIER_TOOLTIP);
+
+        for (AbstractWidget widget : widgets(screen)) {
+            final String tooltip = tooltipText(widget);
+            if (!tooltip.isEmpty()) {
+                assertWrappedTooltipLines(client, Tooltip.splitTooltip(client, Component.literal(tooltip)));
+            }
+        }
+    }
+
+    private static void assertRootTooltipLayouts(
+            final ClientGameTestContext context,
+            final SmartDropsConfigScreen root
+    ) {
+        context.runOnClient(client -> {
+            final int originalWidth = root.width;
+            final int originalHeight = root.height;
+            try {
+                for (int[] size : List.of(
+                        new int[] {320, 180},
+                        new int[] {426, 240},
+                        new int[] {640, 360},
+                        new int[] {1280, 720})) {
+                    root.resize(size[0], size[1]);
+                    assertGeneralRoot(root, true);
+                    assertRootClarityTooltips(client, root);
+                    for (AbstractWidget widget : widgets(root)) {
+                        final String tooltip = tooltipText(widget);
+                        if (!tooltip.isEmpty()) {
+                            assertWidgetTooltipOnScreen(client, root, widget, tooltip);
+                        }
+                    }
+                }
+            } finally {
+                root.resize(originalWidth, originalHeight);
+            }
+        });
+    }
+
+    private static void assertAdvancedTooltips(
+            final Minecraft client,
+            final StructuredConfigList list,
+            final boolean readOnly
+    ) {
+        require(list.rowCount() == 11,
+                "Advanced tooltip regression requires eight settings and three presets");
+        final List<StructuredConfigList.Row> settings = list.rows().subList(0, 8);
+        require(Set.copyOf(settings.stream().map(row -> row.primary().getString()).toList())
+                        .equals(ADVANCED_TOOLTIPS.keySet()),
+                "Advanced visible setting labels changed unexpectedly");
+        for (StructuredConfigList.Row row : settings) {
+            final String label = row.primary().getString();
+            final String expected = ADVANCED_TOOLTIPS.get(label);
+            final String displayedValue = row.rightDetail().getString();
+            require(expected != null && expected.equals(row.tooltip().getString()),
+                    "Advanced tooltip did not match its setting-specific explanation: " + label);
+            require(displayedValue.contains("ON") || displayedValue.contains("OFF"),
+                    "Advanced row stopped displaying its ON/OFF value: " + label);
+            require(readOnly == displayedValue.contains("(read-only)"),
+                    "Advanced read-only presentation did not match authority: " + label);
+            require(!row.tooltip().getString().equals(label + ": " + displayedValue),
+                    "Advanced tooltip merely repeated its label and value: " + label);
+        }
+
+        final List<StructuredConfigList.Row> presets = list.rows().subList(8, 11);
+        require(Set.copyOf(presets.stream().map(row -> row.secondary().getString()).toList())
+                        .equals(PRESET_TOOLTIPS.keySet()),
+                "Advanced preset labels changed unexpectedly");
+        for (StructuredConfigList.Row row : presets) {
+            final String name = row.secondary().getString();
+            require(PRESET_TOOLTIPS.get(name).equals(row.tooltip().getString()),
+                    "Advanced preset tooltip changed unexpectedly: " + name);
+        }
+        assertStructuredTooltipWrapping(client, list);
+    }
+
+    private static void assertMultiplierTooltipPropagation(
+            final Minecraft client,
+            final Screen screen,
+            final String label,
+            final String expectedTooltip
+    ) {
+        final List<AbstractWidget> tooltipWidgets = widgets(screen).stream()
+                .filter(widget -> expectedTooltip.equals(tooltipText(widget)))
+                .toList();
+        final List<String> messages = tooltipWidgets.stream()
+                .map(widget -> widget.getMessage().getString())
+                .toList();
+        require(tooltipWidgets.size() == 4,
+                label + " tooltip was not attached to exactly four MultiplierControl widgets");
+        require(messages.contains(label) && messages.contains("-") && messages.contains("+")
+                        && messages.stream()
+                                .filter(message -> !label.equals(message)
+                                        && !"-".equals(message)
+                                        && !"+".equals(message))
+                                .count() == 1,
+                label + " tooltip did not cover its label, value, minus, and plus widgets");
+        for (AbstractWidget widget : tooltipWidgets) {
+            assertWrappedTooltipLines(
+                    client,
+                    Tooltip.splitTooltip(client, Component.literal(tooltipText(widget))));
+        }
+    }
+
+    private static void assertWidgetTooltip(
+            final AbstractWidget widget,
+            final String expected,
+            final String description
+    ) {
+        require(expected.equals(tooltipText(widget)),
+                description + " was missing or had unexpected text");
+    }
+
+    private static void assertWidgetTooltipOnScreen(
+            final Minecraft client,
+            final Screen screen,
+            final AbstractWidget widget,
+            final String tooltip
+    ) {
+        final List<FormattedCharSequence> lines = Tooltip.splitTooltip(
+                client,
+                Component.literal(tooltip));
+        final int tooltipWidth = lines.stream()
+                .mapToInt(client.font::width)
+                .max()
+                .orElseThrow();
+        final int tooltipHeight = lines.size() == 1 ? 8 : lines.size() * 10;
+        final int mouseX = Math.max(0, Math.min(screen.width - 1, widget.getX() + widget.getWidth() / 2));
+        final int mouseY = Math.max(0, Math.min(screen.height - 1, widget.getY() + widget.getHeight() / 2));
+        final Vector2ic position = new MenuTooltipPositioner(widget.getRectangle()).positionTooltip(
+                screen.width,
+                screen.height,
+                mouseX,
+                mouseY,
+                tooltipWidth,
+                tooltipHeight);
+        require(position.x() - 3 >= 0
+                        && position.y() - 3 >= 0
+                        && position.x() + tooltipWidth + 3 <= screen.width
+                        && position.y() + tooltipHeight + 3 <= screen.height,
+                "Tooltip left the " + screen.width + "x" + screen.height
+                        + " viewport for widget " + widget.getMessage().getString());
     }
 
     private static void assertReadOnlyRoot(final SmartDropsConfigScreen screen) {
@@ -1543,10 +1795,15 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
     }
 
     private static boolean hasWidgetLabel(final Screen screen, final String label) {
+        return widgets(screen).stream()
+                .anyMatch(widget -> label.equals(widget.getMessage().getString()));
+    }
+
+    private static List<AbstractWidget> widgets(final Screen screen) {
         return screen.children().stream()
                 .filter(AbstractWidget.class::isInstance)
                 .map(AbstractWidget.class::cast)
-                .anyMatch(widget -> label.equals(widget.getMessage().getString()));
+                .toList();
     }
 
     private static List<Button> buttons(final Screen screen) {
@@ -1554,6 +1811,22 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 .filter(Button.class::isInstance)
                 .map(Button.class::cast)
                 .toList();
+    }
+
+    private static Button buttonWithLabel(final Screen screen, final String label) {
+        return buttons(screen).stream()
+                .filter(button -> label.equals(button.getMessage().getString()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Missing button: " + label));
+    }
+
+    private static String tooltipText(final AbstractWidget widget) {
+        final NarrationHintCapture capture = new NarrationHintCapture();
+        widget.updateNarration(capture);
+        require(capture.hints.size() <= 1,
+                "Widget exposed more than one tooltip narration hint: "
+                        + widget.getMessage().getString());
+        return capture.hints.isEmpty() ? "" : capture.hints.getFirst();
     }
 
     private static List<Button> buttonsWithLabel(final Screen screen, final String label) {
@@ -1653,6 +1926,22 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
             });
             require(!controlBreak[0],
                     "Wrapped tooltip still emitted a line-break control glyph");
+        }
+    }
+
+    private static final class NarrationHintCapture implements NarrationElementOutput {
+        private final List<String> hints = new ArrayList<>();
+
+        @Override
+        public void add(final NarratedElementType type, final NarrationThunk<?> narration) {
+            if (type == NarratedElementType.HINT) {
+                narration.getText(hints::add);
+            }
+        }
+
+        @Override
+        public NarrationElementOutput nest() {
+            return this;
         }
     }
 

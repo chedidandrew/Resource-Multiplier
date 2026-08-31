@@ -270,7 +270,7 @@ public final class SmartDropsConfigScreen extends Screen {
         final int third = second + columnWidth + gap;
         final int secondRow = y + buttonHeight + 2;
         this.addRenderableWidget(Button.builder(
-                        Component.translatable("smart_resource_drops.gui.categories"),
+                        Component.translatable("smart_resource_drops.gui.root_block_categories"),
                         button -> this.minecraft.gui.setScreen(new RuleListScreen(
                                 this, this.session, RuleListScreen.Kind.CATEGORY)))
                 .bounds(left, y, columnWidth, buttonHeight).build());
@@ -282,18 +282,24 @@ public final class SmartDropsConfigScreen extends Screen {
                         Component.translatable("smart_resource_drops.gui.dimensions"),
                         button -> this.minecraft.gui.setScreen(new RuleListScreen(
                                 this, this.session, RuleListScreen.Kind.DIMENSION)))
+                .tooltip(Tooltip.create(Component.translatable(
+                        "smart_resource_drops.gui.root_dimensions_tooltip")))
                 .bounds(third, y, columnWidth, buttonHeight).build());
         this.addRenderableWidget(Button.builder(
-                        Component.translatable("smart_resource_drops.gui.filters"),
+                        Component.translatable("smart_resource_drops.gui.root_block_filters"),
                         button -> this.minecraft.gui.setScreen(new FilterConfigScreen(this, this.session)))
                 .bounds(left, secondRow, columnWidth, buttonHeight).build());
         this.addRenderableWidget(Button.builder(
                         Component.translatable("smart_resource_drops.gui.advanced"),
                         button -> this.minecraft.gui.setScreen(new AdvancedConfigScreen(this, this.session)))
+                .tooltip(Tooltip.create(Component.translatable(
+                        "smart_resource_drops.gui.root_advanced_tooltip")))
                 .bounds(second, secondRow, columnWidth, buttonHeight).build());
         this.addRenderableWidget(Button.builder(
                         Component.translatable("smart_resource_drops.gui.entity_drops"),
                         button -> this.minecraft.gui.setScreen(new EntityDropsScreen(this, this.session)))
+                .tooltip(Tooltip.create(Component.translatable(
+                        "smart_resource_drops.gui.root_entity_drops_tooltip")))
                 .bounds(third, secondRow, columnWidth, buttonHeight).build());
     }
 

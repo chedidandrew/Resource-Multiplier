@@ -4,16 +4,25 @@
 
 Resource Multiplier `1.2.0-rc.1` is an unpublished release candidate with `release_ready=false`. The current automated pass was run on Java 25 against Minecraft 26.2, Fabric Loader 0.19.3, Fabric API 0.158.0+26.2, and optional client-only Mod Menu 20.0.0. These results establish build and regression evidence; they do not replace hands-on gameplay, separately installed multiplayer, datapack-reload, or named third-party compatibility tests.
 
+### Configuration clarity pass - local validation complete
+
+Focused coverage confirms that the root buttons read **Block Categories** and **Block Filters**, their child-screen titles remain **Categories** and **Filters**, and the existing visible-label contracts remain unchanged. It preserves the previously detailed tooltip text; requires the new Dimensions, Advanced, and Entity Drops navigation help; requires both root XP descriptions to identify eligible block breaks; and requires meaningful, setting-specific help on all eight Advanced boolean rows without removing the visible ON/OFF state.
+
+Runtime tooltip regressions prove shared `MultiplierControl` help on the label, value, minus button, and plus button; Minecraft's 170-pixel wrapping; on-screen placement at 320x180, 426x240, 640x360, and 1280x720; complete clipped-row information followed by supplemental details; and explanatory help on read-only controls. Authority coverage includes local defaults, integrated-server authority, and dedicated-server operator and non-operator paths, including non-mutation when read-only Advanced actions are invoked.
+
+The local final chain passes all six repository validators, including `python scripts/test_structured_tooltip_composition.py`, the 90-assertion dependency-free core runner, mapped JUnit, the dedicated GameTest runtime, the real client GameTest with Mod Menu present, the cache-free Java 25 Loom build, standalone server checks, and fresh-empty-directory packaging. The client run recaptured only `docs/images/general-config.webp`; the Block Overrides and Shearing screenshots remain byte-for-byte unchanged because their visible content did not change. Exact clean-checkout GitHub Actions evidence remains pending until the clarity commit is pushed.
+
 The exact local sequence was:
 
 ```powershell
 python tools/validate_package.py
 python scripts/test_release_packaging.py
 python scripts/test_modmenu_integration.py
+python scripts/test_structured_tooltip_composition.py
 python scripts/edge_case_source_audit.py
 python scripts/polish_regression_tests.py
 .\tools\run_core_tests.ps1
-.\gradlew.bat --no-daemon --no-build-cache --rerun-tasks clean build --warning-mode all
+.\gradlew.bat --no-daemon --no-build-cache --rerun-tasks clean test runGameTest build --warning-mode all
 .\gradlew.bat --no-daemon --no-build-cache --rerun-tasks runClientGameTest -Pinclude_modmenu_runtime=true --warning-mode all
 .\gradlew.bat --no-daemon --no-build-cache --rerun-tasks runServer --warning-mode all
 python tools/package_release.py --output-dir <fresh-empty-directory>
@@ -21,11 +30,11 @@ python tools/package_release.py --output-dir <fresh-empty-directory>
 
 Measured automated results:
 
-- Package/metadata/README validation passed with 118 production Java sources. Deterministic release-package regression passed with 252 Git-tracked source entries. Mod Menu integration, edge-case audit, polish regressions, and all 90 dependency-free core assertions passed.
-- The cache-free `clean build` completed with `BUILD SUCCESSFUL` in 29 seconds. JUnit passed 158 tests in 24 suites with zero failures, errors, or skips; the dedicated Minecraft runner passed all 66 required GameTests.
-- The real client GameTest completed with `BUILD SUCCESSFUL` in 39 seconds with Mod Menu present. It exercised title-screen, integrated-server, dedicated-server operator/non-operator authority, reset, navigation, search, and tooltip wrapping/control-character paths, and produced 19 current screenshots. Three clean captures are published in the README.
-- The standalone dedicated server loaded 43 mods without Mod Menu, initialized Resource Multiplier under the preserved `smart_resource_drops` ID, reached `Done (0.247s)`, returned the expected `/smartdrops` and shearing status, reported `Status: Valid` from `/smartdrops validate`, confirmed no configuration or world data changed, stopped cleanly, and completed in 48 seconds.
-- Release packaging succeeded in a fresh empty directory. The playable JAR is `build/libs/resource-multiplier-1.2.0-rc.1.jar`: 601,044 bytes, 311 ZIP entries, SHA-256 `5CA797D6BC4BBAB6F223361D9A99A118850F40B0273426D3B1ADF8AAB5CDCB31`. It embeds the MIT license, production icon, public name `Resource Multiplier`, version `1.2.0-rc.1`, and the unchanged mod ID/data namespace, with zero nested JAR or GameTest entries.
+- Package/metadata/README validation passed with 118 production Java sources. Deterministic release-package regression passed with 257 Git-tracked source entries. Mod Menu integration, structured-tooltip composition, edge-case audit, polish regressions, and all 90 dependency-free core assertions passed.
+- The cache-free `clean test runGameTest build` completed with `BUILD SUCCESSFUL` in 31 seconds. JUnit passed 158 tests in 24 suites with zero failures, errors, or skips; the dedicated Minecraft runner passed all 66 required GameTests.
+- The real client GameTest completed with `BUILD SUCCESSFUL` in 40 seconds with Mod Menu 20.0.0 present. It exercised title-screen, integrated-server, dedicated-server operator/non-operator authority, reset, navigation, search, exact tooltip narration, wrapping, viewport bounds, and read-only non-mutation, and produced 19 current screenshots. The refreshed general capture is published in the README.
+- The standalone dedicated server loaded 43 mods without Mod Menu, initialized Resource Multiplier under the preserved `smart_resource_drops` ID, reached `Done (0.280s)`, returned the expected `/smartdrops` and shearing status, reported `Status: Valid` from compact and verbose validation, confirmed no configuration or world data changed, stopped cleanly, and completed in 42 seconds.
+- Release packaging succeeded in a fresh empty directory. The playable JAR is `build/libs/resource-multiplier-1.2.0-rc.1.jar`: 601,761 bytes, 311 ZIP entries, SHA-256 `27F73D54F8CD6EFE17F68DFB3C76D11B67BEAB3AB6DF4725F0D398E4D0E5F9C7`. It embeds the MIT license, production icon, public name `Resource Multiplier`, version `1.2.0-rc.1`, and the unchanged mod ID/data namespace, with zero nested JAR or GameTest entries.
 - Lightweight Markdown validation checked README length, heading hierarchy, balanced fences, local links/images, image alt text and declared widths. Every README GitHub and badge URL returned HTTP 200.
 - Static workflow inspection confirms the ordinary build workflow handles branch pushes, pull requests, and manual dispatch only. The guarded release workflow is the sole `v*` tag handler and exits before build or publication while `release_ready=false`.
 

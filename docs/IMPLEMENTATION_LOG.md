@@ -1,5 +1,15 @@
 # Implementation log
 
+## 2026-08-30, minimal configuration clarity pass
+
+A tooltip-by-tooltip audit left the already behavior-specific configuration help unchanged. The only visible labels changed are the two root navigation actions, now **Block Categories** and **Block Filters**; their child screens retain **Categories** and **Filters** through root-specific translation keys. Root Dimensions, Advanced, and Entity Drops receive concise scope descriptions, the two root XP descriptions now identify XP from eligible block breaks, and the eight Advanced boolean rows receive setting-specific explanations while retaining their visible ON/OFF state.
+
+This is a client-presentation and regression-coverage change, not a general wording rewrite. It reuses the existing `Tooltip`, `StructuredConfigList`, and `MultiplierControl` paths and retains Minecraft's 170-pixel wrapping plus clipped-row supplemental-tooltip composition. It adds no recurring work, registry scan, or gameplay overhead and changes no configuration field, JSON key, default, rule resolution, schema, migration, authority behavior, payload, namespace, command, Java package, mod ID, or provenance identifier. Version `1.2.0-rc.1` and `release_ready=false` remain unchanged.
+
+Focused label, tooltip, layout, and authority regressions pass through actual widget narration and the existing structured-tooltip path. Coverage locks the root-only labels and unchanged child titles, exact added/improved copy, unchanged preset and representative detailed help, shared multiplier-control tooltips on all four widgets, standard 170-pixel wrapping, tooltip bounds at 320x180 through 1280x720, all four authority contexts, and read-only non-mutation.
+
+The complete local Java 25 chain passes: six repository validators, 90 dependency-free core assertions, 158 mapped JUnit tests in 24 suites, all 66 dedicated GameTests, the 40-second Mod Menu-enabled client GameTest, the 31-second cache-free build, and a 42-second standalone server smoke without Mod Menu. Fresh packaging validates 257 source entries and produces a 601,761-byte/311-entry playable JAR with SHA-256 `27F73D54F8CD6EFE17F68DFB3C76D11B67BEAB3AB6DF4725F0D398E4D0E5F9C7`. The general configuration screenshot is refreshed from the real client run; the two unaffected published screenshots retain their prior hashes. Commit and exact clean-checkout GitHub Actions evidence remain pending until push.
+
 ## 2026-08-30, 1.2.0-rc.1 public-presentation candidate
 
 The project version now identifies the current build as `1.2.0-rc.1`, while `release_ready=false` keeps tagged publication deliberately disabled. This pass makes the candidate's state legible without changing gameplay or performing an internal migration: the `smart_resource_drops` mod ID and datapack/network namespace, `com.chedidandrew.smartresourcedrops` Java package, `config/smart_resource_drops.json` schema and keys, saved-world provenance identifiers, and `/smartdrops` and `/smartdropsgui` commands remain unchanged.

@@ -57,41 +57,49 @@ final class AdvancedConfigScreen extends SmartDropsSubScreen {
         addBooleanRow(
                 rows,
                 Component.translatable("smart_resource_drops.gui.enabled"),
+                Component.translatable("smart_resource_drops.gui.enabled_tooltip"),
                 session.enabled(),
                 session::setEnabled);
         addBooleanRow(
                 rows,
                 Component.translatable("smart_resource_drops.gui.player_mining"),
+                Component.translatable("smart_resource_drops.gui.player_mining_tooltip"),
                 session.playerMining(),
                 session::setPlayerMining);
         addBooleanRow(
                 rows,
                 Component.translatable("smart_resource_drops.gui.explosions"),
+                Component.translatable("smart_resource_drops.gui.explosions_tooltip"),
                 session.explosions(),
                 session::setExplosions);
         addBooleanRow(
                 rows,
                 Component.translatable("smart_resource_drops.gui.automated_mining"),
+                Component.translatable("smart_resource_drops.gui.automated_mining_tooltip"),
                 session.automatedMining(),
                 session::setAutomatedMining);
         addBooleanRow(
                 rows,
                 Component.translatable("smart_resource_drops.gui.protect_block_entities"),
+                Component.translatable("smart_resource_drops.gui.protect_block_entities_tooltip"),
                 session.protectBlockEntities(),
                 session::setProtectBlockEntities);
         addBooleanRow(
                 rows,
                 Component.translatable("smart_resource_drops.gui.piston_safety"),
+                Component.translatable("smart_resource_drops.gui.piston_safety_tooltip"),
                 session.conservativePistonProtection(),
                 session::setConservativePistonProtection);
         addBooleanRow(
                 rows,
                 Component.translatable("smart_resource_drops.gui.player_overrides"),
+                Component.translatable("smart_resource_drops.gui.player_overrides_tooltip"),
                 session.allowPlayerOverrides(),
                 session::setAllowPlayerOverrides);
         addBooleanRow(
                 rows,
                 Component.translatable("smart_resource_drops.gui.statistics"),
+                Component.translatable("smart_resource_drops.gui.statistics_tooltip"),
                 session.statisticsEnabled(),
                 session::setStatisticsEnabled);
 
@@ -106,6 +114,7 @@ final class AdvancedConfigScreen extends SmartDropsSubScreen {
     private void addBooleanRow(
             final List<StructuredConfigList.Row> rows,
             final Component label,
+            final Component tooltip,
             final boolean currentValue,
             final BooleanSetter setter
     ) {
@@ -113,10 +122,6 @@ final class AdvancedConfigScreen extends SmartDropsSubScreen {
         Component rightDetail = session.editable()
                 ? displayedValue
                 : Component.translatable("smart_resource_drops.gui.read_only_value", displayedValue);
-        Component tooltip = Component.empty()
-                .append(label)
-                .append(Component.literal(": "))
-                .append(rightDetail);
         rows.add(new StructuredConfigList.Row(
                 label,
                 Component.empty(),
