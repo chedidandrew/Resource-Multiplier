@@ -1,10 +1,10 @@
 # Resource Multiplier testing and verification
 
-## Unreleased shearing candidate gate
+## 1.2.0-rc.1 automated evidence and open release gates
 
-The real client GameTest also opens Entity Categories and validates every structured row tooltip through Minecraft's mapped font and vanilla splitter: explicit newlines must become separate lines, no rendered line may exceed 170 pixels, and no LF or CR control character may reach the rendered character sequence. The static Mod Menu regression locks the shared wrapped-tooltip call and concise category-estimate text so future screens cannot silently return to the single-component rendering path.
+Resource Multiplier `1.2.0-rc.1` is an unpublished release candidate with `release_ready=false`. The current automated pass was run on Java 25 against Minecraft 26.2, Fabric Loader 0.19.3, Fabric API 0.158.0+26.2, and optional client-only Mod Menu 20.0.0. These results establish build and regression evidence; they do not replace hands-on gameplay, separately installed multiplayer, datapack-reload, or named third-party compatibility tests.
 
-Before the new feature was edited, Java 25 baseline runs of `clean test`, all 22 dedicated GameTests, `runClientGameTest`, and `clean build --warning-mode all` passed. The completed, renamed candidate was then verified serially: 158 JUnit tests in 24 suites passed; all 66 dedicated GameTests passed, including 44 focused shearing methods; the latest real client GameTest with Mod Menu 20.0.0 present and mapped tooltip assertions passed in 42 seconds; and the latest exact clean Loom build passed in 35 seconds. All six package/static/core checks passed with 118 Java sources, 248 deterministic source entries, and 90 core assertions. The standalone server without Mod Menu reached `Done`, returned the renamed status and validation output through `/smartdrops`, and stopped cleanly. A real Mod Menu client completed resource/audio/atlas initialization; direct captures verified the Resource Multiplier list/detail entry, configuration title, and reset confirmation without confirming the destructive action.
+The exact local sequence was:
 
 ```powershell
 python tools/validate_package.py
@@ -13,19 +13,29 @@ python scripts/test_modmenu_integration.py
 python scripts/edge_case_source_audit.py
 python scripts/polish_regression_tests.py
 .\tools\run_core_tests.ps1
-.\gradlew.bat --no-daemon --no-build-cache --rerun-tasks clean test --warning-mode all
-.\gradlew.bat --no-daemon --no-build-cache --rerun-tasks runGameTest --warning-mode all
-.\gradlew.bat --no-daemon --no-build-cache --rerun-tasks runClientGameTest -Pinclude_modmenu_runtime=true --warning-mode all
 .\gradlew.bat --no-daemon --no-build-cache --rerun-tasks clean build --warning-mode all
+.\gradlew.bat --no-daemon --no-build-cache --rerun-tasks runClientGameTest -Pinclude_modmenu_runtime=true --warning-mode all
+.\gradlew.bat --no-daemon --no-build-cache --rerun-tasks runServer --warning-mode all
+python tools/package_release.py --output-dir <fresh-empty-directory>
 ```
 
-The passing mapped suite covers fresh/reset versus migrated/recovery defaults, exact schema-2 entity preservation, 0/1/2/64x resolution, special/unknown/tag-conflict safety, bounded/atomic patches, component/legal-stack preservation, cumulative source/item/materialized-stack limits, full-event fallback, nested contexts, exception cleanup, and read-only inspection/validation. Dedicated tests distinguish real sheep state/tool/output behavior from resolver-only assertions and keep beehive, leash, block shearing, direct equipment output, and existing block/death-loot tests unchanged.
+Measured automated results:
 
-The following hands-on results remain mandatory and unchecked until a person performs them in `runClient -Pinclude_modmenu_runtime=true` and on a separately started `runServer`: fresh and migrated manual sheep; manual/dispenser toggles; global and exact `0x`, `1x`, `2x`, and `64x`; white/dyed/baby/already-sheared/regrowing sheep; Mooshroom, Snow Golem, Bogged, Copper Golem, and Sulfur Cube; tool durability/state/sound/event once; beehive and leash dispenser paths; leaves/vines/cobwebs; output fallback; Mod Menu navigation, Website/Issues browser launch, dirty Back, Apply, Discard, Reset, and non-operator read-only mode; inspect/validate output; multiplayer permissions; and `/reload` adding/removing a certified modded type. Startup smoke alone does not satisfy this matrix.
+- Package/metadata/README validation passed with 118 production Java sources. Deterministic release-package regression passed with 252 Git-tracked source entries. Mod Menu integration, edge-case audit, polish regressions, and all 90 dependency-free core assertions passed.
+- The cache-free `clean build` completed with `BUILD SUCCESSFUL` in 29 seconds. JUnit passed 158 tests in 24 suites with zero failures, errors, or skips; the dedicated Minecraft runner passed all 66 required GameTests.
+- The real client GameTest completed with `BUILD SUCCESSFUL` in 39 seconds with Mod Menu present. It exercised title-screen, integrated-server, dedicated-server operator/non-operator authority, reset, navigation, search, and tooltip wrapping/control-character paths, and produced 19 current screenshots. Three clean captures are published in the README.
+- The standalone dedicated server loaded 43 mods without Mod Menu, initialized Resource Multiplier under the preserved `smart_resource_drops` ID, reached `Done (0.247s)`, returned the expected `/smartdrops` and shearing status, reported `Status: Valid` from `/smartdrops validate`, confirmed no configuration or world data changed, stopped cleanly, and completed in 48 seconds.
+- Release packaging succeeded in a fresh empty directory. The playable JAR is `build/libs/resource-multiplier-1.2.0-rc.1.jar`: 601,044 bytes, 311 ZIP entries, SHA-256 `5CA797D6BC4BBAB6F223361D9A99A118850F40B0273426D3B1ADF8AAB5CDCB31`. It embeds the MIT license, production icon, public name `Resource Multiplier`, version `1.2.0-rc.1`, and the unchanged mod ID/data namespace, with zero nested JAR or GameTest entries.
+- Lightweight Markdown validation checked README length, heading hierarchy, balanced fences, local links/images, image alt text and declared widths. Every README GitHub and badge URL returned HTTP 200.
+- Static workflow inspection confirms the ordinary build workflow handles branch pushes, pull requests, and manual dispatch only. The guarded release workflow is the sole `v*` tag handler and exits before build or publication while `release_ready=false`.
+
+The mapped and dedicated suites cover fresh/reset versus migrated/recovery defaults, exact schema-2 entity preservation, 0/1/2/64x resolution, special/unknown/tag-conflict safety, bounded/atomic patches, component/legal-stack preservation, cumulative source/item/materialized-stack limits, full-event fallback, nested contexts, exception cleanup, and read-only inspection/validation. Dedicated tests distinguish real sheep state/tool/output behavior from resolver-only assertions and retain beehive, leash, block shearing, direct equipment output, and existing block/death-loot regression coverage.
+
+Still open are the hands-on sheep/special/dispenser/block/beehive/leash/UI/reload matrix; a separately installed operator/non-operator multiplayer pass; existing-config and saved-provenance restart checks in a real world; dense high-output observation; and named/versioned third-party cases for biome/passive-animal content, a hostile mob, boss, inventory-carrying mob, custom shearable, automated miner, and custom placement. The exact candidate also still needs a successful clean-checkout GitHub Actions run after these changes are committed. See [PUBLIC_RELEASE_CHECKLIST.md](PUBLIC_RELEASE_CHECKLIST.md); none of these pending gates is inferred from the automated client, server, or synthetic fixtures.
 
 ## 1.1.0 final hardening verification under the former public name - 2026-08-30
 
-The current tree adds the read-only configuration validator, complete block-loot output preflight, deprecation cleanup, publication templates, and expanded package/source hygiene. The following results come from the serialized post-hardening run and final artifact inspection rather than old XML or the historical checkpoint below.
+That historical 1.1.0 tree added the read-only configuration validator, complete block-loot output preflight, deprecation cleanup, publication templates, and expanded package/source hygiene. The following results came from its serialized post-hardening run and final artifact inspection rather than older XML or the checkpoint below.
 
 The intended automated sequence is:
 

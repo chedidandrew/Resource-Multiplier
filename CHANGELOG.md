@@ -2,14 +2,18 @@
 
 All notable changes are documented here.
 
-## Unreleased — 1.2.0 candidate
+## 1.2.0-rc.1 - Unreleased
 
 ### Changed
 
 - Fixed structured configuration tooltips so Minecraft performs its standard 170-pixel wrapping and consumes explicit line breaks instead of displaying `LF` control glyphs. Entity-category hover copy is now concise and leaves details already visible in the row out of the tooltip.
+- Clarified entity inspection as a hypothetical direct-player attribution check and renamed the shearing preflight display to its exact 256 source-or-materialized-stack meaning. This changes labels and documentation only, not rule resolution or output limits.
+- Marked the current development build as `1.2.0-rc.1` while keeping the publication latch at `release_ready=false`. This identifies the tested artifact honestly as a release candidate; no Git tag, GitHub Release, or other publication is part of this pass.
+- Reworked the README into a public landing page with the production icon, concise feature and safety guidance, honest release-status and download wording, focused installation/configuration/build links, and current real-client screenshots rather than placeholders. The complete operator command tree now lives in [`docs/COMMANDS.md`](docs/COMMANDS.md), keeping the landing page approachable without removing technical detail.
 - Changed the public name from **Smart Resource Drops** to **Resource Multiplier**. This is a branding-only compatibility change: the mod ID remains `smart_resource_drops`; `config/smart_resource_drops.json`, saved-world provenance, `/smartdrops` and `/smartdropsgui`, and `smart_resource_drops:*` datapack IDs remain compatible. Existing configurations, worlds, commands, and datapacks require no rename migration.
 - Published the canonical project homepage/source and Issues URLs in Fabric metadata so Mod Menu exposes working **Website** and **Issues** actions. Release validation now locks those URLs, the production icon path, and the SPDX `MIT` declaration.
 - Hardened the public GitHub workflows by pinning every third-party action to a verified immutable commit, disabling persisted checkout credentials, and bounding job runtimes.
+- Removed `v*` tag handling from the normal build workflow. The release workflow is now the sole tag handler, avoiding duplicate tagged builds while retaining the explicit release latch and all publication checks.
 - Hardened public packaging so source archives contain exactly Git-tracked files, reject untracked or secret/runtime paths, normalize cross-platform permissions, require an empty output directory, and fail closed unless every production class plus the exact entrypoint, mixin, dependency, icon, contact, and embedded-license contract is present. Tagged publication is additionally locked behind an explicit `release_ready` latch and main-branch ancestry check.
 
 ### Added
@@ -17,7 +21,7 @@ All notable changes are documented here.
 - Added narrowly scoped, server-authoritative multiplication for certified standard entity shearing output. Manual player and vanilla dispenser sources have independent gates; manual defaults ON only for a truly fresh/reset configuration, while automation defaults OFF.
 - Added `#smart_resource_drops:shearing/standard_resources` with sheep as the production certification and `#smart_resource_drops:shearing/special` for Bogged, Copper Golem, Mooshroom, Snow Golem, and Sulfur Cube. Known vanilla specials are also hard-gated in code, so data-pack replacement or a conflicting safe tag cannot make their transformation/equipment output multiply.
 - Added an identity-matched, nested `ShearingActionContext` around `Player.interactOn` and only the entity branch of `ShearsDispenseItemBehavior.tryShearEntity`. The final `LivingEntity.dropFromShearingLootTable` consumer is buffered once per helper call; loot is never rerolled and `Shearable.shear` is never repeated.
-- Added an always-on whole-action shearing preflight capped at 1,024 multiplied items and 256 collected/materialized stack groups. Overflow or pathological output falls back completely to original `1x` batches through their original consumers, with saturating arithmetic and bounded five-minute warning keys.
+- Added an always-on whole-action shearing preflight capped at 1,024 multiplied items and 256 source entries or materialized legal stacks. Overflow or pathological output falls back completely to original `1x` batches through their original consumers, with saturating arithmetic and bounded five-minute warning keys.
 - Added schema-3 shearing fields, a separate 256-entry exact-rule domain, atomic patch/removal support, a shared-draft Shearing Drops GUI, operator commands, read-only entity-inspection output, and shearing-specific validation codes.
 - Added focused resolver/buffer/budget tests and schema-1/schema-2 serialized migration fixtures. The dedicated mapped shearing GameTest matrix is part of this candidate hardening pass.
 
@@ -30,9 +34,9 @@ All notable changes are documented here.
 
 ### Verification status
 
-- The serialized Java 25 automated chain passes: 158 JUnit tests in 24 suites, all 66 dedicated GameTests (44 focused on shearing), the 40-second real client GameTest with Mod Menu present, the 30-second clean Loom build, all six package/static/core validators, standalone server/client startup smokes, and direct Mod Menu/configuration/reset-title captures. The nested runtime installs non-capturing barrier frames for disabled, fixed-1x, and untrusted re-entrant actions, preventing a same-target inner source from inheriting an eligible outer multiplier.
-- The canonical-repository safety pass reran the cache-free clean build in 26 seconds with 158/158 JUnit tests and 66/66 GameTests, passed the 37-second real client GameTest plus all package/Mod Menu/release/core validators, produced and validated the tracked-only deterministic source/release bundle, and inspected the final 311-entry JAR for exact MIT/contact/icon/entrypoint/mixin/dependency metadata, every production top-level class, and embedded-license identity.
-- This work intentionally retains `1.1.0` metadata. The hands-on client/gameplay/multiplayer matrix, a real in-running-game datapack reload cycle, and representative third-party custom shearables/tools/machines remain required before changing the version to `1.2.0` or publishing an artifact. No release claim is made by this entry.
+- The final local presentation-candidate chain passes: package/README metadata validation with 118 production Java sources, deterministic release validation with 252 Git-tracked source entries, Mod Menu/edge-case/polish audits, 90 core assertions, 158 JUnit tests in 24 suites, all 66 dedicated GameTests, the 39-second real client GameTest with Mod Menu present, and the 29-second cache-free clean Loom build. A standalone server loads without Mod Menu, reaches `Done (0.247s)`, returns valid general/shearing status and validation output, and stops cleanly in 48 seconds.
+- Fresh-empty-directory packaging produces the versioned source ZIP, playable JAR, checksum manifest, and release bundle. The inspected 601,044-byte/311-entry JAR has SHA-256 `5CA797D6BC4BBAB6F223361D9A99A118850F40B0273426D3B1ADF8AAB5CDCB31` and retains exact MIT/contact/icon/entrypoint/mixin/dependency metadata, every production top-level class, the `smart_resource_drops` data namespace, and zero nested JAR or GameTest entries.
+- The presentation pass changes no gameplay logic, configuration schema, migration behavior, network IDs, provenance data, command names, Java package, mod ID, or datapack namespace. The hands-on client/gameplay and separately installed multiplayer matrix, a real in-running-game datapack reload cycle, and representative third-party biome, hostile-mob, boss, inventory-mob, custom-shearable, tool, and machine checks remain open before promotion to `1.2.0`. With `release_ready=false`, this entry makes no release claim and creates no tag or publication.
 
 ## 1.1.0 - 2026-08-30
 

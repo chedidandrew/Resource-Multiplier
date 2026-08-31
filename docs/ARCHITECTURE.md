@@ -21,7 +21,7 @@ The loot list is multiplied rather than reconstructed. This avoids reimplementin
 2. The resolver checks the master/source gate and live entity-type tags. Known/tagged special entities win over standard certification; unknown entities fail closed at `1x`.
 3. The entity calls `LivingEntity.dropFromShearingLootTable` normally. Its final consumer is replaced with a bounded collector only for the exact active target; the loot table runs once.
 4. Each helper invocation retains its own downstream consumer. The real shear method finishes its state/tool/event work once before output commits.
-5. The complete action is preflighted cumulatively against 1,024 items and 256 source/materialized stack groups. It emits all legal multiplied batches or all original `1x` batches, never a partial mix.
+5. The complete action is preflighted cumulatively against 1,024 items and 256 source entries or materialized legal stacks. It emits all legal multiplied batches or all original `1x` batches, never a partial mix.
 6. Exceptional actions attempt original-output rollback without masking the original exception, then clear the thread-local scope in `finally`.
 
 Beehives, leash removal, block shearing, direct equipment ejection, custom machine calls outside the vanilla dispenser path, and global spawn paths never enter this pipeline.

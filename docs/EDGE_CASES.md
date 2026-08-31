@@ -28,7 +28,7 @@ Resource Multiplier multiplies the loot result produced by Minecraft, not the so
 - Mob XP uses a one-shot identity token for the exact `ExperienceOrb.award` call. A nested unrelated award cannot inherit the mob rule, and an amplified result above 634,112 remains at its original amount.
 - Entity shearing is eligible only for an identity-matched real-player or exact vanilla-dispenser scope, current standard-resource tag membership, absence from special safety, and final output through `dropFromShearingLootTable`. An override alone cannot certify an unknown entity.
 - A `0x` eligible shear still performs the state transition and tool path once while suppressing standard helper loot. Special and unknown shearables stay vanilla `1x` regardless of configured defaults.
-- Multiple helper calls share one cumulative 1,024-item/256-stack-group preflight. Overflow emits the complete original action output through each original consumer; an exception after collection attempts original output once, clears context, and rethrows the original failure.
+- Multiple helper calls share one cumulative preflight capped at 1,024 multiplied items and 256 source entries or materialized legal stacks. Overflow emits the complete original action output through each original consumer; an exception after collection attempts original output once, clears context, and rethrows the original failure.
 - Mooshroom, Snow Golem, Bogged, Copper Golem, and Sulfur Cube are hard special cases. Direct equipment ejection, beehives, leash removal, and block shearing are outside the entity-shearing scope.
 
 ## Multiplayer

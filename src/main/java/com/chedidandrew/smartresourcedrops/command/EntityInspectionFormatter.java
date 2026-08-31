@@ -116,8 +116,8 @@ final class EntityInspectionFormatter {
                 trace.filterEligible() ? "Allowed" : "Blocked",
                 trace.filterEligible())));
         lines.add(indentedValue("Kill requirement", plain(killRequirement(trace.killRequirement()))));
-        lines.add(indentedValue("Observed attribution", plain(titleCase(trace.attribution().name()))));
-        lines.add(indentedValue("Vanilla player-kill credit", yesNo(trace.vanillaPlayerKilled())));
+        lines.add(indentedValue("Inspection attribution", plain(titleCase(trace.attribution().name()))));
+        lines.add(indentedValue("Hypothetical vanilla player-kill credit", yesNo(trace.vanillaPlayerKilled())));
         lines.add(indentedValue("Invoking player would qualify", yesNo(trace.invokingPlayerWouldQualify())));
 
         lines.add(section("Item multiplier resolution"));
@@ -174,7 +174,7 @@ final class EntityInspectionFormatter {
                             + ShearingOutputBudget.MAX_MULTIPLIED_ITEMS
                             + " items / "
                             + ShearingOutputBudget.MAX_SOURCE_OR_MATERIALIZED_STACKS
-                            + " source or materialized stack groups")));
+                            + " source or materialized stacks")));
             lines.add(Component.literal(
                             "  Standard helper output will be multiplied only when a supported player or "
                                     + "vanilla dispenser path uses it.")

@@ -2,17 +2,17 @@
 
 This document describes possible future work. It is not a promise of a release date or a specification for the current build.
 
-## Current 1.2 shearing candidate status
+## Current Resource Multiplier 1.2.0-rc.1 status
 
 Status: **implemented in source, release gate open**. The candidate adds only supported entity shearing actions: real-player interaction and the exact vanilla dispenser entity branch, with multiplication at `LivingEntity.dropFromShearingLootTable`. Sheep is the shipped standard resource. Unknown types and the audited vanilla special transformations remain `1x`; direct equipment output, beehives, leash removal, block shearing, milking, brushing, egg laying, breeding, gifts, fishing, bartering, trading, chest/structure loot, and unrelated resource systems remain out of scope.
 
-Schema 3, independent source toggles, a 256-rule domain, shared-draft GUI, commands, inspection, validation, 1,024-item/256-stack whole-action safety, and focused tests are present. The serial automated suite, real client GameTest, server/client startup checks, package audit, and candidate artifact inspection pass. The version remains `1.1.0` until the full hands-on vanilla/special/UI/multiplayer/reload matrix and representative third-party compatibility checks pass. Preserve the 1.1 and earlier investigation/history below; mark this plan complete only when those gates are recorded.
+Schema 3, independent source toggles, a 256-rule domain, shared-draft GUI, commands, inspection, validation, 1,024-item/256-stack whole-action safety, and focused tests are present. The serial automated suite, real client GameTest, server/client startup checks, package audit, and candidate artifact inspection pass. The development version is `1.2.0-rc.1`; it must not be promoted to final `1.2.0` until the full hands-on vanilla/special/UI/multiplayer/reload matrix and representative third-party compatibility checks pass. Preserve the 1.1 and earlier investigation/history below; mark this plan complete only when those gates are recorded.
 
 ## 1.0.x maintenance boundary
 
 The 1.0.x line remains focused on block-resource drops, placed-block provenance, configuration safety, compatibility, and defect fixes. **Mob or general entity drop multiplication will not be implemented in 1.0.x.** No 1.0.x configuration key, network payload, mixin, or data migration should reserve or partially enable the design below.
 
-## Current 1.1 implementation status
+## Historical 1.1 implementation record
 
 Status: **implementation and the final diagnostics/output/publication automated hardening pass are complete**. All five validators, 90 core assertions, 125 mapped JUnit tests in 21 suites, 22 dedicated GameTests, the real client GameTest, standalone server validation, the no-build-cache clean build, and playable-JAR audit pass. Publication-readiness and general mod compatibility remain blocked on the manual and third-party gates below.
 
@@ -33,7 +33,7 @@ The preserved pre-final checkpoint passed 92 mapped JUnit tests in 16 suites and
 
 ## Integration and public API stance
 
-There is no supported public Java API in either version 1.1.x or the current unreleased 1.2 shearing candidate. Publicly visible classes and methods in the implementation are internal details unless a later compatibility document explicitly guarantees them; other mods should not depend on their names or signatures. Documented configuration and commands plus the datapack-extensible category, protected-output, and audited standard-shearing-resource tags are the supported integration surfaces for the current candidate.
+There is no supported public Java API in either version 1.1.x or the current 1.2.0-rc.1 shearing candidate. Publicly visible classes and methods in the implementation are internal details unless a later compatibility document explicitly guarantees them; other mods should not depend on their names or signatures. Documented configuration and commands plus the datapack-extensible category, protected-output, and audited standard-shearing-resource tags are the supported integration surfaces for the current candidate.
 
 A formal Java compatibility API is deferred until at least one concrete, reproducible third-party integration case cannot be solved safely through those existing surfaces. Any proposal must begin with that real case and define ownership, lifecycle, failure behavior, versioning, documentation, and cross-mod tests before an API is promised. Speculative hooks are not roadmap commitments.
 
@@ -87,4 +87,4 @@ All edits would use the existing permission, expected-revision, atomic persisten
 - Performance profiling of dense mob farms with the feature both disabled and enabled.
 - Documentation and migration review confirming that upgrading from 1.0.x changes no existing block-drop behavior.
 
-The planning record above remains historical. Version 1.1.0 still remains unreleasable until every current manual gate listed earlier in this document and in [PUBLIC_RELEASE_CHECKLIST.md](PUBLIC_RELEASE_CHECKLIST.md) has evidence.
+The planning record above remains historical. The current 1.2.0-rc.1 candidate remains unreleased until every manual gate listed earlier in this document and in [PUBLIC_RELEASE_CHECKLIST.md](PUBLIC_RELEASE_CHECKLIST.md) has evidence.

@@ -586,7 +586,7 @@ public final class SmartDropsCommands {
                         + " | default=" + configuredDefault
                         + " | overrides=" + config.shearingEntityMultipliers.size()
                         + " | unknown/special=vanilla 1x"
-                        + " | outputBudget=1024 items/256 stack groups");
+                        + " | outputBudget=1024 items/256 source or materialized stacks");
     }
 
     private static int showStatistics(CommandSourceStack source) {

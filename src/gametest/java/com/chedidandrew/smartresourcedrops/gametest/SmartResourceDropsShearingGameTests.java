@@ -858,7 +858,7 @@ public final class SmartResourceDropsShearingGameTests {
             helper.assertTrue(executeCommand(helper, "smartdrops shearing status", source) == 1,
                     "Shearing status command failed");
             helper.assertTrue(messages.text().contains("Resource Multiplier shearing")
-                            && messages.text().contains("outputBudget=1024 items/256 stack groups"),
+                            && messages.text().contains("outputBudget=1024 items/256 source or materialized stacks"),
                     "Shearing status omitted its state or safety budget");
             helper.assertTrue(ConfigManager.revision() == revision,
                     "Read-only shearing status changed the authoritative revision");

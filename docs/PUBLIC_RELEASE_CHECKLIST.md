@@ -1,21 +1,61 @@
 # Resource Multiplier public release checklist
 
-## Unreleased 1.2.0 shearing candidate
+## 1.2.0-rc.1 release candidate
 
-- [x] Run the full serial Java 25 validator/JUnit/dedicated-GameTest/client-GameTest/clean-build sequence with no shared Gradle race: 158 JUnit tests, 66/66 dedicated GameTests, 40-second real client GameTest with Mod Menu 20.0.0 present, 30-second clean build, and all six validators/core checks pass.
-- [x] Prove schema 2→3 preserves every serialized entity death-loot setting while both shearing sources initialize OFF; prove schema 1, malformed recovery, future schema, fresh install, and Reset semantics independently through serialized fixtures and mapped tests.
-- [ ] Verify real sheep manual/dispenser output at disabled, `0x`, `1x`, `2x`, and `64x`, including color/components, legal stacks, state/tool/sound/event once, regrowth, and complete 1x budget fallback.
-- [ ] Verify Mooshroom, Snow Golem, Bogged, Copper Golem, and Sulfur Cube remain fixed vanilla `1x`, including exact override and conflicting standard-tag attempts.
-- [ ] Verify unknown modded standard-helper, special, direct-output, multi-helper, component-rich, nested, exceptional, pathological, custom-tool, and unsupported-machine fixtures where available; document any unautomated fixture honestly.
-- [ ] Verify leaves/vines/cobwebs, beehive dispenser action, dispenser/player leash removal, existing block loot, and existing entity death loot remain outside the new subsystem.
-- [ ] Verify Shearing Drops UI at 1280×720/common GUI scales, independent access while death drops are OFF, shared dirty state, Back/Apply/Discard/Reset, safe search/editability, and non-operator read-only authority.
-- [ ] Verify `/smartdrops shearing status`, all operator mutations, `/smartdrops inspect entity [verbose]`, and `/smartdrops validate [verbose]` on an actual dedicated server; reject non-operator writes.
-- [ ] Verify `/reload` changes current safe/special classification without restart and no missing production shearing tags are reported.
-- [x] Verify the Resource Multiplier name is visible in the real Mod Menu list/detail view, configuration screen, and reset confirmation; compatibility validators and mapped tests keep `smart_resource_drops` configs/schema/migrations, world provenance, payload IDs, `/smartdrops` commands, Java packages, and datapack IDs unchanged.
-- [x] Verify the canonical GitHub repository is public with Issues enabled and recognized as MIT; expose exact homepage, Issues, and source URLs through Fabric/Mod Menu metadata; scan tracked files for credentials/generated data; replace personal local artifact paths; and pin public workflow actions to immutable commits.
-- [x] Keep the GitHub release workflow locked with `release_ready=false`; require full Git history and prove the tagged commit is contained in `origin/main` before any publication step can run.
-- [x] Validate the exact 248-file Git-tracked source-package contract, secret/runtime deny rules, deterministic modes, and empty-output requirement; inspect the playable candidate JAR for every production top-level class plus exact entrypoint/mixin/dependency/tag/icon/contact/MIT contracts and absence of GameTest fixtures, local config/world/log/cache/build data and nested dependencies; standalone server startup confirms Mod Menu is absent from its 43-mod classpath.
-- [ ] Only after every required automated, runtime, and manual gate passes: bump all metadata from `1.1.0` to `1.2.0`, rebuild, record final path/size/entry count/SHA-256, set `release_ready=true` in that exact tested commit, merge it to `main`, wait for the required clean-checkout workflow, and tag that commit for publication. Until then, keep the latch false and do not describe the candidate as released.
+This section applies only to the exact `1.2.0-rc.1` candidate. An unchecked item is still pending, and historical evidence below does not satisfy a current gate. Keep `release_ready=false`; do not create a tag or release while any required gate remains open.
+
+### Automated and artifact gates
+
+- [x] Run every repository validator and lightweight Markdown/link check: package/README metadata validates 118 production Java sources; release packaging validates 252 Git-tracked source entries; Mod Menu, edge-case, and polish checks pass; every local README target resolves and every referenced GitHub/badge URL returns HTTP 200.
+- [x] Run the full mapped Java 25 suite serially: JUnit passes 158 tests in 24 suites with zero failures/errors/skips, and all 66 required dedicated-server GameTests pass during the 29-second clean build.
+- [x] Run the real client GameTest with Mod Menu 20.0.0 present: branding, navigation, reset, dirty-state, authority, search, and mapped tooltip checks pass in 39 seconds, and 19 current screenshots are captured.
+- [x] Complete `gradlew.bat --no-daemon --no-build-cache --rerun-tasks clean build --warning-mode all`: `BUILD SUCCESSFUL` in 29 seconds with warnings visible and no shared Gradle race.
+- [x] Start standalone `runServer` with 43 mods and no Mod Menu: Resource Multiplier reaches `Done (0.247s)`, `/smartdrops`, shearing status, and `/smartdrops validate` return expected output, no data is changed, and `stop` completes cleanly in 48 seconds without client-only class loading.
+- [x] The passing mapped configuration suite covers schema 2→3 preservation with both shearing sources initialized OFF, schema 1, malformed recovery, future schema, fresh install, and Reset semantics.
+- [x] Re-audit backward compatibility: the task changes no production source/resource namespace, and validation plus JAR inspection retain `smart_resource_drops`, the Java/config/datapack/network/provenance identifiers, both command roots, schema, and migration behavior.
+- [x] Validate the Git-tracked source-package contract, deterministic archive modes, secret/runtime/generated-data deny rules, required documentation and screenshots, and fresh-empty-output requirement; all packaging regressions pass with 252 source entries.
+- [x] Inspect `build/libs/resource-multiplier-1.2.0-rc.1.jar`: 601,044 bytes, 311 entries, SHA-256 `5CA797D6BC4BBAB6F223361D9A99A118850F40B0273426D3B1ADF8AAB5CDCB31`, embedded 1.2.0-rc.1/Resource Multiplier/MIT/contact/dependencies/icon/tags, Java class major 69, and zero nested JAR or GameTest entries.
+- [x] Build the source archive, playable JAR, checksum manifest, and five-entry release bundle in a fresh empty temporary directory; exact checksums are stored beside those generated artifacts rather than made self-referential in the source tree.
+- [x] Verify the ordinary build workflow handles branch pushes, pull requests, and manual runs, while the guarded release workflow is the sole `v*` tag handler and checks `release_ready=true` before build/package/publication; the current false latch keeps publishing locked.
+- [ ] Confirm the exact candidate commit passes the required clean-checkout GitHub Actions workflow. Do not create a tag merely to obtain this evidence.
+
+### Manual gameplay and operations gates
+
+- [ ] Verify real sheep player/dispenser output at disabled, `0x`, `1x`, `2x`, and `64x`, including color/components, legal stacks, state/tool/sound/event exactly once, regrowth, and complete vanilla `1x` budget fallback.
+- [ ] Verify Mooshroom, Snow Golem, Bogged, Copper Golem, and Sulfur Cube remain fixed vanilla `1x`, including exact-override and conflicting-standard-tag attempts.
+- [ ] Verify leaves, vines, cobwebs, beehive dispenser action, dispenser/player leash removal, existing block loot, and entity death loot remain outside the shearing subsystem.
+- [ ] Exercise representative block and entity drops in a real world at `0x`, `1x`, ordinary multiplied values, and the configured cap; include Fortune/Looting, Silk Touch, explosions, XP, protected drops, placed-block provenance, restart persistence, and full fallback behavior.
+- [ ] Verify all configuration screens at 1280×720 and common GUI scales, including General, block/entity/category/shearing views, search, inheritance, shared dirty state, Back, Apply, Discard, Reset All, keyboard/mouse focus, concise wrapped tooltips, and non-operator read-only authority.
+- [ ] On an actual dedicated server, exercise `/smartdrops`, `/smartdropsgui`, shearing status and operator mutations, block/entity inspection, and compact/verbose validation; confirm non-operators cannot write settings.
+- [ ] Verify `/reload` updates current block/entity/shearing tag classification without restart, preserves unknown configuration references, and reports no missing production tags.
+- [ ] Load representative existing 1.0.x/1.1.0 configs and saved-world provenance data, restart, and confirm the migration is compatible and lossless; separately test malformed, unreadable, and future-schema files.
+- [ ] Repeat operator and non-operator Apply/Discard/Reset/stale-patch/reconnect checks against a separately installed multiplayer server, including a client without Mod Menu.
+- [ ] Observe a dense farm and high-output block/shearing scenario for duplicates, partial fallback output, leaked contexts, excessive entities/orbs, warning spam, or unbounded memory/CPU behavior.
+- [ ] Inspect all public screenshots and logs for usernames, server addresses, tokens, filesystem paths, world names, or other private data before publication.
+
+### Named third-party compatibility gates
+
+Record a real project name and exact installed version. A synthetic fixture, generic category, or "latest" is not evidence. Every row remains pending until its dated result and limitation are filled in.
+
+| Category | Mod/project name | Exact version | Test date | Resource Multiplier version | Result | Limitation |
+| --- | --- | --- | --- | --- | --- | --- |
+| Biome/passive-animal content | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
+| Hostile mob | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
+| Boss | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
+| Inventory-carrying mob | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
+| Custom shearable | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
+| Automated miner | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
+| Custom placement | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
+
+No generalized third-party compatibility statement is permitted until the relevant rows contain reproducible evidence.
+
+### Final promotion gate
+
+- [ ] Confirm every automated/artifact, manual gameplay/operations, and named third-party compatibility gate above is complete against one exact commit and candidate artifact.
+- [ ] Only then change `mod_version` from `1.2.0-rc.1` to `1.2.0`, rerun the entire validation/build/runtime/artifact sequence, and record the final release artifact identities.
+- [ ] Set `release_ready=true` only in that exact fully tested `1.2.0` commit, merge it to `main`, wait for the required clean-checkout workflow, and create the publication tag only after all checks pass.
+
+Until all promotion steps are complete, keep the latch false and describe this build only as an unpublished release candidate.
 
 ## 1.1.0 final hardening release evidence under the former public name
 

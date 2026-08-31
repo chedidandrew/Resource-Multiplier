@@ -118,6 +118,7 @@ required = [
     "config-examples/default.json",
     "docs/ARCHITECTURE.md",
     "docs/ANTI_DUPE.md",
+    "docs/COMMANDS.md",
     "docs/CONFIGURATION.md",
     "docs/COMPATIBILITY.md",
     "docs/PERFORMANCE.md",
@@ -126,6 +127,9 @@ required = [
     "docs/GITHUB_UPLOAD.md",
     "docs/IMPLEMENTATION_LOG.md",
     "docs/ROADMAP.md",
+    "docs/images/general-config.webp",
+    "docs/images/block-overrides.webp",
+    "docs/images/shearing-config.webp",
     "tools/package_release.py",
     "scripts/test_release_packaging.py",
 ]
@@ -272,6 +276,7 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
+    "mod_version": "1.2.0-rc.1",
     "minecraft_version": "26.2",
     "loader_version": "0.19.3",
     "loom_version": "1.17.20",
@@ -282,10 +287,65 @@ expected_properties = {
 for key, expected in expected_properties.items():
     if properties.get(key) != expected:
         fail(f"gradle.properties {key} must be {expected!r}, found {properties.get(key)!r}")
-if properties.get("release_ready") not in {"true", "false"}:
-    fail("gradle.properties release_ready must be exactly 'true' or 'false'")
-if properties.get("mod_version") == "1.1.0" and properties.get("release_ready") != "false":
-    fail("The unreleased 1.1.0-metadata shearing candidate must keep release_ready=false")
+if properties.get("release_ready") != "false":
+    fail("The 1.2.0-rc.1 development candidate must keep release_ready=false")
+
+readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
+readme_word_count = len(re.findall(r"\S+", readme_text))
+if not 1_000 <= readme_word_count <= 1_500:
+    fail(f"README.md public landing page must stay near 1,000-1,500 words, found {readme_word_count}")
+for marker in (
+    '<h1 align="center">Resource Multiplier</h1>',
+    'src="src/main/resources/assets/smart_resource_drops/icon.png"',
+    'alt="Resource Multiplier icon"',
+    "actions/workflows/build.yml/badge.svg?branch=main",
+    "Minecraft-26.2",
+    "Loader-Fabric",
+    "Java-25",
+    "License-MIT",
+    "Status-1.2.0--rc.1",
+    "> [!IMPORTANT]",
+    "There is no stable public download yet.",
+    "Resource Multiplier 1.2.0 is not publicly released yet.",
+    "docs/COMMANDS.md",
+    "docs/images/general-config.webp",
+    "docs/images/block-overrides.webp",
+    "docs/images/shearing-config.webp",
+):
+    if marker not in readme_text:
+        fail(f"README.md is missing required public-presentation marker: {marker}")
+if readme_text.count("```") % 2 != 0:
+    fail("README.md contains an unclosed fenced code block")
+if "Smart Resource Drops" in readme_text:
+    fail("README.md still contains the former public name")
+
+readme_targets = re.findall(r"!?\[[^\]]*\]\(([^)]+)\)", readme_text)
+readme_targets.extend(re.findall(r'(?:href|src)="([^"]+)"', readme_text))
+for raw_target in readme_targets:
+    target = raw_target.strip().strip("<>")
+    if target.startswith(("https://", "http://", "mailto:", "#")):
+        continue
+    path_text = target.split("#", 1)[0].split("?", 1)[0]
+    if path_text and not (ROOT / path_text).exists():
+        fail(f"README.md contains a broken relative link or image path: {target}")
+
+for image_attributes in re.findall(r"<img\b([^>]*)>", readme_text, re.IGNORECASE):
+    alt_match = re.search(r'alt="([^"]+)"', image_attributes)
+    src_match = re.search(r'src="([^"]+)"', image_attributes)
+    if alt_match is None or not alt_match.group(1).strip():
+        fail("README.md contains an HTML image without descriptive alt text")
+    if src_match is None:
+        fail("README.md contains an HTML image without a source")
+    width_match = re.search(r'width="(\d+)"', image_attributes)
+    if width_match is not None and int(width_match.group(1)) > 760:
+        fail("README.md contains an image wider than the 760-pixel landing-page limit")
+
+readme_headings = [
+    len(match.group(1))
+    for match in re.finditer(r"(?m)^(#{1,6})\s+", readme_text)
+]
+if any(level != 2 for level in readme_headings):
+    fail("README.md must use the centered HTML H1 followed by a flat H2 section hierarchy")
 
 fabric = read_json(ROOT / "src/main/resources/fabric.mod.json")
 if isinstance(fabric, dict):
@@ -839,6 +899,13 @@ for workflow in (".github/workflows/build.yml", ".github/workflows/release.yml")
         fail(f"{workflow} must run the deterministic source-packaging regression")
 
 release_workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+build_workflow = (ROOT / ".github/workflows/build.yml").read_text(encoding="utf-8")
+if re.search(r"(?m)^\s+tags:\s*", build_workflow):
+    fail("The regular build workflow must not duplicate the authoritative release workflow on tags")
+if "branches: ['**']" not in build_workflow or "pull_request:" not in build_workflow:
+    fail("The regular build workflow must retain branch-push and pull-request validation")
+if "tags: ['v*']" not in release_workflow:
+    fail("The release workflow must remain the sole v* tag workflow")
 if "tools/package_release.py --output-dir dist" not in release_workflow or "dist/*" not in release_workflow:
     fail("The release workflow must create and publish the validated deterministic release bundle")
 for required_release_gate in (
