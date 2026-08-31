@@ -1,0 +1,60 @@
+name: Publish Resource Multiplier 1.2.0
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-1.2.0.yml'
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  publish:
+    if: github.repository == 'chedidandrew/Resource-Multiplier'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify exact tested release commit
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: 88bb5a79facdc7da120b912d8a67e9f41ecb57e0
+        run: |
+          test "$(git rev-parse HEAD^)" = "$RELEASE_SHA" || {
+            echo "Unexpected parent commit; refusing to publish." >&2
+            exit 1
+          }
+          test "$(git diff --name-only HEAD^ HEAD)" = ".github/workflows/publish-1.2.0.yml" || {
+            echo "Bootstrap commit contains unexpected changes." >&2
+            exit 1
+          }
+          test "$(git show "$RELEASE_SHA:gradle.properties" | sed -n 's/^mod_version=//p')" = "1.2.0"
+          test "$(git show "$RELEASE_SHA:gradle.properties" | sed -n 's/^release_ready=//p')" = "true"
+          test -z "$(git tag -l v1.2.0)"
+
+          conclusion="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build.yml --commit "$RELEASE_SHA" --json conclusion,status --limit 10 --jq '[.[] | select(.status == "completed")][0].conclusion')"
+          test "$conclusion" = "success" || {
+            echo "The exact release commit does not have a successful completed Build and verify run." >&2
+            exit 1
+          }
+
+      - name: Create annotated release tag and dispatch guarded release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: 88bb5a79facdc7da120b912d8a67e9f41ecb57e0
+        run: |
+          git config user.name 'Resource Multiplier Release Automation'
+          git config user.email '145610849+chedidandrew@users.noreply.github.com'
+          git tag -a v1.2.0 -m 'Resource Multiplier 1.2.0' "$RELEASE_SHA"
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push "$remote" refs/tags/v1.2.0
+          gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref v1.2.0
