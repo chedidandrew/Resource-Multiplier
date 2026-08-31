@@ -5,7 +5,7 @@
 Resource Multiplier `1.2.1` is the current stable metadata patch for Minecraft Java Edition 26.2 and Fabric. It updates the optional Mod Menu Website destination to the official CurseForge project, preserves GitHub Issues and source links, and adds optional support links. Gameplay behavior is unchanged from `1.2.0`.
 
 - Version: `1.2.1`
-- Publication latch: `release_ready=true`
+- Publication latch in the tagged release source: `release_ready=true`
 - Stable JAR: `resource-multiplier-1.2.1.jar`
 - Website: `https://www.curseforge.com/minecraft/mc-mods/resource-multiplier`
 - Issues: `https://github.com/chedidandrew/Resource-Multiplier/issues`
@@ -20,7 +20,7 @@ Resource Multiplier `1.2.1` is the current stable metadata patch for Minecraft J
 - Tested release commit: `34cc5a64c6d97c8db332ce45260c7615a8f9ab97`
 - Annotated tag: `v1.2.1`
 - Clean-checkout Build and verify run: `33419561475`
-- Guarded release workflow run: `33419932094`
+- Guarded release workflow run: `33419972111`
 - Official JAR size: `601971` bytes
 - ZIP entries: `311`
 - Official JAR SHA-256: `6E90578892E1F9AA2BF22B8FE4BE1B7831E8BE87F767D14BDB2C376F0443CA32`
