@@ -27,15 +27,17 @@ This patch is limited to public branding, metadata, artifact names, documentatio
 
 ## Automated gates
 
-- [ ] Package and metadata validation passes on the final rebrand commit.
-- [ ] Deterministic source and release-package validation passes.
-- [ ] Mod Menu integration and public-copy regressions pass.
-- [ ] Core assertions and mapped JUnit tests pass.
-- [ ] All required dedicated-server GameTests pass.
-- [ ] Client GUI and authority GameTests pass.
-- [ ] The Java 25 Fabric Loom build completes successfully.
-- [ ] The exact final rebrand commit passes a clean-checkout GitHub Actions run.
-- [ ] The candidate JAR is inspected for name, version, stable mod ID, unchanged icon, embedded MIT license, package contents, and absence of GameTest or nested-JAR leakage.
+- [x] Package and metadata validation passes on the final rebrand commit.
+- [x] Deterministic source and release-package validation passes.
+- [x] Mod Menu integration and public-copy regressions pass.
+- [x] Core assertions and mapped JUnit tests pass.
+- [x] All required dedicated-server GameTests pass.
+- [x] Client GUI and authority GameTests pass.
+- [x] The Java 25 Fabric Loom build completes successfully.
+- [x] The exact final rebrand commit passes a clean-checkout GitHub Actions run.
+- [x] The candidate JAR is inspected for name, version, stable mod ID, unchanged icon, embedded MIT license, package contents, and absence of GameTest or nested-JAR leakage.
+
+Verification evidence: clean-checkout run `33439853561` on commit `79d6be129d99ce15053f69cf6f242c0350e187b2`; playable JAR SHA-256 `08fe1fb05684b336d71a0f3467a358594148556295624a2a3b42d40325a905fe`; icon SHA-256 `b8a56ed24db3a2e812271d69fd021a5756469ac0d649ebd7cc3f205d7d276694`. Publication gates remain intentionally open because `1.2.2` has not been tagged or released.
 
 ## Publication gates
 
