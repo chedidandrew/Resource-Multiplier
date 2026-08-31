@@ -1,5 +1,9 @@
 # Implementation log
 
+## 2026-08-30, structured tooltip wrapping correction
+
+Structured configuration rows now pass hover text through Minecraft's standard `Tooltip.splitTooltip` path before rendering. This consumes embedded line breaks and constrains each rendered line to the vanilla 170-pixel tooltip width, fixing both the screen-wide hover text and visible `LF` control glyphs. Entity-category hover text was also shortened to supplemental inheritance and estimate guidance because the category, configured value, and active safety state are already rendered in the row. A real-client regression uses the mapped runtime font to require every category tooltip line to stay within 170 pixels and to reject surviving LF or CR code points.
+
 ## 2026-08-30, canonical public repository and release metadata
 
 The canonical project is now the public [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier) repository with GitHub Issues enabled. Fabric metadata publishes the exact homepage, source, and issue-tracker URLs consumed by Mod Menu, while package, Mod Menu, and release-JAR validators prevent those links, the production icon path, or the SPDX `MIT` declaration from drifting. GitHub recognizes the repository license as MIT; the bundled license contains the permission grant, retained-notice condition, and warranty disclaimer. MIT keeps this project openly reusable but does not impose a source-publication requirement on downstream forks.

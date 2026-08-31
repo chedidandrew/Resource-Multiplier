@@ -6,6 +6,7 @@ All notable changes are documented here.
 
 ### Changed
 
+- Fixed structured configuration tooltips so Minecraft performs its standard 170-pixel wrapping and consumes explicit line breaks instead of displaying `LF` control glyphs. Entity-category hover copy is now concise and leaves details already visible in the row out of the tooltip.
 - Changed the public name from **Smart Resource Drops** to **Resource Multiplier**. This is a branding-only compatibility change: the mod ID remains `smart_resource_drops`; `config/smart_resource_drops.json`, saved-world provenance, `/smartdrops` and `/smartdropsgui`, and `smart_resource_drops:*` datapack IDs remain compatible. Existing configurations, worlds, commands, and datapacks require no rename migration.
 - Published the canonical project homepage/source and Issues URLs in Fabric metadata so Mod Menu exposes working **Website** and **Issues** actions. Release validation now locks those URLs, the production icon path, and the SPDX `MIT` declaration.
 - Hardened the public GitHub workflows by pinning every third-party action to a verified immutable commit, disabling persisted checkout credentials, and bounding job runtimes.

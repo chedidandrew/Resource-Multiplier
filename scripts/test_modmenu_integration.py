@@ -436,6 +436,14 @@ require(re.search(r"\bextractContent\s*\(", structured_list) is not None, "Struc
 require(re.search(r"\bmouseClicked\s*\(", structured_list) is not None, "Structured list rows must handle selection without child Buttons")
 for forbidden in ("import net.minecraft.client.gui.components.Button", "Button.builder(", "new Button("):
     require(forbidden not in structured_list, f"StructuredConfigList must not allocate a Button per row: {forbidden}")
+require(
+    "Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip)" in structured_list,
+    "Structured list tooltips must use Minecraft's standard wrapped multi-line tooltip path",
+)
+require(
+    "setTooltipForNextFrame(tooltip, mouseX, mouseY)" not in structured_list,
+    "Structured list tooltips must not send newline-bearing Components to the single-line overload",
+)
 
 # Apply is staged, dirty-gated, and emits exactly one patch. Local/default authority
 # persists that patch atomically; connected authority waits for the loading/ack bridge.
@@ -842,6 +850,16 @@ require(
     lang["smart_resource_drops.gui.reset_no_permission"]
     == "You do not have permission to modify server settings.",
     "Read-only Reset tooltip must explain the server permission requirement",
+)
+require(
+    lang["smart_resource_drops.gui.entity_category_estimated_tooltip"]
+    == "Estimated from registry metadata. Verify in-world with /smartdrops inspect entity.",
+    "Estimated entity tooltips must stay concise and retain authoritative inspection guidance",
+)
+require(
+    lang["smart_resource_drops.gui.entity_category_estimated_count"]
+    == "%s estimated entries; verify in-world with /smartdrops inspect entity.",
+    "Estimated category-count tooltips must stay concise",
 )
 
 all_client_ui = "\n".join((

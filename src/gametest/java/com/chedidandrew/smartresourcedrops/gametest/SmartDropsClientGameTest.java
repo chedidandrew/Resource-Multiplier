@@ -29,17 +29,22 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestDedicatedServerCon
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestDedicatedServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 
 /** End-to-end GUI and authority checks in real Minecraft client/server runtimes. */
 @SuppressWarnings("UnstableApiUsage")
 public final class SmartDropsClientGameTest implements FabricClientGameTest {
     private static final int BLOCK_RESULT_LIMIT = 200;
+    private static final int VANILLA_TOOLTIP_WIDTH = 170;
     private static final String APPLY_KEY = "Apply Changes";
     private static final String BACK_KEY = "Back";
     private static final String DONE_KEY = "Done";
@@ -667,8 +672,10 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         context.runOnClient(client -> rowWithPrimary(entityDrops, "Entity Categories").action().run());
         final Screen entityCategories = waitForSimpleScreen(
                 context, "EntityCategoryScreen", "Entity Categories");
-        require(onlyList(entityCategories).rowCount() == session.entityCategories().size(),
+        final StructuredConfigList entityCategoryList = onlyList(entityCategories);
+        require(entityCategoryList.rowCount() == session.entityCategories().size(),
                 "Entity Categories child omitted registry categories");
+        context.runOnClient(client -> assertStructuredTooltipWrapping(client, entityCategoryList));
         require(session.setEntityCategoryMultiplier(EntityCategory.PASSIVE,
                         Objects.equals(originalEntityCategory, 3) ? 2 : 3),
                 "Entity category child could not stage a category override");
@@ -1609,6 +1616,44 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
     ) {
         context.runOnClient(client -> ClientPlayNetworking.send(
                 new ConfigResetPayload(requestId, expectedRevision)));
+    }
+
+    private static void assertStructuredTooltipWrapping(
+            final Minecraft client,
+            final StructuredConfigList list
+    ) {
+        final List<FormattedCharSequence> explicitLines = Tooltip.splitTooltip(
+                client,
+                Component.literal("First line\nSecond line"));
+        require(explicitLines.size() >= 2,
+                "Minecraft tooltip splitting did not consume an explicit line break");
+        assertWrappedTooltipLines(client, explicitLines);
+
+        for (StructuredConfigList.Row row : list.rows()) {
+            if (!row.tooltip().getString().isEmpty()) {
+                assertWrappedTooltipLines(client, Tooltip.splitTooltip(client, row.tooltip()));
+            }
+        }
+    }
+
+    private static void assertWrappedTooltipLines(
+            final Minecraft client,
+            final List<FormattedCharSequence> lines
+    ) {
+        require(!lines.isEmpty(), "Wrapped tooltip unexpectedly produced no lines");
+        for (FormattedCharSequence line : lines) {
+            require(client.font.width(line) <= VANILLA_TOOLTIP_WIDTH,
+                    "Structured tooltip line exceeded vanilla's 170-pixel width");
+            final boolean[] controlBreak = {false};
+            line.accept((index, style, codePoint) -> {
+                if (codePoint == '\n' || codePoint == '\r') {
+                    controlBreak[0] = true;
+                }
+                return true;
+            });
+            require(!controlBreak[0],
+                    "Wrapped tooltip still emitted a line-break control glyph");
+        }
     }
 
     private static void require(final boolean condition, final String message) {

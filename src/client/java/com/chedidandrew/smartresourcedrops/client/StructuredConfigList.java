@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
@@ -108,7 +109,7 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
     /**
      * Immutable data for one structured row. Empty components are allowed;
-     * {@code tooltip} is the full, unabridged hover text.
+     * {@code tooltip} contains supplemental hover details.
      */
     public record Row(
             Component primary,
@@ -199,7 +200,10 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
                     || rightDetail.truncated();
             if (hovered && (!row.tooltip().getString().isEmpty() || truncated)) {
                 Component tooltip = row.tooltip().getString().isEmpty() ? fullRowText() : row.tooltip();
-                graphics.setTooltipForNextFrame(tooltip, mouseX, mouseY);
+                graphics.setTooltipForNextFrame(
+                        Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip),
+                        mouseX,
+                        mouseY);
             }
         }
 

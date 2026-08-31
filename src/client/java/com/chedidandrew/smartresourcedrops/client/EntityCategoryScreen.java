@@ -59,17 +59,11 @@ final class EntityCategoryScreen extends SmartDropsSubScreen {
                             : "smart_resource_drops.gui.entity_rules_inactive");
             final Component inheritedName = sourceName(inherited);
             final Component tooltip = Component.empty()
-                    .append(ConfigUiText.entityCategoryName(category))
-                    .append("\n")
-                    .append(ConfigUiText.configured(configured))
-                    .append("\n")
                     .append(Component.translatable(
                             "smart_resource_drops.gui.inherited_from",
                             inheritedName))
-                    .append("\n")
+                    .append(". ")
                     .append(ConfigUiText.effective(effective.multiplier()))
-                    .append("\n")
-                    .append(safety)
                     .append(estimatedCount > 0
                             ? Component.empty()
                                     .append("\n")
