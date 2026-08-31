@@ -1,10 +1,10 @@
 # Resource Multiplier compatibility notes
 
-Resource Multiplier 1.2.0-rc.1 passes its automated synthetic-testmod, dedicated/client GameTest, clean-build, package-validator, and playable-JAR gates. All named third-party manual cases remain pending. This evidence documents the generic boundary only; it is not a claim that every mod, datapack, or server stack is compatible.
+Resource Multiplier 1.2.0 passes its automated synthetic-testmod, dedicated/client GameTest, clean-build, package-validator, and playable-JAR gates. All named third-party manual cases remain pending. This evidence documents the generic boundary only; it is not a claim that every mod, datapack, or server stack is compatible.
 
-## Resource Multiplier 1.2.0-rc.1 supported shearing boundary
+## Resource Multiplier 1.2.0 supported shearing boundary
 
-The 1.2.0-rc.1 candidate recognizes two sources only: a real server player inside `Player.interactOn`, and the exact vanilla dispenser entity call inside `ShearsDispenseItemBehavior.tryShearEntity`. The outer player scope deliberately does not require `Items.SHEARS`, so a compatible custom tool can work if it follows the standard entity interaction and final shearing-helper path. Fabric fake players, direct `Shearable.shear` calls, custom machine output, and inference from `SoundSource.BLOCKS` remain unsupported vanilla `1x`.
+The 1.2.0 candidate recognizes two sources only: a real server player inside `Player.interactOn`, and the exact vanilla dispenser entity call inside `ShearsDispenseItemBehavior.tryShearEntity`. The outer player scope deliberately does not require `Items.SHEARS`, so a compatible custom tool can work if it follows the standard entity interaction and final shearing-helper path. Fabric fake players, direct `Shearable.shear` calls, custom machine output, and inference from `SoundSource.BLOCKS` remain unsupported vanilla `1x`.
 
 Eligible output must pass through `LivingEntity.dropFromShearingLootTable`. That helper runs once and its final stacks are buffered; Resource Multiplier never reruns the table or repeats the state transition. Per-call consumers are retained, preserving sheep velocity, entity-specific positions, and compatible mod placement behavior. Direct `spawnAtLocation`, `ItemEntity`, inventory, and equipment ejection are not intercepted.
 
@@ -87,17 +87,17 @@ Every manual compatibility result must record the mod/project name, exact tested
 
 | Category | Mod/project | Exact version | Test date | Resource Multiplier version | Result | Known limitation |
 | --- | --- | --- | --- | --- | --- | --- |
-| Biome/wildlife or passive | Pending selection | Not tested | Not tested | 1.2.0-rc.1 | Pending | Manual gate not performed |
-| Hostile entity | Pending selection | Not tested | Not tested | 1.2.0-rc.1 | Pending | Manual gate not performed |
-| Boss | Pending selection | Not tested | Not tested | 1.2.0-rc.1 | Pending | Manual gate not performed |
-| Equipment/inventory | Pending selection | Not tested | Not tested | 1.2.0-rc.1 | Pending | Manual gate not performed |
-| Custom shearable | Pending selection | Not tested | Not tested | 1.2.0-rc.1 | Pending | Manual gate not performed |
-| Automated miner | Pending selection | Not tested | Not tested | 1.2.0-rc.1 | Pending | Manual gate not performed |
-| Custom placement/drop | Pending selection | Not tested | Not tested | 1.2.0-rc.1 | Pending | Manual gate not performed |
+| Biome/wildlife or passive | Pending selection | Not tested | Not tested | 1.2.0 | Pending | Manual gate not performed |
+| Hostile entity | Pending selection | Not tested | Not tested | 1.2.0 | Pending | Manual gate not performed |
+| Boss | Pending selection | Not tested | Not tested | 1.2.0 | Pending | Manual gate not performed |
+| Equipment/inventory | Pending selection | Not tested | Not tested | 1.2.0 | Pending | Manual gate not performed |
+| Custom shearable | Pending selection | Not tested | Not tested | 1.2.0 | Pending | Manual gate not performed |
+| Automated miner | Pending selection | Not tested | Not tested | 1.2.0 | Pending | Manual gate not performed |
+| Custom placement/drop | Pending selection | Not tested | Not tested | 1.2.0 | Pending | Manual gate not performed |
 
 ## Integration API stance
 
-Neither version 1.1.x nor the current 1.2.0-rc.1 shearing candidate exposes a supported public Java API. Other mods and packs should use documented configuration and commands, project-owned category tags, `#smart_resource_drops:protected_entity_loot`, and the audited `#smart_resource_drops:shearing/standard_resources` certification surface rather than bind to public-looking implementation classes. A formal API is deferred until a concrete reproducible third-party case cannot be solved safely through those surfaces and supplies lifecycle, failure, versioning, documentation, and cross-mod test requirements.
+Neither version 1.1.x nor the current 1.2.0 shearing candidate exposes a supported public Java API. Other mods and packs should use documented configuration and commands, project-owned category tags, `#smart_resource_drops:protected_entity_loot`, and the audited `#smart_resource_drops:shearing/standard_resources` certification surface rather than bind to public-looking implementation classes. A formal API is deferred until a concrete reproducible third-party case cannot be solved safely through those surfaces and supplies lifecycle, failure, versioning, documentation, and cross-mod test requirements.
 
 ## Safe defaults
 

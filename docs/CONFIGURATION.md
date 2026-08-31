@@ -8,7 +8,7 @@ If `blacklist` is absent or `null`, the safety blacklist is installed for compat
 
 ## Schema 3 shearing settings
 
-Resource Multiplier 1.2.0-rc.1 uses schema 3. This release candidate remains unpublished while its manual gates are open. These settings form an independent 256-entry domain and do not consume the block or death-entity rule budgets.
+Resource Multiplier 1.2.0 uses schema 3. This release candidate remains unpublished while its manual gates are open. These settings form an independent 256-entry domain and do not consume the block or death-entity rule budgets.
 
 | Field | Fresh/reset default | Meaning |
 | --- | ---: | --- |

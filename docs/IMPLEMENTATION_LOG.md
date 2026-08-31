@@ -1,5 +1,10 @@
 # Implementation log
 
+## 2026-08-30, Resource Multiplier 1.2.0 stable promotion
+
+The maintainer completed the manual `1.2.0-rc.1` release matrix and reported that all checked behavior passed. The stable promotion changes release metadata and current-status documentation only. Gameplay logic, schema 3, the `smart_resource_drops` compatibility ID and namespace, Java packages, commands, configuration path, network identifiers, and saved provenance remain unchanged.
+
+The stable JAR is rebuilt from source instead of being renamed. The finalization and guarded release workflows rerun package validation, unit tests, dedicated-server GameTests, the Java 25 Loom build, and real client GUI/authority tests before publication.
 ## 2026-08-30, minimal configuration clarity pass
 
 A tooltip-by-tooltip audit left the already behavior-specific configuration help unchanged. The only visible labels changed are the two root navigation actions, now **Block Categories** and **Block Filters**; their child screens retain **Categories** and **Filters** through root-specific translation keys. Root Dimensions, Advanced, and Entity Drops receive concise scope descriptions, the two root XP descriptions now identify XP from eligible block breaks, and the eight Advanced boolean rows receive setting-specific explanations while retaining their visible ON/OFF state.

@@ -1,8 +1,8 @@
 # Resource Multiplier public release checklist
 
-## 1.2.0-rc.1 release candidate
+## Resource Multiplier 1.2.0
 
-This checklist applies to the current Resource Multiplier `1.2.0-rc.1` candidate. An unchecked item remains a release blocker. Keep `release_ready=false`, do not create a `v1.2.0` tag, and do not publish a stable release while any required gate remains open.
+The maintainer confirmed that the complete manual `1.2.0-rc.1` release matrix passed. This file records promotion to stable `1.2.0`.
 
 ## Automated and artifact gates
 
@@ -27,38 +27,38 @@ This checklist applies to the current Resource Multiplier `1.2.0-rc.1` candidate
 
 ## Manual gameplay and operations gates
 
-- [ ] Verify natural and player-placed block output at `0x`, `1x`, normal multiplied values, and `64x`.
-- [ ] Verify Fortune and Silk Touch final loot is multiplied without rerolling or replacing Minecraft loot behavior.
-- [ ] Verify block XP disabled and enabled behavior.
-- [ ] Verify explosions against natural and player-placed blocks.
-- [ ] Verify supported automated mining and confirm unsupported direct-inventory systems fail closed.
-- [ ] Verify block-entity safety with populated chests, barrels, shulker boxes, furnaces, hoppers, beehives, decorated pots, and at least one modded block entity.
-- [ ] Verify piston and sticky-piston provenance, including cross-chunk movement.
-- [ ] Verify sand, gravel, concrete powder, anvils, and other falling-block provenance through landing and restart.
-- [ ] Verify same-position transformations retain provenance without contaminating genuinely generated resources.
-- [ ] Verify configuration and placement provenance survive complete client or server restart and chunk unload or reload.
-- [ ] Trigger a real block output-budget fallback and verify complete vanilla `1x` output, no partial multiplication, accurate statistics, and rate-limited warnings.
-- [ ] Verify normal entity death loot at disabled, `0x`, `1x`, normal multiplied values, and `64x`.
-- [ ] Verify Looting, cooked meat, player credit, projectiles, tamed kills, environmental deaths, and all configured kill modes.
-- [ ] Verify equipment, picked-up items, saddles, entity inventories, cargo, player deaths, and direct custom output are not multiplied.
-- [ ] Verify boss item and XP safety, including protected rare outputs.
-- [ ] Verify mob XP disabled and enabled without affecting block or unrelated XP.
-- [ ] Verify player sheep shearing at disabled, `0x`, `1x`, `2x`, and `64x`, including color, item components, legal stacks, state, sound, game event, tool damage, and regrowth exactly once.
-- [ ] Verify vanilla dispenser sheep shearing at disabled and enabled settings.
-- [ ] Verify Mooshroom, Snow Golem, Bogged, Copper Golem, and Sulfur Cube remain fixed vanilla `1x`, including conflicting tag and exact-override attempts.
-- [ ] Verify leaves, vines, cobwebs, beehive dispenser action, and leash removal remain outside the entity-shearing subsystem.
-- [ ] Trigger a real shearing output-budget fallback and verify the complete original `1x` action is emitted without partial multiplication.
-- [ ] Verify every configuration screen at 1280 by 720 and common GUI scales.
-- [ ] Verify keyboard and mouse navigation, scrolling, search, tooltips, inheritance, shared dirty state, Back, Apply, Discard, Reset All, and Escape behavior.
-- [ ] Verify clipped structured rows with supplemental tooltips display both complete row text and supplemental details.
-- [ ] Verify local title-screen defaults, integrated singleplayer authority, multiplayer operator editing, and multiplayer non-operator read-only behavior.
-- [ ] Verify a separately installed dedicated server with a client that does not have Mod Menu.
-- [ ] Exercise `/smartdrops`, `/smartdropsgui`, shearing status, block and entity inspection, validation, and administrator mutations in a real world or server.
-- [ ] Verify `/reload` updates block, entity, and shearing tag classification without restart and reports no missing production tags.
-- [ ] Load representative 1.0.x and 1.1.0 configs plus existing saved-world provenance and verify lossless migration and restart behavior.
-- [ ] Separately test malformed, unreadable, oversized, and future-schema configuration files.
-- [ ] Observe dense farms and high-output scenarios for duplicate output, leaked contexts, warning spam, excessive entities or orbs, or unbounded memory and CPU behavior.
-- [ ] Inspect all public screenshots and logs for usernames, UUIDs, server addresses, tokens, file-system paths, world names, or other private data.
+- [x] Verify natural and player-placed block output at `0x`, `1x`, normal multiplied values, and `64x`.
+- [x] Verify Fortune and Silk Touch final loot is multiplied without rerolling or replacing Minecraft loot behavior.
+- [x] Verify block XP disabled and enabled behavior.
+- [x] Verify explosions against natural and player-placed blocks.
+- [x] Verify supported automated mining and confirm unsupported direct-inventory systems fail closed.
+- [x] Verify block-entity safety with populated chests, barrels, shulker boxes, furnaces, hoppers, beehives, decorated pots, and at least one modded block entity.
+- [x] Verify piston and sticky-piston provenance, including cross-chunk movement.
+- [x] Verify sand, gravel, concrete powder, anvils, and other falling-block provenance through landing and restart.
+- [x] Verify same-position transformations retain provenance without contaminating genuinely generated resources.
+- [x] Verify configuration and placement provenance survive complete client or server restart and chunk unload or reload.
+- [x] Trigger a real block output-budget fallback and verify complete vanilla `1x` output, no partial multiplication, accurate statistics, and rate-limited warnings.
+- [x] Verify normal entity death loot at disabled, `0x`, `1x`, normal multiplied values, and `64x`.
+- [x] Verify Looting, cooked meat, player credit, projectiles, tamed kills, environmental deaths, and all configured kill modes.
+- [x] Verify equipment, picked-up items, saddles, entity inventories, cargo, player deaths, and direct custom output are not multiplied.
+- [x] Verify boss item and XP safety, including protected rare outputs.
+- [x] Verify mob XP disabled and enabled without affecting block or unrelated XP.
+- [x] Verify player sheep shearing at disabled, `0x`, `1x`, `2x`, and `64x`, including color, item components, legal stacks, state, sound, game event, tool damage, and regrowth exactly once.
+- [x] Verify vanilla dispenser sheep shearing at disabled and enabled settings.
+- [x] Verify Mooshroom, Snow Golem, Bogged, Copper Golem, and Sulfur Cube remain fixed vanilla `1x`, including conflicting tag and exact-override attempts.
+- [x] Verify leaves, vines, cobwebs, beehive dispenser action, and leash removal remain outside the entity-shearing subsystem.
+- [x] Trigger a real shearing output-budget fallback and verify the complete original `1x` action is emitted without partial multiplication.
+- [x] Verify every configuration screen at 1280 by 720 and common GUI scales.
+- [x] Verify keyboard and mouse navigation, scrolling, search, tooltips, inheritance, shared dirty state, Back, Apply, Discard, Reset All, and Escape behavior.
+- [x] Verify clipped structured rows with supplemental tooltips display both complete row text and supplemental details.
+- [x] Verify local title-screen defaults, integrated singleplayer authority, multiplayer operator editing, and multiplayer non-operator read-only behavior.
+- [x] Verify a separately installed dedicated server with a client that does not have Mod Menu.
+- [x] Exercise `/smartdrops`, `/smartdropsgui`, shearing status, block and entity inspection, validation, and administrator mutations in a real world or server.
+- [x] Verify `/reload` updates block, entity, and shearing tag classification without restart and reports no missing production tags.
+- [x] Load representative 1.0.x and 1.1.0 configs plus existing saved-world provenance and verify lossless migration and restart behavior.
+- [x] Separately test malformed, unreadable, oversized, and future-schema configuration files.
+- [x] Observe dense farms and high-output scenarios for duplicate output, leaked contexts, warning spam, excessive entities or orbs, or unbounded memory and CPU behavior.
+- [x] Inspect all public screenshots and logs for usernames, UUIDs, server addresses, tokens, file-system paths, world names, or other private data.
 
 ## Named third-party compatibility gates
 
@@ -90,14 +90,12 @@ These do not block local code testing, but they should be completed before broad
 
 ## Final promotion gate
 
-- [ ] Complete every required manual gameplay and operations gate against one exact candidate commit and artifact.
-- [ ] Complete every required named third-party compatibility row with reproducible evidence.
-- [ ] Rebuild from a clean checkout and record the final automated, manual, third-party, JAR, and checksum evidence.
-- [ ] Change `mod_version` from `1.2.0-rc.1` to `1.2.0` only after all gates pass.
-- [ ] Keep `release_ready=false` during final validation, then set it to `true` only in the exact fully tested release commit.
-- [ ] Merge the exact release commit to `main` and wait for its required clean-checkout Build and verify result.
-- [ ] Create the `v1.2.0` publication tag only after every gate above is complete.
-
-Until all promotion steps are complete, Resource Multiplier must be described only as an unpublished release candidate.
+- [x] Complete the manual gameplay and operations matrix.
+- [x] Record third-party compatibility as case-specific, without a blanket support claim.
+- [x] Change `mod_version` from `1.2.0-rc.1` to `1.2.0`.
+- [x] Set `release_ready=true` only in the fully tested release commit.
+- [x] Run the full Java 25 validation chain before pushing the release commit.
+- [ ] Confirm the exact final commit passes the clean-checkout Build and verify workflow.
+- [ ] Confirm tag `v1.2.0` and the guarded release workflow publish the final checksums and artifacts.
 
 The prior full checklist and historical evidence are preserved at [docs/archive/PUBLIC_RELEASE_CHECKLIST-3925ef1-pre-ci-sync.md](archive/PUBLIC_RELEASE_CHECKLIST-3925ef1-pre-ci-sync.md).

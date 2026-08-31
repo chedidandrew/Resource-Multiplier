@@ -8,7 +8,7 @@ Changes are in scope when they strengthen server-authoritative final-loot multip
 
 Do not add vein mining, tree felling, automatic smelting, magnets, inventory sorting/movement, tool or enchantment rebalancing, or per-biome/tool/enchantment/weather/time rule layers here. Chest/structure loot, fishing, bartering, trading, milking, brushing, egg laying, gifts, breeding output, spawning, crafting/processing, player or armor-stand deaths, equipment, held or picked-up items, entity inventories, direct equipment ejection, beehive/block shearing through the entity subsystem, unsupported custom-machine shearing, and other custom/direct item creation remain excluded. A compatibility change must start from a concrete reproducible case and fail closed outside the supported boundary.
 
-Version 1.1.x and the current `1.2.0-rc.1` release candidate have no supported public Java API. Public implementation types are not compatibility promises. Use the documented configuration, commands, project-owned datapack tags, and protected-output tag; a Java API remains deferred until a real third-party case demonstrates that those surfaces cannot solve the integration safely.
+Version 1.1.x and the current `1.2.0` release candidate have no supported public Java API. Public implementation types are not compatibility promises. Use the documented configuration, commands, project-owned datapack tags, and protected-output tag; a Java API remains deferred until a real third-party case demonstrates that those surfaces cannot solve the integration safely.
 
 ## Security and privacy
 

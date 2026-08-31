@@ -2,11 +2,11 @@
 
 This document describes possible future work. It is not a promise of a release date or a specification for the current build.
 
-## Current Resource Multiplier 1.2.0-rc.1 status
+## Current Resource Multiplier 1.2.0 status
 
 Status: **implemented in source, release gate open**. The candidate adds only supported entity shearing actions: real-player interaction and the exact vanilla dispenser entity branch, with multiplication at `LivingEntity.dropFromShearingLootTable`. Sheep is the shipped standard resource. Unknown types and the audited vanilla special transformations remain `1x`; direct equipment output, beehives, leash removal, block shearing, milking, brushing, egg laying, breeding, gifts, fishing, bartering, trading, chest/structure loot, and unrelated resource systems remain out of scope.
 
-Schema 3, independent source toggles, a 256-rule domain, shared-draft GUI, commands, inspection, validation, 1,024-item/256-stack whole-action safety, and focused tests are present. The serial automated suite, real client GameTest, server/client startup checks, package audit, and candidate artifact inspection pass. The development version is `1.2.0-rc.1`; it must not be promoted to final `1.2.0` until the full hands-on vanilla/special/UI/multiplayer/reload matrix and representative third-party compatibility checks pass. Preserve the 1.1 and earlier investigation/history below; mark this plan complete only when those gates are recorded.
+Schema 3, independent source toggles, a 256-rule domain, shared-draft GUI, commands, inspection, validation, 1,024-item/256-stack whole-action safety, and focused tests are present. The serial automated suite, real client GameTest, server/client startup checks, package audit, and candidate artifact inspection pass. The development version is `1.2.0`; it must not be promoted to final `1.2.0` until the full hands-on vanilla/special/UI/multiplayer/reload matrix and representative third-party compatibility checks pass. Preserve the 1.1 and earlier investigation/history below; mark this plan complete only when those gates are recorded.
 
 ## 1.0.x maintenance boundary
 
@@ -33,7 +33,7 @@ The preserved pre-final checkpoint passed 92 mapped JUnit tests in 16 suites and
 
 ## Integration and public API stance
 
-There is no supported public Java API in either version 1.1.x or the current 1.2.0-rc.1 shearing candidate. Publicly visible classes and methods in the implementation are internal details unless a later compatibility document explicitly guarantees them; other mods should not depend on their names or signatures. Documented configuration and commands plus the datapack-extensible category, protected-output, and audited standard-shearing-resource tags are the supported integration surfaces for the current candidate.
+There is no supported public Java API in either version 1.1.x or the current 1.2.0 shearing candidate. Publicly visible classes and methods in the implementation are internal details unless a later compatibility document explicitly guarantees them; other mods should not depend on their names or signatures. Documented configuration and commands plus the datapack-extensible category, protected-output, and audited standard-shearing-resource tags are the supported integration surfaces for the current candidate.
 
 A formal Java compatibility API is deferred until at least one concrete, reproducible third-party integration case cannot be solved safely through those existing surfaces. Any proposal must begin with that real case and define ownership, lifecycle, failure behavior, versioning, documentation, and cross-mod tests before an API is promised. Speculative hooks are not roadmap commitments.
 
@@ -87,4 +87,4 @@ All edits would use the existing permission, expected-revision, atomic persisten
 - Performance profiling of dense mob farms with the feature both disabled and enabled.
 - Documentation and migration review confirming that upgrading from 1.0.x changes no existing block-drop behavior.
 
-The planning record above remains historical. The current 1.2.0-rc.1 candidate remains unreleased until every manual gate listed earlier in this document and in [PUBLIC_RELEASE_CHECKLIST.md](PUBLIC_RELEASE_CHECKLIST.md) has evidence.
+The planning record above remains historical. The current 1.2.0 candidate remains unreleased until every manual gate listed earlier in this document and in [PUBLIC_RELEASE_CHECKLIST.md](PUBLIC_RELEASE_CHECKLIST.md) has evidence.

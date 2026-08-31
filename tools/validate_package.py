@@ -276,7 +276,7 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
-    "mod_version": "1.2.0-rc.1",
+    "mod_version": "1.2.0",
     "minecraft_version": "26.2",
     "loader_version": "0.19.3",
     "loom_version": "1.17.20",
@@ -287,8 +287,8 @@ expected_properties = {
 for key, expected in expected_properties.items():
     if properties.get(key) != expected:
         fail(f"gradle.properties {key} must be {expected!r}, found {properties.get(key)!r}")
-if properties.get("release_ready") != "false":
-    fail("The 1.2.0-rc.1 development candidate must keep release_ready=false")
+if properties.get("release_ready") != "true":
+    fail("The stable 1.2.0 release commit must set release_ready=true")
 
 readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
 readme_word_count = len(re.findall(r"\S+", readme_text))
@@ -303,10 +303,10 @@ for marker in (
     "Loader-Fabric",
     "Java-25",
     "License-MIT",
-    "Status-1.2.0--rc.1",
+    "Status-1.2.0-Release",
     "> [!IMPORTANT]",
-    "There is no stable public download yet.",
-    "Resource Multiplier 1.2.0 is not publicly released yet.",
+    "Current stable release:",
+    "Official Resource Multiplier builds are published through",
     "docs/COMMANDS.md",
     "docs/images/general-config.webp",
     "docs/images/block-overrides.webp",

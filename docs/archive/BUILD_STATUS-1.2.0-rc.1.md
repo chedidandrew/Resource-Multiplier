@@ -1,23 +1,5 @@
 # Build status
 
-## Resource Multiplier 1.2.0
-
-Resource Multiplier `1.2.0` is the stable Fabric release for Minecraft Java Edition 26.2. The maintainer confirmed that the manual `1.2.0-rc.1` release matrix passed on 2026-08-30.
-
-- Version: `1.2.0`
-- Publication latch: `release_ready=true`
-- Expected JAR: `build/libs/resource-multiplier-1.2.0.jar`
-- Mod ID and datapack namespace remain `smart_resource_drops`
-- Config path remains `config/smart_resource_drops.json`
-- Commands remain `/smartdrops` and `/smartdropsgui`
-
-The stable JAR is rebuilt from source. Renaming the release-candidate JAR is invalid because its embedded Fabric metadata, manifest, package records, and checksums would still identify `1.2.0-rc.1`.
-
-Finalization build: `601807` bytes, `311` ZIP entries, SHA-256 `A34BC93E9AD10BDDA1E74B7ADBF397D1EC4D96BEA52F206DDEF5A7A5074BAA6A`.
-
-Third-party compatibility remains case-specific rather than a blanket guarantee.
-
-## Archived release-candidate evidence
 ## Resource Multiplier 1.2.0-rc.1
 
 Resource Multiplier `1.2.0-rc.1` remains an unpublished release candidate for Minecraft Java Edition 26.2. Publication is intentionally locked with `release_ready=false`. No release tag or GitHub Release has been created.

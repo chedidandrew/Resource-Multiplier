@@ -1,8 +1,8 @@
 # Resource Multiplier testing and verification
 
-## 1.2.0-rc.1 automated evidence and open release gates
+## 1.2.0 automated evidence and open release gates
 
-Resource Multiplier `1.2.0-rc.1` is an unpublished release candidate with `release_ready=false`. The current automated pass was run on Java 25 against Minecraft 26.2, Fabric Loader 0.19.3, Fabric API 0.158.0+26.2, and optional client-only Mod Menu 20.0.0. These results establish build and regression evidence; they do not replace hands-on gameplay, separately installed multiplayer, datapack-reload, or named third-party compatibility tests.
+Resource Multiplier `1.2.0` is an unpublished release candidate with `release_ready=false`. The current automated pass was run on Java 25 against Minecraft 26.2, Fabric Loader 0.19.3, Fabric API 0.158.0+26.2, and optional client-only Mod Menu 20.0.0. These results establish build and regression evidence; they do not replace hands-on gameplay, separately installed multiplayer, datapack-reload, or named third-party compatibility tests.
 
 ### Configuration clarity pass - local validation complete
 
@@ -34,7 +34,7 @@ Measured automated results:
 - The cache-free `clean test runGameTest build` completed with `BUILD SUCCESSFUL` in 31 seconds. JUnit passed 158 tests in 24 suites with zero failures, errors, or skips; the dedicated Minecraft runner passed all 66 required GameTests.
 - The real client GameTest completed with `BUILD SUCCESSFUL` in 40 seconds with Mod Menu 20.0.0 present. It exercised title-screen, integrated-server, dedicated-server operator/non-operator authority, reset, navigation, search, exact tooltip narration, wrapping, viewport bounds, and read-only non-mutation, and produced 19 current screenshots. The refreshed general capture is published in the README.
 - The standalone dedicated server loaded 43 mods without Mod Menu, initialized Resource Multiplier under the preserved `smart_resource_drops` ID, reached `Done (0.280s)`, returned the expected `/smartdrops` and shearing status, reported `Status: Valid` from compact and verbose validation, confirmed no configuration or world data changed, stopped cleanly, and completed in 42 seconds.
-- Release packaging succeeded in a fresh empty directory. The playable JAR is `build/libs/resource-multiplier-1.2.0-rc.1.jar`: 601,761 bytes, 311 ZIP entries, SHA-256 `27F73D54F8CD6EFE17F68DFB3C76D11B67BEAB3AB6DF4725F0D398E4D0E5F9C7`. It embeds the MIT license, production icon, public name `Resource Multiplier`, version `1.2.0-rc.1`, and the unchanged mod ID/data namespace, with zero nested JAR or GameTest entries.
+- Release packaging succeeded in a fresh empty directory. The playable JAR is `build/libs/resource-multiplier-1.2.0.jar`: 601,761 bytes, 311 ZIP entries, SHA-256 `27F73D54F8CD6EFE17F68DFB3C76D11B67BEAB3AB6DF4725F0D398E4D0E5F9C7`. It embeds the MIT license, production icon, public name `Resource Multiplier`, version `1.2.0`, and the unchanged mod ID/data namespace, with zero nested JAR or GameTest entries.
 - Lightweight Markdown validation checked README length, heading hierarchy, balanced fences, local links/images, image alt text and declared widths. Every README GitHub and badge URL returned HTTP 200.
 - Static workflow inspection confirms the ordinary build workflow handles branch pushes, pull requests, and manual dispatch only. The guarded release workflow is the sole `v*` tag handler and exits before build or publication while `release_ready=false`.
 - GitHub Actions run `33354997205` completed successfully for the exact production clarity commit `cb6d17d9a26283ddc98c6e3f7d8fa46ebb341380`. Its package-policy, Java/dedicated test/build, client GUI/authority, and artifact-upload steps all passed.
