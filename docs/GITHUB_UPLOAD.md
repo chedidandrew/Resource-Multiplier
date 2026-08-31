@@ -1,6 +1,6 @@
 # GitHub publication guide
 
-The canonical public source repository is [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier). User downloads are published on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier), and ordinary bug or compatibility reports are handled through [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues). Resource Multiplier `1.2.1` is the stable Fabric 26.2 release line.
+The canonical public source repository is [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier). User downloads are published on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier), and ordinary bug or compatibility reports are handled through [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues). Smart Resource Multiplier `1.2.2` is the current source candidate; `1.2.1` remains the latest published Fabric 26.2 release until the branding patch is tagged.
 
 ## Clone and contribute
 
@@ -15,7 +15,7 @@ git push -u origin your-change
 
 ## CI
 
-`.github/workflows/build.yml` runs on branch pushes, pull requests, and manual dispatch. With Java 25 it runs the source and package validators, the complete core and mapped-Minecraft JUnit suites, all required dedicated-server GameTests, the Fabric Loom build, and the real client GUI and authority GameTests under Xvfb. The playable JAR is uploaded as an Actions artifact. Tag pushes are handled only by the guarded release workflow.
+`.github/workflows/build.yml` runs on branch pushes, pull requests, and manual dispatch. With Java 25 it runs the source and package validators, the complete core and mapped-Minecraft JUnit suites, all required dedicated-server GameTests, the Fabric Loom build, and the real client GUI and authority GameTests under Xvfb. The playable JAR, sources JAR, and a clean `git archive` source snapshot are uploaded together as a `SmartResourceMultiplier-<commit>` Actions artifact. Tag pushes are handled only by the guarded release workflow.
 
 ## Release
 
@@ -54,5 +54,5 @@ java
 loot
 server-side
 anti-dupe
-resource-multiplier
+smart-resource-multiplier
 ```

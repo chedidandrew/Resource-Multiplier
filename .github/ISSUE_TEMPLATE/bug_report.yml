@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible Resource Multiplier defect.
+description: Report a reproducible Smart Resource Multiplier defect.
 title: "[Bug] "
 labels: []
 assignees: []
@@ -11,7 +11,7 @@ body:
   - type: input
     id: smartdrops-version
     attributes:
-      label: Resource Multiplier version
+      label: Smart Resource Multiplier version
       placeholder: 1.2.1
     validations:
       required: true
@@ -111,7 +111,7 @@ body:
       options:
         - label: I reproduced this with the smallest practical mod set and checked that it is not already documented.
           required: true
-        - label: I checked whether the issue reproduces with only Resource Multiplier and its required dependencies.
+        - label: I checked whether the issue reproduces with only Smart Resource Multiplier and its required dependencies.
           required: true
         - label: This report contains no security-sensitive details or private server/player information.
           required: true

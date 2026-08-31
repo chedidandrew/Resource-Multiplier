@@ -151,7 +151,7 @@ final class BlockInspectionFormatter {
     }
 
     private static Component title() {
-        return Component.literal("Resource Multiplier Inspection")
+        return Component.literal("Smart Resource Multiplier Inspection")
                 .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
     }
 
@@ -291,7 +291,7 @@ final class BlockInspectionFormatter {
 
     private static String reasonText(RuleResolutionTrace trace) {
         return switch (trace.reason()) {
-            case MOD_DISABLED -> "Resource Multiplier is disabled";
+            case MOD_DISABLED -> "Smart Resource Multiplier is disabled";
             case SOURCE_DISABLED -> sourceName(trace.source()) + " is disabled";
             case BLOCK_ENTITY_PROTECTED -> "Block entity protection is enabled and this block is not allowlisted";
             case FILTERED -> filterResult(trace);

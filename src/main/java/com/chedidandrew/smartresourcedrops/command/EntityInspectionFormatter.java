@@ -188,7 +188,7 @@ final class EntityInspectionFormatter {
     }
 
     private static Component title() {
-        return Component.literal("Resource Multiplier Entity Inspection")
+        return Component.literal("Smart Resource Multiplier Entity Inspection")
                 .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
     }
 

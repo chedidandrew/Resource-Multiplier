@@ -86,7 +86,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
             FILTERS_KEY);
     private static final Map<String, String> ADVANCED_TOOLTIPS = Map.of(
             "Mod Enabled",
-            "Master switch for Resource Multiplier. Saved settings remain unchanged while multiplication is disabled.",
+            "Master switch for Smart Resource Multiplier. Saved settings remain unchanged while multiplication is disabled.",
             "Player Mining",
             "Allow eligible block drops caused by player mining to use block multipliers.",
             "Explosion Drops",
@@ -254,7 +254,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
             context.waitForScreen(ResetAllSettingsConfirmScreen.class);
             takeRequiredScreenshot(context, "smart-drops-reset-confirmation");
             final Screen confirmation = context.computeOnClient(client -> client.gui.screen());
-            require("Reset Resource Multiplier?".equals(confirmation.getTitle().getString()),
+            require("Reset Smart Resource Multiplier?".equals(confirmation.getTitle().getString()),
                     "Reset confirmation had an unexpected public title");
             require(hasWidgetLabel(confirmation, RESET_EVERYTHING_KEY)
                             && hasWidgetLabel(confirmation, CANCEL_KEY),
@@ -1076,7 +1076,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
     }
 
     private static void assertGeneralRoot(final SmartDropsConfigScreen screen, final boolean editable) {
-        require("Resource Multiplier".equals(screen.getTitle().getString()),
+        require("Smart Resource Multiplier".equals(screen.getTitle().getString()),
                 "Root config screen had an unexpected title");
         require(screen.editorSession() != null, "Root screen did not expose its editor session");
         require(screen.editorSession().editable() == editable, "Unexpected root editability");
@@ -1737,14 +1737,14 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
             final String message
     ) {
         require(screen instanceof SmartDropsSubScreen,
-                "Expected a Resource Multiplier child screen, found "
+                "Expected a Smart Resource Multiplier child screen, found "
                         + screen.getClass().getName());
         require(((SmartDropsSubScreen)screen).unsavedChangesIndicatorVisible() == expected, message);
     }
 
     private static void assertCompactUnsavedChangesLayout(final Screen screen) {
         require(screen instanceof SmartDropsSubScreen,
-                "Compact indicator check requires a Resource Multiplier child screen");
+                "Compact indicator check requires a Smart Resource Multiplier child screen");
         final SmartDropsSubScreen child = (SmartDropsSubScreen)screen;
         final SmartDropsSubScreen.UnsavedChangesIndicatorLayout layout =
                 child.unsavedChangesIndicatorLayout();

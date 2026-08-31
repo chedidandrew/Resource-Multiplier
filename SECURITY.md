@@ -1,4 +1,4 @@
-# Resource Multiplier security policy
+# Smart Resource Multiplier security policy
 
 ## Supported version
 

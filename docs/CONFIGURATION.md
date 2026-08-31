@@ -1,6 +1,6 @@
-# Resource Multiplier configuration reference
+# Smart Resource Multiplier configuration reference
 
-Resource Multiplier intentionally continues to use the compatibility-stable gameplay configuration file `config/smart_resource_drops.json`. On a dedicated or connected server it is authoritative; the client installation's title-screen copy supplies defaults for future local/singleplayer servers. It is generated on first launch and rewritten in a normalized form after a real change. No-op updates do not write the file.
+Smart Resource Multiplier intentionally continues to use the compatibility-stable gameplay configuration file `config/smart_resource_drops.json`. On a dedicated or connected server it is authoritative; the client installation's title-screen copy supplies defaults for future local/singleplayer servers. It is generated on first launch and rewritten in a normalized form after a real change. No-op updates do not write the file.
 
 Values outside safe ranges are clamped during load. A malformed file is replaced only after the original is successfully moved to a timestamped `.broken-*` backup. If the file cannot be read or backed up, writes are suppressed so the original is not destroyed. A file with a schema newer than this mod supports is left untouched; the server logs the incompatibility and runs safe in-memory defaults without downgrading the file.
 
@@ -8,7 +8,7 @@ If `blacklist` is absent or `null`, the safety blacklist is installed for compat
 
 ## Schema 3 shearing settings
 
-Resource Multiplier 1.2.0 uses schema 3. This release candidate remains unpublished while its manual gates are open. These settings form an independent 256-entry domain and do not consume the block or death-entity rule budgets.
+Smart Resource Multiplier 1.2.2 uses schema 3. The rebrand changes no configuration field, default, migration rule, or authority behavior. These settings form an independent 256-entry domain and do not consume the block or death-entity rule budgets.
 
 | Field | Fresh/reset default | Meaning |
 | --- | ---: | --- |

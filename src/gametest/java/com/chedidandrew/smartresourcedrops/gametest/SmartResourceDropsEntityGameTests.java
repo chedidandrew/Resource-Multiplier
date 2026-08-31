@@ -691,7 +691,7 @@ public final class SmartResourceDropsEntityGameTests {
                             player.createCommandSourceStack().withSource(compact)) == 1,
                     "Looked-at entity inspection did not succeed");
             helper.assertTrue(
-                    compact.text().contains("Resource Multiplier Entity Inspection")
+                    compact.text().contains("Smart Resource Multiplier Entity Inspection")
                             && compact.text().contains("smart_resource_drops_gametest:hostile"),
                     "Compact entity inspection omitted its heading or entity ID");
 

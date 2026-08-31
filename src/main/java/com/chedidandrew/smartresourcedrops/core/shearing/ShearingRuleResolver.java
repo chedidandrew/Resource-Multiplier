@@ -117,7 +117,7 @@ public final class ShearingRuleResolver {
                     exactOverride,
                     1,
                     ShearingRuleTrace.RuleSource.MOD_DISABLED,
-                    "Resource Multiplier is disabled");
+                    "Smart Resource Multiplier is disabled");
         }
         if (!sourceEnabled) {
             return result(

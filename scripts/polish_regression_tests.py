@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic policy and package regressions for Resource Multiplier."""
+"""Deterministic policy and package regressions for Smart Resource Multiplier."""
 from __future__ import annotations
 
 import json
@@ -129,4 +129,4 @@ def source_tests() -> None:
 if __name__ == "__main__":
     policy_tests()
     source_tests()
-    print("Resource Multiplier polish regressions: PASS")
+    print("Smart Resource Multiplier polish regressions: PASS")

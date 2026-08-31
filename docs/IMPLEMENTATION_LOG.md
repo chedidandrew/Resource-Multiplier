@@ -1,5 +1,13 @@
 # Implementation log
 
+## 2026-08-31, Smart Resource Multiplier public rebrand
+
+The public project name changes from **Resource Multiplier** to **Smart Resource Multiplier**. The new name is applied to Fabric and Mod Menu metadata, configuration and reset screens, commands and diagnostics, support templates, maintained documentation, build artifacts, deterministic packaging, and the tests and validators that lock those surfaces. New playable JARs use `smart-resource-multiplier-<version>.jar`, and release bundles use the `SmartResourceMultiplier-*` prefix.
+
+This remains a compatibility-preserving presentation change. The `smart_resource_drops` Fabric mod ID, schema-3 configuration path and keys, datapack and network namespace, saved placement provenance, Java package, `/smartdrops`, and `/smartdropsgui` remain unchanged. Existing worlds, settings, commands, and datapacks require no migration. Upgrade guidance explicitly requires removing the older JAR before installing the renamed one, because both JARs declare the same stable mod ID.
+
+The GitHub repository and CurseForge URL slugs remain unchanged to preserve existing external links. Branch CI artifacts are renamed to `SmartResourceMultiplier-<commit>` and now include a clean `git archive` source snapshot next to the built JARs, making the exact tested source available without altering release publication rules. The production icon is intentionally unchanged so its visual direction can be reviewed separately rather than mixing binary artwork changes into the compatibility-focused source rebrand. Version advances to `1.2.2`, while `release_ready=false` keeps publication locked until the exact final rebrand commit completes the clean-checkout validation chain.
+
 ## 2026-08-31, Resource Multiplier 1.2.1 storefront and support links
 
 This patch changes public metadata and documentation only. Fabric and Mod Menu now use the official CurseForge project as the website, GitHub Issues as the report destination, and GitHub as the source repository. Optional Ko-fi, PayPal, and Cash App links are exposed through Mod Menu custom metadata and GitHub's funding configuration.

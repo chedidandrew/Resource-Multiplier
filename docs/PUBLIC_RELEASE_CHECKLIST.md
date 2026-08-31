@@ -1,39 +1,50 @@
-# Resource Multiplier public release checklist
+# Smart Resource Multiplier public release checklist
 
-## Resource Multiplier 1.2.1
+## Smart Resource Multiplier 1.2.2
 
-This patch changes storefront, issue-tracker, source, and optional funding metadata only. It does not change gameplay or configuration behavior.
+This patch is limited to public branding, metadata, artifact names, documentation, and the regression contracts that verify those surfaces. Gameplay, configuration semantics, schema, networking, permissions, persistence, and anti-duplication behavior are unchanged.
+
+## Branding and compatibility gates
+
+- [x] Fabric and Mod Menu expose the public name **Smart Resource Multiplier**.
+- [x] Configuration screens, reset prompts, commands, diagnostics, issue forms, and maintained documentation use the new public name.
+- [x] The Fabric mod ID remains `smart_resource_drops`.
+- [x] `config/smart_resource_drops.json`, schema 3, datapack and network namespaces, saved provenance, Java packages, `/smartdrops`, and `/smartdropsgui` remain unchanged.
+- [x] New build artifacts use `smart-resource-multiplier-<version>.jar`.
+- [x] Deterministic release packages use the `SmartResourceMultiplier-*` prefix.
+- [x] Upgrade documentation tells players to remove the older JAR before installing the renamed JAR.
+- [x] The production icon remains byte-for-byte unchanged for separate review.
 
 ## Metadata and documentation gates
 
-- [x] `mod_version` is `1.2.1` and the tagged release source authorizes publication with `release_ready=true`.
-- [x] Fabric `contact.homepage` points to the official CurseForge project.
-- [x] Fabric `contact.issues` points to GitHub Issues.
-- [x] Fabric `contact.sources` points to the GitHub repository.
-- [x] Mod Menu custom links expose Ko-fi, PayPal, and Cash App with localized labels.
-- [x] `.github/FUNDING.yml` exposes the same optional support destinations through GitHub.
-- [x] README, changelog, implementation log, issue forms, packaging policy, and release records identify `1.2.1`.
-- [x] Compatibility identifiers, schema, config path, commands, network IDs, and saved provenance remain unchanged.
+- [x] `mod_version` is `1.2.2`.
+- [x] `release_ready=false` prevents accidental tagged publication while this candidate is being verified.
+- [x] Fabric `contact.homepage` remains the official CurseForge project.
+- [x] Fabric `contact.issues` remains GitHub Issues.
+- [x] Fabric `contact.sources` remains the public GitHub repository.
+- [x] README, changelog, implementation log, build status, release notes, validators, and package tests document the transition.
+- [x] Historical release and verification records preserve the public names and artifact identities that were true for those releases.
 
-## Automated and publication gates
+## Automated gates
 
-- [x] Package and metadata validation passes.
-- [x] Deterministic source and release-package validation passes.
-- [x] Mod Menu integration and contact-link regression checks pass.
-- [x] Core assertions and mapped JUnit pass.
-- [x] All 66 required dedicated-server GameTests pass.
-- [x] Client GUI and authority GameTests pass.
-- [x] The Java 25 Fabric Loom build completes successfully.
-- [x] The exact tested release commit `34cc5a64c6d97c8db332ce45260c7615a8f9ab97` passes clean-checkout Build and verify in run `33419561475`.
-- [x] Annotated tag `v1.2.1` points to the exact tested release commit.
-- [x] The guarded release workflow passes in run `33419972111`.
-- [x] GitHub Release `v1.2.1` publishes the playable JAR, source archive, release bundle, build-status record, and checksum files.
-- [x] Official playable JAR is `601971` bytes with 311 ZIP entries and SHA-256 `6E90578892E1F9AA2BF22B8FE4BE1B7831E8BE87F767D14BDB2C376F0443CA32`.
+- [ ] Package and metadata validation passes on the final rebrand commit.
+- [ ] Deterministic source and release-package validation passes.
+- [ ] Mod Menu integration and public-copy regressions pass.
+- [ ] Core assertions and mapped JUnit tests pass.
+- [ ] All required dedicated-server GameTests pass.
+- [ ] Client GUI and authority GameTests pass.
+- [ ] The Java 25 Fabric Loom build completes successfully.
+- [ ] The exact final rebrand commit passes a clean-checkout GitHub Actions run.
+- [ ] The candidate JAR is inspected for name, version, stable mod ID, unchanged icon, embedded MIT license, package contents, and absence of GameTest or nested-JAR leakage.
+
+## Publication gates
+
+- [ ] Set `release_ready=true` only in the exact fully verified release commit.
+- [ ] Create tag `v1.2.2` on a commit contained in `main`.
+- [ ] The guarded release workflow rebuilds and publishes the JAR, source archive, release bundle, build-status record, and checksums.
+- [ ] Confirm the published JAR name is `smart-resource-multiplier-1.2.2.jar`.
+- [ ] Confirm users are told to remove `resource-multiplier-1.2.1.jar` before upgrading.
 
 ## Manual scope decision
 
-No new gameplay matrix was required because no gameplay, mixin, configuration, networking, persistence, or authority code changed. The complete `1.2.0` manual release evidence remains archived under `docs/archive/`. The packaged `1.2.1` metadata was inspected through the release validators, and the dedicated-server and real-client validation suites passed before publication.
-
-## Third-party compatibility policy
-
-Third-party compatibility remains case-specific. Reports should include the exact project version, loader, registry IDs, diagnostic output, reproduction steps, and relevant logs.
+No new gameplay matrix is required for this candidate because no gameplay, mixin target, configuration field, default, network payload, permission path, persistence identifier, or rule-resolution behavior changed. The existing `1.2.0` and `1.2.1` gameplay evidence remains applicable. The visible rebrand still requires real client and dedicated-server tests so public titles, reset copy, commands, metadata, and packaged artifacts are verified in their actual runtime paths.

@@ -1,6 +1,6 @@
-# Resource Multiplier command reference
+# Smart Resource Multiplier command reference
 
-This reference applies to **Resource Multiplier 1.2.0**. The public name changed, but the command entry points remain legacy-compatible: server commands use `/smartdrops`, and the client configuration screen uses `/smartdropsgui`.
+This reference applies to **Smart Resource Multiplier 1.2.2**. The public name changed, but the command entry points remain legacy-compatible: server commands use `/smartdrops`, and the client configuration screen uses `/smartdropsgui`.
 
 Administrative configuration mutations are server-authoritative. They are validated, persisted, and published as one configuration update; if persistence fails, the live configuration is not changed. For the JSON field reference and defaults, see [CONFIGURATION.md](CONFIGURATION.md).
 
@@ -9,7 +9,7 @@ Administrative configuration mutations are server-authoritative. They are valida
 | Entry point | Who can use it | Purpose |
 | --- | --- | --- |
 | `/smartdrops` | Players and console | Show a compact status line |
-| `/smartdropsgui` | Client players with Resource Multiplier installed | Open the configuration screen |
+| `/smartdropsgui` | Client players with Smart Resource Multiplier installed | Open the configuration screen |
 | `/smartdrops gui` | Players and console | Print a reminder to use `/smartdropsgui`; it does not open a screen |
 | `/smartdrops status` | Players and console | Show the same compact status as `/smartdrops` |
 | `/smartdrops shearing [status]` | Players and console | Show the shearing-specific status |
@@ -105,7 +105,7 @@ Each toggle accepts exactly `on` or `off`:
 
 | Command | Effect |
 | --- | --- |
-| `/smartdrops admin enabled <on|off>` | Master switch for Resource Multiplier gameplay |
+| `/smartdrops admin enabled <on|off>` | Master switch for Smart Resource Multiplier gameplay |
 | `/smartdrops admin protection <on|off>` | Smart placement-provenance protection for block rules |
 | `/smartdrops admin xp <on|off>` | Independent block-experience multiplication gate |
 | `/smartdrops admin player-mining <on|off>` | Allow ordinary player block mining to use configured block multipliers |
@@ -265,7 +265,7 @@ known/tagged special safety > unknown/uncertified safety > master disabled > sel
 
 Adding an exact rule requires the entity type to exist in the live registry, be present in `#smart_resource_drops:shearing/standard_resources`, and not be a known or tagged special transformation. Unknown and special types remain fixed at vanilla `1x`. Removing a rule with `inherit` is allowed even when the entity is now missing, uncertified, or special; a currently certified standard type then returns to the default shearing rule.
 
-For eligible standard-helper output within the whole-action safety budget, `0x` suppresses the helper-produced items while the real shearing state transition, event/sound path, and tool behavior still happen once. An action exceeding the source-entry/materialized-legal-stack preflight falls back wholly to its original vanilla `1x` output even when `0x` is configured. Resource Multiplier never reruns the shearing loot table or repeats the shear action. See [COMPATIBILITY.md](COMPATIBILITY.md#certifying-a-compatible-modded-shearable) before certifying a modded entity.
+For eligible standard-helper output within the whole-action safety budget, `0x` suppresses the helper-produced items while the real shearing state transition, event/sound path, and tool behavior still happen once. An action exceeding the source-entry/materialized-legal-stack preflight falls back wholly to its original vanilla `1x` output even when `0x` is configured. Smart Resource Multiplier never reruns the shearing loot table or repeats the shear action. See [COMPATIBILITY.md](COMPATIBILITY.md#certifying-a-compatible-modded-shearable) before certifying a modded entity.
 
 ## Presets
 

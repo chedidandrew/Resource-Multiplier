@@ -11,7 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-/** Resource Multiplier category tags plus runtime entity-type tag discovery. */
+/** Smart Resource Multiplier category tags plus runtime entity-type tag discovery. */
 public final class EntityDropTags {
     private static final Map<EntityCategory, TagKey<EntityType<?>>> CATEGORY_TAGS =
             new EnumMap<>(EntityCategory.class);

@@ -356,7 +356,7 @@ public final class SmartDropsNetworking {
         final String json = snapshot.json();
         if (json.length() > ConfigSnapshotPayload.MAX_JSON_LENGTH) {
             SmartResourceDrops.LOGGER.error(
-                "Refusing oversized Resource Multiplier config snapshot for {} ({} characters; maximum {})",
+                "Refusing oversized Smart Resource Multiplier config snapshot for {} ({} characters; maximum {})",
                 player.getScoreboardName(),
                 json.length(),
                 ConfigSnapshotPayload.MAX_JSON_LENGTH);

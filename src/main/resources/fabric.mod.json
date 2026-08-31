@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "smart_resource_drops",
   "version": "${version}",
-  "name": "Resource Multiplier",
+  "name": "Smart Resource Multiplier",
   "description": "Configurable block, entity death-loot, and safe supported shearing multipliers with persistent anti-dupe protection.",
   "authors": [
     "Andrew Chedid"

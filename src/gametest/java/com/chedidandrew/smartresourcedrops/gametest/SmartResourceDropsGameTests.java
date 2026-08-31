@@ -292,7 +292,7 @@ public final class SmartResourceDropsGameTests {
                         "smartdrops inspect",
                         player.createCommandSourceStack().withSource(targetMessages)) == 1,
                 "The looked-at block inspection command did not succeed");
-        helper.assertTrue(targetMessages.text().contains("Resource Multiplier Inspection")
+        helper.assertTrue(targetMessages.text().contains("Smart Resource Multiplier Inspection")
                         && targetMessages.text().contains("minecraft:stone"),
                 "The successful command did not emit the expected inspection components");
 
@@ -359,7 +359,7 @@ public final class SmartResourceDropsGameTests {
                             "smartdrops validate",
                             helper.getLevel().getServer().createCommandSourceStack().withSource(consoleMessages)) == 1,
                     "Console validation command did not succeed");
-            helper.assertTrue(consoleMessages.text().contains("Resource Multiplier Validation")
+            helper.assertTrue(consoleMessages.text().contains("Smart Resource Multiplier Validation")
                             && consoleMessages.text().contains("additional issue(s) omitted")
                             && consoleMessages.messageCount() <= 24,
                     "Compact validation output was missing or unbounded");

@@ -2,7 +2,7 @@
 
 ## Design goal
 
-Resource Multiplier changes only final loot at three explicit boundaries: qualifying block loot, standard living-entity death-table loot, and supported certified entity-shearing helper output. The implementation avoids world scans, per-tick polling, broad item-entity interception, and a third-party configuration library.
+Smart Resource Multiplier changes only final loot at three explicit boundaries: qualifying block loot, standard living-entity death-table loot, and supported certified entity-shearing helper output. The implementation avoids world scans, per-tick polling, broad item-entity interception, and a third-party configuration library.
 
 ## Runtime path
 

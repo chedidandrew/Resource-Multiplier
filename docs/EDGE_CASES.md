@@ -1,6 +1,6 @@
 # Edge-case behavior
 
-Resource Multiplier multiplies the loot result produced by Minecraft, not the source block item itself. This keeps Fortune, Silk Touch, modded loot tables and explosion decay authoritative.
+Smart Resource Multiplier multiplies the loot result produced by Minecraft, not the source block item itself. This keeps Fortune, Silk Touch, modded loot tables and explosion decay authoritative.
 
 ## Provenance rules
 

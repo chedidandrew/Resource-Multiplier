@@ -48,7 +48,7 @@ fabric = json.loads(read(ROOT / "src/main/resources/fabric.mod.json"))
 build = read(ROOT / "build.gradle")
 props = read(ROOT / "gradle.properties")
 lang = json.loads(read(ROOT / "src/main/resources/assets/smart_resource_drops/lang/en_us.json"))
-public_name = "Resource Multiplier"
+public_name = "Smart Resource Multiplier"
 legacy_public_name = "Smart Resource" + " Drops"
 
 integration = read(CLIENT / "SmartResourceDropsModMenuIntegration.java")
@@ -104,7 +104,7 @@ for name in required_child_names:
 # The display brand is public copy. Established namespaces and command literals are
 # compatibility contracts and must not follow the display-name rename.
 require(fabric.get("id") == "smart_resource_drops", "The stable mod id must remain smart_resource_drops")
-require(fabric.get("name") == public_name, "fabric.mod.json must expose the Resource Multiplier name")
+require(fabric.get("name") == public_name, "fabric.mod.json must expose the Smart Resource Multiplier name")
 require(
     fabric.get("contact")
     == {
@@ -131,23 +131,23 @@ require(
 )
 require(
     lang.get("modmenu.nameTranslation.smart_resource_drops") == public_name,
-    "Mod Menu must display Resource Multiplier",
+    "Mod Menu must display Smart Resource Multiplier",
 )
 require(
     lang.get("smart_resource_drops.title") == public_name,
-    "The config GUI title must display Resource Multiplier",
+    "The config GUI title must display Smart Resource Multiplier",
 )
 require(
     'Component.translatable("smart_resource_drops.title")' in root_screen,
     "The root config screen must keep using the stable localized title key",
 )
 require(
-    lang.get("smart_resource_drops.gui.reset_confirm_title") == "Reset Resource Multiplier?",
+    lang.get("smart_resource_drops.gui.reset_confirm_title") == "Reset Smart Resource Multiplier?",
     "The reset confirmation title must use the public display name",
 )
 reset_body_copy = lang.get("smart_resource_drops.gui.reset_confirm_body", "")
 require(
-    "every Resource Multiplier setting" in reset_body_copy,
+    "every Smart Resource Multiplier setting" in reset_body_copy,
     "The reset confirmation body must use the public display name",
 )
 require(
@@ -328,7 +328,7 @@ advanced_tooltip_contract = (
     (
         "smart_resource_drops.gui.enabled",
         "smart_resource_drops.gui.enabled_tooltip",
-        "Master switch for Resource Multiplier. Saved settings remain unchanged while multiplication is disabled.",
+        "Master switch for Smart Resource Multiplier. Saved settings remain unchanged while multiplication is disabled.",
     ),
     (
         "smart_resource_drops.gui.player_mining",
@@ -848,7 +848,7 @@ require(
 )
 require(
     "ClientCommandQueue.clear()" in method_body(state, "invalidatePendingMutations"),
-    "Confirmed reset must clear every delayed Resource Multiplier client mutation/action",
+    "Confirmed reset must clear every delayed Smart Resource Multiplier client mutation/action",
 )
 require(
     "belongsToCurrentConnection" in session
@@ -1078,7 +1078,7 @@ for key in required_language_keys:
     require(key in lang, f"Missing language key: {key}")
 require(
     lang["smart_resource_drops.gui.reset_all_tooltip"]
-    == "Restore all Resource Multiplier settings to their defaults.",
+    == "Restore all Smart Resource Multiplier settings to their defaults.",
     "Reset tooltip must describe configuration defaults without implying world-data deletion",
 )
 require(

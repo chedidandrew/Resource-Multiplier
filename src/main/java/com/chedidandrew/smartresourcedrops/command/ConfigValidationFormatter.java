@@ -22,7 +22,7 @@ final class ConfigValidationFormatter {
     static List<Component> format(final ConfigValidationReport report, final boolean verbose) {
         final int issueLimit = verbose ? VERBOSE_ISSUE_LIMIT : COMPACT_ISSUE_LIMIT;
         final List<Component> lines = new ArrayList<>();
-        lines.add(Component.literal("Resource Multiplier Validation")
+        lines.add(Component.literal("Smart Resource Multiplier Validation")
                 .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD));
         lines.add(valueLine("Configuration revision", String.valueOf(report.revision()), ChatFormatting.WHITE));
         lines.add(statusLine(report));

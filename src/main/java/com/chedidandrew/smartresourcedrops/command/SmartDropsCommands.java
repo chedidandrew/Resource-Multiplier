@@ -549,7 +549,7 @@ public final class SmartDropsCommands {
 
     private static int showStatus(CommandSourceStack source) {
         SmartDropsConfig config = ConfigManager.get();
-        String status = "Resource Multiplier: "
+        String status = "Smart Resource Multiplier: "
                 + (config.enabled ? "ON" : "OFF")
                 + " | global=" + config.globalMultiplier + "x"
                 + " | protection=" + onOff(config.smartPlacementProtection)
@@ -580,7 +580,7 @@ public final class SmartDropsCommands {
                 : config.defaultShearingMultiplier + "x";
         return message(
                 source,
-                "Resource Multiplier shearing: master=" + onOff(config.enabled)
+                "Smart Resource Multiplier shearing: master=" + onOff(config.enabled)
                         + " | manual=" + onOff(config.manualShearingDropsEnabled)
                         + " | automated=" + onOff(config.automatedShearingDropsEnabled)
                         + " | default=" + configuredDefault

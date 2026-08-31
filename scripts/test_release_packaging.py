@@ -22,9 +22,9 @@ spec = importlib.util.spec_from_file_location(
 require(spec is not None and spec.loader is not None, "Could not load package_release.py")
 package_release = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(package_release)
-require(package_release.PUBLIC_MOD_NAME == "Resource Multiplier", "Public mod name contract changed")
-require(package_release.PUBLIC_ARCHIVE_BASE == "ResourceMultiplier", "Release archive base changed")
-require(package_release.PLAYABLE_JAR_BASE == "resource-multiplier", "Playable JAR base changed")
+require(package_release.PUBLIC_MOD_NAME == "Smart Resource Multiplier", "Public mod name contract changed")
+require(package_release.PUBLIC_ARCHIVE_BASE == "SmartResourceMultiplier", "Release archive base changed")
+require(package_release.PLAYABLE_JAR_BASE == "smart-resource-multiplier", "Playable JAR base changed")
 require(
     package_release.EXPECTED_MODMENU_LINKS
     == {'smart_resource_drops.modmenu.link.kofi': 'https://ko-fi.com/andrewchedid', 'smart_resource_drops.modmenu.link.paypal': 'https://www.paypal.com/paypalme/chedidandrew', 'smart_resource_drops.modmenu.link.cash_app': 'https://cash.app/%24AndrewChedid'},
@@ -53,7 +53,7 @@ def write_minimum_release_entries(
     metadata = {
         "schemaVersion": 1,
         "id": "smart_resource_drops",
-        "name": "Resource Multiplier",
+        "name": "Smart Resource Multiplier",
         "version": "test",
         "contact": dict(package_release.EXPECTED_CONTACT),
         "license": "MIT",
@@ -101,7 +101,7 @@ def write_minimum_release_entries(
     for required in package_release.REQUIRED_RELEASE_JAR_ENTRIES:
         if required == omitted or required in {"fabric.mod.json", "smart_resource_drops.mixins.json"}:
             continue
-        if required == "LICENSE_resource-multiplier":
+        if required == "LICENSE_smart-resource-multiplier":
             payload = (ROOT / "LICENSE").read_bytes() if license_payload is None else license_payload
         elif required == "data/smart_resource_drops/tags/item/protected_entity_loot.json":
             payload = json.dumps({
@@ -170,7 +170,7 @@ for forbidden in (
     ".build/core-tests/Example.class",
     "run/config/smart_resource_drops.json",
     "logs/latest.log",
-    "dist/ResourceMultiplier-1.0.3-source.zip",
+    "dist/SmartResourceMultiplier-1.2.2-source.zip",
     "out/production/Example.class",
     ".idea/workspace.xml",
     ".vs/SmartResourceDrops/v17/.suo",
@@ -270,11 +270,11 @@ for required_build_input in (
         f"JAR freshness inputs omitted {required_build_input}",
     )
 
-with tempfile.TemporaryDirectory(prefix="resource-multiplier-source-test-") as temp_dir:
+with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-") as temp_dir:
     temp_root = Path(temp_dir)
     first = temp_root / "first.zip"
     second = temp_root / "second.zip"
-    top_level = "ResourceMultiplier-test"
+    top_level = "SmartResourceMultiplier-test"
 
     first_entries = package_release.build_source_zip(first, top_level, source_files)
     second_entries = package_release.build_source_zip(second, top_level, source_files)
@@ -406,7 +406,7 @@ with tempfile.TemporaryDirectory(prefix="resource-multiplier-source-test-") as t
             raise AssertionError(f"Playable JAR accepted forbidden entry {forbidden_entry}")
 
     for missing_entry in (
-        "LICENSE_resource-multiplier",
+        "LICENSE_smart-resource-multiplier",
         "com/chedidandrew/smartresourcedrops/client/SmartResourceDropsClient.class",
         "smart_resource_drops.mixins.json",
         "assets/smart_resource_drops/icon.png",
@@ -460,7 +460,7 @@ with tempfile.TemporaryDirectory(prefix="resource-multiplier-source-test-") as t
     else:
         raise AssertionError("Release packager accepted a non-empty output directory")
 
-for built_jar in sorted((ROOT / "build/libs").glob("resource-multiplier-*.jar")):
+for built_jar in sorted((ROOT / "build/libs").glob("smart-resource-multiplier-*.jar")):
     if not built_jar.name.endswith("-sources.jar"):
         package_release.validate_release_jar(built_jar)
 

@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 public final class SmartResourceDrops implements ModInitializer {
     public static final String MOD_ID = "smart_resource_drops";
-    public static final String MOD_NAME = "Resource Multiplier";
+    public static final String MOD_NAME = "Smart Resource Multiplier";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
     public static Identifier id(String path) {

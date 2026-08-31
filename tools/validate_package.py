@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import struct
@@ -30,6 +31,7 @@ EXPECTED_ENTRYPOINTS = {
         "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsModMenuIntegration"
     ],
 }
+EXPECTED_ICON_SHA256 = "b8a56ed24db3a2e812271d69fd021a5756469ac0d649ebd7cc3f205d7d276694"
 EXPECTED_SOURCE_DEPENDS = {
     "fabricloader": ">=${loader_version}",
     "minecraft": "~${minecraft_version}",
@@ -134,6 +136,8 @@ required = [
     "docs/GITHUB_UPLOAD.md",
     "docs/IMPLEMENTATION_LOG.md",
     "docs/ROADMAP.md",
+    "docs/REBRAND.md",
+    "docs/releases/1.2.2.md",
     "docs/images/general-config.webp",
     "docs/images/block-overrides.webp",
     "docs/images/shearing-config.webp",
@@ -292,36 +296,53 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
-    "mod_version": "1.2.1",
+    "mod_version": "1.2.2",
     "minecraft_version": "26.2",
     "loader_version": "0.19.3",
     "loom_version": "1.17.20",
     "fabric_version": "0.158.0+26.2",
     "maven_group": "com.chedidandrew",
-    "archives_base_name": "resource-multiplier",
+    "archives_base_name": "smart-resource-multiplier",
 }
 for key, expected in expected_properties.items():
     if properties.get(key) != expected:
         fail(f"gradle.properties {key} must be {expected!r}, found {properties.get(key)!r}")
-if properties.get("release_ready") != "true":
-    fail("The stable 1.2.1 release commit must set release_ready=true")
+if properties.get("release_ready") != "false":
+    fail("The 1.2.2 rebrand source candidate must keep release_ready=false until a tagged release is authorized")
+
+settings_text = (ROOT / "settings.gradle").read_text(encoding="utf-8")
+if "rootProject.name = 'SmartResourceMultiplier'" not in settings_text:
+    fail("settings.gradle must expose the SmartResourceMultiplier build identity")
+
+rebrand_text = (ROOT / "docs/REBRAND.md").read_text(encoding="utf-8")
+for marker in (
+    "Smart Resource Multiplier",
+    "smart-resource-multiplier-1.2.2.jar",
+    "smart_resource_drops",
+    "config/smart_resource_drops.json",
+    "/smartdrops",
+    "/smartdropsgui",
+    "icon is intentionally unchanged",
+):
+    if marker not in rebrand_text:
+        fail(f"docs/REBRAND.md is missing required compatibility guidance: {marker}")
 
 readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
 readme_word_count = len(re.findall(r"\S+", readme_text))
 if not 1_000 <= readme_word_count <= 1_500:
     fail(f"README.md public landing page must stay near 1,000-1,500 words, found {readme_word_count}")
 for marker in (
-    '<h1 align="center">Resource Multiplier</h1>',
+    '<h1 align="center">Smart Resource Multiplier</h1>',
     'src="src/main/resources/assets/smart_resource_drops/icon.png"',
-    'alt="Resource Multiplier icon"',
+    'alt="Smart Resource Multiplier icon"',
     "actions/workflows/build.yml/badge.svg?branch=main",
     "Minecraft-26.2",
     "Loader-Fabric",
     "Java-25",
     "License-MIT",
-    "Status-1.2.1-Release",
+    "Status-1.2.2-Candidate",
     "> [!IMPORTANT]",
-    "Current stable release:",
+    "Current source version:",
     "www.curseforge.com/minecraft/mc-mods/resource-multiplier",
     "Download the current release from",
     "docs/COMMANDS.md",
@@ -334,7 +355,7 @@ for marker in (
 if readme_text.count("```") % 2 != 0:
     fail("README.md contains an unclosed fenced code block")
 if "Smart Resource Drops" in readme_text:
-    fail("README.md still contains the former public name")
+    fail("README.md still contains the pre-1.2.0 public name")
 
 readme_targets = re.findall(r"!?\[[^\]]*\]\(([^)]+)\)", readme_text)
 readme_targets.extend(re.findall(r'(?:href|src)="([^"]+)"', readme_text))
@@ -369,7 +390,7 @@ if isinstance(fabric, dict):
     checks = {
         "schemaVersion": 1,
         "id": "smart_resource_drops",
-        "name": "Resource Multiplier",
+        "name": "Smart Resource Multiplier",
         "environment": "*",
     }
     for key, expected in checks.items():
@@ -397,22 +418,35 @@ if isinstance(fabric, dict):
 
 public_copy_contracts = {
     "src/main/java/com/chedidandrew/smartresourcedrops/SmartResourceDrops.java": (
-        'public static final String MOD_NAME = "Resource Multiplier";',
+        'public static final String MOD_NAME = "Smart Resource Multiplier";',
     ),
     "src/main/java/com/chedidandrew/smartresourcedrops/command/BlockInspectionFormatter.java": (
-        'Component.literal("Resource Multiplier Inspection")',
+        'Component.literal("Smart Resource Multiplier Inspection")',
     ),
     "src/main/java/com/chedidandrew/smartresourcedrops/command/EntityInspectionFormatter.java": (
-        'Component.literal("Resource Multiplier Entity Inspection")',
+        'Component.literal("Smart Resource Multiplier Entity Inspection")',
     ),
     "src/main/java/com/chedidandrew/smartresourcedrops/command/ConfigValidationFormatter.java": (
-        'Component.literal("Resource Multiplier Validation")',
+        'Component.literal("Smart Resource Multiplier Validation")',
     ),
     "src/main/java/com/chedidandrew/smartresourcedrops/command/SmartDropsCommands.java": (
-        '"Resource Multiplier: "',
-        '"Resource Multiplier shearing: master="',
+        '"Smart Resource Multiplier: "',
+        '"Smart Resource Multiplier shearing: master="',
     ),
 }
+
+public_runtime_roots = [
+    ROOT / "src/main",
+    ROOT / "src/client",
+    ROOT / "src/gametest",
+]
+old_public_name = re.compile(r"(?<!Smart )Resource Multiplier")
+for runtime_root in public_runtime_roots:
+    for path in sorted(runtime_root.rglob("*")):
+        if path.is_file() and path.suffix in {".java", ".json"}:
+            runtime_text = path.read_text(encoding="utf-8")
+            if old_public_name.search(runtime_text):
+                fail(f"Runtime source still exposes the previous public name: {path.relative_to(ROOT)}")
 
 compatibility_contracts = {
     "src/main/java/com/chedidandrew/smartresourcedrops/SmartResourceDrops.java": (
@@ -785,6 +819,8 @@ if icon.is_file():
         width, height = struct.unpack(">II", data[16:24])
         if (width, height) != (128, 128):
             fail(f"Mod icon must be 128x128, found {width}x{height}")
+        if hashlib.sha256(data).hexdigest() != EXPECTED_ICON_SHA256:
+            fail("The 1.2.2 rebrand must preserve the reviewed production icon byte-for-byte")
 
 build_gradle = (ROOT / "build.gradle").read_text(encoding="utf-8")
 for expected in [
@@ -840,8 +876,8 @@ game_test_metadata = read_json(ROOT / "src/gametest/resources/fabric.mod.json")
 if isinstance(game_test_metadata, dict):
     if game_test_metadata.get("id") != "smart_resource_drops_gametest":
         fail("GameTest metadata must preserve the smart_resource_drops_gametest id")
-    if game_test_metadata.get("name") != "Resource Multiplier GameTests":
-        fail("GameTest metadata must expose the Resource Multiplier GameTests name")
+    if game_test_metadata.get("name") != "Smart Resource Multiplier GameTests":
+        fail("GameTest metadata must expose the Smart Resource Multiplier GameTests name")
     game_test_entrypoints = game_test_metadata.get("entrypoints", {})
     if not isinstance(game_test_entrypoints, dict) or not game_test_entrypoints.get("fabric-client-gametest"):
         fail("GameTest metadata is missing the Fabric client GameTest entrypoint")

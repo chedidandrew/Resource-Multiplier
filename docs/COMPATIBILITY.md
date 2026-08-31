@@ -1,12 +1,12 @@
-# Resource Multiplier compatibility notes
+# Smart Resource Multiplier compatibility notes
 
-Resource Multiplier 1.2.0 passes its automated synthetic-testmod, dedicated/client GameTest, clean-build, package-validator, and playable-JAR gates. All named third-party manual cases remain pending. This evidence documents the generic boundary only; it is not a claim that every mod, datapack, or server stack is compatible.
+Smart Resource Multiplier 1.2.2 preserves the tested gameplay boundaries from 1.2.1. The rebrand changes no loot boundary, rule resolver, safety budget, configuration behavior, or mixin target. The final source candidate must still pass the complete synthetic-testmod, dedicated/client GameTest, clean-build, package-validator, and playable-JAR chain. All named third-party manual cases remain case-specific; this document is not a claim that every mod, datapack, or server stack is compatible.
 
-## Resource Multiplier 1.2.0 supported shearing boundary
+## Smart Resource Multiplier 1.2.x supported shearing boundary
 
 The 1.2.0 candidate recognizes two sources only: a real server player inside `Player.interactOn`, and the exact vanilla dispenser entity call inside `ShearsDispenseItemBehavior.tryShearEntity`. The outer player scope deliberately does not require `Items.SHEARS`, so a compatible custom tool can work if it follows the standard entity interaction and final shearing-helper path. Fabric fake players, direct `Shearable.shear` calls, custom machine output, and inference from `SoundSource.BLOCKS` remain unsupported vanilla `1x`.
 
-Eligible output must pass through `LivingEntity.dropFromShearingLootTable`. That helper runs once and its final stacks are buffered; Resource Multiplier never reruns the table or repeats the state transition. Per-call consumers are retained, preserving sheep velocity, entity-specific positions, and compatible mod placement behavior. Direct `spawnAtLocation`, `ItemEntity`, inventory, and equipment ejection are not intercepted.
+Eligible output must pass through `LivingEntity.dropFromShearingLootTable`. That helper runs once and its final stacks are buffered; Smart Resource Multiplier never reruns the table or repeats the state transition. Per-call consumers are retained, preserving sheep velocity, entity-specific positions, and compatible mod placement behavior. Direct `spawnAtLocation`, `ItemEntity`, inventory, and equipment ejection are not intercepted.
 
 Production certification includes sheep only. Mooshroom, Snow Golem, Bogged, Copper Golem, and Sulfur Cube are special and fixed at vanilla `1x`; the hardcoded audited safety set prevents a datapack `replace` or conflicting standard tag from bypassing that rule. Unknown modded shearables fail closed until a pack deliberately adds the type to `#smart_resource_drops:shearing/standard_resources`. Certification means only that standard-helper output is eligible—it does not promise that a modded entity actually calls the helper.
 
@@ -39,7 +39,7 @@ For the 1.1 entity path, compatibility means final **standard death-table** outp
 
 - Supported: non-player `LivingEntity` standard death-table stacks emitted by Minecraft's death-specific loot consumer.
 - Always outside the multiplier: players, armor stands, equipment, held/picked-up items, entity inventories/cargo, custom death output, direct item spawns, gifts, shearing, fishing, breeding, trading, commands, advancement/score/stat rewards, and unrelated XP.
-- `doMobLoot=false`, an empty table, a baby/no-drop condition, cancellation, and another mod's final zero-result remain authoritative. Resource Multiplier does not recreate output.
+- `doMobLoot=false`, an empty table, a baby/no-drop condition, cancellation, and another mod's final zero-result remain authoritative. Smart Resource Multiplier does not recreate output.
 - Ravager's Minecraft 26.2 standard table contains a saddle and Evoker's contains a Totem of Undying. Both items are protected at final-output time and remain single even when boss item multiplication is deliberately enabled. Datapacks may protect additional progression output through `#smart_resource_drops:protected_entity_loot`; the shipped tag uses `replace: false`.
 - Wither/Dragon and other special drops must be tested individually. Output produced through subclass custom-death code remains outside the standard-table hook by design.
 - A mod that replaces `dropAllDeathLoot`, bypasses the supported death-table call, consumes loot into an inventory, or creates items later receives vanilla behavior unless it offers a targeted compatibility contract. This fail-closed result is preferred to multiplying ambiguous inventory/equipment output.
@@ -77,15 +77,15 @@ Mob XP is scoped to the active death's `ExperienceOrb.award` call. Nearby or lat
 
 ## Block output budget and failure behavior
 
-Resource Multiplier preflights each block's complete final loot list before applying a multiplier above `1x`. If the estimate exceeds 262,144 items or 4,096 legal stacks, or arithmetic saturates because another mod supplied pathological counts, the complete original list is returned untouched at vanilla `1x`. The mod never partially multiplies, truncates, or reconstructs that list. This protects player, explosion, and supported automation paths at the same boundary while preserving another mod's already-produced output.
+Smart Resource Multiplier preflights each block's complete final loot list before applying a multiplier above `1x`. If the estimate exceeds 262,144 items or 4,096 legal stacks, or arithmetic saturates because another mod supplied pathological counts, the complete original list is returned untouched at vanilla `1x`. The mod never partially multiplies, truncates, or reconstructs that list. This protects player, explosion, and supported automation paths at the same boundary while preserving another mod's already-produced output.
 
 With statistics enabled, the fallback counts the evaluation and original vanilla items, increments `blockBudgetFallbacks`, and records no multiplied block or bonus items. A bounded warning identifies the block, dimension, position, multiplier, estimates, limits, and fallback; repeated block-ID/reason pairs are suppressed for five minutes in a cache capped at 256 keys. A mod that manufactures output outside the supported final block-loot boundary remains untouched rather than being forced through this budget.
 
 ## Compatibility evidence format
 
-Every manual compatibility result must record the mod/project name, exact tested version, calendar test date, exact Resource Multiplier version/artifact, result, and known limitation. Do not write “compatible with modded mobs” or another blanket claim from a synthetic fixture or one project. At minimum, release evidence needs separate rows for biome/wildlife or passive entities, hostile entities, bosses, equipment/inventory behavior, custom shearables, automated miners, and custom placement/drop integrations.
+Every manual compatibility result must record the mod/project name, exact tested version, calendar test date, exact Smart Resource Multiplier version/artifact, result, and known limitation. Do not write “compatible with modded mobs” or another blanket claim from a synthetic fixture or one project. At minimum, release evidence needs separate rows for biome/wildlife or passive entities, hostile entities, bosses, equipment/inventory behavior, custom shearables, automated miners, and custom placement/drop integrations.
 
-| Category | Mod/project | Exact version | Test date | Resource Multiplier version | Result | Known limitation |
+| Category | Mod/project | Exact version | Test date | Smart Resource Multiplier version | Result | Known limitation |
 | --- | --- | --- | --- | --- | --- | --- |
 | Biome/wildlife or passive | Pending selection | Not tested | Not tested | 1.2.0 | Pending | Manual gate not performed |
 | Hostile entity | Pending selection | Not tested | Not tested | 1.2.0 | Pending | Manual gate not performed |
@@ -105,10 +105,10 @@ Block entities and data-bearing containers are excluded by default. Automation m
 
 ## Mod Menu
 
-Resource Multiplier integrates with Mod Menu through an optional client entrypoint. Mod Menu is not declared as a required dependency and is not needed on dedicated servers.
+Smart Resource Multiplier integrates with Mod Menu through an optional client entrypoint. Mod Menu is not declared as a required dependency and is not needed on dedicated servers.
 
-With Mod Menu installed, the Mods screen exposes a `Configure` button for Resource Multiplier. With no active world or integrated server, it opens the complete editor against the global local file; those values are defaults for future singleplayer worlds and never modify a remote server. With a play connection, the same route requests the authoritative server snapshot and never falls back to local values.
+With Mod Menu installed, the Mods screen exposes a `Configure` button for Smart Resource Multiplier. With no active world or integrated server, it opens the complete editor against the global local file; those values are defaults for future singleplayer worlds and never modify a remote server. With a play connection, the same route requests the authoritative server snapshot and never falls back to local values.
 
-If a connected server does not support Resource Multiplier config sync, the loading screen reports that state and allows the player to return safely. Regular players receive the full connected interface read-only; operators and the integrated-server owner can apply validated changes.
+If a connected server does not support Smart Resource Multiplier config sync, the loading screen reports that state and allows the player to return safely. Regular players receive the full connected interface read-only; operators and the integrated-server owner can apply validated changes.
 
 The final hardening pass reconfirms compile-only dependency and dedicated-server classpath isolation: standalone server startup without Mod Menu reaches `Done (0.313s)`, executes validation, and stops cleanly; the client GameTest passes in 38 seconds across the shared title/local, cached connected, integrated-server, dedicated non-operator, and dedicated operator routes. A historical Mod Menu 20.0.0 run visibly completed the title-screen Mods-list Configure route and every major child dirty-state view, while the current standalone Mod Menu client run is startup smoke only. Connected Mod Menu navigation and a separately installed multiplayer session remain pending.

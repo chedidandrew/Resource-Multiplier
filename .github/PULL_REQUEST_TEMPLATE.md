@@ -1,6 +1,6 @@
 # Summary
 
-Describe the Resource Multiplier problem and the smallest focused change that solves it.
+Describe the Smart Resource Multiplier problem and the smallest focused change that solves it.
 
 ## Impact statement
 

@@ -87,7 +87,7 @@ public final class ConfigManager {
             writesSuppressed = true;
             loadDiagnostics = ConfigLoadDiagnostics.readFailure();
             SmartResourceDrops.LOGGER.error(
-                    "Could not read Resource Multiplier config; the existing file will not be overwritten",
+                    "Could not read Smart Resource Multiplier config; the existing file will not be overwritten",
                     exception);
             return false;
         }
@@ -104,7 +104,7 @@ public final class ConfigManager {
             publishConfig(SmartDropsConfig.safeExistingFileDefaults(), PublicationKind.UPDATE);
             writesSuppressed = true;
             SmartResourceDrops.LOGGER.error(
-                    "Resource Multiplier config schema {} is newer than supported schema {}; "
+                    "Smart Resource Multiplier config schema {} is newer than supported schema {}; "
                             + "using safe defaults without overwriting the file",
                     parsed.schemaVersion(),
                     SmartDropsConfig.CURRENT_SCHEMA);
@@ -117,7 +117,7 @@ public final class ConfigManager {
                 && !preserveOversizedConfig(path, parsed)) {
             writesSuppressed = true;
             SmartResourceDrops.LOGGER.error(
-                    "The oversized Resource Multiplier config was sanitized in memory, but a backup could not be "
+                    "The oversized Smart Resource Multiplier config was sanitized in memory, but a backup could not be "
                             + "created; the original file will not be overwritten");
             return false;
         }
@@ -206,16 +206,16 @@ public final class ConfigManager {
         } catch (IOException copyFailure) {
             writesSuppressed = true;
             SmartResourceDrops.LOGGER.error(
-                    "Malformed Resource Multiplier config could not be preserved; "
+                    "Malformed Smart Resource Multiplier config could not be preserved; "
                             + "the original file will not be overwritten",
                     copyFailure);
-            SmartResourceDrops.LOGGER.error("Rejected malformed Resource Multiplier config", exception);
+            SmartResourceDrops.LOGGER.error("Rejected malformed Smart Resource Multiplier config", exception);
             return false;
         }
 
         final SmartDropsConfig defaults = SmartDropsConfig.safeExistingFileDefaults();
         SmartResourceDrops.LOGGER.error(
-                "Malformed Resource Multiplier config was preserved as " + brokenPath.getFileName()
+                "Malformed Smart Resource Multiplier config was preserved as " + brokenPath.getFileName()
                         + " and replaced with safe defaults",
                 exception);
         if (!writeCandidate(path, defaults, "replace the malformed configuration")) {
@@ -787,7 +787,7 @@ public final class ConfigManager {
         try {
             AtomicConfigWriter.write(path, GSON.toJson(candidate));
         } catch (IOException exception) {
-            SmartResourceDrops.LOGGER.error("Could not save Resource Multiplier config", exception);
+            SmartResourceDrops.LOGGER.error("Could not save Smart Resource Multiplier config", exception);
             return false;
         }
         publishConfig(candidate, PublicationKind.UPDATE);

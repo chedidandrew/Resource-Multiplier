@@ -1,4 +1,15 @@
-# Resource Multiplier roadmap
+# Smart Resource Multiplier roadmap
+
+## Current 1.2.2 status
+
+The Smart Resource Multiplier `1.2.2` work is a compatibility-preserving public rebrand. It updates visible names, artifact names, metadata, maintained documentation, and regression contracts only. It adds no gameplay system and changes no multiplier rule, safety gate, configuration field, default, schema, networking behavior, permission path, persistence identifier, or mixin target.
+
+The `smart_resource_drops` mod ID and datapack/network namespace, `config/smart_resource_drops.json`, saved placement provenance, Java package, `/smartdrops`, and `/smartdropsgui` remain stable. The icon remains unchanged pending separate visual review. Future feature work remains governed by the historical scope and safety decisions below.
+
+## Historical roadmap
+
+The following sections preserve the planning and release-gate history written under the public names that were current at the time.
+
 
 This document describes possible future work. It is not a promise of a release date or a specification for the current build.
 

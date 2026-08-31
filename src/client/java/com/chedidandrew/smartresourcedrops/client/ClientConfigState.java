@@ -303,7 +303,7 @@ public final class ClientConfigState {
     }
 
     /**
-     * Invalidates every queued Resource Multiplier client mutation/request generation.
+     * Invalidates every queued Smart Resource Multiplier client mutation/request generation.
      * This is deliberately called only after the user confirms a full reset.
      */
     public static void invalidatePendingMutations() {

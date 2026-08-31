@@ -1,4 +1,31 @@
-# Resource Multiplier testing and verification
+# Smart Resource Multiplier testing and verification
+
+## 1.2.2 rebrand candidate
+
+Smart Resource Multiplier `1.2.2` is a branding-only source candidate with `release_ready=false`. It changes public names, artifact names, metadata, documentation, and the regression contracts that verify those surfaces. It does not change gameplay, mixin targets, configuration fields or defaults, schema, networking, permissions, persistence, or anti-duplication behavior.
+
+The final candidate must pass this clean-checkout sequence on Java 25:
+
+```bash
+python3 tools/validate_package.py
+python3 scripts/test_release_packaging.py
+python3 scripts/test_modmenu_integration.py
+python3 scripts/test_structured_tooltip_composition.py
+python3 scripts/edge_case_source_audit.py
+python3 scripts/polish_regression_tests.py
+bash tools/run_core_tests.sh
+./gradlew --no-daemon clean test runGameTest build
+xvfb-run -a ./gradlew --no-daemon runClientGameTest
+```
+
+The expected playable artifact is `build/libs/smart-resource-multiplier-1.2.2.jar`. Inspection must confirm public name `Smart Resource Multiplier`, version `1.2.2`, stable mod ID `smart_resource_drops`, unchanged icon bytes, embedded MIT license, no nested JARs, and no GameTest classes or resources. The exact clean-checkout run, artifact size, ZIP-entry count, and SHA-256 are recorded in `BUILD_STATUS.md` after CI passes.
+
+No new hands-on gameplay matrix is required because the gameplay implementation is unchanged. Runtime client and dedicated-server tests remain required because the visible title, reset prompts, command headers, metadata, and packaged artifact identity must be exercised through real runtime paths.
+
+## Historical verification records
+
+The remaining sections preserve the evidence captured for earlier public names and versions. Artifact names, hashes, versions, and release status in those sections are historical facts and should not be rewritten to match the current brand.
+
 
 ## 1.2.0 automated evidence and open release gates
 

@@ -37,7 +37,7 @@ public final class RuleEngineTest {
         blockedTraceKeepsConfiguredRuleAndAppliedVanillaValue();
         traceFilterDiagnosticsAreExact();
         multipleCategoryTraceHonorsInputOrder();
-        System.out.println("PASS: " + assertions + " Resource Multiplier core assertions");
+        System.out.println("PASS: " + assertions + " Smart Resource Multiplier core assertions");
     }
 
     private static void naturalBlockUsesGlobalMultiplier() {

@@ -2,6 +2,27 @@
 
 All notable changes are documented here.
 
+## 1.2.2 - Unreleased
+
+### Changed
+
+- Renamed the public project from **Resource Multiplier** to **Smart Resource Multiplier** across Fabric metadata, Mod Menu, configuration screens, reset prompts, commands, diagnostics, templates, maintained documentation, tests, validators, and packaging copy.
+- Changed new JAR names from `resource-multiplier-<version>.jar` to `smart-resource-multiplier-<version>.jar` and deterministic release-package prefixes from `ResourceMultiplier-*` to `SmartResourceMultiplier-*`.
+- Kept the GitHub repository and CurseForge URL slugs unchanged so existing links continue to work.
+- Kept the production icon unchanged for a separate visual review.
+- Added [`docs/REBRAND.md`](docs/REBRAND.md) with upgrade and compatibility details.
+- Renamed branch CI artifacts to `SmartResourceMultiplier-<commit>` and included a clean `git archive` source snapshot alongside the built JARs for reproducible review.
+
+### Compatibility
+
+- Preserved the `smart_resource_drops` mod ID, schema 3 configuration file, datapack and network namespace, saved placement provenance, Java package, `/smartdrops`, and `/smartdropsgui`. Existing worlds and configurations require no migration.
+- Players upgrading to the renamed JAR must remove the older `resource-multiplier-*.jar` file so Fabric does not discover two JARs with the same stable mod ID.
+- No block, entity, XP, shearing, filtering, multiplier, networking, permission, persistence, or anti-duplication behavior changed.
+
+### Verification
+
+- The final rebrand commit must pass the complete package, unit, dedicated-server, client, and Java 25 build chain before publication is authorized. `release_ready=false` remains set during candidate validation.
+
 ## 1.2.1 - 2026-08-31
 
 ### Changed

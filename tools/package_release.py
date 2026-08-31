@@ -14,9 +14,9 @@ from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXED_TIME = (2026, 8, 29, 0, 0, 0)
-PUBLIC_MOD_NAME = "Resource Multiplier"
-PUBLIC_ARCHIVE_BASE = "ResourceMultiplier"
-PLAYABLE_JAR_BASE = "resource-multiplier"
+PUBLIC_MOD_NAME = "Smart Resource Multiplier"
+PUBLIC_ARCHIVE_BASE = "SmartResourceMultiplier"
+PLAYABLE_JAR_BASE = "smart-resource-multiplier"
 PROJECT_HOMEPAGE = "https://www.curseforge.com/minecraft/mc-mods/resource-multiplier"
 PROJECT_SOURCES = "https://github.com/chedidandrew/Resource-Multiplier"
 PROJECT_ISSUES = f"{PROJECT_SOURCES}/issues"
@@ -201,7 +201,7 @@ REQUIRED_RELEASE_JAR_ENTRIES = frozenset(
     {
         "fabric.mod.json",
         "smart_resource_drops.mixins.json",
-        "LICENSE_resource-multiplier",
+        "LICENSE_smart-resource-multiplier",
         "com/chedidandrew/smartresourcedrops/SmartResourceDrops.class",
         "com/chedidandrew/smartresourcedrops/client/SmartResourceDropsClient.class",
         "com/chedidandrew/smartresourcedrops/client/SmartResourceDropsModMenuIntegration.class",
@@ -394,7 +394,7 @@ def is_forbidden_source_path(relative: Path | PurePosixPath) -> bool:
         or name.endswith("-build_status.md")
     ):
         return True
-    if name.startswith(("resource-multiplier-", "smart-resource-drops-")) and name.endswith(".jar"):
+    if name.startswith(("smart-resource-multiplier-", "resource-multiplier-", "smart-resource-drops-")) and name.endswith(".jar"):
         return True
     return False
 
@@ -550,7 +550,7 @@ def validate_release_jar(
                 errors.append(f"missing required production JAR entries: {', '.join(missing)}")
 
             try:
-                embedded_license = archive.read("LICENSE_resource-multiplier")
+                embedded_license = archive.read("LICENSE_smart-resource-multiplier")
             except KeyError:
                 pass
             else:
@@ -805,7 +805,7 @@ def require_empty_output_directory(output_dir: Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Create deterministic Resource Multiplier release packages.")
+    parser = argparse.ArgumentParser(description="Create deterministic Smart Resource Multiplier release packages.")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "dist")
     parser.add_argument(
         "--source-only",
@@ -872,7 +872,7 @@ def main() -> None:
     except ReleasePackageError as exc:
         raise SystemExit(f"Source package validation failed: {exc}") from exc
 
-    package_readme = f"""Resource Multiplier {version} package\n\nTarget: Minecraft Java {minecraft_version}, Fabric Loader {properties['loader_version']}, Fabric API {properties['fabric_version']}, Java 25.\n\nFiles:\n- {jar_name}: Fabric Loom-built release JAR produced by `gradlew clean build`.\n- {source_name}: Complete GitHub-ready source, tests, documentation, Gradle build, and GitHub Actions workflows.\n- {checksum_name}: SHA-256 hashes for the release JAR and source archive.\n- {prefix}-BUILD_STATUS.md: Validation status and remaining manual in-game release checks.\n\nRelease gate:\nOnly package and publish a JAR produced by the real Java 25 Fabric Loom build. Complete the manual in-game checks in docs/PUBLIC_RELEASE_CHECKLIST.md before making a public release.\n"""
+    package_readme = f"""Smart Resource Multiplier {version} package\n\nTarget: Minecraft Java {minecraft_version}, Fabric Loader {properties['loader_version']}, Fabric API {properties['fabric_version']}, Java 25.\n\nFiles:\n- {jar_name}: Fabric Loom-built release JAR produced by `gradlew clean build`.\n- {source_name}: Complete GitHub-ready source, tests, documentation, Gradle build, and GitHub Actions workflows.\n- {checksum_name}: SHA-256 hashes for the release JAR and source archive.\n- {prefix}-BUILD_STATUS.md: Validation status and remaining manual in-game release checks.\n\nRelease gate:\nOnly package and publish a JAR produced by the real Java 25 Fabric Loom build. Complete the manual in-game checks in docs/PUBLIC_RELEASE_CHECKLIST.md before making a public release.\n"""
     package_readme_output.write_text(package_readme, encoding="utf-8", newline="\n")
 
     checksums = [jar_output, source_output]
