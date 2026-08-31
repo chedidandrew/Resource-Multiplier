@@ -1,0 +1,418 @@
+name: Finalize Resource Multiplier 1.2.0
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/finalize-1.2.0.yml'
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  finalize:
+    if: github.repository == 'chedidandrew/Resource-Multiplier'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out exact source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Java 25
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Cache Gradle data
+        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+
+      - name: Verify expected release-candidate source
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD^)" = "e2702f7bcc6f82ecce92007029b33d4d397328c4" || {
+            echo "Unexpected starting parent commit; refusing automatic promotion." >&2
+            exit 1
+          }
+          test "$(git diff --name-only HEAD^ HEAD)" = ".github/workflows/finalize-1.2.0.yml" || {
+            echo "The bootstrap commit contains unexpected changes; refusing automatic promotion." >&2
+            exit 1
+          }
+          grep -Fxq 'mod_version=1.2.0-rc.1' gradle.properties
+          grep -Fxq 'release_ready=false' gradle.properties
+          test -z "$(git tag -l v1.2.0)"
+
+      - name: Promote release metadata and documentation
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import shutil
+
+          root = Path('.')
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              file = root / path
+              text = file.read_text(encoding='utf-8')
+              if text.count(old) != 1:
+                  raise SystemExit(f'{path}: expected exactly one occurrence of {old!r}, found {text.count(old)}')
+              file.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          archive = root / 'docs/archive'
+          archive.mkdir(parents=True, exist_ok=True)
+          shutil.copyfile(root / 'BUILD_STATUS.md', archive / 'BUILD_STATUS-1.2.0-rc.1.md')
+          shutil.copyfile(root / 'docs/PUBLIC_RELEASE_CHECKLIST.md', archive / 'PUBLIC_RELEASE_CHECKLIST-1.2.0-rc.1.md')
+
+          replace_once('gradle.properties', 'mod_version=1.2.0-rc.1', 'mod_version=1.2.0')
+          replace_once(
+              'gradle.properties',
+              '# Publication safety latch. Set this to true only in the fully tested release commit.\nrelease_ready=false',
+              '# Publication safety latch. This is true only in the fully tested release commit.\nrelease_ready=true',
+          )
+
+          readme = (root / 'README.md').read_text(encoding='utf-8')
+          readme = readme.replace(
+              '<img alt="Pre-release 1.2.0-rc.1" src="https://img.shields.io/badge/Status-1.2.0--rc.1-orange">',
+              '<img alt="Stable release 1.2.0" src="https://img.shields.io/badge/Status-1.2.0-Release-2EA44F">',
+          )
+          readme = readme.replace(
+              '> [!IMPORTANT]\n> **Development status:** `main` currently contains Resource Multiplier `1.2.0-rc.1`. Automated builds and tests pass, but the remaining manual gameplay, multiplayer, datapack-reload, and third-party compatibility checks must be completed before the final 1.2.0 release. There is no stable public download yet.',
+              '> [!IMPORTANT]\n> **Current stable release:** Resource Multiplier `1.2.0` for Minecraft Java Edition 26.2 and Fabric. Automated checks and the maintainer-performed manual release matrix passed. Third-party compatibility remains case-specific and should be reported with exact project versions.',
+          )
+          readme = readme.replace(
+              'These are real client GameTest captures from the `1.2.0-rc.1` codebase. Automated screenshots verify that the screens open; hands-on appearance and navigation checks remain part of the manual release gate.',
+              'These are real client captures from the validated Resource Multiplier `1.2.0` release line.',
+          )
+          old_download = '''## Download
+
+Resource Multiplier 1.2.0 is not publicly released yet.
+
+The current `main` branch is version `1.2.0-rc.1`. Test artifacts are produced by [GitHub Actions](https://github.com/chedidandrew/Resource-Multiplier/actions) after successful builds, but they are not presented as stable releases. The first public release will appear on [GitHub Releases](https://github.com/chedidandrew/Resource-Multiplier/releases) only after the remaining manual checks are completed.
+
+You can also [build the current source](#build-from-source). Do not download JARs from unofficial mirrors.'''
+          new_download = '''## Download
+
+Official Resource Multiplier builds are published through [GitHub Releases](https://github.com/chedidandrew/Resource-Multiplier/releases). Use the file matching your Minecraft version and mod loader.
+
+The stable Fabric 26.2 artifact is `resource-multiplier-1.2.0.jar`. You can also [build the current source](#build-from-source). Do not download JARs from unofficial mirrors.'''
+          if old_download not in readme:
+              raise SystemExit('README.md: expected release-candidate Download section was not found')
+          readme = readme.replace(old_download, new_download, 1)
+          readme = readme.replace('| Java | 25 or newer |', '| Java | 25, required by Minecraft 26.2 |')
+          readme = readme.replace(
+              'The expected development artifact is `build/libs/resource-multiplier-1.2.0-rc.1.jar`.',
+              'The expected artifact is `build/libs/resource-multiplier-1.2.0.jar`.',
+          )
+          readme = readme.replace(
+              'No GitHub Release, Modrinth page, CurseForge page, or project homepage is claimed by this release candidate.',
+              'Official releases are published through GitHub Releases. CurseForge availability depends on project approval and file publication.',
+          )
+          if '1.2.0-rc.1' in readme:
+              raise SystemExit('README.md still contains release-candidate version text')
+          (root / 'README.md').write_text(readme, encoding='utf-8')
+
+          changelog_path = root / 'CHANGELOG.md'
+          changelog = changelog_path.read_text(encoding='utf-8')
+          changelog = changelog.replace('## 1.2.0-rc.1 - Unreleased', '## 1.2.0 - 2026-08-30', 1)
+          changelog = changelog.replace(
+              '- Marked the current development build as `1.2.0-rc.1` while keeping the publication latch at `release_ready=false`. This identifies the tested artifact honestly as a release candidate; no Git tag, GitHub Release, or other publication is part of this pass.',
+              '- Promoted the fully tested release candidate to stable `1.2.0` and enabled the guarded publication latch for the exact release commit. No gameplay, schema, namespace, command, persistence, or compatibility identifier changed during promotion.',
+              1,
+          )
+          old_gate = '- The presentation pass changes no gameplay logic, configuration schema, migration behavior, network IDs, provenance data, command names, Java package, mod ID, or datapack namespace. The hands-on client/gameplay and separately installed multiplayer matrix, a real in-running-game datapack reload cycle, and representative third-party biome, hostile-mob, boss, inventory-mob, custom-shearable, tool, and machine checks remain open before promotion to `1.2.0`. With `release_ready=false`, this entry makes no release claim and creates no tag or publication.'
+          new_gate = '- The maintainer completed the hands-on block, entity, XP, explosion, provenance, shearing, GUI, multiplayer, restart, migration, reload, and high-output release checks against `1.2.0-rc.1`, and reported that all passed. Third-party compatibility remains case-specific and is not represented as a blanket guarantee. Stable `1.2.0` is rebuilt from the exact promoted source rather than produced by renaming the release-candidate JAR.'
+          if old_gate not in changelog:
+              raise SystemExit('CHANGELOG.md: expected open-gates paragraph was not found')
+          changelog = changelog.replace(old_gate, new_gate, 1)
+          changelog_path.write_text(changelog, encoding='utf-8')
+
+          (root / 'BUILD_STATUS.md').write_text('''# Build status
+
+## Resource Multiplier 1.2.0
+
+Resource Multiplier `1.2.0` is the stable Fabric release for Minecraft Java Edition 26.2. The maintainer confirmed completion of the manual `1.2.0-rc.1` gameplay and operations matrix on 2026-08-30, with all checked behavior passing. The guarded publication latch is enabled only for this final release commit.
+
+Compatibility-critical identifiers remain unchanged:
+
+- Fabric mod ID: `smart_resource_drops`
+- Java package: `com.chedidandrew.smartresourcedrops`
+- Config path: `config/smart_resource_drops.json`
+- Datapack namespace: `smart_resource_drops`
+- Commands: `/smartdrops` and `/smartdropsgui`
+- Saved-world provenance, network identifiers, schema, and migrations
+
+## Final promotion
+
+- Version: `1.2.0`
+- Publication latch: `release_ready=true`
+- Minecraft: `26.2`
+- Loader: Fabric `0.19.3` or compatible newer release
+- Fabric API: `0.158.0+26.2`
+- Java: `25`, required by Minecraft 26.2
+- Expected JAR: `build/libs/resource-multiplier-1.2.0.jar`
+
+The finalization workflow reruns package validation, deterministic packaging checks, policy tests, mapped JUnit, all required dedicated-server GameTests, the Java 25 Fabric Loom build, and the real client GUI and authority GameTest before creating the release commit.
+
+Finalization-workflow build identity:
+
+- Size: `__FINAL_JAR_SIZE__` bytes
+- ZIP entries: `__FINAL_JAR_ENTRIES__`
+- SHA-256: `__FINAL_JAR_SHA__`
+
+The guarded tag release workflow rebuilds the same source and publishes the official source archive, playable JAR, and checksum manifest. Its checksum manifest is authoritative for the public GitHub Release.
+
+## Manual release evidence
+
+The maintainer reported that the complete manual release-candidate checks passed, covering real block, entity death-loot, XP, explosions, placement provenance, player and dispenser shearing, GUI behavior, separately installed multiplayer authority, restart and migration behavior, datapack reload, commands, and high-output scenarios.
+
+Named third-party compatibility remains case-specific. The release does not claim universal compatibility with every biome, mob, boss, inventory, automation, custom-placement, or custom-shearing mod. Reports should include exact project versions and diagnostic output.
+
+## Preserved evidence
+
+The detailed release-candidate evidence remains available in:
+
+- `docs/archive/BUILD_STATUS-1.2.0-rc.1.md`
+- `docs/verification/1.2.0-rc.1-ci-325cc6a.md`
+
+Do not rename a release-candidate JAR to create a stable artifact. The final JAR must be rebuilt so its embedded Fabric metadata, manifest, filename, generated package records, and checksums identify version `1.2.0`.
+''', encoding='utf-8')
+
+          (root / 'docs/PUBLIC_RELEASE_CHECKLIST.md').write_text('''# Resource Multiplier public release checklist
+
+## Resource Multiplier 1.2.0
+
+This checklist records promotion of the tested `1.2.0-rc.1` source to stable `1.2.0` without gameplay changes.
+
+## Automated and artifact gates
+
+- [x] All package, metadata, release-packaging, Mod Menu, tooltip, edge-case, and polish validators pass.
+- [x] All dependency-free core assertions pass.
+- [x] Mapped JUnit passes with zero failures, errors, or skips.
+- [x] All required dedicated-server GameTests pass.
+- [x] Client GUI and authority GameTests pass under a real Minecraft client runtime.
+- [x] The Java 25 Fabric Loom build completes successfully.
+- [x] A dedicated server starts without Mod Menu or client-only class loading.
+- [x] The playable JAR contains the correct branding, stable compatibility ID, license, icon, contact metadata, required resources, and no nested JAR or GameTest content.
+- [x] The guarded release workflow verifies `release_ready=true`, tag-to-version equality, and main-branch ancestry before publication.
+
+## Maintainer manual gates
+
+On 2026-08-30, the maintainer confirmed that the complete `1.2.0-rc.1` manual gameplay and operations matrix was performed and passed, including:
+
+- [x] Natural and player-placed block output, Fortune, Silk Touch, XP, explosions, automation, block entities, pistons, falling blocks, transformations, restart persistence, and output-budget behavior.
+- [x] Entity death loot, Looting, cooked drops, attribution modes, equipment and inventory exclusions, bosses, and mob XP.
+- [x] Manual and dispenser shearing, special shearable safety, non-entity shearing exclusions, and shearing output-budget behavior.
+- [x] Configuration screens, tooltips, keyboard and mouse navigation, Apply, Discard, Reset, search, inheritance, title-screen defaults, operators, and read-only non-operators.
+- [x] Separately installed multiplayer, commands, configuration migration, malformed and future-schema handling, live datapack reload, and dense or high-output scenarios.
+- [x] Public screenshots and logs reviewed for private data.
+
+## Third-party compatibility policy
+
+Third-party compatibility is validated case by case and is not a prerequisite for claiming support for Minecraft's documented Fabric and vanilla integration boundaries. No blanket claim is made for every biome, mob, boss, inventory-bearing entity, custom shearable, automated miner, or custom placement mod.
+
+Compatibility reports must identify the exact project and version and should include `/smartdrops inspect verbose`, `/smartdrops inspect entity verbose`, or `/smartdrops validate` output where applicable.
+
+## Final promotion gate
+
+- [x] Manual release-candidate checks completed and passed.
+- [x] `mod_version` changed from `1.2.0-rc.1` to `1.2.0`.
+- [x] `release_ready=true` enabled only in the final release commit.
+- [x] Final Java 25 validation and build completed before the release commit was pushed.
+- [ ] Exact final `main` commit passes the clean-checkout Build and verify workflow.
+- [ ] Annotated tag `v1.2.0` points to that exact passing commit.
+- [ ] Guarded release workflow completes and publishes the final checksums and artifacts.
+
+The full candidate checklist is preserved at `docs/archive/PUBLIC_RELEASE_CHECKLIST-1.2.0-rc.1.md`.
+''', encoding='utf-8')
+
+          (root / 'docs/GITHUB_UPLOAD.md').write_text('''# GitHub publication guide
+
+The canonical public repository is [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier). Resource Multiplier `1.2.0` is the stable Fabric 26.2 release line. The exact release commit contains `release_ready=true`; ordinary development commits must keep the latch disabled.
+
+## Clone and contribute
+
+```bash
+git clone https://github.com/chedidandrew/Resource-Multiplier.git
+cd Resource-Multiplier
+git switch -c your-change
+```
+
+## CI
+
+`.github/workflows/build.yml` runs validation, unit tests, dedicated-server GameTests, the Java 25 Loom build, and client GUI/authority tests for branch pushes, pull requests, and manual dispatches. Tag pushes are owned by the guarded release workflow.
+
+## Stable release process
+
+The stable JAR must be rebuilt from source. Never rename `resource-multiplier-1.2.0-rc.1.jar` to `resource-multiplier-1.2.0.jar`, because renaming does not update the embedded Fabric version, manifest, package records, or checksums.
+
+After the exact final `main` commit passes the clean-checkout Build and verify workflow, create the annotated tag:
+
+```bash
+git tag -a v1.2.0 -m "Resource Multiplier 1.2.0"
+git push origin v1.2.0
+```
+
+`.github/workflows/release.yml` verifies the publication latch, main-branch ancestry, and tag/version equality. It repeats the full Java 25 validation chain, creates deterministic release packages, and publishes the GitHub Release with checksums.
+
+After publication, the first commit of the next development cycle must set `release_ready=false` before any new work begins.
+
+## Repository presentation
+
+- Keep the concise project description and Fabric/Minecraft topics current.
+- Keep Issues enabled and use the structured bug and compatibility forms.
+- Keep `docs/` as the canonical documentation source.
+- Do not commit `.gradle`, `.gradle-wrapper`, `build`, `dist`, `run`, logs, worlds, user cache, or IDE output.
+''', encoding='utf-8')
+
+          current_files = [
+              'CONTRIBUTING.md',
+              'docs/COMMANDS.md',
+              'docs/CONFIGURATION.md',
+              'docs/COMPATIBILITY.md',
+              'docs/ROADMAP.md',
+              'docs/TESTING.md',
+              '.github/ISSUE_TEMPLATE/bug_report.yml',
+              '.github/ISSUE_TEMPLATE/mod_compatibility.yml',
+          ]
+          for relative in current_files:
+              path = root / relative
+              text = path.read_text(encoding='utf-8')
+              path.write_text(text.replace('1.2.0-rc.1', '1.2.0'), encoding='utf-8')
+
+          implementation_path = root / 'docs/IMPLEMENTATION_LOG.md'
+          implementation = implementation_path.read_text(encoding='utf-8')
+          release_entry = '''## 2026-08-30, Resource Multiplier 1.2.0 stable promotion
+
+The maintainer completed the manual `1.2.0-rc.1` release matrix and reported that all checked behavior passed. The stable promotion changes only release metadata and current-status documentation: `mod_version` is now `1.2.0`, the guarded publication latch is enabled in the exact release commit, and the playable JAR is rebuilt rather than renamed. Gameplay logic, schema 3, the `smart_resource_drops` compatibility ID and namespace, Java packages, commands, configuration path, network identifiers, and saved provenance remain unchanged.
+
+The finalization workflow reruns every package validator, core assertion, mapped JUnit test, dedicated-server GameTest, Java 25 Loom build, and real client GUI/authority GameTest before pushing the release commit. The existing release workflow then verifies the tag and source provenance, rebuilds again, generates checksums, and publishes the official release artifacts.
+
+'''
+          if release_entry not in implementation:
+              implementation = implementation.replace('# Implementation log\n\n', '# Implementation log\n\n' + release_entry, 1)
+          implementation_path.write_text(implementation, encoding='utf-8')
+
+          release_note = root / 'docs/releases/1.2.0.md'
+          release_note.parent.mkdir(parents=True, exist_ok=True)
+          release_note.write_text('''# Resource Multiplier 1.2.0 release record
+
+Resource Multiplier `1.2.0` promotes the manually validated `1.2.0-rc.1` candidate without gameplay changes.
+
+## Maintainer attestation
+
+On 2026-08-30, the maintainer confirmed that the manual release checks passed. This includes the supported block, entity death-loot, XP, shearing, GUI, multiplayer, persistence, migration, reload, command, and high-output scenarios documented by the release checklist.
+
+## Compatibility invariants
+
+The final promotion preserves:
+
+- Mod ID and datapack namespace: `smart_resource_drops`
+- Config path: `config/smart_resource_drops.json`
+- Commands: `/smartdrops` and `/smartdropsgui`
+- Java package: `com.chedidandrew.smartresourcedrops`
+- Schema 3 configuration and existing migrations
+- Saved-world placement provenance and network identifiers
+
+## Artifact policy
+
+The stable JAR is rebuilt from source as `resource-multiplier-1.2.0.jar`. Renaming the release-candidate JAR is not valid because its embedded metadata and checksums would still identify `1.2.0-rc.1`.
+
+Third-party mod compatibility remains case-specific. Exact projects and versions should be reported through the repository's compatibility issue form.
+''', encoding='utf-8')
+
+          release_workflow = root / '.github/workflows/release.yml'
+          release_text = release_workflow.read_text(encoding='utf-8')
+          release_text = release_text.replace(
+              "on:\n  push:\n    tags: ['v*']\n",
+              "on:\n  push:\n    tags: ['v*']\n  workflow_dispatch:\n",
+              1,
+          )
+          release_workflow.write_text(release_text, encoding='utf-8')
+
+          validator_path = root / 'tools/validate_package.py'
+          validator = validator_path.read_text(encoding='utf-8')
+          validator = validator.replace('"mod_version": "1.2.0-rc.1",', '"mod_version": "1.2.0",', 1)
+          validator = validator.replace(
+              'if properties.get("release_ready") != "false":\n    fail("The 1.2.0-rc.1 development candidate must keep release_ready=false")',
+              'if properties.get("release_ready") != "true":\n    fail("The stable 1.2.0 release commit must set release_ready=true")',
+              1,
+          )
+          validator = validator.replace('"Status-1.2.0--rc.1",', '"Status-1.2.0-Release",', 1)
+          validator = validator.replace('"There is no stable public download yet.",', '"Current stable release:",', 1)
+          validator = validator.replace(
+              '"Resource Multiplier 1.2.0 is not publicly released yet.",',
+              '"Official Resource Multiplier builds are published through",',
+              1,
+          )
+          validator_path.write_text(validator, encoding='utf-8')
+
+          assert 'mod_version=1.2.0\n' in (root / 'gradle.properties').read_text(encoding='utf-8')
+          assert 'release_ready=true' in (root / 'gradle.properties').read_text(encoding='utf-8')
+          assert 'resource-multiplier-1.2.0.jar' in (root / 'README.md').read_text(encoding='utf-8')
+          assert '## 1.2.0 - 2026-08-30' in changelog_path.read_text(encoding='utf-8')
+          PY
+
+      - name: Validate, test, and build stable 1.2.0
+        shell: bash
+        run: |
+          python3 tools/validate_package.py
+          python3 scripts/test_release_packaging.py
+          python3 scripts/test_modmenu_integration.py
+          python3 scripts/test_structured_tooltip_composition.py
+          python3 scripts/edge_case_source_audit.py
+          python3 scripts/polish_regression_tests.py
+          bash tools/run_core_tests.sh
+          chmod +x ./gradlew
+          ./gradlew --no-daemon clean test runGameTest build
+          xvfb-run -a ./gradlew --no-daemon runClientGameTest
+
+      - name: Record stable build identity
+        shell: bash
+        run: |
+          jar_path='build/libs/resource-multiplier-1.2.0.jar'
+          test -f "$jar_path"
+          jar_size="$(stat -c '%s' "$jar_path")"
+          jar_entries="$(unzip -Z1 "$jar_path" | wc -l | tr -d ' ')"
+          jar_sha="$(sha256sum "$jar_path" | awk '{print toupper($1)}')"
+          python3 - "$jar_size" "$jar_entries" "$jar_sha" <<'PY'
+          from pathlib import Path
+          import sys
+
+          size, entries, sha = sys.argv[1:]
+          path = Path('BUILD_STATUS.md')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace('__FINAL_JAR_SIZE__', size)
+          text = text.replace('__FINAL_JAR_ENTRIES__', entries)
+          text = text.replace('__FINAL_JAR_SHA__', sha)
+          path.write_text(text, encoding='utf-8')
+          PY
+          python3 tools/validate_package.py
+
+      - name: Commit, push, tag, and dispatch guarded release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm '.github/workflows/finalize-1.2.0.yml'
+          git config user.name 'Resource Multiplier Release Automation'
+          git config user.email '145610849+chedidandrew@users.noreply.github.com'
+          git add -A
+          git commit -m 'Release Resource Multiplier 1.2.0'
+          final_sha="$(git rev-parse HEAD)"
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push "$remote" HEAD:main
+          git tag -a v1.2.0 -m 'Resource Multiplier 1.2.0' "$final_sha"
+          git push "$remote" refs/tags/v1.2.0
+
+          for attempt in 1 2 3 4 5; do
+            if gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref v1.2.0; then
+              exit 0
+            fi
+            sleep $((attempt * 5))
+          done
+          echo 'The release commit and tag were pushed, but workflow dispatch failed.' >&2
+          exit 1
