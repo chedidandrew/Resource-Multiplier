@@ -307,8 +307,8 @@ expected_properties = {
 for key, expected in expected_properties.items():
     if properties.get(key) != expected:
         fail(f"gradle.properties {key} must be {expected!r}, found {properties.get(key)!r}")
-if properties.get("release_ready") != "false":
-    fail("The 1.2.2 rebrand source candidate must keep release_ready=false until a tagged release is authorized")
+if properties.get("release_ready") != "true":
+    fail("The Smart Resource Multiplier 1.2.2 stable release must keep release_ready=true")
 
 settings_text = (ROOT / "settings.gradle").read_text(encoding="utf-8")
 if "rootProject.name = 'SmartResourceMultiplier'" not in settings_text:
@@ -340,9 +340,9 @@ for marker in (
     "Loader-Fabric",
     "Java-25",
     "License-MIT",
-    "Status-1.2.2-Candidate",
+    "Status-1.2.2-Release",
     "> [!IMPORTANT]",
-    "Current source version:",
+    "Current stable release:",
     "www.curseforge.com/minecraft/mc-mods/resource-multiplier",
     "Download the current release from",
     "docs/COMMANDS.md",

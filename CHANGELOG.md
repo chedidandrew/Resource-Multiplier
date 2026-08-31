@@ -2,7 +2,7 @@
 
 All notable changes are documented here.
 
-## 1.2.2 - Unreleased
+## 1.2.2 - 2026-08-31
 
 ### Changed
 
@@ -21,7 +21,7 @@ All notable changes are documented here.
 
 ### Verification
 
-- The final rebrand commit must pass the complete package, unit, dedicated-server, client, and Java 25 build chain before publication is authorized. `release_ready=false` remains set during candidate validation.
+- The complete package, unit, dedicated-server, client, and Java 25 build chain passed before publication. The guarded release commit sets `release_ready=true` and publishes the rebuilt artifact with deterministic source and checksum records.
 
 ## 1.2.1 - 2026-08-31
 

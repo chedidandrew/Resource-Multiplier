@@ -1,10 +1,10 @@
 # Smart Resource Multiplier testing and verification
 
-## 1.2.2 rebrand candidate
+## 1.2.2 stable rebrand release
 
-Smart Resource Multiplier `1.2.2` is a branding-only source candidate with `release_ready=false`. It changes public names, artifact names, metadata, documentation, and the regression contracts that verify those surfaces. It does not change gameplay, mixin targets, configuration fields or defaults, schema, networking, permissions, persistence, or anti-duplication behavior.
+Smart Resource Multiplier `1.2.2` is a branding-only stable release with `release_ready=true`. It changes public names, artifact names, metadata, documentation, and the regression contracts that verify those surfaces. It does not change gameplay, mixin targets, configuration fields or defaults, schema, networking, permissions, persistence, or anti-duplication behavior.
 
-The final candidate must pass this clean-checkout sequence on Java 25:
+The release commit must pass this clean-checkout sequence on Java 25 before publication:
 
 ```bash
 python3 tools/validate_package.py
