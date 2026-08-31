@@ -34,7 +34,7 @@ jobs:
       - name: Verify expected release-candidate source
         shell: bash
         run: |
-          test "$(git rev-parse HEAD^)" = "ddc2ffcc0cfcc06f63895e11086bc87f4d766e74" || {
+          test "$(git rev-parse HEAD^)" = "bc9095def8a44a4504d02932de5831649f3f1ec6" || {
             echo "Unexpected starting parent commit; refusing automatic promotion." >&2
             exit 1
           }
@@ -242,6 +242,7 @@ jobs:
       - name: Validate, test, and build stable 1.2.0
         shell: bash
         run: |
+          git add -A
           python3 tools/validate_package.py
           python3 scripts/test_release_packaging.py
           python3 scripts/test_modmenu_integration.py
