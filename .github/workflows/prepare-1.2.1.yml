@@ -1,0 +1,169 @@
+name: Prepare Resource Multiplier 1.2.1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/prepare-1.2.1.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    if: github.repository == 'chedidandrew/Resource-Multiplier'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out exact source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Java 25
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Cache Gradle data
+        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+
+      - name: Apply 1.2.1 metadata patch
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import json
+
+          root = Path('.')
+          curseforge = 'https://www.curseforge.com/minecraft/mc-mods/resource-multiplier'
+          github = 'https://github.com/chedidandrew/Resource-Multiplier'
+          issues = github + '/issues'
+
+          def replace_exact(path, old, new, count=1):
+              p = root / path
+              text = p.read_text(encoding='utf-8')
+              found = text.count(old)
+              if found < count:
+                  raise SystemExit(f'{path}: expected at least {count} occurrence(s) of {old!r}, found {found}')
+              text = text.replace(old, new, count)
+              p.write_text(text, encoding='utf-8')
+
+          # Stable patch version. No gameplay or compatibility identifier changes.
+          replace_exact('gradle.properties', 'mod_version=1.2.0', 'mod_version=1.2.1')
+
+          # Fabric metadata powers Mod Menu Website / Issues buttons.
+          mod_path = root / 'src/main/resources/fabric.mod.json'
+          mod = json.loads(mod_path.read_text(encoding='utf-8'))
+          mod['contact'] = {
+              'homepage': curseforge,
+              'issues': issues,
+              'sources': github,
+          }
+          mod_path.write_text(json.dumps(mod, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+
+          # Keep validation locked to the intended public metadata and new patch version.
+          validator = root / 'tools/validate_package.py'
+          text = validator.read_text(encoding='utf-8')
+          old_contact = '''PROJECT_HOMEPAGE = "https://github.com/chedidandrew/Resource-Multiplier"\nPROJECT_ISSUES = f"{PROJECT_HOMEPAGE}/issues"\nEXPECTED_CONTACT = {\n    "homepage": PROJECT_HOMEPAGE,\n    "issues": PROJECT_ISSUES,\n    "sources": PROJECT_HOMEPAGE,\n}'''
+          new_contact = f'''PROJECT_HOMEPAGE = "{curseforge}"\nPROJECT_ISSUES = "{issues}"\nPROJECT_SOURCES = "{github}"\nEXPECTED_CONTACT = {{\n    "homepage": PROJECT_HOMEPAGE,\n    "issues": PROJECT_ISSUES,\n    "sources": PROJECT_SOURCES,\n}}'''
+          if old_contact not in text:
+              raise SystemExit('tools/validate_package.py: expected contact contract not found')
+          text = text.replace(old_contact, new_contact, 1)
+          text = text.replace('"mod_version": "1.2.0",', '"mod_version": "1.2.1",', 1)
+          text = text.replace('The stable 1.2.0 release commit must set release_ready=true', 'The stable 1.2.1 release commit must set release_ready=true', 1)
+          text = text.replace('"Status-1.2.0-Release",', '"Status-1.2.1-Release",', 1)
+          validator.write_text(text, encoding='utf-8')
+
+          # Mod Menu regression: Website -> CurseForge, Issues -> GitHub, Sources -> GitHub.
+          test_path = root / 'scripts/test_modmenu_integration.py'
+          text = test_path.read_text(encoding='utf-8')
+          old = '''        "homepage": "https://github.com/chedidandrew/Resource-Multiplier",\n        "issues": "https://github.com/chedidandrew/Resource-Multiplier/issues",\n        "sources": "https://github.com/chedidandrew/Resource-Multiplier",'''
+          new = f'''        "homepage": "{curseforge}",\n        "issues": "{issues}",\n        "sources": "{github}",'''
+          if old not in text:
+              raise SystemExit('scripts/test_modmenu_integration.py: expected metadata contract not found')
+          test_path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # README current-release identity and download links.
+          readme = root / 'README.md'
+          text = readme.read_text(encoding='utf-8')
+          replacements = {
+              'alt="Stable release 1.2.0"': 'alt="Stable release 1.2.1"',
+              'Status-1.2.0-Release': 'Status-1.2.1-Release',
+              '**Current stable release:** Resource Multiplier `1.2.0`': '**Current stable release:** Resource Multiplier `1.2.1`',
+              'The stable Fabric 26.2 artifact is `resource-multiplier-1.2.0.jar`.': 'The stable Fabric 26.2 artifact is `resource-multiplier-1.2.1.jar`.\n\nThe official project page is also available on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier).',
+              'The expected artifact is `build/libs/resource-multiplier-1.2.0.jar`.': 'The expected artifact is `build/libs/resource-multiplier-1.2.1.jar`.',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'README.md: missing expected text {old!r}')
+              text = text.replace(old, new, 1)
+          readme.write_text(text, encoding='utf-8')
+
+          # Player-facing and engineering history.
+          changelog = root / 'CHANGELOG.md'
+          text = changelog.read_text(encoding='utf-8')
+          marker = 'All notable changes are documented here.\n\n'
+          entry = '''## 1.2.1 - 2026-08-31\n\n### Changed\n\n- Updated the optional Mod Menu integration so **Website** opens the official Resource Multiplier CurseForge page.\n- Kept **Issues** linked directly to the Resource Multiplier GitHub issue tracker and **Sources** linked to the GitHub repository.\n- Updated public metadata, release documentation, and validation contracts for the new stable `1.2.1` patch.\n\n### Compatibility\n\n- No gameplay logic, configuration schema, saved-world data, commands, networking IDs, Java package, mod ID, datapack namespace, defaults, or anti-duplication behavior changed. Existing 1.2.0 worlds and configurations remain compatible.\n\n'''
+          if marker not in text:
+              raise SystemExit('CHANGELOG.md header marker missing')
+          changelog.write_text(text.replace(marker, marker + entry, 1), encoding='utf-8')
+
+          impl = root / 'docs/IMPLEMENTATION_LOG.md'
+          text = impl.read_text(encoding='utf-8')
+          heading_end = text.find('\n\n')
+          if heading_end < 0:
+              raise SystemExit('docs/IMPLEMENTATION_LOG.md heading not found')
+          entry = '''\n\n## 2026-08-31 - 1.2.1 public-link metadata patch\n\n- Bumped the stable patch version from `1.2.0` to `1.2.1`.\n- Changed Fabric metadata `contact.homepage` to the official CurseForge project page so Mod Menu's Website button opens the public download page.\n- Preserved `contact.issues` as the GitHub Issues tracker and `contact.sources` as the GitHub source repository.\n- Updated metadata regression checks and release documentation.\n- No gameplay, config, migration, persistence, networking, command, namespace, or anti-duplication behavior changed.\n'''
+          impl.write_text(text[:heading_end] + entry + text[heading_end:], encoding='utf-8')
+
+          release_dir = root / 'docs/releases'
+          release_dir.mkdir(parents=True, exist_ok=True)
+          (release_dir / '1.2.1.md').write_text(f'''# Resource Multiplier 1.2.1 release record\n\nResource Multiplier `1.2.1` is a metadata-only stable patch for Minecraft Java Edition 26.2 and Fabric.\n\n## User-visible change\n\n- Mod Menu **Website** now opens the official CurseForge page: {curseforge}\n- Mod Menu **Issues** opens: {issues}\n- Mod Menu **Sources** remains: {github}\n\n## Compatibility\n\nNo gameplay rules, configuration schema, migrations, saved-world provenance, commands, network identifiers, Java package, Fabric mod ID, datapack namespace, defaults, or anti-duplication behavior changed from `1.2.0`.\n\nThe release JAR must be rebuilt from source as `resource-multiplier-1.2.1.jar`; renaming the `1.2.0` JAR would leave the embedded version metadata at `1.2.0`.\n''', encoding='utf-8')
+
+          status = root / 'BUILD_STATUS.md'
+          text = status.read_text(encoding='utf-8')
+          status_entry = '''# Build status\n\n## Resource Multiplier 1.2.1\n\nResource Multiplier `1.2.1` is a metadata-only stable patch for Minecraft Java Edition 26.2 and Fabric. Mod Menu Website now targets the official CurseForge project, while Issues and Sources remain on GitHub. No gameplay or compatibility identifiers changed.\n\n- Version: `1.2.1`\n- Publication latch: `release_ready=true`\n- Expected JAR: `build/libs/resource-multiplier-1.2.1.jar`\n- Mod ID and datapack namespace remain `smart_resource_drops`\n- Config path remains `config/smart_resource_drops.json`\n- Commands remain `/smartdrops` and `/smartdropsgui`\n\nThe official release checksum is recorded by the guarded GitHub release workflow and release checksum manifest.\n\n## Previous stable release evidence\n'''
+          if not text.startswith('# Build status\n'):
+              raise SystemExit('BUILD_STATUS.md header mismatch')
+          status.write_text(status_entry + text[len('# Build status\n\n'):], encoding='utf-8')
+
+          # Keep issue templates current for reports against the newest stable patch.
+          for path in ('.github/ISSUE_TEMPLATE/bug_report.yml', '.github/ISSUE_TEMPLATE/mod_compatibility.yml'):
+              p = root / path
+              t = p.read_text(encoding='utf-8')
+              t = t.replace('placeholder: 1.2.0', 'placeholder: 1.2.1')
+              p.write_text(t, encoding='utf-8')
+
+          # Remove this one-shot workflow from the resulting stable patch commit.
+          (root / '.github/workflows/prepare-1.2.1.yml').unlink()
+          PY
+
+      - name: Validate and test patch
+        shell: bash
+        run: |
+          python3 tools/validate_package.py
+          python3 scripts/test_release_packaging.py
+          python3 scripts/test_modmenu_integration.py
+          python3 scripts/test_structured_tooltip_composition.py
+          python3 scripts/edge_case_source_audit.py
+          python3 scripts/polish_regression_tests.py
+          bash tools/run_core_tests.sh
+          chmod +x ./gradlew
+          ./gradlew --no-daemon clean test runGameTest build
+          xvfb-run -a ./gradlew --no-daemon runClientGameTest
+
+      - name: Commit and push tested patch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'Resource Multiplier Release Automation'
+          git config user.email '145610849+chedidandrew@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'Release Resource Multiplier 1.2.1 metadata patch'
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push origin HEAD:main
