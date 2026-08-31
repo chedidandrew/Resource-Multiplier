@@ -23,7 +23,7 @@ Focused label, tooltip, layout, and authority regressions pass. All six reposito
 
 The current local playable JAR is `build/libs/resource-multiplier-1.2.0-rc.1.jar`: 601,761 bytes, 311 ZIP entries, SHA-256 `27F73D54F8CD6EFE17F68DFB3C76D11B67BEAB3AB6DF4725F0D398E4D0E5F9C7`. Fresh packaging validates 257 source entries and creates the source ZIP, byte-identical playable JAR, checksum manifest, and five-entry release bundle. A standalone server loads 43 mods without Mod Menu, reaches `Done (0.280s)`, returns general and shearing status, reports `Status: Valid` in compact and verbose validation, confirms no configuration or world data changed, and stops cleanly with `BUILD SUCCESSFUL` in 42 seconds.
 
-An exact clean-checkout GitHub Actions run for the clarity commit remains pending until that commit is pushed. The prior clean-checkout evidence below is preserved and is not attributed to this uncommitted pass.
+The exact production clarity commit is `cb6d17d9a26283ddc98c6e3f7d8fa46ebb341380`. GitHub Actions [run `33354997205`](https://github.com/chedidandrew/Resource-Multiplier/actions/runs/33354997205) completed successfully for that clean checkout. Package policy checks, Java and dedicated-server tests, the Loom build, client GUI/authority tests, and playable-JAR upload all passed. Artifact `ResourceMultiplier-cb6d17d9a26283ddc98c6e3f7d8fa46ebb341380` has artifact ID `9744863404`, size 547,460 bytes, and GitHub ZIP digest `F385B0E9B436AC1B1CCA67BE505BB591436E1E98A928C6B8E199A297D6697E13`.
 
 ## Prior verified production-code checkpoint
 
@@ -97,7 +97,7 @@ The development-only `smart_resource_drops_gametest` module now expands the proj
 
 ## Remaining release gates
 
-The prior `325cc6a6fcafe5810000f3c377e9e96ea5bd68c9` clean-checkout automated and artifact gate passed. The clarity commit still requires its own successful clean-checkout GitHub Actions run after push. Beyond that automated gate, the remaining release gates require hands-on or named third-party evidence:
+The clarity production commit `cb6d17d9a26283ddc98c6e3f7d8fa46ebb341380` and prior `325cc6a6fcafe5810000f3c377e9e96ea5bd68c9` checkpoint both passed their exact clean-checkout automated and artifact gates. The remaining release gates require hands-on or named third-party evidence:
 
 - real block, entity death-loot, XP, explosion, provenance, and output-budget gameplay;
 - real player and dispenser shearing at disabled, `0x`, `1x`, normal multiplied, and maximum values;
