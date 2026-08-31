@@ -199,9 +199,10 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
                     || leftDetail.truncated()
                     || rightDetail.truncated();
             if (hovered && (!row.tooltip().getString().isEmpty() || truncated)) {
-                Component tooltip = row.tooltip().getString().isEmpty() ? fullRowText() : row.tooltip();
                 graphics.setTooltipForNextFrame(
-                        Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip),
+                        Tooltip.splitTooltip(
+                                StructuredConfigList.this.minecraft,
+                                hoverText(truncated)),
                         mouseX,
                         mouseY);
             }
@@ -235,17 +236,42 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
             row.action().run();
         }
 
+        /**
+         * Builds hover text without hiding clipped row content behind a
+         * supplemental tooltip. When the row is truncated, every unclipped row
+         * field is shown first and supplemental details follow on new lines.
+         */
+        private Component hoverText(final boolean truncated) {
+            final MutableComponent text = Component.empty();
+            if (truncated) {
+                appendTooltipPart(text, row.primary());
+                appendTooltipPart(text, row.secondary());
+                appendTooltipPart(text, row.leftDetail());
+                appendTooltipPart(text, row.rightDetail());
+            }
+            appendTooltipPart(text, row.tooltip());
+            return text;
+        }
+
         private Component fullRowText() {
             MutableComponent text = Component.empty();
             appendNarrationPart(text, row.primary());
             appendNarrationPart(text, row.secondary());
             appendNarrationPart(text, row.leftDetail());
             appendNarrationPart(text, row.rightDetail());
-            if (!row.tooltip().getString().isEmpty()) {
-                appendNarrationPart(text, row.tooltip());
-            }
+            appendNarrationPart(text, row.tooltip());
             return text;
         }
+    }
+
+    private static void appendTooltipPart(final MutableComponent target, final Component part) {
+        if (part.getString().isEmpty()) {
+            return;
+        }
+        if (!target.getString().isEmpty()) {
+            target.append(Component.literal("\n"));
+        }
+        target.append(part);
     }
 
     private static void appendNarrationPart(final MutableComponent target, final Component part) {

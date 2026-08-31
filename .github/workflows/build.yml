@@ -33,6 +33,7 @@ jobs:
           python3 tools/validate_package.py
           python3 scripts/test_release_packaging.py
           python3 scripts/test_modmenu_integration.py
+          python3 scripts/test_structured_tooltip_composition.py
           python3 scripts/edge_case_source_audit.py
           python3 scripts/polish_regression_tests.py
           bash tools/run_core_tests.sh
