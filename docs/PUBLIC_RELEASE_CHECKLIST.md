@@ -2,100 +2,73 @@
 
 ## Resource Multiplier 1.2.0
 
-The maintainer confirmed that the complete manual `1.2.0-rc.1` release matrix passed. This file records promotion to stable `1.2.0`.
+Resource Multiplier `1.2.0` is the stable Fabric release for Minecraft Java Edition 26.2. It promotes the manually validated `1.2.0-rc.1` candidate without gameplay changes.
 
 ## Automated and artifact gates
 
-- [x] Package and metadata validation passes for 118 production Java sources.
-- [x] Deterministic source and release-packaging validation passes, including secret, runtime, generated-data, nested-JAR, test-fixture, entrypoint, mixin, icon, license, and contact checks.
-- [x] Mod Menu integration, structured-tooltip composition, edge-case, and polish regression checks pass.
-- [x] All 90 dependency-free core assertions pass.
+- [x] Package and metadata validation passes.
+- [x] Deterministic source and release packaging validation passes.
+- [x] Mod Menu, tooltip, edge-case, and polish regression checks pass.
+- [x] All dependency-free core assertions pass.
 - [x] Mapped JUnit passes with zero failures, errors, or skips.
 - [x] All 66 required dedicated-server GameTests pass.
-- [x] Client GUI and authority GameTests pass under a real Minecraft client runtime.
+- [x] Client GUI and authority GameTests pass in a real Minecraft client runtime.
 - [x] The Java 25 Fabric Loom build completes successfully.
 - [x] A dedicated server starts without Mod Menu or client-only class loading.
-- [x] The playable JAR contains the Resource Multiplier branding, `1.2.0-rc.1` version, `smart_resource_drops` compatibility ID, MIT license, icon, contact metadata, required resources, and no nested JAR or GameTest content.
-- [x] The normal build workflow handles branches, pull requests, and manual runs only. The guarded release workflow is the sole `v*` tag handler.
-- [x] The guarded release workflow checks `release_ready=true`, tag-to-version equality, and main-branch ancestry before publication.
-- [x] The exact clean-checkout GitHub Actions workflow passed for presentation commit `3925ef1cf928763b4d5ff98b9ba9962b3133a8d3`.
-- [x] The exact clean-checkout GitHub Actions workflow passed for tooltip-fixed production commit `325cc6a6fcafe5810000f3c377e9e96ea5bd68c9` in run `33351410406`.
-- [x] The current clean GitHub Actions JAR was independently inspected: 601,231 bytes, 311 entries, Java class major 69, SHA-256 `B974CABC64698679A81B7E39915CD3092815BDF91406C6E5B9E2DBEBF0A403C9`.
-- [x] Local Windows and clean GitHub artifact hashes are recorded separately rather than presented as universally reproducible.
-- [x] The development-only GameTest module expands the current project version rather than logging a stale hard-coded `1.0.0` version.
-- [x] Structured tooltips show complete clipped row fields before supplemental details and still use Minecraft's standard 170-pixel wrapping.
+- [x] The playable JAR contains Resource Multiplier `1.2.0`, the stable `smart_resource_drops` compatibility ID, the MIT license, icon, contact metadata, required resources, and no nested JAR or GameTest content.
+- [x] The exact release commit `88bb5a79facdc7da120b912d8a67e9f41ecb57e0` passes the clean-checkout Build and verify workflow in run `33359029127`.
+- [x] Annotated tag `v1.2.0` points to the exact tested release commit.
+- [x] The guarded release workflow passes in run `33359315520`.
+- [x] GitHub Release `v1.2.0` is published with the playable JAR, source archive, release bundle, build status, and checksum files.
+- [x] Official playable JAR SHA-256 is `A34BC93E9AD10BDDA1E74B7ADBF397D1EC4D96BEA52F206DDEF5A7A5074BAA6A`.
 
-## Manual gameplay and operations gates
+## Maintainer manual gates
 
-- [x] Verify natural and player-placed block output at `0x`, `1x`, normal multiplied values, and `64x`.
-- [x] Verify Fortune and Silk Touch final loot is multiplied without rerolling or replacing Minecraft loot behavior.
-- [x] Verify block XP disabled and enabled behavior.
-- [x] Verify explosions against natural and player-placed blocks.
-- [x] Verify supported automated mining and confirm unsupported direct-inventory systems fail closed.
-- [x] Verify block-entity safety with populated chests, barrels, shulker boxes, furnaces, hoppers, beehives, decorated pots, and at least one modded block entity.
-- [x] Verify piston and sticky-piston provenance, including cross-chunk movement.
-- [x] Verify sand, gravel, concrete powder, anvils, and other falling-block provenance through landing and restart.
-- [x] Verify same-position transformations retain provenance without contaminating genuinely generated resources.
-- [x] Verify configuration and placement provenance survive complete client or server restart and chunk unload or reload.
-- [x] Trigger a real block output-budget fallback and verify complete vanilla `1x` output, no partial multiplication, accurate statistics, and rate-limited warnings.
-- [x] Verify normal entity death loot at disabled, `0x`, `1x`, normal multiplied values, and `64x`.
-- [x] Verify Looting, cooked meat, player credit, projectiles, tamed kills, environmental deaths, and all configured kill modes.
-- [x] Verify equipment, picked-up items, saddles, entity inventories, cargo, player deaths, and direct custom output are not multiplied.
-- [x] Verify boss item and XP safety, including protected rare outputs.
-- [x] Verify mob XP disabled and enabled without affecting block or unrelated XP.
-- [x] Verify player sheep shearing at disabled, `0x`, `1x`, `2x`, and `64x`, including color, item components, legal stacks, state, sound, game event, tool damage, and regrowth exactly once.
-- [x] Verify vanilla dispenser sheep shearing at disabled and enabled settings.
-- [x] Verify Mooshroom, Snow Golem, Bogged, Copper Golem, and Sulfur Cube remain fixed vanilla `1x`, including conflicting tag and exact-override attempts.
-- [x] Verify leaves, vines, cobwebs, beehive dispenser action, and leash removal remain outside the entity-shearing subsystem.
-- [x] Trigger a real shearing output-budget fallback and verify the complete original `1x` action is emitted without partial multiplication.
-- [x] Verify every configuration screen at 1280 by 720 and common GUI scales.
-- [x] Verify keyboard and mouse navigation, scrolling, search, tooltips, inheritance, shared dirty state, Back, Apply, Discard, Reset All, and Escape behavior.
-- [x] Verify clipped structured rows with supplemental tooltips display both complete row text and supplemental details.
-- [x] Verify local title-screen defaults, integrated singleplayer authority, multiplayer operator editing, and multiplayer non-operator read-only behavior.
-- [x] Verify a separately installed dedicated server with a client that does not have Mod Menu.
-- [x] Exercise `/smartdrops`, `/smartdropsgui`, shearing status, block and entity inspection, validation, and administrator mutations in a real world or server.
-- [x] Verify `/reload` updates block, entity, and shearing tag classification without restart and reports no missing production tags.
-- [x] Load representative 1.0.x and 1.1.0 configs plus existing saved-world provenance and verify lossless migration and restart behavior.
-- [x] Separately test malformed, unreadable, oversized, and future-schema configuration files.
-- [x] Observe dense farms and high-output scenarios for duplicate output, leaked contexts, warning spam, excessive entities or orbs, or unbounded memory and CPU behavior.
-- [x] Inspect all public screenshots and logs for usernames, UUIDs, server addresses, tokens, file-system paths, world names, or other private data.
+On 2026-08-30, the maintainer confirmed that the complete `1.2.0-rc.1` manual gameplay and operations matrix was performed and passed, including:
 
-## Named third-party compatibility gates
+- [x] Natural and player-placed block output at `0x`, `1x`, normal multiplied values, and `64x`.
+- [x] Fortune, Silk Touch, block XP, explosions, supported automation, and block-entity safety.
+- [x] Piston, sticky-piston, falling-block, transformation, restart, chunk reload, and provenance persistence behavior.
+- [x] Entity death loot, Looting, cooked drops, attribution modes, equipment and inventory exclusions, boss safety, and mob XP.
+- [x] Manual and dispenser shearing, special shearable safety, non-entity shearing exclusions, tool durability, state changes, and output budgets.
+- [x] Configuration screens, search, inheritance, tooltips, keyboard and mouse navigation, Apply, Discard, Reset, and read-only permissions.
+- [x] Separately installed multiplayer, commands, configuration migration, malformed and future-schema handling, live datapack reload, and high-output scenarios.
+- [x] Public screenshots and logs reviewed for private data.
 
-Record an exact project name, exact installed version, date, result, and limitation. Synthetic fixtures and generic category claims do not satisfy these rows.
+## Third-party compatibility policy
 
-| Category | Mod or project | Exact version | Test date | Resource Multiplier | Result | Limitation |
-| --- | --- | --- | --- | --- | --- | --- |
-| Biome or passive-animal content | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
-| Hostile mob | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
-| Boss | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
-| Inventory-bearing mob | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
-| Custom shearable | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
-| Automated miner | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
-| Custom block placement | Not selected | Pending | Pending | 1.2.0-rc.1 | Not performed | Pending |
+Third-party compatibility remains case-specific and is not represented as a blanket guarantee. Compatibility reports should identify:
 
-No generalized compatibility statement is permitted until the relevant row contains reproducible evidence.
+- Exact other project and version
+- Minecraft version and loader
+- Affected block or entity registry ID
+- Relevant `/smartdrops inspect verbose`, `/smartdrops inspect entity verbose`, or `/smartdrops validate` output
+- Reproduction steps and relevant logs
+
+Representative biome, mob, boss, inventory-bearing entity, custom shearable, automated miner, and custom placement integrations may be documented over time without changing the stable release status.
+
+## Compatibility invariants
+
+The stable promotion preserves:
+
+- Fabric mod ID: `smart_resource_drops`
+- Java package: `com.chedidandrew.smartresourcedrops`
+- Config path: `config/smart_resource_drops.json`
+- Datapack namespace: `smart_resource_drops`
+- Commands: `/smartdrops` and `/smartdropsgui`
+- Schema 3 configuration and existing migration behavior
+- Saved-world placement provenance and network identifiers
 
 ## Repository presentation settings
 
-These do not block local code testing, but they should be completed before broad public promotion:
+These repository settings are presentation improvements rather than release blockers:
 
 - [ ] Set the repository description to: `Configurable multipliers for block drops, mob loot, and supported shearing, with persistent anti-duplication protection.`
 - [ ] Add topics: `minecraft`, `minecraft-mod`, `fabric`, `fabricmc`, `java`, `loot`, `server-side`, `anti-dupe`, `resource-multiplier`.
-- [ ] Leave the homepage empty until a real Modrinth or project page exists.
+- [ ] Leave the homepage empty until a real Modrinth or other canonical project page exists.
 - [ ] Disable Wiki if `docs/` remains canonical.
 - [ ] Disable Projects if unused.
 - [ ] Enable automatic deletion of merged branches when pull-request development begins.
 - [ ] Protect `main` with the Build and verify check when branch protection is desired.
 
-## Final promotion gate
-
-- [x] Complete the manual gameplay and operations matrix.
-- [x] Record third-party compatibility as case-specific, without a blanket support claim.
-- [x] Change `mod_version` from `1.2.0-rc.1` to `1.2.0`.
-- [x] Set `release_ready=true` only in the fully tested release commit.
-- [x] Run the full Java 25 validation chain before pushing the release commit.
-- [ ] Confirm the exact final commit passes the clean-checkout Build and verify workflow.
-- [ ] Confirm tag `v1.2.0` and the guarded release workflow publish the final checksums and artifacts.
-
-The prior full checklist and historical evidence are preserved at [docs/archive/PUBLIC_RELEASE_CHECKLIST-3925ef1-pre-ci-sync.md](archive/PUBLIC_RELEASE_CHECKLIST-3925ef1-pre-ci-sync.md).
+The complete release-candidate checklist and historical evidence remain preserved under `docs/archive/` and `docs/verification/`.
