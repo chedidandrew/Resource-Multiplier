@@ -199,10 +199,9 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
                     || leftDetail.truncated()
                     || rightDetail.truncated();
             if (hovered && (!row.tooltip().getString().isEmpty() || truncated)) {
+                Component tooltip = hoverText(truncated);
                 graphics.setTooltipForNextFrame(
-                        Tooltip.splitTooltip(
-                                StructuredConfigList.this.minecraft,
-                                hoverText(truncated)),
+                        Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip),
                         mouseX,
                         mouseY);
             }
