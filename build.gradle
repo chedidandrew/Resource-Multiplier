@@ -105,6 +105,15 @@ processResources {
     }
 }
 
+// Keep the development-only GameTest module aligned with the candidate version
+// shown by Fabric Loader and CI logs instead of retaining a stale hard-coded value.
+tasks.named('processGametestResources') {
+    inputs.property 'version', modVersionValue
+    filesMatching('fabric.mod.json') {
+        expand(version: modVersionValue)
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.release = 25
     options.encoding = 'UTF-8'

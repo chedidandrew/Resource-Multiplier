@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "smart_resource_drops_gametest",
-  "version": "1.0.0",
+  "version": "${version}",
   "name": "Resource Multiplier GameTests",
   "environment": "*",
   "entrypoints": {

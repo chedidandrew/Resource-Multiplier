@@ -1,0 +1,168 @@
+# Build status
+
+## 1.2.0-rc.1 public-presentation candidate — 2026-08-30
+
+The current working tree is Resource Multiplier `1.2.0-rc.1` on `main`, based on commit `e8257fd3776c0dabddaeff9d78cc4e23625f9229` and tracking the canonical public repository at `https://github.com/chedidandrew/Resource-Multiplier`. It is deliberately unpublished: `release_ready=false`, no tag or GitHub Release was created, and the README states that no stable public download exists.
+
+This pass changes presentation, release-state clarity, documentation structure, validation, and workflow ownership only. It does not change gameplay behavior. The public name is **Resource Multiplier**; the compatibility-critical mod ID `smart_resource_drops`, Java package, config filename and keys, datapack namespace, network payload IDs, saved-world provenance identifiers, `/smartdrops`, `/smartdropsgui`, schema, and migrations remain unchanged.
+
+Current automated evidence:
+
+- Package/metadata/README validation passes with 118 production Java sources. Deterministic release-package regression passes with 252 Git-tracked source entries. Mod Menu integration, edge-case, and polish audits pass; the Windows dependency-free core runner passes all 90 assertions.
+- `gradlew.bat --no-daemon --no-build-cache --rerun-tasks clean build --warning-mode all` completes with `BUILD SUCCESSFUL` in 29 seconds. JUnit reports 158 tests in 24 suites with zero failures, errors, or skips; the dedicated Minecraft runner reports all 66 required GameTests passed.
+- `runClientGameTest -Pinclude_modmenu_runtime=true` loads Mod Menu 20.0.0 and `smart_resource_drops 1.2.0-rc.1`, exercises the title, integrated-server, dedicated operator/non-operator, reset, navigation, search, and mapped tooltip paths, creates 19 current screenshots, and completes with `BUILD SUCCESSFUL` in 39 seconds.
+- Standalone `runServer` loads 43 mods without Mod Menu, initializes Resource Multiplier, reaches `Done (0.247s)`, returns the expected `/smartdrops` and shearing status (including the corrected budget label), reports `Status: Valid` and no mutation from `/smartdrops validate`, accepts `stop`, and completes with `BUILD SUCCESSFUL` in 48 seconds without client-only class loading.
+- Fresh-empty-directory release packaging produces `ResourceMultiplier-1.2.0-rc.1-source.zip` with 252 entries, `resource-multiplier-1.2.0-rc.1.jar`, the checksum manifest, and a five-entry release bundle. The source archive's hash remains in the generated external manifest so the archive is not self-referential.
+- README validation enforces a 1,000–1,500-word landing page, one centered public title, balanced fences, a flat section hierarchy, valid local links/images, accessible image text and bounded widths, the production icon, three real RC screenshots, and honest pre-release wording. All referenced public GitHub and badge URLs returned HTTP 200.
+- The ordinary build workflow now handles branch pushes, pull requests, and manual dispatch only. The guarded release workflow is the sole `v*` tag handler and checks `release_ready=true` before build, packaging, or publication. With the current false latch, tagged publication remains locked.
+
+The inspected playable artifact is `build/libs/resource-multiplier-1.2.0-rc.1.jar`: 601,044 bytes, 311 ZIP entries, SHA-256 `5CA797D6BC4BBAB6F223361D9A99A118850F40B0273426D3B1ADF8AAB5CDCB31`, embedded public name `Resource Multiplier`, version `1.2.0-rc.1`, mod ID `smart_resource_drops`, MIT license, production icon and canonical contact links, Java class major 69, stable `data/smart_resource_drops` namespace, and zero nested JAR or GameTest entries. Host-only OSHI/Windows performance-counter and JOML deprecation warnings remain external dependency/environment noise; they did not fail the build.
+
+Still open are hands-on block/entity/shearing/UI/reload tests; separately installed operator/non-operator multiplayer and existing-world restart checks; dense-output observation; exact named/versioned third-party cases for biome/passive-animal content, hostile mobs, bosses, inventory-carrying mobs, custom shearables, automated miners, and custom placement; and a clean-checkout GitHub Actions run for the eventual exact candidate commit. Only after every gate closes may the project move to `1.2.0`, set `release_ready=true` in that fully tested commit, tag, or publish. The 1.1.0 evidence below is preserved history and does not validate this RC.
+
+## 1.1.0 final hardening validation under the former public name - 2026-08-30
+
+This directory is not a Git checkout: it has no `.git` metadata, branch, commit, tags, or remote. The baseline commit and public-release status therefore cannot be verified locally. Version 1.1.0 is retained, Fabric contact metadata remains `{}`, and no release or push was performed.
+
+Verified target: Minecraft Java 26.2, Fabric Loader 0.19.3, Fabric API 0.158.0+26.2, Java 25, Fabric Loom 1.17.20, and optional client-only Mod Menu 20.0.0.
+
+### Baseline before the final hardening changes
+
+- `clean test` passed 92 tests in 16 suites with zero failures, errors, or skips.
+- The dedicated runner passed all 20 required GameTests, and the client GameTest passed.
+- All five repository validators and all 90 dependency-free core assertions passed.
+- The first baseline `clean build --warning-mode all` exposed an intermittent XP GameTest failure: merged equal-value XP orbs made a value-only count observe 4 instead of the expected 5. The final fixture uses distinct Minecraft orb denominations and the complete post-fix sequence below passes.
+- The baseline JAR was 426,260 bytes with 242 entries and SHA-256 `6AC0002F1615AB2FFF6248DFABE356A50EC65825D59190A57B9AE219DD3A1866`.
+
+### Final automated and runtime evidence
+
+- All five static/package/UI validators pass. Package validation counts 103 production Java sources; deterministic source validation covers 224 entries; the Mod Menu, edge-case, and polish audits pass.
+- The Windows dependency-free core runner passes all 90 assertions.
+- Mapped JUnit reports 125 tests in 21 suites with zero failures, errors, or skips.
+- The dedicated Minecraft runner passes all 22 required GameTests, including live validation-command invariants and player/explosion/automation block-budget fallback/recovery coverage.
+- `runClientGameTest` completes with `BUILD SUCCESSFUL` in 38 seconds.
+- The authoritative Java 25 `gradlew.bat --no-daemon --no-build-cache clean build --warning-mode all` completes with `BUILD SUCCESSFUL` in 32 seconds and includes the 125-test JUnit and 22-test dedicated results. Project sources emit no deprecation warning; the remaining JOML/OSHI/Windows host warnings originate outside the project.
+- Standalone `runServer --warning-mode all` loads 43 mods without Mod Menu or a client-only classloading failure, reaches `Done (0.313s)`, executes both `/smartdrops validate` forms from the console with status `Valid`, reports no missing tag warnings or data changes, accepts `stop`, and completes with `BUILD SUCCESSFUL` in 45 seconds.
+- Standalone `runClient -Pinclude_modmenu_runtime=true` loads the then-current 1.1.0 display name and Mod Menu 20.0.0 and completes resource, audio, and texture-atlas initialization before an intentional interrupt. This is historical startup evidence only, not an interactive GUI or in-world manual pass.
+
+The inspected playable artifact is `build/libs/smart-resource-drops-1.1.0.jar`:
+
+- 483,638 bytes and 272 ZIP entries
+- SHA-256 `E3A6A38ADB3412F081ED546089C0E61C932AC8E0D507AB5B33F9A94A5DF66EBA`
+- embedded mod version 1.1.0, Java class major 69 (Java 25), and contact metadata `{}`
+- all required validation/output-budget classes present, with zero forbidden testmod/GameTest/fixture/development-loot/bundled-dependency/nested-JAR/runtime-data leaks
+
+The checksum-pinned standard Gradle 9.5.1 wrapper is present and boots successfully. Deterministic source packaging validates 224 entries; the generated `SmartResourceDrops-1.1.0-SHA256SUMS.txt` is the authoritative non-self-referential checksum evidence for the playable JAR and source archive.
+
+Still pending are the standalone interactive client/in-world GUI and command matrix, player-driven vanilla block/entity matrix, manual unknown/conflicting/near-limit validation configuration, hands-on pathological block-loot fallback observation, custom-tag `/reload`, running-game restart/migration, dense-farm observation, separately installed operator/non-operator multiplayer, and named/versioned third-party wildlife/hostile/boss/inventory/miner/custom-placement cases. Automated fixtures and startup smoke do not satisfy those gates or justify a general compatibility claim.
+
+The 1.1.0 checkpoint immediately below is preserved historical evidence and is not the current artifact identity.
+
+## 1.1.0 automated release-candidate validation under the former public name - historical pre-hardening checkpoint
+
+The working tree contains the default-off entity death-loot implementation, schema 2 configuration/editor/networking, server-side entity inspection, common entity category tags, the narrow death-loot/XP mixin boundary, deterministic development fixtures, and playable-JAR fixture-leak checks.
+
+The follow-up safety and verification hardening is included in the measurements below. It adds bounded amplified item/XP output, lazy exactly-once claims, a one-shot mob-XP token, persisted attribution origin, stricter player-credit validation, an extensible protected-loot tag, transactional config publication, server-authoritative connected catalogs, stale-editor invalidation, compact mutation failures, real class-fallback/pickup/Looting and independent XP coverage, broader entity-editor transaction checks, and stricter archive validation. “20 required GameTests” remains a runner count, not evidence that every one of the 54 requested behaviors is a separate passing test.
+
+Completed evidence:
+
+- All five static/package/UI validators pass. Package validation counts 90 production Java sources, deterministic source packaging validates 198 entries, the Mod Menu integration audit passes, the edge-case audit passes, and the polish regression suite passes.
+- The Windows dependency-free core runner passes all 90 assertions.
+- The exact Java 25 `gradlew.bat --no-daemon --no-build-cache clean build` completes with `BUILD SUCCESSFUL` in 35 seconds. JUnit XML reports 16 suites, 92 tests, zero failures, zero errors, and zero skipped tests; the dedicated-server runner reports all 20 required GameTests passed.
+- `runClientGameTest` completes with `BUILD SUCCESSFUL` in 39 seconds, including the complete entity draft/copy/equality paths, child staging, namespaced search, reset, and local/integrated/dedicated permission paths.
+- Standalone `runClient` loads the 1.1.0 artifact and completes resource, audio, and texture-atlas initialization before an intentional interrupt. This is a startup smoke, not interactive gameplay.
+- Standalone `runServer` without Mod Menu loads the 1.1.0 artifact, reaches `Done (0.436s)`, accepts `stop`, saves all dimensions, and finishes with `BUILD SUCCESSFUL` in 32 seconds without a client-only classloading failure.
+
+The inspected playable artifact is `build/libs/smart-resource-drops-1.1.0.jar`:
+
+- 426,260 bytes and 242 ZIP entries
+- SHA-256 `6AC0002F1615AB2FFF6248DFABE356A50EC65825D59190A57B9AE219DD3A1866`
+- embedded mod version 1.1.0, Java class major 69 (Java 25), and contact metadata `{}`
+- no GameTest/testmod/fixture classes or data, development loot tables, bundled Fabric/Minecraft/Mod Menu classes, nested dependency JARs, or runtime configuration/world data
+
+Still pending: the complete player-driven vanilla entity matrix, custom category-tag `/reload`, running-game restart/migration, dense-farm observation, separately installed multiplayer authority checks, and named/versioned third-party wildlife/hostile/boss/equipment-or-inventory compatibility matrix. Synthetic fixtures prove the supported integration boundary but do not justify a general mod-compatibility or publication-readiness claim.
+
+The 1.0.3 paths, timings, counts, and hashes below are preserved historical baselines only.
+
+## 1.0.3 public-release cleanup under the former public name
+
+Target environment:
+
+- Minecraft Java Edition 26.2
+- Fabric Loader 0.19.3+
+- Fabric API 0.158.0+26.2 or a compatible newer 26.2 build
+- Java 25
+- Fabric Loom 1.17.20
+- Gradle 9.5.1 from the checksum-pinned wrapper bootstrap
+- Mod Menu 20.0.0 as an optional client integration
+
+## Block inspection feature - validated 2026-08-30
+
+`/smartdrops inspect` and `/smartdrops inspect verbose` are implemented as server-authoritative, read-only diagnostics. They use a server-player raycast and the same immutable rule trace as gameplay, including modded namespaced IDs and dimensions, vanilla `minecraft:`/common `c:` category tags, Miscellaneous fallback, exact/tag filters, source and placement-provenance gates, block-entity protection/allowlisting, override precedence, configured multiplier, effective result, and reason. Inspection uses non-consuming provenance/cache peeks and neither evaluates loot nor changes world, configuration, revision, statistics, drops, XP, or provenance.
+
+Inspection-specific automated coverage spans dependency-free core assertions, mapped JUnit trace/parser/formatter/privacy tests, a recent-removal peek regression, and dedicated-server GameTests. The GameTests repeatedly inspect real stone and a tracked, populated chest while checking stable traces, gameplay-decision parity, and configuration/statistics/world/block-entity/provenance invariants; they also execute the real server command dispatcher for a looked-at block, sky/no-target guidance, and console rejection. The existing server-only classloading audit remains active.
+
+Final measured inspection results:
+
+- All five Python validators passed; package validation counted 64 production Java sources and release packaging validated a deterministic 132-entry source archive.
+- The Windows-native dependency-free core harness passed all 90 assertions.
+- JUnit XML reports 13 suites, 63 tests, zero failures, zero errors, and zero skipped tests. The focused `RuleResolutionTraceTest` passed 12/12 and `SmartDropsCommandsTest` passed 6/6.
+- The dedicated-server runner passed exactly 8/8 required GameTests.
+- The final clean build completed with `BUILD SUCCESSFUL` in 17 seconds, and the real Minecraft 26.2 client GameTest completed with `BUILD SUCCESSFUL` in 34 seconds.
+- Standalone `runServer` without Mod Menu reached `Done`, stopped cleanly, showed no client-only classloading failure, and completed with `BUILD SUCCESSFUL` in 33 seconds.
+
+The final inspection-feature playable artifact is `build/libs/smart-resource-drops-1.0.3.jar`:
+
+- 291,391 bytes and 173 ZIP entries
+- SHA-256 `1F4FBF54C13C544909BA61F0800FFB76C073E2ED04EB0F95FF10B33849565A1B`
+- JUnit/GameTest classes remain excluded from the playable JAR
+
+A standalone `runClient` startup smoke initialized the mod and completed client resource, audio, and texture-atlas loading before the task was intentionally interrupted. No in-world interaction was claimed: the player-driven natural/placed mining check after repeated inspection and the real third-party modded block, block-entity, and dimension compatibility matrix remain manual release gates.
+
+The verified sections below are the pre-inspection 1.0.3 public-release baseline. Their 2026-08-30 counts, timings, and artifact identity are intentionally preserved for history and are not the inspection-feature measurements above.
+
+## Verified locally on 2026-08-30
+
+- All five Python validators passed: package/source structure, deterministic release packaging, Mod Menu integration, edge-case contracts, and polish regressions.
+- Package validation counted 62 production Java sources. The Windows-native dependency-free core suite passed all 62 assertions.
+- Gradle JUnit passed all 47 tests in 12 suites against the mapped Minecraft classes.
+- The dedicated-server GameTest runner passed all six required tests; Resource Multiplier contributes five methods covering server-only/mixin boundaries, provenance transitions, real door placement, the real stone `dropResources` path, and reset without provenance loss.
+- The real Minecraft 26.2 client GameTest completed with `BUILD SUCCESSFUL` in 32 seconds. It covers the shared child-screen dirty indicator, root-only Apply/Discard actions, Reset Cancel/confirm behavior, compact 320x180 layout, hierarchy/search behavior, and local/integrated/dedicated authority paths.
+- A real Mod Menu 20.0.0 `runClient` completed with `BUILD SUCCESSFUL` in 14 minutes 18 seconds. The historical title-screen Mods > former-name Configure route, all major child dirty states, successful Apply clearing, and the red Reset Everything confirmation were manually exercised before the rename.
+- A standalone `runServer` without Mod Menu initialized the mod in the server environment, reached `Done (0.256s)`, accepted `stop`, and completed with `BUILD SUCCESSFUL` in 37 seconds.
+- The final deterministic source archive was independently inspected: 129 entries under one versioned top-level directory, all required Gradle bootstrap files present, executable mode `755` on `gradlew`, and zero forbidden generated/runtime entries.
+
+The POSIX core launcher was not executed because this Windows host has no installed WSL distribution. `tools/run_core_tests.ps1` compiled the same dependency-free sources and executed the same assertions natively.
+
+## Rule, configuration, and editor result
+
+- `PLAYER_PLACED_ONLY` now excludes natural blocks with placement protection either on or off. `NATURAL_ONLY` excludes placed blocks only while protection is on; with protection off it treats both provenance states as eligible. `ALL` admits both. Independent source toggles and safety/filter rules still apply.
+- `minecraft:dragon_egg` is included in the authoritative default blacklist and shipped example. It is not hard-coded in `RuleEngine`; an administrator may remove it and use normal rule resolution.
+- Every child screen displays subtle shared-session dirty state near Back. Apply Changes remains available only on the General/root screen, which still switches Done to Discard Changes while dirty. Apply remains one bounded `ConfigPatch`; reset remains a distinct permission-checked, revision-checked atomic operation.
+- At this historical 1.0.x checkpoint, `fabric.mod.json` contact metadata remained `{}` because the then-supplied directory had no `.git` metadata or verifiable project-owned URL. The canonical repository and contact metadata were established later and are recorded in the current status section.
+- Mob/entity drops remain deliberately absent from 1.0.x. `docs/ROADMAP.md` contains only a conservative, optional 1.1 design note.
+
+## Final clean build and artifact
+
+The final exact `gradlew.bat --no-daemon clean build` completed with `BUILD SUCCESSFUL` in 15 seconds. It compiled every Java 25 source set, restored the input-identical JUnit result from Gradle's verified cache, and launched the dedicated-server GameTest runner, which passed all six required tests. The immediately preceding clean build in the same final pass executed the 47-test JUnit task directly and also completed successfully; the XML result contains 12 suites, 47 tests, zero failures, zero errors, and zero skipped tests.
+
+The inspected playable artifact is `build/libs/smart-resource-drops-1.0.3.jar`:
+
+- 272,738 bytes and 169 ZIP entries
+- SHA-256 `41A0604C6D907E1619F5A468487FB0984C3A7863C56F3333D0F9F31CE7697CCC`
+- embedded mod version 1.0.3 and contact metadata `{}`
+- Java class major 69 (Java 25)
+- no JUnit/GameTest classes, bundled Mod Menu or Fabric API classes, or nested dependency JARs
+
+## Remaining release gates and known risks
+
+These are not inferred from compilation, automated clients, or GameTests:
+
+- Perform actual player-driven natural and placed mining at `0x`, `1x`, `2x`, `4x`, and `64x`, including Fortune, Silk Touch, XP on/off, item components, and vanilla gamerules.
+- Restart the JVM/world and reload affected chunks to verify persisted provenance. Exercise piston, sticky-piston, and falling-block movement across chunk boundaries and save/restart boundaries.
+- Test TNT/explosion decay, a Fabric fake player, representative third-party automated miners, populated vanilla/modded block entities, and a modded block/dimension fixture.
+- A third-party machine that removes a marked block but delays its eventual supported `Block.dropResources` call beyond the bounded two-tick recent-removal window can be classified as natural. A mod that manufactures items without a supported drop path remains outside the multiplication boundary.
+- Repeat Mod Menu Configure against a separately installed multiplayer server as both non-operator and operator, test missing-server-mod and retry/failure paths, remove Mod Menu and verify the command route, and complete the full GUI-scale/keyboard/mouse/tooltip matrix.
+- This working directory has no `.git` metadata. Restore or initialize source control, run CI on the exact release commit, verify the canonical GitHub URL, populate contact metadata only from that verified URL, and compare the published checksum with the uploaded artifact.
+
+The exhaustive publication gate is [docs/PUBLIC_RELEASE_CHECKLIST.md](docs/PUBLIC_RELEASE_CHECKLIST.md).
