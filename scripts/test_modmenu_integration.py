@@ -108,12 +108,22 @@ require(fabric.get("name") == public_name, "fabric.mod.json must expose the Reso
 require(
     fabric.get("contact")
     == {
-        "homepage": "https://github.com/chedidandrew/Resource-Multiplier",
+        "homepage": "https://www.curseforge.com/minecraft/mc-mods/resource-multiplier",
         "issues": "https://github.com/chedidandrew/Resource-Multiplier/issues",
         "sources": "https://github.com/chedidandrew/Resource-Multiplier",
     },
     "Mod Menu metadata must expose the canonical website, issue tracker, and source repository",
 )
+require(
+    fabric.get("custom") == {"modmenu": {"links": {'smart_resource_drops.modmenu.link.kofi': 'https://ko-fi.com/andrewchedid', 'smart_resource_drops.modmenu.link.paypal': 'https://www.paypal.com/paypalme/chedidandrew', 'smart_resource_drops.modmenu.link.cash_app': 'https://cash.app/%24AndrewChedid'}}},
+    "Mod Menu metadata must expose the exact optional support links",
+)
+for key, label in {
+    "smart_resource_drops.modmenu.link.kofi": "Support on Ko-fi",
+    "smart_resource_drops.modmenu.link.paypal": "Support on PayPal",
+    "smart_resource_drops.modmenu.link.cash_app": "Support on Cash App",
+}.items():
+    require(lang.get(key) == label, f"Missing localized Mod Menu link label: {key}")
 require(fabric.get("license") == "MIT", "Mod Menu metadata must expose the MIT license")
 require(
     fabric.get("icon") == "assets/smart_resource_drops/icon.png",

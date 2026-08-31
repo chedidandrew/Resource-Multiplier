@@ -1,6 +1,6 @@
 # GitHub publication guide
 
-The canonical public repository is [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier), with ordinary bug and compatibility reports handled through [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues). Resource Multiplier `1.2.0` is the stable Fabric 26.2 release line. The exact release commit uses `release_ready=true`; ordinary development commits must keep the latch disabled.
+The canonical public source repository is [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier). User downloads are published on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier), and ordinary bug or compatibility reports are handled through [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues). Resource Multiplier `1.2.1` is the stable Fabric 26.2 release line.
 
 ## Clone and contribute
 
@@ -15,23 +15,29 @@ git push -u origin your-change
 
 ## CI
 
-`.github/workflows/build.yml` runs on branch pushes, pull requests, and manual dispatch. With Java 25 it runs the source/package validators, the complete core and mapped-Minecraft JUnit suites, all required dedicated-server GameTests (66 in the current shearing candidate), the Fabric Loom build, and the real client GUI/authority GameTest under Xvfb. The non-sources JAR is uploaded as an Actions artifact. Tag pushes are handled only by the authoritative release workflow so the full suite is not duplicated.
+`.github/workflows/build.yml` runs on branch pushes, pull requests, and manual dispatch. With Java 25 it runs the source and package validators, the complete core and mapped-Minecraft JUnit suites, all required dedicated-server GameTests, the Fabric Loom build, and the real client GUI and authority GameTests under Xvfb. The playable JAR is uploaded as an Actions artifact. Tag pushes are handled only by the guarded release workflow.
 
 ## Release
 
-The stable JAR must be rebuilt from source. Never rename `resource-multiplier-1.2.0-rc.1.jar` to `resource-multiplier-1.2.0.jar`, because renaming does not update embedded metadata or checksums.
+Always rebuild a versioned JAR from source. Renaming an older JAR does not update its embedded Fabric metadata, manifest, package records, or checksums.
 
-After the final `main` commit passes Build and verify, tag it as `v1.2.0`. The guarded release workflow verifies `release_ready=true`, main ancestry, and tag/version equality, then rebuilds, tests, packages, and publishes the release.
+A stable release commit must set `mod_version` to the intended version and `release_ready=true`. After the exact `main` commit passes Build and verify, tag that commit with the matching `v<version>` tag. The guarded release workflow verifies the latch, tag-to-version equality, and main ancestry before rebuilding, testing, packaging, and publishing.
 
-After publication, set `release_ready=false` in the first commit of the next development cycle.
+## Public links
+
+- Website and primary download page: [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier)
+- Source repository: [GitHub](https://github.com/chedidandrew/Resource-Multiplier)
+- Bug and compatibility reports: [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues)
+- Optional support: [Ko-fi](https://ko-fi.com/andrewchedid), [PayPal](https://www.paypal.com/paypalme/chedidandrew), and [Cash App](https://cash.app/%24AndrewChedid)
+
+The same destinations are locked by package validation and exposed through Fabric or Mod Menu metadata. `.github/FUNDING.yml` supplies GitHub's sponsor button.
+
 ## Repository presentation and settings checklist
 
-These GitHub-side settings are manual repository-administration actions; source validation cannot enforce them:
-
 - Use this concise repository description: **Configurable multipliers for block drops, mob loot, and supported shearing, with persistent anti-duplication protection.**
-- Leave the repository homepage field empty until a real project-owned site exists.
+- Set the repository homepage to the official CurseForge project page.
 - Keep Issues enabled and Discussions disabled for the current support model.
-- Disable the Wiki while `docs/` remains the canonical documentation, avoiding two conflicting documentation sets.
+- Disable the Wiki while `docs/` remains canonical.
 - Review Projects and disable it if no board is actively maintained.
 - Enable automatic deletion of head branches after pull requests merge.
 - Protect `main`, require pull requests for gameplay changes, and require the `Build and verify` check before merge.

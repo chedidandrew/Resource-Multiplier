@@ -8,7 +8,7 @@
     "Andrew Chedid"
   ],
   "contact": {
-    "homepage": "https://github.com/chedidandrew/Resource-Multiplier",
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/resource-multiplier",
     "issues": "https://github.com/chedidandrew/Resource-Multiplier/issues",
     "sources": "https://github.com/chedidandrew/Resource-Multiplier"
   },
@@ -37,5 +37,14 @@
   },
   "suggests": {
     "modmenu": ">=${modmenu_version}"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "smart_resource_drops.modmenu.link.kofi": "https://ko-fi.com/andrewchedid",
+        "smart_resource_drops.modmenu.link.paypal": "https://www.paypal.com/paypalme/chedidandrew",
+        "smart_resource_drops.modmenu.link.cash_app": "https://cash.app/%24AndrewChedid"
+      }
+    }
   }
 }

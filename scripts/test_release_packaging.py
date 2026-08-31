@@ -26,9 +26,14 @@ require(package_release.PUBLIC_MOD_NAME == "Resource Multiplier", "Public mod na
 require(package_release.PUBLIC_ARCHIVE_BASE == "ResourceMultiplier", "Release archive base changed")
 require(package_release.PLAYABLE_JAR_BASE == "resource-multiplier", "Playable JAR base changed")
 require(
+    package_release.EXPECTED_MODMENU_LINKS
+    == {'smart_resource_drops.modmenu.link.kofi': 'https://ko-fi.com/andrewchedid', 'smart_resource_drops.modmenu.link.paypal': 'https://www.paypal.com/paypalme/chedidandrew', 'smart_resource_drops.modmenu.link.cash_app': 'https://cash.app/%24AndrewChedid'},
+    "Mod Menu support-link contract changed",
+)
+require(
     package_release.EXPECTED_CONTACT
     == {
-        "homepage": "https://github.com/chedidandrew/Resource-Multiplier",
+        "homepage": "https://www.curseforge.com/minecraft/mc-mods/resource-multiplier",
         "issues": "https://github.com/chedidandrew/Resource-Multiplier/issues",
         "sources": "https://github.com/chedidandrew/Resource-Multiplier",
     },
@@ -52,6 +57,7 @@ def write_minimum_release_entries(
         "version": "test",
         "contact": dict(package_release.EXPECTED_CONTACT),
         "license": "MIT",
+        "custom": {"modmenu": {"links": dict(package_release.EXPECTED_MODMENU_LINKS)}},
         "icon": "assets/smart_resource_drops/icon.png",
         "entrypoints": {
             "main": ["com.chedidandrew.smartresourcedrops.SmartResourceDrops"],
@@ -194,6 +200,7 @@ require(
 )
 
 for missing_source in (
+    ".github/FUNDING.yml",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/config.yml",
     ".github/ISSUE_TEMPLATE/mod_compatibility.yml",

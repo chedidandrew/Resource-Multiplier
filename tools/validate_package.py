@@ -10,12 +10,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 ERRORS: list[str] = []
-PROJECT_HOMEPAGE = "https://github.com/chedidandrew/Resource-Multiplier"
-PROJECT_ISSUES = f"{PROJECT_HOMEPAGE}/issues"
+PROJECT_HOMEPAGE = "https://www.curseforge.com/minecraft/mc-mods/resource-multiplier"
+PROJECT_SOURCES = "https://github.com/chedidandrew/Resource-Multiplier"
+PROJECT_ISSUES = f"{PROJECT_SOURCES}/issues"
 EXPECTED_CONTACT = {
     "homepage": PROJECT_HOMEPAGE,
     "issues": PROJECT_ISSUES,
-    "sources": PROJECT_HOMEPAGE,
+    "sources": PROJECT_SOURCES,
+}
+EXPECTED_MODMENU_LINKS = {
+    "smart_resource_drops.modmenu.link.kofi": "https://ko-fi.com/andrewchedid",
+    "smart_resource_drops.modmenu.link.paypal": "https://www.paypal.com/paypalme/chedidandrew",
+    "smart_resource_drops.modmenu.link.cash_app": "https://cash.app/%24AndrewChedid",
 }
 EXPECTED_ENTRYPOINTS = {
     "main": ["com.chedidandrew.smartresourcedrops.SmartResourceDrops"],
@@ -46,6 +52,7 @@ def read_json(path: Path) -> object:
 
 required = [
     ".gitignore",
+    ".github/FUNDING.yml",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/config.yml",
     ".github/ISSUE_TEMPLATE/mod_compatibility.yml",
@@ -262,6 +269,15 @@ for relative, markers in form_markers.items():
         if marker not in text:
             fail(f"{relative} is missing required publication guidance: {marker}")
 
+funding_text = (ROOT / ".github/FUNDING.yml").read_text(encoding="utf-8")
+for marker in (
+    "ko_fi: andrewchedid",
+    "https://www.paypal.com/paypalme/chedidandrew",
+    "https://cash.app/%24AndrewChedid",
+):
+    if marker not in funding_text:
+        fail(f".github/FUNDING.yml is missing required funding destination: {marker}")
+
 generated_json_roots = {".build", ".gradle", ".gradle-wrapper", "build", "run"}
 for path in sorted(ROOT.rglob("*.json")):
     relative_parts = path.relative_to(ROOT).parts
@@ -276,7 +292,7 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
-    "mod_version": "1.2.0",
+    "mod_version": "1.2.1",
     "minecraft_version": "26.2",
     "loader_version": "0.19.3",
     "loom_version": "1.17.20",
@@ -288,7 +304,7 @@ for key, expected in expected_properties.items():
     if properties.get(key) != expected:
         fail(f"gradle.properties {key} must be {expected!r}, found {properties.get(key)!r}")
 if properties.get("release_ready") != "true":
-    fail("The stable 1.2.0 release commit must set release_ready=true")
+    fail("The stable 1.2.1 release commit must set release_ready=true")
 
 readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
 readme_word_count = len(re.findall(r"\S+", readme_text))
@@ -303,10 +319,11 @@ for marker in (
     "Loader-Fabric",
     "Java-25",
     "License-MIT",
-    "Status-1.2.0-Release",
+    "Status-1.2.1-Release",
     "> [!IMPORTANT]",
     "Current stable release:",
-    "Official Resource Multiplier builds are published through",
+    "www.curseforge.com/minecraft/mc-mods/resource-multiplier",
+    "Download the current release from",
     "docs/COMMANDS.md",
     "docs/images/general-config.webp",
     "docs/images/block-overrides.webp",
@@ -360,6 +377,8 @@ if isinstance(fabric, dict):
             fail(f"fabric.mod.json {key} mismatch")
     if fabric.get("contact") != EXPECTED_CONTACT:
         fail("fabric.mod.json must expose the canonical homepage, issues, and sources URLs")
+    if fabric.get("custom") != {"modmenu": {"links": EXPECTED_MODMENU_LINKS}}:
+        fail("fabric.mod.json must expose the exact Mod Menu support links")
     if fabric.get("license") != "MIT":
         fail("fabric.mod.json must declare the SPDX MIT license identifier")
     if fabric.get("icon") != "assets/smart_resource_drops/icon.png":

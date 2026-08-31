@@ -17,13 +17,14 @@
   <a href="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml"><img alt="Build and verify" src="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml/badge.svg?branch=main"></a>
   <img alt="Minecraft 26.2" src="https://img.shields.io/badge/Minecraft-26.2-62B47A">
   <img alt="Fabric loader" src="https://img.shields.io/badge/Loader-Fabric-DBD0B4">
+  <a href="https://www.curseforge.com/minecraft/mc-mods/resource-multiplier"><img alt="Download on CurseForge" src="https://img.shields.io/badge/Download-CurseForge-F16436?logo=curseforge&amp;logoColor=white"></a>
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-ED8B00?logo=openjdk&amp;logoColor=white">
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/License-MIT-2EA44F"></a>
-  <img alt="Stable release 1.2.0" src="https://img.shields.io/badge/Status-1.2.0-Release-2EA44F">
+  <img alt="Stable release 1.2.1" src="https://img.shields.io/badge/Status-1.2.1-Release-2EA44F">
 </p>
 
 > [!IMPORTANT]
-> **Current stable release:** Resource Multiplier `1.2.0` for Minecraft Java Edition 26.2 and Fabric. Automated checks and the maintainer-performed manual release matrix passed. Third-party compatibility remains case-specific and should be reported with exact project versions.
+> **Current stable release:** Resource Multiplier `1.2.1` for Minecraft Java Edition 26.2 and Fabric. This patch updates the official CurseForge website action, keeps GitHub Issues as the report destination, and adds optional support links without changing gameplay.
 
 Resource Multiplier speeds up repetitive gathering by multiplying the final loot Minecraft already calculated. Fortune, Silk Touch, Looting, loot-table changes, item components, NBT, and legal stack sizes are preserved because the mod works after normal loot evaluation instead of replacing it.
 
@@ -69,13 +70,13 @@ Resource Multiplier does not add vein mining, tree felling, automatic smelting, 
   >
 </p>
 
-These are real client captures from the validated Resource Multiplier `1.2.0` release line.
+These are real client captures from the validated Resource Multiplier `1.2.x` release line.
 
 ## Download
 
-Official Resource Multiplier builds are published through [GitHub Releases](https://github.com/chedidandrew/Resource-Multiplier/releases). Use the file matching your Minecraft version and mod loader.
+Download the current release from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier). Verified release bundles, source archives, and checksums are also published through [GitHub Releases](https://github.com/chedidandrew/Resource-Multiplier/releases).
 
-The stable Fabric 26.2 artifact is `resource-multiplier-1.2.0.jar`.
+The stable Fabric 26.2 artifact is `resource-multiplier-1.2.1.jar`. Use only the file matching your Minecraft version and mod loader.
 
 You can also [build the current source](#build-from-source). Do not download JARs from unofficial mirrors.
 
@@ -156,7 +157,7 @@ Windows CMD:
 gradlew.bat clean build
 ```
 
-The expected artifact is `build/libs/resource-multiplier-1.2.0.jar`. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
+The expected artifact is `build/libs/resource-multiplier-1.2.1.jar`. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
 
 ## Documentation
 
@@ -177,4 +178,6 @@ The expected artifact is `build/libs/resource-multiplier-1.2.0.jar`. See [Testin
 
 Resource Multiplier is open source under the permissive [MIT License](LICENSE). You may use, copy, modify, publish, distribute, sublicense, or sell the software while retaining the copyright and permission notices.
 
-Report ordinary defects through [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues). Use the compatibility form for a reproducible conflict with another mod, and follow [SECURITY.md](SECURITY.md) for sensitive reports. Official releases are published through GitHub Releases. CurseForge availability depends on project approval and file publication.
+Download releases from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier). Report ordinary defects through [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues), use the compatibility form for a reproducible conflict with another mod, and follow [SECURITY.md](SECURITY.md) for sensitive reports. Source code and verified release checksums remain available on [GitHub](https://github.com/chedidandrew/Resource-Multiplier).
+
+Development can be supported through [Ko-fi](https://ko-fi.com/andrewchedid), [PayPal](https://www.paypal.com/paypalme/chedidandrew), or [Cash App](https://cash.app/%24AndrewChedid). Support is optional and never changes access to releases, source code, issue support, or modpack permission.

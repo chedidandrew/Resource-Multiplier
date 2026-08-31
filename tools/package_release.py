@@ -17,12 +17,18 @@ FIXED_TIME = (2026, 8, 29, 0, 0, 0)
 PUBLIC_MOD_NAME = "Resource Multiplier"
 PUBLIC_ARCHIVE_BASE = "ResourceMultiplier"
 PLAYABLE_JAR_BASE = "resource-multiplier"
-PROJECT_HOMEPAGE = "https://github.com/chedidandrew/Resource-Multiplier"
-PROJECT_ISSUES = f"{PROJECT_HOMEPAGE}/issues"
+PROJECT_HOMEPAGE = "https://www.curseforge.com/minecraft/mc-mods/resource-multiplier"
+PROJECT_SOURCES = "https://github.com/chedidandrew/Resource-Multiplier"
+PROJECT_ISSUES = f"{PROJECT_SOURCES}/issues"
 EXPECTED_CONTACT = {
     "homepage": PROJECT_HOMEPAGE,
     "issues": PROJECT_ISSUES,
-    "sources": PROJECT_HOMEPAGE,
+    "sources": PROJECT_SOURCES,
+}
+EXPECTED_MODMENU_LINKS = {
+    "smart_resource_drops.modmenu.link.kofi": "https://ko-fi.com/andrewchedid",
+    "smart_resource_drops.modmenu.link.paypal": "https://www.paypal.com/paypalme/chedidandrew",
+    "smart_resource_drops.modmenu.link.cash_app": "https://cash.app/%24AndrewChedid",
 }
 EXPECTED_ENTRYPOINTS = {
     "main": ["com.chedidandrew.smartresourcedrops.SmartResourceDrops"],
@@ -35,6 +41,7 @@ EXPECTED_MIXIN_DECLARATIONS = ["smart_resource_drops.mixins.json"]
 REQUIRED_SOURCE_FILES = frozenset(
     {
         ".gitignore",
+        ".github/FUNDING.yml",
         ".github/ISSUE_TEMPLATE/bug_report.yml",
         ".github/ISSUE_TEMPLATE/config.yml",
         ".github/ISSUE_TEMPLATE/mod_compatibility.yml",
@@ -570,6 +577,8 @@ def validate_release_jar(
                         "release JAR contact metadata does not expose the canonical "
                         "homepage, issues, and sources URLs"
                     )
+                if metadata.get("custom") != {"modmenu": {"links": EXPECTED_MODMENU_LINKS}}:
+                    errors.append("release JAR metadata does not expose the exact Mod Menu support links")
                 if metadata.get("license") != "MIT":
                     errors.append("release JAR metadata does not declare the MIT license")
                 if metadata.get("icon") != "assets/smart_resource_drops/icon.png":

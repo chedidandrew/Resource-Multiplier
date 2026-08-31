@@ -273,5 +273,8 @@
   "tag.item.smart_resource_drops.protected_entity_loot": "Protected Entity Loot",
   "modmenu.nameTranslation.smart_resource_drops": "Resource Multiplier",
   "modmenu.summaryTranslation.smart_resource_drops": "Configurable resource multipliers with smart anti-dupe protection.",
-  "modmenu.descriptionTranslation.smart_resource_drops": "Configurable resource multipliers with persistent anti-dupe protection for player-placed blocks."
+  "modmenu.descriptionTranslation.smart_resource_drops": "Configurable resource multipliers with persistent anti-dupe protection for player-placed blocks.",
+  "smart_resource_drops.modmenu.link.kofi": "Support on Ko-fi",
+  "smart_resource_drops.modmenu.link.paypal": "Support on PayPal",
+  "smart_resource_drops.modmenu.link.cash_app": "Support on Cash App"
 }

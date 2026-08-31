@@ -1,5 +1,11 @@
 # Implementation log
 
+## 2026-08-31, Resource Multiplier 1.2.1 storefront and support links
+
+This patch changes public metadata and documentation only. Fabric and Mod Menu now use the official CurseForge project as the website, GitHub Issues as the report destination, and GitHub as the source repository. Optional Ko-fi, PayPal, and Cash App links are exposed through Mod Menu custom metadata and GitHub's funding configuration.
+
+The public version advances to `1.2.1`. Gameplay logic, configuration schema and keys, defaults, networking, commands, Java packages, mod ID, datapack namespace, saved placement provenance, and server authority remain unchanged. Validators lock the exact contact and funding metadata, and the complete automated suite is rerun before publication.
+
 ## 2026-08-30, Resource Multiplier 1.2.0 stable promotion
 
 The maintainer completed the manual `1.2.0-rc.1` release matrix and reported that all checked behavior passed. The stable promotion changes release metadata and current-status documentation only. Gameplay logic, schema 3, the `smart_resource_drops` compatibility ID and namespace, Java packages, commands, configuration path, network identifiers, and saved provenance remain unchanged.

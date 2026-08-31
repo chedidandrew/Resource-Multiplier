@@ -2,6 +2,20 @@
 
 All notable changes are documented here.
 
+## 1.2.1 - 2026-08-31
+
+### Changed
+
+- Updated the Fabric metadata used by Mod Menu so the **Website** action opens the official Resource Multiplier CurseForge page.
+- Confirmed the Mod Menu **Issues** action continues to open the Resource Multiplier GitHub issue tracker, while the source-code action continues to use the GitHub repository.
+- Added optional Ko-fi, PayPal, and Cash App support links to Mod Menu metadata and added a GitHub funding configuration for the same project support options.
+- Updated the README, release records, validators, package tests, and issue forms for the `1.2.1` storefront-link patch.
+- No block, entity, XP, shearing, configuration, schema, migration, networking, command, permission, persistence, or anti-duplication behavior changed.
+
+### Verification
+
+- The full package validators, unit tests, dedicated-server GameTests, Java 25 Fabric build, and client GUI/authority GameTests are required to pass before this release commit is published.
+
 ## 1.2.0 - 2026-08-30
 
 ### Changed
