@@ -46,11 +46,14 @@ jobs:
       - name: Run client GUI and authority tests
         run: xvfb-run -a ./gradlew --no-daemon runClientGameTest
 
-      - name: Upload playable JAR
+      - name: Create source snapshot
+        run: git archive --format=zip --output=build/source-snapshot.zip HEAD
+
+      - name: Upload build artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: ResourceMultiplier-${{ github.sha }}
+          name: SmartResourceMultiplier-${{ github.sha }}
           path: |
             build/libs/*.jar
-            !build/libs/*-sources.jar
+            build/source-snapshot.zip
           if-no-files-found: error
