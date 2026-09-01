@@ -1,0 +1,46 @@
+name: Diagnose Smart logo transfer 2
+
+on:
+  push:
+    branches:
+      - branding/smart-logo-final
+    paths:
+      - .github/workflows/diagnose-logo-transfer-2.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify exact staged chunks
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '2aa9e2623a17e8c9607f5141201b8d1137c26a945d4bdef969b6dcae9bb3ec18  .branding-staging/icon.b64.part00' | sha256sum -c -
+          echo '6ae243a85868da5c10fa8ce68cb6a5f124e8ce4f7717ce4745becfeb1b66080e  .branding-staging/icon.b64.part01' | sha256sum -c -
+          echo '84d0fbb74fb4e826d64a87d3ceef346ceb92a86b082e39d0980ee55c144897cb  .branding-staging/icon.b64.part02' | sha256sum -c -
+          echo '81b2a3b1b51b5717d96fb490252c4adc38a38a05753ffd28e3e6a0226f53904d  .branding-staging/icon.b64.part03' | sha256sum -c -
+          echo 'de1dddc815343c0030eef08259036850ac9ecb022bc8da71665ba6c13f741914  .branding-staging/icon.b64.part04a' | sha256sum -c -
+          echo 'b9cf04f5373798de7e5e0663a7cf9f4ccbf33dd44f531e30b513a5d32dce3e6c  .branding-staging/icon.b64.part04b' | sha256sum -c -
+          echo 'fba74edd150b9dfb07510d0c4604b47949fe3f93ddaa689d7bbe285f9572b55b  .branding-staging/icon.b64.part04c' | sha256sum -c -
+          echo '46fbbac3a494bed4edb35d5bf24c825ebfcfb1e016010df41212e4de526c2d30  .branding-staging/icon.b64.part05' | sha256sum -c -
+          echo '53002778924e797e540b1177e8c8e01a22430d29fa3630ddc5c68da501136483  .branding-staging/icon.b64.part06' | sha256sum -c -
+          cat \
+            .branding-staging/icon.b64.part00 \
+            .branding-staging/icon.b64.part01 \
+            .branding-staging/icon.b64.part02 \
+            .branding-staging/icon.b64.part03 \
+            .branding-staging/icon.b64.part04a \
+            .branding-staging/icon.b64.part04b \
+            .branding-staging/icon.b64.part04c \
+            .branding-staging/icon.b64.part05 \
+            .branding-staging/icon.b64.part06 \
+            | tr -d '\n' | base64 --decode > /tmp/icon.png
+          echo 'a62a59890d670c4df1ebca6375387bd47736e510cc1a755abd3ecb8bd4d24642  /tmp/icon.png' | sha256sum -c -
+          test "$(wc -c < /tmp/icon.png)" -eq 40625
