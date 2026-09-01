@@ -1,0 +1,30 @@
+license="${mod_license}"
+issueTrackerURL="https://github.com/chedidandrew/Resource-Multiplier/issues"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+displayURL="https://github.com/chedidandrew/Resource-Multiplier"
+logoFile="assets/smart_resource_drops/icon.png"
+authors="Andrew Chedid"
+description='''
+A lightweight, configurable resource multiplier with smart player-placement protection, entity and shearing multipliers, XP scaling, and an in-game configuration GUI.
+'''
+
+[[mixins]]
+config="smart_resource_drops.mixins.json"
+
+[[dependencies.${mod_id}]]
+modId="neoforge"
+type="required"
+versionRange="[${neo_version},)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="minecraft"
+type="required"
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"
