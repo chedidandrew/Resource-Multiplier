@@ -31,7 +31,7 @@ EXPECTED_ENTRYPOINTS = {
         "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsModMenuIntegration"
     ],
 }
-EXPECTED_ICON_SHA256 = "a62a59890d670c4df1ebca6375387bd47736e510cc1a755abd3ecb8bd4d24642"
+EXPECTED_ICON_SHA256 = "409e2b3e7e87e4cd7200ec0598709dcd5ce282cad2e7404d8f883627c5f3e995"
 EXPECTED_SOURCE_DEPENDS = {
     "fabricloader": ">=${loader_version}",
     "minecraft": "~${minecraft_version}",

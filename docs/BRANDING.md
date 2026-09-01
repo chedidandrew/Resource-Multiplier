@@ -2,16 +2,16 @@
 
 ## Current production icon
 
-The current `main` branch uses the approved **SMART x2** icon selected on 2026-08-31. The artwork keeps the established resource-multiplier identity while replacing the previous `RESOURCE MULTIPLIER` wordmark with `SMART` and adding restrained shader-style lighting, depth, highlights, and glow.
+The current `main` branch uses the approved **SMART RESOURCE MULTIPLIER** icon selected on 2026-08-31. The artwork presents the complete project name beneath a diamond-ore block, diamond pickaxe, scattered diamonds, and two upward multiplier arrows in a dark, Minecraft-inspired frame.
 
 The production asset remains a compact `128x128` PNG because that is the project contract enforced by package validation and is sufficient for Minecraft, Mod Menu, GitHub README rendering, and storefront thumbnails.
 
 - Path: `src/main/resources/assets/smart_resource_drops/icon.png`
 - Dimensions: `128x128`
-- SHA-256: `a62a59890d670c4df1ebca6375387bd47736e510cc1a755abd3ecb8bd4d24642`
-- Core visual elements: `SMART`, white `x2`, two upward green arrows, diamond, coal, iron ingot, log, grass-and-dirt frame, shader-style highlights
+- SHA-256: `409e2b3e7e87e4cd7200ec0598709dcd5ce282cad2e7404d8f883627c5f3e995`
+- Core visual elements: `SMART RESOURCE MULTIPLIER`, diamond-ore block, diamond pickaxe, scattered diamonds, two upward green arrows, purple-and-gold frame, shader-style highlights
 
-The approved high-resolution artwork was downscaled to the required production size with high-quality resampling and light edge sharpening so the shader detail survives thumbnail rendering without materially increasing the packaged mod size.
+The approved `1254x1254` artwork was downscaled to the required production size with high-quality Lanczos resampling so its detail survives thumbnail rendering without materially increasing the packaged mod size.
 
 ## Release-history boundary
 

@@ -1,8 +1,14 @@
 # Implementation log
 
-## 2026-08-31, approved SMART x2 icon refresh
+## 2026-08-31, full-name diamond-mining icon refresh
 
-The separately reviewed production artwork is now the **SMART x2** shader-style icon. The source asset remains `128x128`, with SHA-256 `a62a59890d670c4df1ebca6375387bd47736e510cc1a755abd3ecb8bd4d24642`, and continues to use the existing `assets/smart_resource_drops/icon.png` path so Fabric metadata and Mod Menu integration require no identifier or path migration. The visual keeps the grass-and-dirt frame, multiplier arrows, diamond, coal, iron ingot, and log, while replacing the previous wordmark with `SMART` and adding restrained shader-style light, depth, highlights, and glow.
+The current production asset now uses the supplied **SMART RESOURCE MULTIPLIER** artwork, featuring a diamond-ore block, diamond pickaxe, scattered diamonds, two upward green arrows, and a purple-and-gold frame. The `1254x1254` source was downscaled with Lanczos resampling to the existing `128x128` package contract and stored at `assets/smart_resource_drops/icon.png`; its SHA-256 is `409e2b3e7e87e4cd7200ec0598709dcd5ce282cad2e7404d8f883627c5f3e995`.
+
+This current-main branding replacement changes no Fabric metadata path, gameplay behavior, configuration, schema, networking, command, permission, persistence, datapack namespace, mod ID, or anti-duplication behavior. The package validator now locks the replacement artwork's checksum. The already published `v1.2.2` binary and its historical icon remain unchanged.
+
+## 2026-08-31, earlier SMART x2 icon refresh
+
+At this checkpoint, the separately reviewed production artwork was the **SMART x2** shader-style icon. The source asset remained `128x128`, with SHA-256 `a62a59890d670c4df1ebca6375387bd47736e510cc1a755abd3ecb8bd4d24642`, and continued to use the existing `assets/smart_resource_drops/icon.png` path so Fabric metadata and Mod Menu integration required no identifier or path migration. The visual kept the grass-and-dirt frame, multiplier arrows, diamond, coal, iron ingot, and log, while replacing the previous wordmark with `SMART` and adding restrained shader-style light, depth, highlights, and glow. It was later superseded on current `main` by the full-name diamond-mining artwork documented above.
 
 The already published `v1.2.2` binary remains unchanged and retains its historical icon SHA-256 `b8a56ed24db3a2e812271d69fd021a5756469ac0d649ebd7cc3f205d7d276694`. This post-release source update changes no gameplay, configuration, schema, defaults, networking, commands, permissions, persistence, datapack namespace, mod ID, or anti-duplication behavior. Package validation now locks the newly approved current-main icon checksum, and the complete automated build, dedicated-server, client, and packaging chain is rerun before promotion to `main`.
 

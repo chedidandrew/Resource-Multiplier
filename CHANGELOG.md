@@ -6,7 +6,7 @@ All notable changes are documented here.
 
 ### Changed
 
-- Replaced the current `main` production icon with the approved **SMART x2** shader-style artwork while retaining the established grass/dirt frame, multiplier arrows, and resource symbols.
+- Replaced the current `main` production icon with the approved **SMART RESOURCE MULTIPLIER** diamond-mining artwork, including the full project name, diamond-ore block, pickaxe, scattered diamonds, and multiplier arrows.
 - Kept the production asset at the validated `128x128` size and updated package validation to lock its SHA-256.
 - Preserved the already published `v1.2.2` release and its original icon as historical release evidence; this visual refresh changes current source branding only and no gameplay or compatibility identifier.
 
