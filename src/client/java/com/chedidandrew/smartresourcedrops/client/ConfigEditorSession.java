@@ -1716,6 +1716,9 @@ public final class ConfigEditorSession {
             case AXOLOTLS, UNDERGROUND_WATER_CREATURE, WATER_CREATURE, WATER_AMBIENT ->
                     EntityCategory.AQUATIC;
             case MISC -> EntityCategory.MISCELLANEOUS;
+            // Fabric mods can extend this enum at runtime. Keep their entities configurable even
+            // when they introduce a category that did not exist on the compile-time classpath.
+            default -> EntityCategory.MISCELLANEOUS;
         };
     }
 
