@@ -13,7 +13,7 @@ This patch is limited to public branding, metadata, artifact names, documentatio
 - [x] New build artifacts use `smart-resource-multiplier-<version>.jar`.
 - [x] Deterministic release packages use the `SmartResourceMultiplier-*` prefix.
 - [x] Upgrade documentation tells players to remove the older JAR before installing the renamed JAR.
-- [x] The production icon remains byte-for-byte unchanged for separate review.
+- [x] The production icon remained byte-for-byte unchanged for the published `v1.2.2` release; current post-release `main` now uses the separately approved Smart logo documented in [`BRANDING.md`](BRANDING.md).
 
 ## Metadata and documentation gates
 

@@ -1,5 +1,11 @@
 # Implementation log
 
+## 2026-08-31, approved SMART x2 icon refresh
+
+The separately reviewed production artwork is now the **SMART x2** shader-style icon. The source asset remains `128x128`, with SHA-256 `a62a59890d670c4df1ebca6375387bd47736e510cc1a755abd3ecb8bd4d24642`, and continues to use the existing `assets/smart_resource_drops/icon.png` path so Fabric metadata and Mod Menu integration require no identifier or path migration. The visual keeps the grass-and-dirt frame, multiplier arrows, diamond, coal, iron ingot, and log, while replacing the previous wordmark with `SMART` and adding restrained shader-style light, depth, highlights, and glow.
+
+The already published `v1.2.2` binary remains unchanged and retains its historical icon SHA-256 `b8a56ed24db3a2e812271d69fd021a5756469ac0d649ebd7cc3f205d7d276694`. This post-release source update changes no gameplay, configuration, schema, defaults, networking, commands, permissions, persistence, datapack namespace, mod ID, or anti-duplication behavior. Package validation now locks the newly approved current-main icon checksum, and the complete automated build, dedicated-server, client, and packaging chain is rerun before promotion to `main`.
+
 ## 2026-08-31, Smart Resource Multiplier public rebrand and 1.2.2 release
 
 The public project name changes from **Resource Multiplier** to **Smart Resource Multiplier**. The new name is applied to Fabric and Mod Menu metadata, configuration and reset screens, commands and diagnostics, support templates, maintained documentation, build artifacts, deterministic packaging, and the tests and validators that lock those surfaces. New playable JARs use `smart-resource-multiplier-<version>.jar`, and release bundles use the `SmartResourceMultiplier-*` prefix.
