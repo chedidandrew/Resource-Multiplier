@@ -25,7 +25,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .branding-staging/icon.b64.part* | tr -d '\n' | base64 --decode > src/main/resources/assets/smart_resource_drops/icon.png
+          cat \
+            .branding-staging/icon.b64.part00 \
+            .branding-staging/icon.b64.part01 \
+            .branding-staging/icon.b64.part02 \
+            .branding-staging/icon.b64.part03 \
+            .branding-staging/icon.b64.part04a \
+            .branding-staging/icon.b64.part04b \
+            .branding-staging/icon.b64.part04c \
+            .branding-staging/icon.b64.part05 \
+            .branding-staging/icon.b64.part06 \
+            | tr -d '\n' | base64 --decode > src/main/resources/assets/smart_resource_drops/icon.png
           sha256sum -c .branding-staging/icon.sha256
 
           cat > docs/BRANDING.md <<'EOF'
@@ -97,7 +107,7 @@ jobs:
           replace_once(
               'README.md',
               '- [Rebrand and upgrade compatibility](docs/REBRAND.md) — preserved identifiers, JAR-name transition, and upgrade steps.\n',
-              '- [Rebrand and upgrade compatibility](docs/REBRAND.md) — preserved identifiers, JAR-name transition, and upgrade steps.\n- [Branding](docs/BRANDING.md) — current production icon identity, checksum, and release-history boundary.\n',
+              '- [Rebrand and upgrade compatibility](docs/REBRAND.md) — preserved identifiers, JAR-name transition, and upgrade steps.\n- [Branding](docs/BRANDING.md) - current production icon identity, checksum, and release-history boundary.\n',
           )
 
           changelog = Path('CHANGELOG.md')
@@ -130,7 +140,9 @@ jobs:
           PY
 
           rm -rf .branding-staging
-          rm .github/workflows/apply-smart-logo-final.yml
+          rm -f .github/workflows/apply-smart-logo-final.yml
+          rm -f .github/workflows/diagnose-logo-transfer.yml
+          rm -f .github/workflows/diagnose-logo-transfer-2.yml
 
           python3 - <<'PY'
           from pathlib import Path
@@ -145,6 +157,8 @@ jobs:
           digest = hashlib.sha256(data).hexdigest()
           if digest != 'a62a59890d670c4df1ebca6375387bd47736e510cc1a755abd3ecb8bd4d24642':
               raise SystemExit(f'unexpected icon SHA-256: {digest}')
+          if len(data) != 40624:
+              raise SystemExit(f'unexpected icon size in bytes: {len(data)}')
           print(f'icon verified: {width}x{height}, sha256={digest}, bytes={len(data)}')
           PY
 
