@@ -1,8 +1,8 @@
 # Smart Resource Multiplier testing and verification
 
-## 1.2.2 stable rebrand release
+## 1.2.3 stable icon and toolchain release
 
-Smart Resource Multiplier `1.2.2` is a branding-only stable release with `release_ready=true`. It changes public names, artifact names, metadata, documentation, and the regression contracts that verify those surfaces. It does not change gameplay, mixin targets, configuration fields or defaults, schema, networking, permissions, persistence, or anti-duplication behavior.
+Smart Resource Multiplier `1.2.3` is a branding-and-build stable release with `release_ready=true`. It packages the approved `512x512` production icon and declares a Java 25 Gradle toolchain with automatic detection and download fallback so a Java 21 shell can invoke the build safely. It does not change gameplay, mixin targets, configuration fields or defaults, schema, networking, permissions, persistence, or anti-duplication behavior.
 
 The release commit must pass this clean-checkout sequence on Java 25 before publication:
 
@@ -18,7 +18,7 @@ bash tools/run_core_tests.sh
 xvfb-run -a ./gradlew --no-daemon runClientGameTest
 ```
 
-The expected playable artifact is `build/libs/smart-resource-multiplier-1.2.2.jar`. Inspection must confirm public name `Smart Resource Multiplier`, version `1.2.2`, stable mod ID `smart_resource_drops`, unchanged icon bytes, embedded MIT license, no nested JARs, and no GameTest classes or resources. The exact clean-checkout run, artifact size, ZIP-entry count, and SHA-256 are recorded in `BUILD_STATUS.md` after CI passes.
+The expected playable artifact is `build/libs/smart-resource-multiplier-1.2.3.jar`. Inspection must confirm public name `Smart Resource Multiplier`, version `1.2.3`, stable mod ID `smart_resource_drops`, the approved icon bytes, embedded MIT license, no nested JARs, and no GameTest classes or resources. The exact clean-checkout run, artifact size, ZIP-entry count, and SHA-256 are recorded in `BUILD_STATUS.md` after CI passes.
 
 No new hands-on gameplay matrix is required because the gameplay implementation is unchanged. Runtime client and dedicated-server tests remain required because the visible title, reset prompts, command headers, metadata, and packaged artifact identity must be exercised through real runtime paths.
 

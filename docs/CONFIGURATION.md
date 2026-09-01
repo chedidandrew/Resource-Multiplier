@@ -8,7 +8,7 @@ If `blacklist` is absent or `null`, the safety blacklist is installed for compat
 
 ## Schema 3 shearing settings
 
-Smart Resource Multiplier 1.2.2 uses schema 3. The rebrand changes no configuration field, default, migration rule, or authority behavior. These settings form an independent 256-entry domain and do not consume the block or death-entity rule budgets.
+Smart Resource Multiplier 1.2.3 uses schema 3. The icon and build-toolchain refresh changes no configuration field, default, migration rule, or authority behavior. These settings form an independent 256-entry domain and do not consume the block or death-entity rule budgets.
 
 | Field | Fresh/reset default | Meaning |
 | --- | ---: | --- |

@@ -1,6 +1,6 @@
 # Smart Resource Multiplier command reference
 
-This reference applies to **Smart Resource Multiplier 1.2.2**. The public name changed, but the command entry points remain legacy-compatible: server commands use `/smartdrops`, and the client configuration screen uses `/smartdropsgui`.
+This reference applies to **Smart Resource Multiplier 1.2.3**. The command entry points remain legacy-compatible: server commands use `/smartdrops`, and the client configuration screen uses `/smartdropsgui`.
 
 Administrative configuration mutations are server-authoritative. They are validated, persisted, and published as one configuration update; if persistence fails, the live configuration is not changed. For the JSON field reference and defaults, see [CONFIGURATION.md](CONFIGURATION.md).
 

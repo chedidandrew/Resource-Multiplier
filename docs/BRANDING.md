@@ -17,4 +17,4 @@ The approved `1254x1254` artwork was downscaled to `512x512` with high-quality L
 
 GitHub Release `v1.2.2` was published before this visual refresh and remains historical release evidence. Its packaged icon is the earlier pre-refresh artwork with SHA-256 `b8a56ed24db3a2e812271d69fd021a5756469ac0d649ebd7cc3f205d7d276694`.
 
-This post-release change updates current `main` branding only. It does not change gameplay, the `smart_resource_drops` mod ID, configuration paths or schema, commands, datapack/network namespace, saved-world provenance, permissions, or anti-duplication behavior. Any future binary published from current `main` should use a version later than `1.2.2` rather than replacing the already published `v1.2.2` artifact.
+Version `1.2.3` publishes the reviewed replacement without rewriting the already published `v1.2.2` artifact. It does not change gameplay, the `smart_resource_drops` mod ID, configuration paths or schema, commands, datapack/network namespace, saved-world provenance, permissions, or anti-duplication behavior.

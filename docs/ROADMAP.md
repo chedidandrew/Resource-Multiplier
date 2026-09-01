@@ -1,10 +1,10 @@
 # Smart Resource Multiplier roadmap
 
-## Current 1.2.2 status
+## Current 1.2.3 status
 
-The Smart Resource Multiplier `1.2.2` work is a compatibility-preserving public rebrand. It updates visible names, artifact names, metadata, maintained documentation, and regression contracts only. It adds no gameplay system and changes no multiplier rule, safety gate, configuration field, default, schema, networking behavior, permission path, persistence identifier, or mixin target.
+Smart Resource Multiplier `1.2.3` is a compatibility-preserving icon and build-toolchain patch. It publishes the approved high-resolution full-name artwork and lets Gradle select or provision the required Java 25 compiler from an older supported Gradle JVM. It adds no gameplay system and changes no multiplier rule, safety gate, configuration field, default, schema, networking behavior, permission path, persistence identifier, or mixin target.
 
-The `smart_resource_drops` mod ID and datapack/network namespace, `config/smart_resource_drops.json`, saved placement provenance, Java package, `/smartdrops`, and `/smartdropsgui` remain stable. The separate icon review is complete: current `main` now uses the approved **SMART RESOURCE MULTIPLIER** diamond-mining icon documented in [BRANDING.md](BRANDING.md), while the tagged `v1.2.2` release retains its historical pre-refresh icon. Future feature work remains governed by the historical scope and safety decisions below.
+The `smart_resource_drops` mod ID and datapack/network namespace, `config/smart_resource_drops.json`, saved placement provenance, Java package, `/smartdrops`, and `/smartdropsgui` remain stable. Version `1.2.3` packages the approved **SMART RESOURCE MULTIPLIER** diamond-mining icon documented in [BRANDING.md](BRANDING.md), while tagged `v1.2.2` retains its historical pre-refresh icon. Future feature work remains governed by the historical scope and safety decisions below.
 
 ## Historical roadmap
 

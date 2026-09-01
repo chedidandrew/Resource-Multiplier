@@ -20,11 +20,11 @@
   <a href="https://www.curseforge.com/minecraft/mc-mods/resource-multiplier"><img alt="Download on CurseForge" src="https://img.shields.io/badge/Download-CurseForge-F16436?logo=curseforge&amp;logoColor=white"></a>
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-ED8B00?logo=openjdk&amp;logoColor=white">
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/License-MIT-2EA44F"></a>
-  <img alt="Stable release 1.2.2" src="https://img.shields.io/badge/Status-1.2.2-Release-2EA44F">
+  <img alt="Stable release 1.2.3" src="https://img.shields.io/badge/Status-1.2.3-Release-2EA44F">
 </p>
 
 > [!IMPORTANT]
-> **Current stable release:** Smart Resource Multiplier `1.2.2` for Minecraft Java Edition 26.2 and Fabric. This release completes the public rebrand from Resource Multiplier without changing gameplay or compatibility identifiers.
+> **Current stable release:** Smart Resource Multiplier `1.2.3` for Minecraft Java Edition 26.2 and Fabric. This patch adds the full-name high-resolution production icon and reproducible Java 25 toolchain selection without changing gameplay or compatibility identifiers.
 
 Smart Resource Multiplier speeds up repetitive gathering by multiplying the final loot Minecraft already calculated. Fortune, Silk Touch, Looting, loot-table changes, item components, NBT, and legal stack sizes are preserved because the mod works after normal loot evaluation instead of replacing it.
 
@@ -76,7 +76,7 @@ These are real client captures from the validated `1.2.x` code line. The interfa
 
 Download the current release from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier). Verified release bundles, source archives, and checksums are also published through [GitHub Releases](https://github.com/chedidandrew/Resource-Multiplier/releases).
 
-The current published Fabric 26.2 artifact is `smart-resource-multiplier-1.2.2.jar`. Remove any older `resource-multiplier-*.jar` before installing it so Fabric does not load two files with the same internal mod ID.
+The current published Fabric 26.2 artifact is `smart-resource-multiplier-1.2.3.jar`. Remove any older `resource-multiplier-*.jar` or `smart-resource-multiplier-*.jar` before installing it so Fabric does not load two files with the same internal mod ID.
 
 You can also [build the current source](#build-from-source). Do not download JARs from unofficial mirrors.
 
@@ -157,7 +157,7 @@ Windows CMD:
 gradlew.bat clean build
 ```
 
-The expected artifact is `build/libs/smart-resource-multiplier-1.2.2.jar`. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
+The expected artifact is `build/libs/smart-resource-multiplier-1.2.3.jar`. Gradle automatically selects an installed Java 25 toolchain—or downloads one when absent—even if the active shell uses an older supported JVM. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
 
 ## Documentation
 

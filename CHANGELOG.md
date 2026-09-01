@@ -4,10 +4,15 @@ All notable changes are documented here.
 
 ## Unreleased
 
+No unreleased changes.
+
+## 1.2.3 - 2026-08-31
+
 ### Changed
 
 - Replaced the current `main` production icon with the approved **SMART RESOURCE MULTIPLIER** diamond-mining artwork, including the full project name, diamond-ore block, pickaxe, scattered diamonds, and multiplier arrows.
 - Raised the production asset from `128x128` to `512x512` for clearer README, storefront, and high-density rendering, and updated package validation to lock its dimensions and SHA-256.
+- Declared a Java 25 Gradle toolchain with automatic detection and download fallback so `gradlew.bat build` succeeds when launched from an installed Java 21 runtime instead of failing with `release version 25 not supported`.
 - Preserved the already published `v1.2.2` release and its original icon as historical release evidence; this visual refresh changes current source branding only and no gameplay or compatibility identifier.
 
 ## 1.2.2 - 2026-08-31

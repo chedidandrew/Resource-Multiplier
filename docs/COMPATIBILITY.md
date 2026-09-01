@@ -1,6 +1,6 @@
 # Smart Resource Multiplier compatibility notes
 
-Smart Resource Multiplier 1.2.2 preserves the tested gameplay boundaries from 1.2.1. The rebrand changes no loot boundary, rule resolver, safety budget, configuration behavior, or mixin target. The stable release passed the complete synthetic-testmod, dedicated/client GameTest, clean-build, package-validator, and playable-JAR chain. All named third-party manual cases remain case-specific; this document is not a claim that every mod, datapack, or server stack is compatible.
+Smart Resource Multiplier 1.2.3 preserves the tested gameplay boundaries from 1.2.2. The icon and build-toolchain refresh changes no loot boundary, rule resolver, safety budget, configuration behavior, or mixin target. The stable release passes the complete synthetic-testmod, dedicated/client GameTest, clean-build, package-validator, and playable-JAR chain. All named third-party manual cases remain case-specific; this document is not a claim that every mod, datapack, or server stack is compatible.
 
 ## Smart Resource Multiplier 1.2.x supported shearing boundary
 

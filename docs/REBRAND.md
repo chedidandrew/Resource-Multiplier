@@ -29,6 +29,8 @@ Before: resource-multiplier-1.2.1.jar
 After:  smart-resource-multiplier-1.2.2.jar
 ```
 
+The current icon-and-toolchain patch continues that convention as `smart-resource-multiplier-1.2.3.jar`.
+
 Release source and bundle names likewise change from the `ResourceMultiplier-*` prefix to `SmartResourceMultiplier-*`.
 
 Before installing `1.2.2` or newer, remove the older `resource-multiplier-*.jar` file from the `mods` folder. Keeping both files would make Fabric discover two JARs that declare the same stable mod ID.
@@ -37,6 +39,6 @@ Before installing `1.2.2` or newer, remove the older `resource-multiplier-*.jar`
 
 The GitHub repository URL remains `chedidandrew/Resource-Multiplier` so existing bookmarks, issue links, badges, and release references continue to work without a URL migration. The CurseForge project slug also remains `resource-multiplier`. The visible project name in source metadata, the in-game mod list, configuration screens, commands, diagnostics, documentation, build artifacts, and future release packages is Smart Resource Multiplier.
 
-## Icon status
+## Icon history
 
-The current icon is intentionally unchanged in `1.2.2`. It remains valid as a functional resource-multiplication icon, even though its embedded text reflects the previous shorter name. Any future icon change should be handled as a separate visual-design update so branding artwork can be reviewed without mixing binary image changes into the compatibility-focused rebrand.
+The icon was intentionally unchanged in the published `1.2.2` rebrand so binary artwork review remained separate from compatibility-sensitive naming changes. Version `1.2.3` packages the separately approved `512x512` **SMART RESOURCE MULTIPLIER** diamond-mining artwork documented in [BRANDING.md](BRANDING.md). The change affects branding only and keeps the existing Fabric icon path.

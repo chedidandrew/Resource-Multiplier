@@ -140,6 +140,7 @@ required = [
     "docs/REBRAND.md",
     "docs/BRANDING.md",
     "docs/releases/1.2.2.md",
+    "docs/releases/1.2.3.md",
     "docs/images/general-config.webp",
     "docs/images/block-overrides.webp",
     "docs/images/shearing-config.webp",
@@ -298,7 +299,7 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
-    "mod_version": "1.2.2",
+    "mod_version": "1.2.3",
     "minecraft_version": "26.2",
     "loader_version": "0.19.3",
     "loom_version": "1.17.20",
@@ -310,7 +311,7 @@ for key, expected in expected_properties.items():
     if properties.get(key) != expected:
         fail(f"gradle.properties {key} must be {expected!r}, found {properties.get(key)!r}")
 if properties.get("release_ready") != "true":
-    fail("The Smart Resource Multiplier 1.2.2 stable release must keep release_ready=true")
+    fail("The Smart Resource Multiplier 1.2.3 stable release must keep release_ready=true")
 
 settings_text = (ROOT / "settings.gradle").read_text(encoding="utf-8")
 if "rootProject.name = 'SmartResourceMultiplier'" not in settings_text:
@@ -319,12 +320,12 @@ if "rootProject.name = 'SmartResourceMultiplier'" not in settings_text:
 rebrand_text = (ROOT / "docs/REBRAND.md").read_text(encoding="utf-8")
 for marker in (
     "Smart Resource Multiplier",
-    "smart-resource-multiplier-1.2.2.jar",
+    "smart-resource-multiplier-1.2.3.jar",
     "smart_resource_drops",
     "config/smart_resource_drops.json",
     "/smartdrops",
     "/smartdropsgui",
-    "icon is intentionally unchanged",
+    "512x512",
 ):
     if marker not in rebrand_text:
         fail(f"docs/REBRAND.md is missing required compatibility guidance: {marker}")
@@ -342,7 +343,7 @@ for marker in (
     "Loader-Fabric",
     "Java-25",
     "License-MIT",
-    "Status-1.2.2-Release",
+    "Status-1.2.3-Release",
     "> [!IMPORTANT]",
     "Current stable release:",
     "www.curseforge.com/minecraft/mc-mods/resource-multiplier",
@@ -831,6 +832,7 @@ build_gradle = (ROOT / "build.gradle").read_text(encoding="utf-8")
 for expected in [
     "splitEnvironmentSourceSets",
     "withSourcesJar",
+    "JavaLanguageVersion.of(25)",
     "options.release = 25",
     "useJUnitPlatform",
     "configureTests",
@@ -842,6 +844,10 @@ for expected in [
         fail(f"build.gradle is missing {expected}")
 if "-Werror" in build_gradle:
     fail("Deprecation reporting must not make third-party dependency warnings fatal")
+
+settings_gradle = (ROOT / "settings.gradle").read_text(encoding="utf-8")
+if "org.gradle.toolchains.foojay-resolver-convention" not in settings_gradle:
+    fail("settings.gradle must configure Java toolchain auto-provisioning")
 
 for relative in (
     "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityClassifier.java",
