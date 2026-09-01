@@ -2,7 +2,7 @@
 
 ## 2026-08-31, full-name diamond-mining icon refresh
 
-The current production asset now uses the supplied **SMART RESOURCE MULTIPLIER** artwork, featuring a diamond-ore block, diamond pickaxe, scattered diamonds, two upward green arrows, and a purple-and-gold frame. The `1254x1254` source was downscaled with Lanczos resampling to the existing `128x128` package contract and stored at `assets/smart_resource_drops/icon.png`; its SHA-256 is `409e2b3e7e87e4cd7200ec0598709dcd5ce282cad2e7404d8f883627c5f3e995`.
+The current production asset now uses the supplied **SMART RESOURCE MULTIPLIER** artwork, featuring a diamond-ore block, diamond pickaxe, scattered diamonds, two upward green arrows, and a purple-and-gold frame. The `1254x1254` source was downscaled with Lanczos resampling to a higher-detail `512x512` production asset at `assets/smart_resource_drops/icon.png`; its SHA-256 is `db216ccd6058404de18f797ebb5be87a313899a27c3f1971fdf086b8637dc190`.
 
 This current-main branding replacement changes no Fabric metadata path, gameplay behavior, configuration, schema, networking, command, permission, persistence, datapack namespace, mod ID, or anti-duplication behavior. The package validator now locks the replacement artwork's checksum. The already published `v1.2.2` binary and its historical icon remain unchanged.
 

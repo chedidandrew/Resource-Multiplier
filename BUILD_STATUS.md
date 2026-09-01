@@ -13,7 +13,7 @@ Smart Resource Multiplier `1.2.2` is the stable branding release for Minecraft J
 - Mod ID and datapack namespace: `smart_resource_drops`
 - Config path: `config/smart_resource_drops.json`
 - Commands: `/smartdrops` and `/smartdropsgui`
-- Current main icon: approved **SMART RESOURCE MULTIPLIER** diamond-mining artwork, `128x128` PNG, SHA-256 `409e2b3e7e87e4cd7200ec0598709dcd5ce282cad2e7404d8f883627c5f3e995`
+- Current main icon: approved **SMART RESOURCE MULTIPLIER** diamond-mining artwork, `512x512` PNG, SHA-256 `db216ccd6058404de18f797ebb5be87a313899a27c3f1971fdf086b8637dc190`
 - Published `v1.2.2` JAR icon: historical pre-refresh artwork, SHA-256 `b8a56ed24db3a2e812271d69fd021a5756469ac0d649ebd7cc3f205d7d276694`
 
 ## Compatibility decision

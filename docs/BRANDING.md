@@ -4,14 +4,14 @@
 
 The current `main` branch uses the approved **SMART RESOURCE MULTIPLIER** icon selected on 2026-08-31. The artwork presents the complete project name beneath a diamond-ore block, diamond pickaxe, scattered diamonds, and two upward multiplier arrows in a dark, Minecraft-inspired frame.
 
-The production asset remains a compact `128x128` PNG because that is the project contract enforced by package validation and is sufficient for Minecraft, Mod Menu, GitHub README rendering, and storefront thumbnails.
+The production asset is a higher-detail `512x512` PNG. This preserves the supplied artwork's fine lighting, pixel texture, and wordmark detail while keeping the packaged asset substantially smaller than the `1254x1254` source.
 
 - Path: `src/main/resources/assets/smart_resource_drops/icon.png`
-- Dimensions: `128x128`
-- SHA-256: `409e2b3e7e87e4cd7200ec0598709dcd5ce282cad2e7404d8f883627c5f3e995`
+- Dimensions: `512x512`
+- SHA-256: `db216ccd6058404de18f797ebb5be87a313899a27c3f1971fdf086b8637dc190`
 - Core visual elements: `SMART RESOURCE MULTIPLIER`, diamond-ore block, diamond pickaxe, scattered diamonds, two upward green arrows, purple-and-gold frame, shader-style highlights
 
-The approved `1254x1254` artwork was downscaled to the required production size with high-quality Lanczos resampling so its detail survives thumbnail rendering without materially increasing the packaged mod size.
+The approved `1254x1254` artwork was downscaled to `512x512` with high-quality Lanczos resampling. Package validation locks both the higher-resolution dimensions and exact checksum.
 
 ## Release-history boundary
 

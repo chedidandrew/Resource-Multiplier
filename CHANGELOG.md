@@ -7,7 +7,7 @@ All notable changes are documented here.
 ### Changed
 
 - Replaced the current `main` production icon with the approved **SMART RESOURCE MULTIPLIER** diamond-mining artwork, including the full project name, diamond-ore block, pickaxe, scattered diamonds, and multiplier arrows.
-- Kept the production asset at the validated `128x128` size and updated package validation to lock its SHA-256.
+- Raised the production asset from `128x128` to `512x512` for clearer README, storefront, and high-density rendering, and updated package validation to lock its dimensions and SHA-256.
 - Preserved the already published `v1.2.2` release and its original icon as historical release evidence; this visual refresh changes current source branding only and no gameplay or compatibility identifier.
 
 ## 1.2.2 - 2026-08-31

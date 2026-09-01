@@ -31,7 +31,8 @@ EXPECTED_ENTRYPOINTS = {
         "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsModMenuIntegration"
     ],
 }
-EXPECTED_ICON_SHA256 = "409e2b3e7e87e4cd7200ec0598709dcd5ce282cad2e7404d8f883627c5f3e995"
+EXPECTED_ICON_SIZE = 512
+EXPECTED_ICON_SHA256 = "db216ccd6058404de18f797ebb5be87a313899a27c3f1971fdf086b8637dc190"
 EXPECTED_SOURCE_DEPENDS = {
     "fabricloader": ">=${loader_version}",
     "minecraft": "~${minecraft_version}",
@@ -818,8 +819,11 @@ if icon.is_file():
         fail("Mod icon is not a valid PNG")
     else:
         width, height = struct.unpack(">II", data[16:24])
-        if (width, height) != (128, 128):
-            fail(f"Mod icon must be 128x128, found {width}x{height}")
+        if (width, height) != (EXPECTED_ICON_SIZE, EXPECTED_ICON_SIZE):
+            fail(
+                f"Mod icon must be {EXPECTED_ICON_SIZE}x{EXPECTED_ICON_SIZE}, "
+                f"found {width}x{height}"
+            )
         if hashlib.sha256(data).hexdigest() != EXPECTED_ICON_SHA256:
             fail("The current Smart Resource Multiplier production icon must match the approved reviewed artwork")
 
