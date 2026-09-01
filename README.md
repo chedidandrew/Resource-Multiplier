@@ -172,6 +172,7 @@ The expected artifact is `build/libs/smart-resource-multiplier-1.2.2.jar`. See [
 - [Public release checklist](docs/PUBLIC_RELEASE_CHECKLIST.md) — automated, manual, and third-party release gates.
 - [Build status](BUILD_STATUS.md) — current artifact identity and verification result.
 - [Rebrand and upgrade compatibility](docs/REBRAND.md) — preserved identifiers, JAR-name transition, and upgrade steps.
+- [Branding](docs/BRANDING.md) - current production icon identity, checksum, and release-history boundary.
 - [GitHub publication guide](docs/GITHUB_UPLOAD.md) — contribution, CI, packaging, and release-latch process.
 - [Security policy](SECURITY.md) and [Contributing](CONTRIBUTING.md) — reporting and development guidance.
 

@@ -31,7 +31,7 @@ EXPECTED_ENTRYPOINTS = {
         "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsModMenuIntegration"
     ],
 }
-EXPECTED_ICON_SHA256 = "b8a56ed24db3a2e812271d69fd021a5756469ac0d649ebd7cc3f205d7d276694"
+EXPECTED_ICON_SHA256 = "a62a59890d670c4df1ebca6375387bd47736e510cc1a755abd3ecb8bd4d24642"
 EXPECTED_SOURCE_DEPENDS = {
     "fabricloader": ">=${loader_version}",
     "minecraft": "~${minecraft_version}",
@@ -137,6 +137,7 @@ required = [
     "docs/IMPLEMENTATION_LOG.md",
     "docs/ROADMAP.md",
     "docs/REBRAND.md",
+    "docs/BRANDING.md",
     "docs/releases/1.2.2.md",
     "docs/images/general-config.webp",
     "docs/images/block-overrides.webp",
@@ -820,7 +821,7 @@ if icon.is_file():
         if (width, height) != (128, 128):
             fail(f"Mod icon must be 128x128, found {width}x{height}")
         if hashlib.sha256(data).hexdigest() != EXPECTED_ICON_SHA256:
-            fail("The 1.2.2 rebrand must preserve the reviewed production icon byte-for-byte")
+            fail("The current Smart Resource Multiplier production icon must match the approved reviewed artwork")
 
 build_gradle = (ROOT / "build.gradle").read_text(encoding="utf-8")
 for expected in [
