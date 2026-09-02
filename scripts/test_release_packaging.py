@@ -22,6 +22,37 @@ spec = importlib.util.spec_from_file_location(
 require(spec is not None and spec.loader is not None, "Could not load package_release.py")
 package_release = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(package_release)
+
+neoforge_validator_spec = importlib.util.spec_from_file_location(
+    "smart_resource_drops_validate_neoforge_jar",
+    ROOT / "tools/validate_neoforge_jar.py",
+)
+require(
+    neoforge_validator_spec is not None and neoforge_validator_spec.loader is not None,
+    "Could not load validate_neoforge_jar.py",
+)
+validate_neoforge_jar = importlib.util.module_from_spec(neoforge_validator_spec)
+neoforge_validator_spec.loader.exec_module(validate_neoforge_jar)
+
+for development_entry in (
+    "com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.class",
+    "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.class",
+    "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest$Phase.class",
+    "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.class",
+    "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest$Phase.class",
+    "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.class",
+    "fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
+):
+    require(
+        validate_neoforge_jar.is_development_test_entry(development_entry),
+        f"NeoForge JAR validator accepted development-only entry {development_entry}",
+    )
+require(
+    not validate_neoforge_jar.is_development_test_entry(
+        "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeNetworking.class"
+    ),
+    "NeoForge JAR validator rejected a production adapter as test-only",
+)
 require(package_release.PUBLIC_MOD_NAME == "Smart Resource Multiplier", "Public mod name contract changed")
 require(package_release.PUBLIC_ARCHIVE_BASE == "SmartResourceMultiplier", "Release archive base changed")
 require(package_release.PLAYABLE_JAR_BASE == "smart-resource-multiplier", "Playable JAR base changed")
@@ -237,6 +268,12 @@ for missing_source in (
     "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/NeoForgeGameTestEntityFixtures.java",
     "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeMixinAuditGameTests.java",
     "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/entity_final_loot.json",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.java",
+    "neoforge/src/test/resources/fixtures/README.md",
+    "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
+    "tools/run_neoforge_multiplayer_smoke.sh",
     "tools/validate_neoforge_jar.py",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityClassifier.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityDropTags.java",
@@ -392,6 +429,13 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
         "src/main/java/LeakedSource.java",
         "build.gradle",
         "run/config/smart_resource_drops.json",
+        "com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.class",
+        "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.class",
+        "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest$Phase.class",
+        "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.class",
+        "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest$Phase.class",
+        "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.class",
+        "fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
     )
     for forbidden_entry in forbidden_jar_entries:
         forbidden_jar = temp_root / (forbidden_entry.replace("/", "_") + ".jar")
@@ -406,7 +450,8 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
                 or "bundled" in str(exc).lower()
                 or "runtime" in str(exc).lower()
                 or "nested" in str(exc).lower()
-                or "source-package" in str(exc).lower(),
+                or "source-package" in str(exc).lower()
+                or "smoke-test" in str(exc).lower(),
                 f"Playable-JAR rejection was not explicit for {forbidden_entry}",
             )
         else:

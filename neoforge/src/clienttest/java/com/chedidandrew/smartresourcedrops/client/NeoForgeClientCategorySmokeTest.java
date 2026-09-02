@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
@@ -27,7 +28,8 @@ public final class NeoForgeClientCategorySmokeTest {
     private ConfigEditorSession session;
 
     public NeoForgeClientCategorySmokeTest() {
-        if (REGISTERED.compareAndSet(false, true)) {
+        if (Boolean.getBoolean("smart_resource_drops.clientCategoryTest")
+                && REGISTERED.compareAndSet(false, true)) {
             NeoForge.EVENT_BUS.addListener(
                     ClientTickEvent.Post.class,
                     this::onClientTick);
@@ -44,13 +46,15 @@ public final class NeoForgeClientCategorySmokeTest {
                 throw new AssertionError("Timed out waiting for the NeoForge category smoke test");
             }
             if (this.categoryScreen == null) {
-                if (!(minecraft.gui.screen() instanceof TitleScreen titleScreen)) {
+                final Screen initialMenu = minecraft.gui.screen();
+                if (!(initialMenu instanceof TitleScreen)
+                        && !(initialMenu instanceof AccessibilityOnboardingScreen)) {
                     return;
                 }
                 verifyPackagedResources();
-                final Screen routed = SmartDropsConfigScreens.create(titleScreen);
+                final Screen routed = SmartDropsConfigScreens.create(initialMenu);
                 if (!(routed instanceof SmartDropsConfigScreen root)) {
-                    throw new AssertionError("Title-screen config route did not open local defaults");
+                    throw new AssertionError("Initial-menu config route did not open local defaults");
                 }
                 this.session = root.editorSession();
                 this.categoryScreen = new EntityCategoryScreen(root, root, this.session);

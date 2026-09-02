@@ -1,5 +1,29 @@
 # Smart Resource Multiplier testing and verification
 
+## 1.3.0-beta.1 NeoForge validation build
+
+The current source adds a NeoForge 26.2 target without changing the established Fabric artifact. It remains a validation beta with `release_ready=false`; the results here are evidence for the port, not approval to publish it as full loader parity.
+
+The current NeoForge validation sequence is:
+
+```bash
+python3 tools/validate_package.py
+python3 scripts/test_release_packaging.py
+./gradlew -p neoforge --no-daemon clean build runGameTestServer
+./gradlew -p neoforge --no-daemon runMigrationRestartServerTest
+python3 tools/validate_neoforge_jar.py
+xvfb-run -a ./gradlew -p neoforge --no-daemon runClientCategoryTest
+bash tools/run_neoforge_multiplayer_smoke.sh
+```
+
+On 2026-09-01, the NeoForge build passed 164 JUnit tests (158 shared plus 6 NeoForge-focused tests), all 65 dedicated-server GameTests, the physical-client Entity Categories check, and the separately launched multiplayer client/server gate. That multiplayer gate negotiates all six configuration channels; observes a fresh non-operator's read-only root screen and later operator promotion; applies a server-authoritative global edit; fills block rules to the configured maximum and receives the authoritative snapshot; rejects an oversized local edit before it reaches the wire; and resets the server configuration. The runner requires clean exits plus independent client and server success markers.
+
+Existing-world migration coverage uses byte-for-byte Fabric-authored evidence rather than a synthetic NeoForge substitute. The Base64 fixture decodes to the exact 11,088-byte uncompressed Fabric chunk NBT with SHA-256 `b36540e977c8dd932e8a2841787657cc74cf3e3e2029b50c9e3c05877ba07690`. The test imports its legacy provenance, serializes the native NeoForge attachment, writes and flushes a temporary Anvil region, closes and reopens that region, and deserializes the native data into a fresh chunk while checking native-data precedence.
+
+The dedicated migration command adds the full runtime boundary for that captured chunk. Its import JVM loads the seeded Anvil data through a real `ServerLevel`, verifies `PlacementTracker` sees the legacy position, requires the chunk to be dirty, and calls `MinecraftServer.saveEverything`. A second dedicated-server JVM verifies the persisted legacy envelope is gone, the native NeoForge attachment is present, and the gameplay lookup still succeeds. Both phases must write independent success markers. The local two-JVM run passed on 2026-09-01.
+
+These passes do not yet prove the optional-channel client-only/server-only matrix, disconnect/reconnect behavior, entity override/filter/shearing GUI edits, or malicious oversized wire input. The migration proof is one authentic Minecraft 26.2 chunk embedded in a minimal test region; it is not a complete-world, older-version, custom-dimension, or modded-registry migration matrix. Those broader cases remain release gates.
+
 ## 1.2.3 stable icon and toolchain release
 
 Smart Resource Multiplier `1.2.3` is a branding-and-build stable release with `release_ready=true`. It packages the approved `512x512` production icon and declares a Java 25 Gradle toolchain with automatic detection and download fallback so a Java 21 shell can invoke the build safely. It does not change gameplay, mixin targets, configuration fields or defaults, schema, networking, permissions, persistence, or anti-duplication behavior.

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import re
@@ -181,12 +182,40 @@ required = [
     "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/pathological_block_loot.json",
     "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structure/empty.nbt",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.java",
     "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/client/ClientEntityCategoryTagIndexTest.java",
     "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigrationTest.java",
+    "neoforge/src/test/resources/fixtures/README.md",
+    "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
+    "tools/run_neoforge_multiplayer_smoke.sh",
 ]
 for relative in required:
     if not (ROOT / relative).is_file():
         fail(f"Missing required file: {relative}")
+
+migration_fixture = (
+    ROOT
+    / "neoforge/src/test/resources/fixtures/"
+    / "fabric-placement-provenance-chunk--435018--913934.nbt.b64"
+)
+if migration_fixture.is_file():
+    try:
+        encoded_fixture = "".join(migration_fixture.read_text(encoding="ascii").split())
+        migration_fixture_bytes = base64.b64decode(encoded_fixture, validate=True)
+    except (OSError, UnicodeError, ValueError) as exc:
+        fail(f"Fabric placement-provenance fixture is not valid Base64: {exc}")
+    else:
+        if len(migration_fixture_bytes) != 11_088:
+            fail(
+                "Fabric placement-provenance fixture decoded size changed: "
+                f"{len(migration_fixture_bytes)} bytes"
+            )
+        if hashlib.sha256(migration_fixture_bytes).hexdigest() != (
+            "b36540e977c8dd932e8a2841787657cc74cf3e3e2029b50c9e3c05877ba07690"
+        ):
+            fail("Fabric placement-provenance fixture differs from the reviewed Fabric chunk bytes")
 
 wrapper_jar = ROOT / "gradle/wrapper/gradle-wrapper.jar"
 if wrapper_jar.is_file():
@@ -562,6 +591,10 @@ for source_root in (
     ROOT / "src/client",
     ROOT / "src/test",
     ROOT / "src/gametest",
+    ROOT / "neoforge/src/main",
+    ROOT / "neoforge/src/test",
+    ROOT / "neoforge/src/gametest",
+    ROOT / "neoforge/src/clienttest",
 ):
     for path in source_root.rglob("*"):
         if path.is_file() and path.suffix in {".java", ".json", ".mcmeta", ".txt"}:
@@ -585,6 +618,10 @@ java_roots = (
     ROOT / "src/client/java",
     ROOT / "src/test/java",
     ROOT / "src/gametest/java",
+    ROOT / "neoforge/src/main/java",
+    ROOT / "neoforge/src/test/java",
+    ROOT / "neoforge/src/gametest/java",
+    ROOT / "neoforge/src/clienttest/java",
     ROOT / "tools/core-tests",
 )
 for java_root in java_roots:
@@ -1000,7 +1037,7 @@ if actual_fixture_tables != required_fixture_tables:
         f"unexpected={sorted(actual_fixture_tables - required_fixture_tables)}"
     )
 
-for production_root in (ROOT / "src/main", ROOT / "src/client"):
+for production_root in (ROOT / "src/main", ROOT / "src/client", ROOT / "neoforge/src/main"):
     leaked = [
         path.relative_to(ROOT).as_posix()
         for path in production_root.rglob("*")
@@ -1023,6 +1060,42 @@ for workflow in (".github/workflows/build.yml", ".github/workflows/release.yml")
 
 release_workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
 build_workflow = (ROOT / ".github/workflows/build.yml").read_text(encoding="utf-8")
+for required_neoforge_gate in (
+    "tools/validate_neoforge_jar.py",
+    "runClientCategoryTest",
+    "runMigrationRestartServerTest",
+    "tools/run_neoforge_multiplayer_smoke.sh",
+):
+    if required_neoforge_gate not in build_workflow:
+        fail(f"The regular build workflow is missing its NeoForge gate: {required_neoforge_gate}")
+
+multiplayer_runner = (ROOT / "tools/run_neoforge_multiplayer_smoke.sh").read_text(
+    encoding="utf-8"
+)
+for required_multiplayer_contract in (
+    "runMultiplayerServerTest",
+    "runMultiplayerClientTest",
+    "NeoForge multiplayer client smoke test passed",
+    "NeoForge multiplayer server smoke test passed",
+):
+    if required_multiplayer_contract not in multiplayer_runner:
+        fail(
+            "NeoForge multiplayer CI runner is missing its task/pass-marker contract: "
+            f"{required_multiplayer_contract}"
+        )
+
+neoforge_build = (ROOT / "neoforge/build.gradle").read_text(encoding="utf-8")
+for required_migration_contract in (
+    "dependsOn tasks.named('runMigrationImportServerTest')",
+    "migration-import.success",
+    "migration-restart.success",
+    "b36540e977c8dd932e8a2841787657cc74cf3e3e2029b50c9e3c05877ba07690",
+):
+    if required_migration_contract not in neoforge_build:
+        fail(
+            "NeoForge two-JVM migration gate is missing its ordering/marker/fixture contract: "
+            f"{required_migration_contract}"
+        )
 if re.search(r"(?m)^\s+tags:\s*", build_workflow):
     fail("The regular build workflow must not duplicate the authoritative release workflow on tags")
 if "branches: ['**']" not in build_workflow or "pull_request:" not in build_workflow:

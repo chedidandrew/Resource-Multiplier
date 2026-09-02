@@ -40,6 +40,134 @@ def clientTestSourceSet = sourceSets.create('clienttest')
 clientTestSourceSet.java.setSrcDirs(['src/clienttest/java'])
 clientTestSourceSet.resources.setSrcDirs(['src/clienttest/resources'])
 
+def clientCategoryTestDirectory = layout.buildDirectory.dir('client-category-test')
+def multiplayerServerDirectory = layout.buildDirectory.dir('multiplayer-test/server')
+def multiplayerClientDirectory = layout.buildDirectory.dir('multiplayer-test/client')
+def migrationTestDirectory = layout.buildDirectory.dir('migration-server-test')
+def migrationFixtureRelativePath =
+        'src/test/resources/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64'
+def migrationFixtureSha256 =
+        'b36540e977c8dd932e8a2841787657cc74cf3e3e2029b50c9e3c05877ba07690'
+def migrationWorldName = 'migration-smoke-world'
+def prepareClientCategoryTest = tasks.register('prepareClientCategoryTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = clientCategoryTestDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+    }
+}
+def prepareMultiplayerServerTest = tasks.register('prepareMultiplayerServerTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = multiplayerServerDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
+        new File(directory, 'server.properties').setText('''\
+online-mode=false
+server-port=25578
+level-name=multiplayer-smoke-world
+gamemode=creative
+difficulty=peaceful
+spawn-protection=0
+view-distance=4
+simulation-distance=4
+motd=Smart Resource Multiplier multiplayer smoke test
+''', 'UTF-8')
+    }
+}
+def prepareMultiplayerClientTest = tasks.register('prepareMultiplayerClientTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = multiplayerClientDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        // Quick Play must not be held behind first-run accessibility onboarding;
+        // that clean-profile path is covered independently by clientCategoryTest.
+        new File(directory, 'options.txt').setText('onboardAccessibility:false\n', 'UTF-8')
+    }
+}
+def prepareMigrationServerTest = tasks.register('prepareMigrationServerTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final java.nio.file.Path buildRoot = layout.buildDirectory.get().asFile
+                .toPath()
+                .toAbsolutePath()
+                .normalize()
+        final java.nio.file.Path testRoot = migrationTestDirectory.get().asFile
+                .toPath()
+                .toAbsolutePath()
+                .normalize()
+        if (testRoot == buildRoot || !testRoot.startsWith(buildRoot)) {
+            throw new GradleException("Refusing to recreate migration test directory outside ${buildRoot}: ${testRoot}")
+        }
+
+        project.delete(testRoot.toFile())
+        java.nio.file.Files.createDirectories(testRoot)
+        java.nio.file.Files.writeString(
+                testRoot.resolve('eula.txt'),
+                'eula=true\n',
+                java.nio.charset.StandardCharsets.UTF_8)
+        java.nio.file.Files.writeString(
+                testRoot.resolve('server.properties'),
+                '''\
+online-mode=false
+server-port=0
+level-name=migration-smoke-world
+gamemode=creative
+difficulty=peaceful
+spawn-protection=0
+view-distance=2
+simulation-distance=2
+motd=Smart Resource Multiplier migration restart smoke test
+''',
+                java.nio.charset.StandardCharsets.UTF_8)
+
+        final File fixture = layout.projectDirectory.file(migrationFixtureRelativePath).asFile
+        final byte[] fixtureBytes = java.util.Base64.getMimeDecoder().decode(
+                fixture.getText('UTF-8').getBytes(java.nio.charset.StandardCharsets.UTF_8))
+        final String actualSha256 = java.util.HexFormat.of().formatHex(
+                java.security.MessageDigest.getInstance('SHA-256').digest(fixtureBytes))
+        if (actualSha256 != migrationFixtureSha256) {
+            throw new GradleException(
+                    "Fabric migration fixture SHA-256 mismatch: expected ${migrationFixtureSha256}, got ${actualSha256}")
+        }
+
+        final ByteArrayOutputStream compressedBuffer = new ByteArrayOutputStream()
+        new java.util.zip.DeflaterOutputStream(compressedBuffer).withCloseable { stream ->
+            stream.write(fixtureBytes)
+        }
+        final byte[] compressed = compressedBuffer.toByteArray()
+        final int recordLength = 1 + compressed.length
+        final int sectorCount = Math.floorDiv(4 + recordLength + 4095, 4096)
+        if (sectorCount < 1 || sectorCount > 255) {
+            throw new GradleException("Fabric migration fixture needs unsupported MCA sector count ${sectorCount}")
+        }
+
+        final int chunkX = -435018
+        final int chunkZ = -913934
+        final int chunkSlot = (chunkX & 31) + ((chunkZ & 31) * 32)
+        final java.nio.ByteBuffer regionBytes = java.nio.ByteBuffer
+                .allocate(8192 + sectorCount * 4096)
+                .order(java.nio.ByteOrder.BIG_ENDIAN)
+        regionBytes.putInt(chunkSlot * 4, (2 << 8) | sectorCount)
+        regionBytes.putInt(4096 + chunkSlot * 4, 1788300953)
+        regionBytes.position(8192)
+        regionBytes.putInt(recordLength)
+        regionBytes.put((byte) 2)
+        regionBytes.put(compressed)
+
+        final java.nio.file.Path regionDirectory = testRoot
+                .resolve(migrationWorldName)
+                .resolve('dimensions/minecraft/overworld/region')
+        java.nio.file.Files.createDirectories(regionDirectory)
+        java.nio.file.Files.write(
+                regionDirectory.resolve('r.-13595.-28561.mca'),
+                regionBytes.array())
+    }
+}
+
 neoForge {
     version = neo_version
 
@@ -58,6 +186,45 @@ neoForge {
         clientCategoryTest {
             client()
             sourceSet = clientTestSourceSet
+            gameDirectory = clientCategoryTestDirectory
+            systemProperty 'smart_resource_drops.clientCategoryTest', 'true'
+            taskBefore prepareClientCategoryTest
+        }
+        multiplayerServerTest {
+            server()
+            sourceSet = clientTestSourceSet
+            gameDirectory = multiplayerServerDirectory
+            systemProperty 'smart_resource_drops.multiplayerTest', 'true'
+            taskBefore prepareMultiplayerServerTest
+            programArgument '--nogui'
+        }
+        multiplayerClientTest {
+            client()
+            sourceSet = clientTestSourceSet
+            gameDirectory = multiplayerClientDirectory
+            systemProperty 'smart_resource_drops.multiplayerTest', 'true'
+            taskBefore prepareMultiplayerClientTest
+            programArgument '--quickPlayMultiplayer'
+            programArgument '127.0.0.1:25578'
+        }
+        migrationImportServerTest {
+            server()
+            sourceSet = clientTestSourceSet
+            gameDirectory = migrationTestDirectory
+            systemProperty 'smart_resource_drops.migrationTestPhase', 'import'
+            systemProperty 'smart_resource_drops.migrationTestDirectory',
+                    migrationTestDirectory.get().asFile.absolutePath
+            taskBefore prepareMigrationServerTest
+            programArgument '--nogui'
+        }
+        migrationRestartServerTest {
+            server()
+            sourceSet = clientTestSourceSet
+            gameDirectory = migrationTestDirectory
+            systemProperty 'smart_resource_drops.migrationTestPhase', 'restart'
+            systemProperty 'smart_resource_drops.migrationTestDirectory',
+                    migrationTestDirectory.get().asFile.absolutePath
+            programArgument '--nogui'
         }
     }
 
@@ -75,6 +242,27 @@ neoForge {
     unitTest {
         enable()
         testedMod = mods."${mod_id}"
+    }
+}
+
+tasks.named('runMigrationImportServerTest') {
+    doLast {
+        final File marker = new File(migrationTestDirectory.get().asFile, 'migration-import.success')
+        if (!marker.isFile()) {
+            throw new GradleException("Migration import server exited without success marker ${marker}")
+        }
+    }
+}
+
+tasks.named('runMigrationRestartServerTest') {
+    dependsOn tasks.named('runMigrationImportServerTest')
+    doLast {
+        for (String markerName : ['migration-import.success', 'migration-restart.success']) {
+            final File marker = new File(migrationTestDirectory.get().asFile, markerName)
+            if (!marker.isFile()) {
+                throw new GradleException("Migration restart gate exited without success marker ${marker}")
+            }
+        }
     }
 }
 

@@ -166,8 +166,14 @@ REQUIRED_SOURCE_FILES = frozenset(
         "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/pathological_block_loot.json",
         "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structure/empty.nbt",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.java",
+        "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.java",
+        "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.java",
+        "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.java",
         "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/client/ClientEntityCategoryTagIndexTest.java",
         "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigrationTest.java",
+        "neoforge/src/test/resources/fixtures/README.md",
+        "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
+        "tools/run_neoforge_multiplayer_smoke.sh",
     }
 )
 EXCLUDED_PARTS = frozenset(
@@ -341,6 +347,14 @@ FORBIDDEN_RELEASE_JAR_PARTS = frozenset(
         "testmod",
     }
 )
+FORBIDDEN_RELEASE_JAR_CLASS_PREFIXES = frozenset(
+    {
+        "com/chedidandrew/smartresourcedrops/client/neoforgeclientcategorysmoketest",
+        "com/chedidandrew/smartresourcedrops/client/neoforgemultiplayerclientsmoketest",
+        "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemigrationrestartsmoketest",
+        "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemultiplayerserversmoketest",
+    }
+)
 FORBIDDEN_RELEASE_JAR_NAMES = frozenset(
     {
         "command_history.txt",
@@ -355,6 +369,7 @@ FORBIDDEN_RELEASE_JAR_NAMES = frozenset(
         "gradlew",
         "gradlew.bat",
         "readme.md",
+        "fabric-placement-provenance-chunk--435018--913934.nbt.b64",
     }
 )
 
@@ -572,6 +587,11 @@ def validate_release_jar(
                     errors.append(f"bundled dependency, test fixture, or runtime entry {name!r}")
                 if any(part in FORBIDDEN_RELEASE_JAR_PARTS for part in parts):
                     errors.append(f"development-only test fixture entry {name!r}")
+                if any(
+                    folded == prefix + ".class" or folded.startswith(prefix + "$")
+                    for prefix in FORBIDDEN_RELEASE_JAR_CLASS_PREFIXES
+                ):
+                    errors.append(f"development-only smoke-test class entry {name!r}")
                 if parts[-1] in FORBIDDEN_RELEASE_JAR_NAMES:
                     errors.append(f"runtime/server entry {name!r}")
                 if folded.endswith(FORBIDDEN_RELEASE_JAR_SUFFIXES):

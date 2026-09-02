@@ -8,6 +8,9 @@ All notable changes are documented here.
 
 - Added a native NeoForge 26.2 build alongside Fabric while sharing the production gameplay, configuration, commands, networking protocol, and GUI implementation.
 - Added NeoForge persistence, placement-provenance migration, shearing, client configuration, dedicated-server GameTests, physical-client smoke coverage, and release-grade JAR validation.
+- Added a separate-process NeoForge client/server smoke gate covering all six configuration channels, non-operator read-only authority, operator promotion, server-authoritative global and near-limit block edits, returned snapshots, local oversized-edit rejection, and reset.
+- Added a byte-exact Fabric-authored placement-provenance fixture and regression that imports it, writes the migrated native attachment to Anvil storage, closes and reopens that storage, and reloads it into a fresh chunk.
+- Added a two-dedicated-JVM migration gate that loads the captured Fabric chunk through `ServerLevel`, verifies gameplay provenance, performs a real server save, then restarts and verifies native disk data plus gameplay lookup without the legacy envelope.
 
 ### Fixed
 
@@ -16,7 +19,7 @@ All notable changes are documented here.
 
 ### Release status
 
-- Set the development version to `1.3.0-beta.1` with publication locked until the remaining multiplayer and existing-world migration gates pass.
+- Set the development version to `1.3.0-beta.1` with publication locked until the remaining multiplayer, connected-GUI, packaging, and loader-parity gates pass.
 
 ## 1.2.3 - 2026-08-31
 

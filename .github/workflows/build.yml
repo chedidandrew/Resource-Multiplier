@@ -60,7 +60,7 @@ jobs:
 
   neoforge:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 60
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -84,8 +84,50 @@ jobs:
       - name: Validate NeoForge playable JAR
         run: python3 tools/validate_neoforge_jar.py
 
+      - name: Run NeoForge Fabric migration restart gate
+        timeout-minutes: 10
+        run: |
+          set -o pipefail
+          mkdir -p neoforge/build/migration-server-smoke-logs
+          ./gradlew -p neoforge --no-daemon --console=plain runMigrationRestartServerTest \
+            2>&1 | tee neoforge/build/migration-server-smoke-logs/gradle-console.log
+
+      - name: Upload NeoForge migration restart logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: SmartResourceMultiplier-NeoForge-migration-logs-${{ github.sha }}
+          path: |
+            neoforge/build/migration-server-smoke-logs/
+            neoforge/build/migration-server-test/logs/
+            neoforge/build/migration-server-test/crash-reports/
+            neoforge/build/migration-server-test/hs_err_pid*.log
+            neoforge/build/migration-server-test/replay_pid*.log
+            neoforge/build/migration-server-test/migration-import.success
+            neoforge/build/migration-server-test/migration-restart.success
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run NeoForge client category smoke test
         run: xvfb-run -a ./gradlew -p neoforge --no-daemon runClientCategoryTest
+
+      - name: Run NeoForge multiplayer authority smoke test
+        timeout-minutes: 12
+        run: bash tools/run_neoforge_multiplayer_smoke.sh
+
+      - name: Upload NeoForge multiplayer smoke logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: SmartResourceMultiplier-NeoForge-multiplayer-logs-${{ github.sha }}
+          path: |
+            neoforge/build/multiplayer-smoke-logs/
+            neoforge/build/multiplayer-test/server/logs/
+            neoforge/build/multiplayer-test/server/crash-reports/
+            neoforge/build/multiplayer-test/client/logs/
+            neoforge/build/multiplayer-test/client/crash-reports/
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Upload NeoForge validation artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

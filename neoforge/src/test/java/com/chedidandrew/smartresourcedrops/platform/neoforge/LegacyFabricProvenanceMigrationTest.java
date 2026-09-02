@@ -1,23 +1,45 @@
 package com.chedidandrew.smartresourcedrops.platform.neoforge;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.chedidandrew.smartresourcedrops.provenance.PlacedBlockData;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.util.Base64;
+import java.util.HexFormat;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtAccounter;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.chunk.PalettedContainerFactory;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.chunk.storage.RegionFileStorage;
+import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
 import net.minecraft.world.level.chunk.storage.SerializableChunkData;
+import net.neoforged.neoforge.attachment.AttachmentHolder;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.ChunkDataEvent;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 final class LegacyFabricProvenanceMigrationTest {
+    private static final String FABRIC_CHUNK_FIXTURE =
+            "/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64";
+    private static final String FABRIC_CHUNK_SHA256 =
+            "b36540e977c8dd932e8a2841787657cc74cf3e3e2029b50c9e3c05877ba07690";
+    private static final ChunkPos FABRIC_CHUNK_POS = new ChunkPos(-435018, -913934);
+    private static final int FABRIC_PACKED_POSITION = -13958;
+
     @Test
     void decodesValidFabricData() {
         final CompoundTag chunkData = new CompoundTag();
@@ -68,15 +90,7 @@ final class LegacyFabricProvenanceMigrationTest {
 
     @Test
     void loadEventImportsOnceSerializesNativeDataAndKeepsNativePrecedence() {
-        final LevelHeightAccessor emptyHeight = LevelHeightAccessor.create(0, 0);
-        final PalettedContainerFactory factory =
-                new PalettedContainerFactory(null, null, null, null, null, null);
-        final ProtoChunk chunk = new ProtoChunk(
-                new ChunkPos(0, 0),
-                UpgradeData.EMPTY,
-                emptyHeight,
-                factory,
-                null);
+        final ProtoChunk chunk = emptyChunk(new ChunkPos(0, 0));
         chunk.tryMarkSaved();
         assertFalse(chunk.isUnsaved());
 
@@ -96,6 +110,62 @@ final class LegacyFabricProvenanceMigrationTest {
         assertFalse(afterStaleImport.contains(73));
     }
 
+    @Test
+    void fabricAuthoredChunkImportsAndSurvivesNativeRegionReopen(
+            @TempDir final Path regionDirectory
+    ) throws Exception {
+        final CompoundTag fabricChunk = readFabricChunkFixture();
+        assertEquals(FABRIC_CHUNK_POS.x(), fabricChunk.getIntOr("xPos", 0));
+        assertEquals(FABRIC_CHUNK_POS.z(), fabricChunk.getIntOr("zPos", 0));
+        assertTrue(fabricChunk.contains(LegacyFabricProvenanceMigration.FABRIC_ATTACHMENT_ROOT));
+        assertFalse(fabricChunk.contains("neoforge:attachments"));
+
+        final PlacedBlockData decoded = LegacyFabricProvenanceMigration.decode(fabricChunk);
+        assertTrue(decoded != null && decoded.contains(FABRIC_PACKED_POSITION));
+
+        final SerializableChunkData parsed = parseChunk(fabricChunk);
+        final ProtoChunk importedChunk = emptyChunk(FABRIC_CHUNK_POS);
+        importedChunk.tryMarkSaved();
+        NeoForge.EVENT_BUS.post(new ChunkDataEvent.Load(importedChunk, parsed));
+        assertTrue(importedChunk.isUnsaved());
+        assertTrue(serializedNativeData(importedChunk).contains(FABRIC_PACKED_POSITION));
+
+        final CompoundTag nativeSave = importedChunk.writeAttachmentsToNBT(RegistryAccess.EMPTY);
+        assertTrue(nativeSave.contains(LegacyFabricProvenanceMigration.PLACED_BLOCKS_ID));
+        assertFalse(nativeSave.contains(LegacyFabricProvenanceMigration.FABRIC_ATTACHMENT_ROOT));
+
+        final CompoundTag neoForgeSavedChunk = fabricChunk.copy();
+        neoForgeSavedChunk.remove(LegacyFabricProvenanceMigration.FABRIC_ATTACHMENT_ROOT);
+        neoForgeSavedChunk.put(AttachmentHolder.ATTACHMENTS_NBT_KEY, nativeSave);
+        final RegionStorageInfo storageInfo = new RegionStorageInfo(
+                "fabric-migration-fixture",
+                Level.OVERWORLD,
+                "chunk");
+        try (RegionFileStorage storage = new RegionFileStorage(storageInfo, regionDirectory, true)) {
+            storage.write(FABRIC_CHUNK_POS, neoForgeSavedChunk);
+            storage.flush();
+        }
+
+        final CompoundTag reopenedChunk;
+        try (RegionFileStorage storage = new RegionFileStorage(storageInfo, regionDirectory, true)) {
+            reopenedChunk = storage.read(FABRIC_CHUNK_POS);
+        }
+        assertTrue(reopenedChunk != null, "Native chunk disappeared after region close and reopen");
+        assertFalse(reopenedChunk.contains(LegacyFabricProvenanceMigration.FABRIC_ATTACHMENT_ROOT));
+        assertTrue(reopenedChunk.contains(AttachmentHolder.ATTACHMENTS_NBT_KEY));
+
+        final SerializableChunkData restartedData = parseChunk(reopenedChunk);
+        assertTrue(restartedData != null && restartedData.attachmentData() != null);
+        final ProtoChunk restartedChunk = emptyChunk(FABRIC_CHUNK_POS);
+        restartedChunk.readAttachmentsFromNBT(RegistryAccess.EMPTY, restartedData.attachmentData());
+        assertTrue(serializedNativeData(restartedChunk).contains(FABRIC_PACKED_POSITION));
+
+        restartedChunk.tryMarkSaved();
+        NeoForge.EVENT_BUS.post(new ChunkDataEvent.Load(restartedChunk, parsed));
+        assertFalse(restartedChunk.isUnsaved());
+        assertTrue(serializedNativeData(restartedChunk).contains(FABRIC_PACKED_POSITION));
+    }
+
     private static CompoundTag fabricChunkWith(final PlacedBlockData data) {
         final CompoundTag chunkData = new CompoundTag();
         final CompoundTag fabricAttachments = new CompoundTag();
@@ -110,10 +180,41 @@ final class LegacyFabricProvenanceMigrationTest {
     private static SerializableChunkData parsedFabricData(final int packedPosition) {
         final CompoundTag chunkData = fabricChunkWith(dataWith(packedPosition));
         chunkData.putString("Status", "minecraft:empty");
+        return parseChunk(chunkData);
+    }
+
+    private static SerializableChunkData parseChunk(final CompoundTag chunkData) {
         return SerializableChunkData.parse(
-                LevelHeightAccessor.create(-64, 384),
+                // The migration carrier is independent of section decoding. An empty height
+                // keeps this focused fixture test registry-free while parsing the real chunk.
+                LevelHeightAccessor.create(0, 0),
                 new PalettedContainerFactory(null, null, null, null, null, null),
                 chunkData);
+    }
+
+    private static ProtoChunk emptyChunk(final ChunkPos position) {
+        return new ProtoChunk(
+                position,
+                UpgradeData.EMPTY,
+                LevelHeightAccessor.create(0, 0),
+                new PalettedContainerFactory(null, null, null, null, null, null),
+                null);
+    }
+
+    private static CompoundTag readFabricChunkFixture() throws Exception {
+        final byte[] bytes;
+        try (InputStream resource = LegacyFabricProvenanceMigrationTest.class
+                .getResourceAsStream(FABRIC_CHUNK_FIXTURE)) {
+            assertTrue(resource != null, "Missing Fabric-authored chunk fixture");
+            bytes = Base64.getMimeDecoder().decode(resource.readAllBytes());
+        }
+        assertEquals(11088, bytes.length);
+        assertEquals(
+                FABRIC_CHUNK_SHA256,
+                HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes)));
+        try (DataInputStream input = new DataInputStream(new ByteArrayInputStream(bytes))) {
+            return NbtIo.read(input, NbtAccounter.uncompressedQuota());
+        }
     }
 
     private static PlacedBlockData serializedNativeData(final ProtoChunk chunk) {

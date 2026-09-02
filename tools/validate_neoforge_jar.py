@@ -36,10 +36,29 @@ REQUIRED_CLASSES = {
     "com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/ServerPlayerGameModeMixin.class",
 }
 FORBIDDEN_PARTS = {"clienttest", "fixture", "fixtures", "gametest", "test", "tests"}
+FORBIDDEN_TEST_CLASS_PREFIXES = {
+    "com/chedidandrew/smartresourcedrops/client/neoforgeclientcategorysmoketest",
+    "com/chedidandrew/smartresourcedrops/client/neoforgemultiplayerclientsmoketest",
+    "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemigrationrestartsmoketest",
+    "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemultiplayerserversmoketest",
+}
 
 
 class ValidationError(RuntimeError):
     """Raised when the candidate is not a safe standalone NeoForge artifact."""
+
+
+def is_development_test_entry(name: str) -> bool:
+    """Return whether a JAR member belongs only to a NeoForge test source set."""
+    path = PurePosixPath(name)
+    folded = name.casefold()
+    parts = {part.casefold() for part in path.parts}
+    if parts.intersection(FORBIDDEN_PARTS):
+        return True
+    return any(
+        folded == prefix + ".class" or folded.startswith(prefix + "$")
+        for prefix in FORBIDDEN_TEST_CLASS_PREFIXES
+    )
 
 
 def properties(path: Path) -> dict[str, str]:
@@ -133,8 +152,7 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
                     errors.append(f"unsafe JAR entry {name!r}")
                     continue
                 folded = name.casefold()
-                parts = {part.casefold() for part in path.parts}
-                if parts.intersection(FORBIDDEN_PARTS):
+                if is_development_test_entry(name):
                     errors.append(f"development-only test entry {name!r}")
                 if folded.endswith((".jar", ".java")):
                     errors.append(f"nested archive or source entry {name!r}")
