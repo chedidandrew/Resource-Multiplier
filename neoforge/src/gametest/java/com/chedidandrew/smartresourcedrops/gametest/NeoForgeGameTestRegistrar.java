@@ -25,7 +25,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
-/** Registers the loader-neutral Fabric GameTest bodies with NeoForge's 26.2 registry API. */
+/** Registers the loader-neutral Fabric GameTest bodies with NeoForge's 1.21.11 registry API. */
 @EventBusSubscriber(modid = SmartResourceDrops.MOD_ID)
 public final class NeoForgeGameTestRegistrar {
     private static final String TEST_NAMESPACE = "smart_resource_drops_gametest";
@@ -33,9 +33,6 @@ public final class NeoForgeGameTestRegistrar {
     private static final Set<String> EXCLUDED = Set.of(
             "dedicatedServerLoadsEveryRequiredMixin",
             "dedicatedServerAuditsAllThreeShearingMixins");
-    private static final Set<String> PAD_16 = Set.of(
-            "sixtyFourMultiplierUsesLegalStacksForRealSheep",
-            "enabledVanillaDispenserSourceMultipliesSheep");
     private static final List<TestSpec> TESTS = discover();
 
     private NeoForgeGameTestRegistrar() {}
@@ -51,14 +48,14 @@ public final class NeoForgeGameTestRegistrar {
 
     @SubscribeEvent
     public static void registerTests(final RegisterGameTestsEvent event) {
-        final Holder<TestEnvironmentDefinition<?>> environment =
+        final Holder<TestEnvironmentDefinition> environment =
                 event.registerEnvironment(id("environment"));
         for (TestSpec spec : TESTS) {
             final ResourceKey<Consumer<GameTestHelper>> functionKey =
                     ResourceKey.create(Registries.TEST_FUNCTION, spec.id());
-            final TestData<Holder<TestEnvironmentDefinition<?>>> data = new TestData<>(
+            final TestData<Holder<TestEnvironmentDefinition>> data = new TestData<>(
                     environment, EMPTY_STRUCTURE, 20, 0, true, Rotation.NONE,
-                    false, 1, 1, false, spec.padding());
+                    false, 1, 1, false);
             event.registerTest(spec.id(), new FunctionGameTestInstance(functionKey, data));
         }
     }
@@ -97,10 +94,7 @@ public final class NeoForgeGameTestRegistrar {
         final String path = (type.getSimpleName() + "_" + method.getName())
                 .replaceAll("([a-z])([A-Z])", "$1_$2")
                 .toLowerCase(Locale.ROOT);
-        final int padding = type == SmartResourceDropsEntityGameTests.class
-                ? 32
-                : PAD_16.contains(method.getName()) ? 16 : 1;
-        return new TestSpec(id(path), function, padding);
+        return new TestSpec(id(path), function);
     }
 
     private static void invoke(
@@ -127,8 +121,5 @@ public final class NeoForgeGameTestRegistrar {
         return Identifier.fromNamespaceAndPath(TEST_NAMESPACE, path);
     }
 
-    private record TestSpec(
-            Identifier id,
-            Consumer<GameTestHelper> function,
-            int padding) {}
+    private record TestSpec(Identifier id, Consumer<GameTestHelper> function) {}
 }

@@ -49,7 +49,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
     private void onClientTick(final ClientTickEvent.Post event) {
         final Minecraft minecraft = Minecraft.getInstance();
         try {
-            if (minecraft.gui.overlay() != null) {
+            if (minecraft.getOverlay() != null) {
                 return;
             }
             if (++this.ticks > TIMEOUT_TICKS) {
@@ -96,7 +96,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
     }
 
     private void waitForReadOnlySnapshot(final Minecraft minecraft) {
-        final Screen screen = minecraft.gui.screen();
+        final Screen screen = minecraft.screen;
         if (screen instanceof SmartDropsConfigLoadingScreen) {
             return;
         }
@@ -119,7 +119,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
     }
 
     private void waitForEditableSnapshot(final Minecraft minecraft) {
-        final Screen screen = minecraft.gui.screen();
+        final Screen screen = minecraft.screen;
         if (screen instanceof SmartDropsConfigLoadingScreen) {
             return;
         }
@@ -141,7 +141,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
     }
 
     private void waitForConnectedGuiPatch(final Minecraft minecraft) {
-        final Screen screen = minecraft.gui.screen();
+        final Screen screen = minecraft.screen;
         if (screen instanceof SmartDropsConfigLoadingScreen) {
             return;
         }
@@ -174,7 +174,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
         }
         this.expectedNearLimitBlockMultipliers = snapshot.config().blockMultipliers.size()
                 + remainingBlockRuleCapacity;
-        minecraft.gui.setScreen(new SmartDropsConfigLoadingScreen(
+        minecraft.setScreen(new SmartDropsConfigLoadingScreen(
                 root,
                 null,
                 nearLimit,
@@ -183,7 +183,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
     }
 
     private void waitForNearLimitPatch(final Minecraft minecraft) {
-        final Screen screen = minecraft.gui.screen();
+        final Screen screen = minecraft.screen;
         if (screen instanceof SmartDropsConfigLoadingScreen) {
             return;
         }
@@ -223,7 +223,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
     }
 
     private void waitForReset(final Minecraft minecraft) {
-        final Screen screen = minecraft.gui.screen();
+        final Screen screen = minecraft.screen;
         if (screen instanceof SmartDropsConfigLoadingScreen) {
             return;
         }
@@ -255,7 +255,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
         // Begin another real server request, then tear down that exact connection.
         // The NeoForge LoggingOut adapter must invalidate both the request generation
         // and cached authority state before a new connection is allowed to reuse them.
-        minecraft.gui.setScreen(new SmartDropsConfigLoadingScreen(root));
+        minecraft.setScreen(new SmartDropsConfigLoadingScreen(root));
         minecraft.disconnect(new TitleScreen(), false);
         transition(Phase.WAIT_DISCONNECT);
     }
@@ -296,12 +296,12 @@ public final class NeoForgeMultiplayerClientSmokeTest {
             throw new AssertionError("Reconnect exposed a cached snapshot from the first connection");
         }
 
-        minecraft.gui.setScreen(SmartDropsConfigScreens.create(null));
+        minecraft.setScreen(SmartDropsConfigScreens.create(null));
         transition(Phase.WAIT_RECONNECTED_SNAPSHOT);
     }
 
     private void waitForReconnectedSnapshot(final Minecraft minecraft) {
-        final Screen screen = minecraft.gui.screen();
+        final Screen screen = minecraft.screen;
         if (screen instanceof SmartDropsConfigLoadingScreen) {
             return;
         }
@@ -506,7 +506,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
             final Class<T> type,
             final String label
     ) {
-        final Screen screen = minecraft.gui.screen();
+        final Screen screen = minecraft.screen;
         if (!type.isInstance(screen)) {
             throw new AssertionError(
                     label + " expected " + type.getSimpleName() + ", found "

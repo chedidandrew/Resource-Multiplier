@@ -1,13 +1,13 @@
-# Smart Resource Multiplier - NeoForge 26.2
+# Smart Resource Multiplier - NeoForge 1.21.11
 
-This directory is the NeoForge loader target for Minecraft 26.2. It consumes the repository's canonical gameplay, configuration, networking-policy, and GUI sources while keeping NeoForge entrypoints and adapters local to this module.
+This directory is the NeoForge loader target for Minecraft 1.21.11. It consumes the repository's canonical gameplay, configuration, networking-policy, and GUI sources while keeping NeoForge entrypoints and adapters local to this module. Minecraft 26.2 remains the newest/default release on `main`.
 
 ## Toolchain
 
-- Minecraft 26.2
-- NeoForge 26.2.0.72
-- ModDevGradle 2.0.144
-- Java 25
+- Minecraft 1.21.11
+- NeoForge 21.11.45
+- ModDevGradle 2.0.146
+- Java 21
 
 ## Build
 
@@ -31,7 +31,7 @@ Run the portable NeoForge gameplay suite from the repository root with:
 .\gradlew.bat -p neoforge runGameTestServer
 ```
 
-The run is successful only when it reports all 65 required tests passed.
+The run is successful only when it reports all 64 required tests passed.
 
 Run the test-only physical-client Entity Categories check with:
 
@@ -79,12 +79,12 @@ Run the two-JVM placement-provenance migration gate with:
 .\gradlew.bat -p neoforge --no-daemon runMigrationRestartServerTest
 ```
 
-That one command seeds a minimal Anvil region with the hash-locked Fabric-authored chunk, launches an import server that loads it through a real `ServerLevel`, checks the gameplay provenance API, and performs a native server save. It then launches a fresh server JVM and requires the saved chunk to contain native NeoForge data without the legacy Fabric envelope and to pass the gameplay lookup again. Independent marker checks make either phase fail closed. This proves the captured Minecraft 26.2 chunk, not a complete-world, older-version, custom-dimension, or modded-registry migration matrix.
+That one command seeds a minimal Anvil region with the hash-locked Fabric-authored 1.21.11 chunk, launches an import server that loads it through a real `ServerLevel`, checks the gameplay provenance API, and performs a native server save. It then launches a fresh server JVM and requires the saved chunk to contain native NeoForge data without the legacy Fabric envelope and to pass the gameplay lookup again. Independent marker checks make either phase fail closed. This proves the captured Minecraft 1.21.11 chunk, not a complete-world, older-version, custom-dimension, or modded-registry migration matrix.
 
 The playable artifact is:
 
 ```text
-neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0.jar
+neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.21.11.jar
 ```
 
 Validate the rebuilt playable JAR from the repository root with:
@@ -93,10 +93,10 @@ Validate the rebuilt playable JAR from the repository root with:
 py -3 tools/validate_neoforge_jar.py
 ```
 
-The validator rejects Fabric classes/metadata, test fixtures, nested dependencies, missing mixins, stale loader metadata, the wrong icon, and non-Java-25 bytecode.
+The validator rejects Fabric classes/metadata, test fixtures, nested dependencies, missing mixins, stale loader metadata, the wrong icon, and non-Java-21 bytecode.
 
 ## Validation state
 
-The module clean-builds, passes 164 JUnit tests and all 65 dedicated-server GameTests (including NeoForge-native loader and mixin audits), starts a dedicated server through `Done`, passes a physical-client Entity Categories screen check, passes the connected GUI/reconnect authority check, passes the client-only/server-only optional-channel matrix, and rejects malicious oversized wire input without mutating server state. Migration now passes both the focused Anvil close/reopen regression and the two-dedicated-JVM `ServerLevel` import, native save, restart, disk-envelope, and gameplay-lookup gate.
+The module clean-builds, passes 164 JUnit tests and all 64 dedicated-server GameTests (including NeoForge-native loader and mixin audits), starts a dedicated server through `Done`, passes a physical-client Entity Categories screen check, passes the connected GUI/reconnect authority check, passes the client-only/server-only optional-channel matrix, and rejects malicious oversized wire input without mutating server state. Migration now passes both the focused Anvil close/reopen regression and the two-dedicated-JVM `ServerLevel` import, native save, restart, disk-envelope, and gameplay-lookup gate.
 
-Version `1.3.0` is the stable NeoForge counterpart to the Fabric build for the documented mod behavior. Broader whole-world migration coverage beyond the single captured 26.2 chunk remains outside the proven matrix. See `docs/NEOFORGE_PORT.md` for the full checklist and the one-way world-migration warning.
+Version `1.3.0+mc1.21.11` is the stable NeoForge counterpart to the Fabric 1.21.11 build for the documented mod behavior. See `docs/NEOFORGE_PORT.md` for the full checklist and the one-way world-migration warning.

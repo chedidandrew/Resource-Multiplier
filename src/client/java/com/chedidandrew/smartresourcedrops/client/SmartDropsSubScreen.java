@@ -1,6 +1,6 @@
 package com.chedidandrew.smartresourcedrops.client;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -117,21 +117,21 @@ public abstract class SmartDropsSubScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(
-            final GuiGraphicsExtractor graphics,
+    public void render(
+            final GuiGraphics graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
-        graphics.centeredText(
+        super.render(graphics, mouseX, mouseY, partialTick);
+        graphics.drawCenteredString(
                 this.font,
                 ConfigUiText.fitted(this.font, this.title, Math.max(1, this.width - 24)),
                 this.width / 2,
                 this.titleY(),
                 0xFFFFFFFF);
         if (this.session.serverRevisionStale()) {
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     ConfigUiText.fitted(
                             this.font,
@@ -145,7 +145,7 @@ public abstract class SmartDropsSubScreen extends Screen {
         }
         if (this.unsavedChangesIndicatorVisible()) {
             final UnsavedChangesIndicatorLayout layout = this.unsavedChangesIndicatorLayout();
-            graphics.text(
+            graphics.drawString(
                     this.font,
                     this.unsavedChangesIndicatorText(),
                     layout.x(),
@@ -156,7 +156,7 @@ public abstract class SmartDropsSubScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.gui.setScreen(this.backScreen);
+        this.minecraft.setScreen(this.backScreen);
     }
 
     @Override

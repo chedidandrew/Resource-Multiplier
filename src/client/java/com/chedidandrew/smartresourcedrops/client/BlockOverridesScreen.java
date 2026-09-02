@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Locale;
 
 import com.chedidandrew.smartresourcedrops.core.Category;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -134,7 +134,7 @@ final class BlockOverridesScreen extends SmartDropsSubScreen {
                             .append("  ")
                             .append(action),
                     Component.literal(info.displayName() + "\n" + info.id()),
-                    () -> this.minecraft.gui.setScreen(new RuleEditScreen(
+                    () -> this.minecraft.setScreen(new RuleEditScreen(
                             this.root,
                             this,
                             this.session,
@@ -145,13 +145,13 @@ final class BlockOverridesScreen extends SmartDropsSubScreen {
     }
 
     @Override
-    public void extractRenderState(
-            final GuiGraphicsExtractor graphics,
+    public void render(
+            final GuiGraphics graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
         if (this.search == null) {
             return;
         }
@@ -171,7 +171,7 @@ final class BlockOverridesScreen extends SmartDropsSubScreen {
         } else {
             hint = Component.literal(this.totalMatches + " results");
         }
-        graphics.centeredText(
+        graphics.drawCenteredString(
                 this.font,
                 ConfigUiText.fitted(this.font, hint, this.contentWidth()),
                 this.width / 2,
@@ -180,13 +180,13 @@ final class BlockOverridesScreen extends SmartDropsSubScreen {
 
         if (this.totalMatches == 0) {
             final int centerY = Math.min(this.contentBottom() - 24, y + 42);
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     Component.translatable("smart_resource_drops.gui.blocks_empty"),
                     this.width / 2,
                     centerY,
                     0xFFE0E0E0);
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     Component.translatable("smart_resource_drops.gui.blocks_empty_help"),
                     this.width / 2,

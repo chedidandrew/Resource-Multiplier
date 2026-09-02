@@ -40,7 +40,7 @@ check(
     "known vanilla special shearables fail closed",
     "KNOWN_VANILLA_SPECIAL_IDS" in all_text
     and "minecraft:mooshroom" in all_text
-    and "minecraft:sulfur_cube" in all_text,
+    and "minecraft:copper_golem" in all_text,
 )
 failed=[c for c in checks if not c[1]]
 for name,ok,detail in checks: print(("PASS" if ok else "FAIL")+": "+name+(" ("+detail+")" if detail else ""))

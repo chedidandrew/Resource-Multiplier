@@ -4,7 +4,7 @@ import com.chedidandrew.smartresourcedrops.config.ConfigPatch;
 import com.chedidandrew.smartresourcedrops.config.ConfigRequestLifecycle;
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -183,7 +183,7 @@ public final class SmartDropsConfigLoadingScreen extends Screen {
             final long revision,
             final String status
     ) {
-        this.minecraft.gui.setScreen(new SmartDropsConfigScreen(
+        this.minecraft.setScreen(new SmartDropsConfigScreen(
                 this.resultParent,
                 snapshot,
                 editable,
@@ -192,19 +192,19 @@ public final class SmartDropsConfigLoadingScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(
-            final GuiGraphicsExtractor graphics,
+    public void render(
+            final GuiGraphics graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
         final int centerX = this.width / 2;
         final int centerY = this.height / 2;
 
-        graphics.centeredText(this.font, this.title, centerX, centerY - 58, 0xFFFFFFFF);
+        graphics.drawCenteredString(this.font, this.title, centerX, centerY - 58, 0xFFFFFFFF);
         if (this.state == State.LOADING) {
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     fitted(Component.translatable(this.operation == Operation.RESET
                             ? "smart_resource_drops.gui.reset_loading"
@@ -212,7 +212,7 @@ public final class SmartDropsConfigLoadingScreen extends Screen {
                     centerX,
                     centerY - 20,
                     0xFFE0E0E0);
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     fitted(Component.translatable(this.operation == Operation.RESET
                             ? "smart_resource_drops.gui.reset_loading_detail"
@@ -223,13 +223,13 @@ public final class SmartDropsConfigLoadingScreen extends Screen {
             return;
         }
 
-        graphics.centeredText(
+        graphics.drawCenteredString(
                 this.font,
                 fitted(Component.translatable("smart_resource_drops.gui.load_failed")),
                 centerX,
                 centerY - 30,
                 0xFFFF8080);
-        graphics.centeredText(
+        graphics.drawCenteredString(
                 this.font,
                 fitted(Component.translatable(
                         "smart_resource_drops.gui.failure_reason",
@@ -237,7 +237,7 @@ public final class SmartDropsConfigLoadingScreen extends Screen {
                 centerX,
                 centerY - 10,
                 0xFFE0E0E0);
-        graphics.centeredText(
+        graphics.drawCenteredString(
                 this.font,
                 fitted(Component.translatable("smart_resource_drops.gui.error_detail")),
                 centerX,
@@ -283,13 +283,13 @@ public final class SmartDropsConfigLoadingScreen extends Screen {
                 return;
             }
             if (this.minecraft.getConnection() != null) {
-                this.minecraft.gui.setScreen(new SmartDropsConfigLoadingScreen(this.resultParent));
+                this.minecraft.setScreen(new SmartDropsConfigLoadingScreen(this.resultParent));
             } else {
-                this.minecraft.gui.setScreen(this.resultParent);
+                this.minecraft.setScreen(this.resultParent);
             }
             return;
         }
-        this.minecraft.gui.setScreen(this.returnScreen);
+        this.minecraft.setScreen(this.returnScreen);
     }
 
     @Override

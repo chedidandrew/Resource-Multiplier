@@ -18,7 +18,7 @@ import com.chedidandrew.smartresourcedrops.network.ConfigSnapshotPayload;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -63,12 +63,12 @@ public final class FabricClientEntrypoint implements ClientModInitializer {
         });
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, buildContext) ->
-                dispatcher.register(ClientCommands.literal("smartdropsgui").executes(context -> {
+                dispatcher.register(ClientCommandManager.literal("smartdropsgui").executes(context -> {
                     final Minecraft minecraft = Minecraft.getInstance();
                     final Object connection = minecraft.getConnection();
-                    final Screen originatingScreen = minecraft.gui.screen();
+                    final Screen originatingScreen = minecraft.screen;
                     return ClientCommandQueue.runCoalesced(OPEN_CONFIG_QUEUE_KEY, () -> {
-                        final Screen currentScreen = minecraft.gui.screen();
+                        final Screen currentScreen = minecraft.screen;
                         if (!ConfigScreenOpenPolicy.canOpenDelayedCommand(
                                 connection,
                                 minecraft.getConnection(),
@@ -76,7 +76,7 @@ public final class FabricClientEntrypoint implements ClientModInitializer {
                                 currentScreen)) {
                             return;
                         }
-                        minecraft.gui.setScreen(SmartDropsConfigScreens.create(currentScreen));
+                        minecraft.setScreen(SmartDropsConfigScreens.create(currentScreen));
                     }) ? 1 : 0;
                 })));
     }

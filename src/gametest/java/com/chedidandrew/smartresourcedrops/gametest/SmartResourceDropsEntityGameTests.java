@@ -28,7 +28,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.Mob;
@@ -45,7 +44,7 @@ import net.minecraft.world.phys.Vec3;
 
 /** Black-box coverage for the server-authoritative entity death-loot and XP hooks. */
 public final class SmartResourceDropsEntityGameTests {
-    @GameTest(padding = 32)
+    @GameTest(structure = "smart_resource_drops_gametest:wide")
     public void entityFeatureGateAndBoundaryMultipliersUseFinalStandardLoot(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -76,7 +75,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(padding = 32)
+    @GameTest(structure = "smart_resource_drops_gametest:wide")
     public void finalLoaderLootModifierIsMultipliedOnceWithComponentsIntact(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         GameTestEntityFixtures.resetTransientState();
@@ -104,7 +103,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(padding = 32)
+    @GameTest(structure = "smart_resource_drops_gametest:wide")
     public void equipmentCarriedInventoryAndDirectOutputsAreNeverMultiplied(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -145,7 +144,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(padding = 32)
+    @GameTest(structure = "smart_resource_drops_gametest:wide")
     public void bossGateProtectsSaddlesTotemsAndExperienceSeparately(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -180,7 +179,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(padding = 32)
+    @GameTest(structure = "smart_resource_drops_gametest:wide")
     public void vanillaPlayerProjectileEnvironmentalAndTamedAttributionAreRespected(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -194,7 +193,7 @@ public final class SmartResourceDropsEntityGameTests {
             assertItemTotal(helper, 1, Items.ROTTEN_FLESH, 3, "direct player kill");
 
             final Mob projectileVictim = spawn(helper, GameTestEntityFixtures.HOSTILE, 4);
-            final Arrow arrow = helper.spawn(EntityTypes.ARROW, new BlockPos(4, 3, 4));
+            final Arrow arrow = helper.spawn(EntityType.ARROW, new BlockPos(4, 3, 4));
             final DamageSource arrowSource = helper.getLevel().damageSources().arrow(arrow, player);
             kill(helper, projectileVictim, arrowSource);
             assertItemTotal(helper, 4, Items.ROTTEN_FLESH, 3, "player projectile kill");
@@ -225,7 +224,7 @@ public final class SmartResourceDropsEntityGameTests {
                     "Could not establish player credit before untamed-wolf damage");
             playerCreditedAfterUntamedWolf.invulnerableTime = 0;
             final Wolf untamedWolf = helper.spawnWithNoFreeWill(
-                    EntityTypes.WOLF,
+                    EntityType.WOLF,
                     new BlockPos(25, 2, 2));
             helper.assertTrue(
                     playerCreditedAfterUntamedWolf.hurtServer(
@@ -244,7 +243,7 @@ public final class SmartResourceDropsEntityGameTests {
                     3,
                     "vanilla player credit retained after untamed-wolf damage");
 
-            final Wolf wolf = helper.spawnWithNoFreeWill(EntityTypes.WOLF, new BlockPos(13, 2, 2));
+            final Wolf wolf = helper.spawnWithNoFreeWill(EntityType.WOLF, new BlockPos(13, 2, 2));
             wolf.tame(player);
             final Mob tamedVictimPlayerOnly = spawn(helper, GameTestEntityFixtures.HOSTILE, 13);
             kill(helper, tamedVictimPlayerOnly, helper.getLevel().damageSources().mobAttack(wolf));
@@ -258,7 +257,7 @@ public final class SmartResourceDropsEntityGameTests {
             kill(helper, tamedVictim, helper.getLevel().damageSources().mobAttack(wolf));
             assertItemTotal(helper, 16, Items.ROTTEN_FLESH, 3, "tamed kill in owner-enabled mode");
 
-            final Wolf offlineOwner = helper.spawnWithNoFreeWill(EntityTypes.WOLF, new BlockPos(19, 2, 2));
+            final Wolf offlineOwner = helper.spawnWithNoFreeWill(EntityType.WOLF, new BlockPos(19, 2, 2));
             offlineOwner.setTame(true, false);
             offlineOwner.setOwnerReference(EntityReference.of(UUID.fromString(
                     "00000000-0000-0000-0000-000000000123")));
@@ -279,7 +278,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(padding = 32)
+    @GameTest(structure = "smart_resource_drops_gametest:wide")
     public void mobLootGameRuleAndExperienceContextsRemainScoped(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         final boolean previousMobDrops = helper.getLevel().getGameRules().get(GameRules.MOB_DROPS);
@@ -360,7 +359,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(padding = 32)
+    @GameTest(structure = "smart_resource_drops_gametest:wide")
     public void nestedAndExceptionalLootGenerationDoesNotLeakContext(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         GameTestEntityFixtures.resetTransientState();
@@ -399,7 +398,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(padding = 32)
+    @GameTest(structure = "smart_resource_drops_gametest:wide")
     public void duplicateStandardLootHookClaimsTheMultiplierExactlyOnce(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -446,7 +445,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(padding = 32)
+    @GameTest(structure = "smart_resource_drops_gametest:wide")
     public void finalLootingCookedEmptyBabyAndUnstackableResultsKeepVanillaShape(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         GameTestEntityFixtures.resetTransientState();
@@ -492,8 +491,8 @@ public final class SmartResourceDropsEntityGameTests {
                     swords.size() == 3 && swords.stream().allMatch(drop -> drop.getItem().getCount() == 1),
                     "Unstackable item was not emitted as three legal individual stacks");
 
-            configureEntityTest(config -> exactMultiplier(config, EntityTypes.COW, 3));
-            final Mob baby = helper.spawnWithNoFreeWill(EntityTypes.COW, new BlockPos(17, 2, 4));
+            configureEntityTest(config -> exactMultiplier(config, EntityType.COW, 3));
+            final Mob baby = helper.spawnWithNoFreeWill(EntityType.COW, new BlockPos(17, 2, 4));
             baby.setBaby(true);
             killByPlayer(helper, baby, player);
             assertItemTotal(helper, 17, Items.BEEF, 0, "baby mob with no standard drops");
@@ -505,7 +504,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(padding = 32)
+    @GameTest(structure = "smart_resource_drops_gametest:wide")
     public void runtimeRulePrecedenceAndWhitelistModesAreComplete(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -589,7 +588,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(padding = 32)
+    @GameTest(structure = "smart_resource_drops_gametest:wide")
     public void moddedClassificationPriorityFallbackAndInspectionAreDeterministic(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -661,7 +660,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(padding = 32)
+    @GameTest(structure = "smart_resource_drops_gametest:wide")
     public void entityInspectCommandTargetsVerboseMissAndConsoleWithoutMutation(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -676,10 +675,10 @@ public final class SmartResourceDropsEntityGameTests {
             final float health = target.getHealth();
             final Vec3 position = target.position();
             final long revision = ConfigManager.revision();
-            final int itemsBefore = helper.getLevel().getEntities(EntityTypes.ITEM, target.getBoundingBox().inflate(3.0),
+            final int itemsBefore = helper.getLevel().getEntities(EntityType.ITEM, target.getBoundingBox().inflate(3.0),
                     ItemEntity::isAlive).size();
             final int xpBefore = helper.getLevel().getEntities(
-                    EntityTypes.EXPERIENCE_ORB,
+                    EntityType.EXPERIENCE_ORB,
                     target.getBoundingBox().inflate(3.0),
                     ExperienceOrb::isAlive).size();
 
@@ -714,12 +713,12 @@ public final class SmartResourceDropsEntityGameTests {
             helper.assertTrue(ConfigManager.revision() == revision,
                     "Entity inspection changed the authoritative config revision");
             helper.assertTrue(
-                    helper.getLevel().getEntities(EntityTypes.ITEM, target.getBoundingBox().inflate(3.0),
+                    helper.getLevel().getEntities(EntityType.ITEM, target.getBoundingBox().inflate(3.0),
                             ItemEntity::isAlive).size() == itemsBefore,
                     "Entity inspection spawned item output");
             helper.assertTrue(
                     helper.getLevel().getEntities(
-                            EntityTypes.EXPERIENCE_ORB,
+                            EntityType.EXPERIENCE_ORB,
                             target.getBoundingBox().inflate(3.0),
                             ExperienceOrb::isAlive).size() == xpBefore,
                     "Entity inspection spawned experience output");
@@ -936,7 +935,7 @@ public final class SmartResourceDropsEntityGameTests {
     private static List<ItemEntity> allItemDrops(final GameTestHelper helper, final int x) {
         final Vec3 center = absoluteCenter(helper, x);
         return helper.getLevel().getEntities(
-                EntityTypes.ITEM,
+                EntityType.ITEM,
                 new AABB(center, center).inflate(1.5),
                 ItemEntity::isAlive);
     }
@@ -948,7 +947,7 @@ public final class SmartResourceDropsEntityGameTests {
             final String scenario) {
         final Vec3 center = absoluteCenter(helper, x);
         final int actual = helper.getLevel().getEntities(
-                        EntityTypes.EXPERIENCE_ORB,
+                        EntityType.EXPERIENCE_ORB,
                         new AABB(center, center).inflate(2.0),
                         ExperienceOrb::isAlive)
                 .stream()

@@ -102,7 +102,7 @@ final class RuleListScreen extends SmartDropsSubScreen {
                         ConfigUiText.effective(effective.multiplier()),
                         action,
                         Component.literal(key),
-                        () -> this.minecraft.gui.setScreen(new RuleEditScreen(
+                        () -> this.minecraft.setScreen(new RuleEditScreen(
                                 this.root,
                                 this,
                                 this.session,
@@ -130,7 +130,7 @@ final class RuleListScreen extends SmartDropsSubScreen {
                                 .append("  ")
                                 .append(action),
                         Component.literal(id),
-                        () -> this.minecraft.gui.setScreen(new RuleEditScreen(
+                        () -> this.minecraft.setScreen(new RuleEditScreen(
                                 this.root,
                                 this,
                                 this.session,

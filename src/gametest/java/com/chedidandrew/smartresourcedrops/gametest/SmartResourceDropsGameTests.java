@@ -25,7 +25,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.PermissionSet;
 import net.minecraft.world.Container;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.item.ItemStack;
@@ -73,9 +74,9 @@ public final class SmartResourceDropsGameTests {
         assertPreserved(
             helper,
             new BlockPos(3, 2, 1),
-            Blocks.COPPER_BLOCK.weathering().unaffected(),
-            Blocks.COPPER_BLOCK.weathering().exposed());
-        assertPreserved(helper, new BlockPos(4, 2, 1), Blocks.CONCRETE_POWDER.white(), Blocks.CONCRETE.white());
+            Blocks.COPPER_BLOCK,
+            Blocks.EXPOSED_COPPER);
+        assertPreserved(helper, new BlockPos(4, 2, 1), Blocks.WHITE_CONCRETE_POWDER, Blocks.WHITE_CONCRETE);
 
         final BlockPos unrelated = helper.absolutePos(new BlockPos(5, 2, 1));
         helper.getLevel().setBlock(unrelated, Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
@@ -90,7 +91,11 @@ public final class SmartResourceDropsGameTests {
         final BlockPos support = new BlockPos(1, 1, 1);
         final BlockPos lower = support.above();
         helper.setBlock(support, Blocks.STONE);
-        helper.placeBlock(lower, Blocks.OAK_DOOR, Direction.NORTH);
+        final ServerPlayer player = GameTestPlayers.survival(helper);
+        final ItemStack door = new ItemStack(Items.OAK_DOOR);
+        // NeoForge's placement hook reads the stack from the real hand in 1.21.11.
+        player.setItemInHand(InteractionHand.MAIN_HAND, door);
+        helper.placeAt(player, door, support, Direction.UP);
 
         final BlockPos lowerAbsolute = helper.absolutePos(lower);
         helper.assertBlockPresent(Blocks.OAK_DOOR, lower);
@@ -99,7 +104,9 @@ public final class SmartResourceDropsGameTests {
         helper.assertTrue(PlacementTracker.isMarked(helper.getLevel(), lowerAbsolute.above()), "Door upper half was not marked");
 
         final BlockPos failedLower = new BlockPos(5, 4, 5);
-        helper.placeBlock(failedLower, Blocks.OAK_DOOR, Direction.NORTH);
+        final ItemStack unsupportedDoor = new ItemStack(Items.OAK_DOOR);
+        player.setItemInHand(InteractionHand.MAIN_HAND, unsupportedDoor);
+        helper.placeAt(player, unsupportedDoor, failedLower.below(), Direction.UP);
         final BlockPos failedAbsolute = helper.absolutePos(failedLower);
         helper.assertBlockNotPresent(Blocks.OAK_DOOR, failedLower);
         helper.assertFalse(
@@ -366,7 +373,7 @@ public final class SmartResourceDropsGameTests {
             helper.assertFalse(consoleMessages.text().contains(privatePlayerId),
                     "Validation output exposed a stored player UUID");
 
-            final ServerPlayer operator = (ServerPlayer) helper.makeMockServerPlayer(GameType.CREATIVE);
+            final ServerPlayer operator = GameTestPlayers.withGameMode(helper, GameType.CREATIVE);
             final CapturingCommandSource verboseMessages = new CapturingCommandSource();
             helper.assertTrue(executeCommand(
                             helper,
@@ -381,7 +388,7 @@ public final class SmartResourceDropsGameTests {
                             && verboseMessages.text().contains("No configuration or world data was changed."),
                     "Verbose validation omitted expected bounded details or its read-only statement");
 
-            final ServerPlayer normalPlayer = (ServerPlayer) helper.makeMockServerPlayer(GameType.SURVIVAL);
+            final ServerPlayer normalPlayer = GameTestPlayers.withGameMode(helper, GameType.SURVIVAL);
             helper.assertTrue(commandIsRejected(
                             helper,
                             "smartdrops validate",
@@ -601,7 +608,7 @@ public final class SmartResourceDropsGameTests {
 
     private static List<ItemEntity> dropsNear(final GameTestHelper helper, final BlockPos absolutePos) {
         return helper.getLevel().getEntities(
-                EntityTypes.ITEM,
+                EntityType.ITEM,
                 new AABB(absolutePos).inflate(1.0),
                 ItemEntity::isAlive);
     }

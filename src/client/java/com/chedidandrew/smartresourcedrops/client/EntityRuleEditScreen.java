@@ -1,7 +1,7 @@
 package com.chedidandrew.smartresourcedrops.client;
 
 import com.chedidandrew.smartresourcedrops.core.entity.EntityCategory;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -122,18 +122,18 @@ final class EntityRuleEditScreen extends SmartDropsSubScreen {
     }
 
     @Override
-    public void extractRenderState(
-            final GuiGraphicsExtractor graphics,
+    public void render(
+            final GuiGraphics graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
         final int left = this.contentLeft();
         final int top = this.contentTop();
         if (this.kind == Kind.ENTITY) {
             final ConfigEditorSession.EntityInfo info = this.session.entityInfo(this.key).orElse(null);
-            graphics.text(
+            graphics.drawString(
                     this.font,
                     ConfigUiText.fitted(
                             this.font,
@@ -156,7 +156,7 @@ final class EntityRuleEditScreen extends SmartDropsSubScreen {
                     : Component.translatable(
                             "smart_resource_drops.gui.categories_value",
                             categories);
-            graphics.text(
+            graphics.drawString(
                     this.font,
                     ConfigUiText.fitted(
                             this.font,
@@ -168,7 +168,7 @@ final class EntityRuleEditScreen extends SmartDropsSubScreen {
         } else {
             final EntityCategory category = EntityCategory.parse(this.key)
                     .orElse(EntityCategory.MISCELLANEOUS);
-            graphics.text(
+            graphics.drawString(
                     this.font,
                     Component.translatable(
                             "smart_resource_drops.gui.entity_category_count",
@@ -177,7 +177,7 @@ final class EntityRuleEditScreen extends SmartDropsSubScreen {
                     top,
                     0xFFA0A0A0);
             if (category == EntityCategory.BOSSES) {
-                graphics.text(
+                graphics.drawString(
                         this.font,
                         Component.translatable(this.session.bossDropsEnabled()
                                 ? "smart_resource_drops.gui.boss_safety_enabled"
@@ -191,13 +191,13 @@ final class EntityRuleEditScreen extends SmartDropsSubScreen {
         final int detailsY = top + (this.height < 220 ? 52 : 78);
         final Integer configured = this.configuredValue();
         final ConfigEditorSession.EffectiveValue effective = this.effectiveValue();
-        graphics.text(this.font, ConfigUiText.configured(configured), left, detailsY, 0xFFE0E0E0);
+        graphics.drawString(this.font, ConfigUiText.configured(configured), left, detailsY, 0xFFE0E0E0);
         final boolean estimatedInheritedValue = this.kind == Kind.ENTITY
                 && this.session.entityInfo(this.key)
                         .map(ConfigEditorSession.EntityInfo::categoryEstimated)
                         .orElse(true)
                 && effective.sourceTier() != ConfigEditorSession.SourceTier.ENTITY;
-        graphics.text(
+        graphics.drawString(
                 this.font,
                 estimatedInheritedValue
                         ? Component.translatable(
@@ -210,7 +210,7 @@ final class EntityRuleEditScreen extends SmartDropsSubScreen {
         final Component inherited = configured == null
                 ? EntityCategoryScreen.sourceName(this.inheritedValue())
                 : Component.translatable("smart_resource_drops.gui.not_inherited");
-        graphics.text(
+        graphics.drawString(
                 this.font,
                 ConfigUiText.fitted(
                         this.font,

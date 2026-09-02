@@ -104,6 +104,7 @@ def validate_mixin_config(
     config_name: str,
     names: set[str],
     errors: list[str],
+    expected_java_version: int,
 ) -> None:
     try:
         data = json.loads(archive.read(config_name))
@@ -113,8 +114,11 @@ def validate_mixin_config(
     if not isinstance(data, dict):
         errors.append(f"mixin config {config_name!r} is not an object")
         return
-    if data.get("required") is not True or data.get("compatibilityLevel") != "JAVA_25":
-        errors.append(f"mixin config {config_name!r} is not required Java 25 metadata")
+    expected_compatibility = f"JAVA_{expected_java_version}"
+    if data.get("required") is not True or data.get("compatibilityLevel") != expected_compatibility:
+        errors.append(
+            f"mixin config {config_name!r} is not required Java {expected_java_version} metadata"
+        )
     package = data.get("package")
     if not isinstance(package, str) or not package:
         errors.append(f"mixin config {config_name!r} has no package")
@@ -139,6 +143,8 @@ def validate_mixin_config(
 
 def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
     errors: list[str] = []
+    expected_java_version = int(properties(ROOT / "neoforge/gradle.properties")["java_version"])
+    expected_class_major = expected_java_version + 44
     try:
         with zipfile.ZipFile(jar_path) as archive:
             bad_member = archive.testzip()
@@ -223,7 +229,13 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
                 errors.append("NeoForge metadata does not declare both production mixin configs")
 
             for config_name in MIXIN_CONFIGS:
-                validate_mixin_config(archive, config_name, names, errors)
+                validate_mixin_config(
+                    archive,
+                    config_name,
+                    names,
+                    errors,
+                    expected_java_version,
+                )
 
             try:
                 embedded_license = archive.read(LICENSE_ENTRY)
@@ -246,8 +258,10 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
                     "com/chedidandrew/smartresourcedrops/SmartResourceDrops.class"
                 )[:8]
                 magic, _, major = struct.unpack(">IHH", class_header)
-                if magic != 0xCAFEBABE or major != 69:
-                    errors.append(f"main class is not Java 25 bytecode (major={major})")
+                if magic != 0xCAFEBABE or major != expected_class_major:
+                    errors.append(
+                        f"main class is not Java {expected_java_version} bytecode (major={major})"
+                    )
             except (KeyError, struct.error) as exc:
                 errors.append(f"cannot inspect main class bytecode: {exc}")
     except (OSError, zipfile.BadZipFile) as exc:
@@ -268,7 +282,7 @@ def main() -> int:
         print(f"FAIL: {exc}", file=sys.stderr)
         return 1
     print(
-        "PASS: NeoForge playable JAR is loader-isolated, test-free, Java 25, "
+        f"PASS: NeoForge playable JAR is loader-isolated, test-free, Java {config['java_version']}, "
         f"and metadata-complete ({entries} entries, SHA-256 {digest})"
     )
     return 0

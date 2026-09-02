@@ -14,8 +14,7 @@ public final class ShearingTags {
             "minecraft:bogged",
             "minecraft:copper_golem",
             "minecraft:mooshroom",
-            "minecraft:snow_golem",
-            "minecraft:sulfur_cube");
+            "minecraft:snow_golem");
     public static final TagKey<EntityType<?>> STANDARD_RESOURCES = TagKey.create(
             Registries.ENTITY_TYPE,
             SmartResourceDrops.id("shearing/standard_resources"));

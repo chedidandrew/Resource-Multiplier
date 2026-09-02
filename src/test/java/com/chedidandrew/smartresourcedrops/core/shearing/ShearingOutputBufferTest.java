@@ -1,8 +1,6 @@
 package com.chedidandrew.smartresourcedrops.core.shearing;
 
 import net.minecraft.SharedConstants;
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.Item;
@@ -143,7 +141,7 @@ final class ShearingOutputBufferTest {
     }
 
     private static ItemStack stack(Item item, int count) {
-        ItemStack stack = new ItemStack(Holder.direct(item, DataComponentMap.EMPTY), count);
+        ItemStack stack = new ItemStack(item, count);
         stack.set(DataComponents.MAX_STACK_SIZE, 64);
         return stack;
     }

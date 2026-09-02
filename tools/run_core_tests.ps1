@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-function Test-Java25Jdk([string] $candidate) {
+function Test-Java21Jdk([string] $candidate) {
     if ([string]::IsNullOrWhiteSpace($candidate)) {
         return $false
     }
@@ -10,22 +10,22 @@ function Test-Java25Jdk([string] $candidate) {
         return $false
     }
     $version = (& $candidateJavac -version 2>&1 | Select-Object -First 1).ToString()
-    return $version -match '^javac 25(?:\.|$)'
+    return $version -match '^javac 21(?:\.|$)'
 }
 
-$java25Candidates = @($env:JAVA_25_HOME, $env:JAVA_HOME)
+$java21Candidates = @($env:JAVA_21_HOME, $env:JAVA_HOME)
 foreach ($base in @('C:\Program Files\Java', 'C:\Program Files\Eclipse Adoptium')) {
     if (Test-Path -LiteralPath $base) {
-        $java25Candidates += Get-ChildItem -LiteralPath $base -Directory -Filter 'jdk-25*' |
+        $java21Candidates += Get-ChildItem -LiteralPath $base -Directory -Filter 'jdk-21*' |
             Sort-Object Name -Descending |
             Select-Object -ExpandProperty FullName
     }
 }
-$resolvedJavaHome = $java25Candidates |
-    Where-Object { Test-Java25Jdk $_ } |
+$resolvedJavaHome = $java21Candidates |
+    Where-Object { Test-Java21Jdk $_ } |
     Select-Object -First 1
 if ([string]::IsNullOrWhiteSpace($resolvedJavaHome)) {
-    throw 'Java 25 is required. Install a Java 25 JDK or set JAVA_25_HOME/JAVA_HOME to it.'
+    throw 'Java 21 is required. Install a Java 21 JDK or set JAVA_21_HOME/JAVA_HOME to it.'
 }
 $javac = Join-Path $resolvedJavaHome 'bin\javac.exe'
 $java = Join-Path $resolvedJavaHome 'bin\java.exe'
@@ -53,7 +53,7 @@ $sources = @(
     'tools\core-tests\com\chedidandrew\smartresourcedrops\core\RuleEngineTest.java'
 ) | ForEach-Object { Join-Path $repoRoot $_ }
 
-& $javac --release 25 -Xlint:deprecation -d $output @sources
+& $javac --release 21 -Xlint:deprecation -d $output @sources
 if ($LASTEXITCODE -ne 0) {
     throw "javac failed with exit code $LASTEXITCODE"
 }

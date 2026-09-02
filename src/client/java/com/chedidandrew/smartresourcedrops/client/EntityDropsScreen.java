@@ -64,7 +64,7 @@ final class EntityDropsScreen extends SmartDropsSubScreen {
                 Component.translatable("smart_resource_drops.gui.entity_default_multiplier_tooltip"),
                 defaultValue,
                 this.session.entityDropsEnabled(),
-                () -> this.minecraft.gui.setScreen(new EntityScalarEditScreen(
+                () -> this.minecraft.setScreen(new EntityScalarEditScreen(
                         this.root,
                         this,
                         this.session,
@@ -99,7 +99,7 @@ final class EntityDropsScreen extends SmartDropsSubScreen {
                 Component.translatable("smart_resource_drops.gui.mob_xp_multiplier_tooltip"),
                 Component.literal(this.session.mobExperienceMultiplier() + "x"),
                 this.session.multiplyMobExperience(),
-                () -> this.minecraft.gui.setScreen(new EntityScalarEditScreen(
+                () -> this.minecraft.setScreen(new EntityScalarEditScreen(
                         this.root,
                         this,
                         this.session,
@@ -126,7 +126,7 @@ final class EntityDropsScreen extends SmartDropsSubScreen {
                 Component.translatable("smart_resource_drops.gui.entity_categories_tooltip"),
                 Component.translatable("smart_resource_drops.gui.view_details"),
                 true,
-                () -> this.minecraft.gui.setScreen(new EntityCategoryScreen(
+                () -> this.minecraft.setScreen(new EntityCategoryScreen(
                         this.root,
                         this,
                         this.session)));
@@ -136,7 +136,7 @@ final class EntityDropsScreen extends SmartDropsSubScreen {
                 Component.translatable("smart_resource_drops.gui.entity_overrides_tooltip"),
                 Component.translatable("smart_resource_drops.gui.view_details"),
                 true,
-                () -> this.minecraft.gui.setScreen(new EntityOverridesScreen(
+                () -> this.minecraft.setScreen(new EntityOverridesScreen(
                         this.root,
                         this,
                         this.session)));
@@ -146,7 +146,7 @@ final class EntityDropsScreen extends SmartDropsSubScreen {
                 Component.translatable("smart_resource_drops.gui.entity_filters_tooltip"),
                 Component.translatable("smart_resource_drops.gui.view_details"),
                 true,
-                () -> this.minecraft.gui.setScreen(new EntityFilterScreen(
+                () -> this.minecraft.setScreen(new EntityFilterScreen(
                         this.root,
                         this,
                         this.session)));
@@ -156,7 +156,7 @@ final class EntityDropsScreen extends SmartDropsSubScreen {
                 Component.translatable("smart_resource_drops.gui.shearing_drops_tooltip"),
                 Component.translatable("smart_resource_drops.gui.configure"),
                 true,
-                () -> this.minecraft.gui.setScreen(new ShearingDropsScreen(
+                () -> this.minecraft.setScreen(new ShearingDropsScreen(
                         this.root,
                         this,
                         this.session)));
@@ -215,7 +215,7 @@ final class EntityDropsScreen extends SmartDropsSubScreen {
 
     private void rebuildPreservingScroll() {
         this.preservedScroll = this.optionList.scrollAmount();
-        this.minecraft.gui.setScreen(this);
+        this.minecraft.setScreen(this);
     }
 
     private static SmartDropsConfig.EntityKillRequirement nextKillRequirement(

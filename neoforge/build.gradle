@@ -20,7 +20,7 @@ repositories {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(25)
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version as int)
     withSourcesJar()
 }
 
@@ -62,9 +62,9 @@ def oversizedWireServerDirectory = layout.buildDirectory.dir('oversized-wire-tes
 def oversizedWireClientDirectory = layout.buildDirectory.dir('oversized-wire-test/client')
 def migrationTestDirectory = layout.buildDirectory.dir('migration-server-test')
 def migrationFixtureRelativePath =
-        'src/test/resources/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64'
+        'src/test/resources/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64'
 def migrationFixtureSha256 =
-        'b36540e977c8dd932e8a2841787657cc74cf3e3e2029b50c9e3c05877ba07690'
+        'c390fc16519a7b9f9a1fc29feab66209bca96b5db8bff6e659b239d16d36a38d'
 def migrationWorldName = 'migration-smoke-world'
 def prepareClientCategoryTest = tasks.register('prepareClientCategoryTest') {
     outputs.upToDateWhen { false }
@@ -249,8 +249,8 @@ motd=Smart Resource Multiplier migration restart smoke test
             throw new GradleException("Fabric migration fixture needs unsupported MCA sector count ${sectorCount}")
         }
 
-        final int chunkX = -435018
-        final int chunkZ = -913934
+        final int chunkX = -554625
+        final int chunkZ = -233041
         final int chunkSlot = (chunkX & 31) + ((chunkZ & 31) * 32)
         final java.nio.ByteBuffer regionBytes = java.nio.ByteBuffer
                 .allocate(8192 + sectorCount * 4096)
@@ -264,10 +264,10 @@ motd=Smart Resource Multiplier migration restart smoke test
 
         final java.nio.file.Path regionDirectory = testRoot
                 .resolve(migrationWorldName)
-                .resolve('dimensions/minecraft/overworld/region')
+                .resolve('region')
         java.nio.file.Files.createDirectories(regionDirectory)
         java.nio.file.Files.write(
-                regionDirectory.resolve('r.-13595.-28561.mca'),
+                regionDirectory.resolve('r.-17333.-7283.mca'),
                 regionBytes.array())
     }
 }
@@ -503,7 +503,7 @@ dependencies {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.release = 25
+    options.release = java_version as int
     options.encoding = 'UTF-8'
     options.compilerArgs.add('-Xlint:deprecation')
 }

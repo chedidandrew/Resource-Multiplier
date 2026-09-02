@@ -10,6 +10,13 @@ final class GameTestPlayers {
     }
 
     static ServerPlayer survival(final GameTestHelper helper) {
-        return (ServerPlayer) helper.makeMockServerPlayer(GameType.SURVIVAL);
+        return withGameMode(helper, GameType.SURVIVAL);
+    }
+
+    @SuppressWarnings("removal")
+    static ServerPlayer withGameMode(final GameTestHelper helper, final GameType gameType) {
+        final ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.setGameMode(gameType);
+        return player;
     }
 }

@@ -2,7 +2,7 @@ package com.chedidandrew.smartresourcedrops.client;
 
 import java.util.stream.Collectors;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -77,7 +77,7 @@ final class RuleEditScreen extends SmartDropsSubScreen {
         if (hasCategoryView) {
             this.addRenderableWidget(Button.builder(
                             Component.translatable("smart_resource_drops.gui.view_category_blocks"),
-                            button -> this.minecraft.gui.setScreen(new BlockOverridesScreen(
+                            button -> this.minecraft.setScreen(new BlockOverridesScreen(
                                     this.root,
                                     this,
                                     this.session,
@@ -144,19 +144,19 @@ final class RuleEditScreen extends SmartDropsSubScreen {
     }
 
     @Override
-    public void extractRenderState(
-            final GuiGraphicsExtractor graphics,
+    public void render(
+            final GuiGraphics graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
         final int left = this.contentLeft();
         final int top = this.contentTop();
         final boolean compact = this.height < 220;
         int y = top;
         if (this.kind == Kind.BLOCK) {
-            graphics.text(
+            graphics.drawString(
                     this.font,
                     ConfigUiText.fitted(
                             this.font,
@@ -171,7 +171,7 @@ final class RuleEditScreen extends SmartDropsSubScreen {
                             .map(category -> ConfigUiText.categoryName(category.key()).getString())
                             .collect(Collectors.joining(", ")))
                     .orElse(ConfigUiText.categoryName("miscellaneous").getString());
-            graphics.text(
+            graphics.drawString(
                     this.font,
                     ConfigUiText.fitted(
                             this.font,
@@ -183,14 +183,14 @@ final class RuleEditScreen extends SmartDropsSubScreen {
                     y,
                     0xFFE0E0E0);
         } else if (this.kind == Kind.DIMENSION) {
-            graphics.text(
+            graphics.drawString(
                     this.font,
                     ConfigUiText.fitted(this.font, Component.literal(this.key), this.contentWidth()),
                     left,
                     y,
                     0xFFA0A0A0);
         } else {
-            graphics.text(
+            graphics.drawString(
                     this.font,
                     Component.translatable(
                             "smart_resource_drops.gui.category_blocks",
@@ -203,13 +203,13 @@ final class RuleEditScreen extends SmartDropsSubScreen {
         final int detailsY = top + (compact ? 52 : 70);
         final Integer configured = this.configuredValue();
         final ConfigEditorSession.EffectiveValue effective = this.effectiveValue();
-        graphics.text(
+        graphics.drawString(
                 this.font,
                 ConfigUiText.configured(configured),
                 left,
                 detailsY,
                 0xFFE0E0E0);
-        graphics.text(
+        graphics.drawString(
                 this.font,
                 ConfigUiText.effective(effective.multiplier()),
                 left,
@@ -218,7 +218,7 @@ final class RuleEditScreen extends SmartDropsSubScreen {
         final Component inherited = configured == null
                 ? this.sourceName(this.inheritedValue())
                 : Component.translatable("smart_resource_drops.gui.not_inherited");
-        graphics.text(
+        graphics.drawString(
                 this.font,
                 ConfigUiText.fitted(
                         this.font,

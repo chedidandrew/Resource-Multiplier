@@ -146,6 +146,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "tools/validate_neoforge_jar.py",
         "docs/NEOFORGE_PORT.md",
         "docs/releases/1.3.0.md",
+        "docs/releases/1.3.0+mc1.21.11.md",
         "neoforge/build.gradle",
         "neoforge/gradle.properties",
         "neoforge/settings.gradle",
@@ -182,7 +183,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/client/ClientEntityCategoryTagIndexTest.java",
         "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigrationTest.java",
         "neoforge/src/test/resources/fixtures/README.md",
-        "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
+        "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
         "tools/run_neoforge_multiplayer_smoke.sh",
         "tools/run_neoforge_optional_channel_smoke.sh",
         "tools/run_neoforge_oversized_wire_smoke.sh",
@@ -385,7 +386,7 @@ FORBIDDEN_RELEASE_JAR_NAMES = frozenset(
         "gradlew",
         "gradlew.bat",
         "readme.md",
-        "fabric-placement-provenance-chunk--435018--913934.nbt.b64",
+        "fabric-placement-provenance-chunk--554625--233041.nbt.b64",
     }
 )
 
@@ -783,8 +784,8 @@ def validate_release_jar(
                 properties = parse_properties(ROOT / "gradle.properties")
                 expected_depends = {
                     "fabricloader": f">={properties['loader_version']}",
-                    "minecraft": f"~{properties['minecraft_version']}",
-                    "java": ">=25",
+                    "minecraft": properties["minecraft_version"],
+                    "java": f">={properties['java_version']}",
                     "fabric-api": f">={properties['fabric_version']}",
                 }
                 if metadata.get("depends") != expected_depends:
@@ -826,7 +827,6 @@ def validate_release_jar(
                             "minecraft:copper_golem",
                             "minecraft:mooshroom",
                             "minecraft:snow_golem",
-                            "minecraft:sulfur_cube",
                         }
                         if set(values) != expected_special or len(values) != len(expected_special):
                             errors.append(
@@ -1019,7 +1019,7 @@ def main() -> None:
     except ReleasePackageError as exc:
         raise SystemExit(f"Source package validation failed: {exc}") from exc
 
-    package_readme = f"""Smart Resource Multiplier {version} package\n\nTarget: Minecraft Java {minecraft_version}, Java 25. Choose exactly one loader-specific JAR.\n\nFiles:\n- {jar_name}: Fabric release JAR for Fabric Loader {properties['loader_version']} and Fabric API {properties['fabric_version']}.\n- {neoforge_jar_name}: NeoForge release JAR for NeoForge {neoforge_properties['neo_version']}.\n- {source_name}: Complete GitHub-ready dual-loader source, tests, documentation, Gradle builds, and GitHub Actions workflows.\n- {checksum_name}: SHA-256 hashes for both release JARs and the source archive.\n- {prefix}-BUILD_STATUS.md: Validation status and release evidence.\n\nInstallation:\nUpload the two JARs as separate CurseForge files with the correct Fabric or NeoForge loader selection. Never install both JARs in the same Minecraft instance. Back up a world before changing loaders; Fabric-to-NeoForge provenance migration is one-way.\n"""
+    package_readme = f"""Smart Resource Multiplier {version} package\n\nTarget: Minecraft Java {minecraft_version}, Java {properties['java_version']}. Choose exactly one loader-specific JAR.\n\nFiles:\n- {jar_name}: Fabric release JAR for Fabric Loader {properties['loader_version']} and Fabric API {properties['fabric_version']}.\n- {neoforge_jar_name}: NeoForge release JAR for NeoForge {neoforge_properties['neo_version']}.\n- {source_name}: Complete GitHub-ready dual-loader source, tests, documentation, Gradle builds, and GitHub Actions workflows.\n- {checksum_name}: SHA-256 hashes for both release JARs and the source archive.\n- {prefix}-BUILD_STATUS.md: Validation status and release evidence.\n\nInstallation:\nUpload the two JARs as separate CurseForge files with the correct Fabric or NeoForge loader selection. Never install both JARs in the same Minecraft instance. Back up a world before changing loaders; Fabric-to-NeoForge provenance migration is one-way.\n"""
     package_readme_output.write_text(package_readme, encoding="utf-8", newline="\n")
 
     checksums = [jar_output, neoforge_jar_output, source_output]

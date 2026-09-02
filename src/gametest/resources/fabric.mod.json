@@ -21,9 +21,11 @@
   },
   "depends": {
     "fabricloader": "*",
-    "minecraft": "26.2",
+    "minecraft": "1.21.11",
     "fabric-gametest-api-v1": "*",
-    "fabric-client-gametest-api-v1": "*",
     "smart_resource_drops": "*"
+  },
+  "suggests": {
+    "fabric-client-gametest-api-v1": "*"
   }
 }

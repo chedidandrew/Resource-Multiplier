@@ -1,6 +1,6 @@
 package com.chedidandrew.smartresourcedrops.client;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -104,13 +104,13 @@ final class EntityScalarEditScreen extends SmartDropsSubScreen {
     }
 
     @Override
-    public void extractRenderState(
-            final GuiGraphicsExtractor graphics,
+    public void render(
+            final GuiGraphics graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
         final boolean defaultMultiplier = this.kind == Kind.DEFAULT_MULTIPLIER;
         final boolean dependencyEnabled = defaultMultiplier
                 ? this.session.entityDropsEnabled()
@@ -118,14 +118,14 @@ final class EntityScalarEditScreen extends SmartDropsSubScreen {
         final Component explanation = Component.translatable(defaultMultiplier
                 ? "smart_resource_drops.gui.entity_default_multiplier_tooltip"
                 : "smart_resource_drops.gui.mob_xp_multiplier_tooltip");
-        graphics.centeredText(
+        graphics.drawCenteredString(
                 this.font,
                 ConfigUiText.fitted(this.font, explanation, this.contentWidth()),
                 this.width / 2,
                 this.contentTop() + 8,
                 0xFFA0A0A0);
         if (!dependencyEnabled) {
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     Component.translatable("smart_resource_drops.gui.control_inactive"),
                     this.width / 2,

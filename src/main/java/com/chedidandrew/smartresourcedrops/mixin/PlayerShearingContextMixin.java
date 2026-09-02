@@ -10,31 +10,29 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Shearable;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 
 /** Scopes both entity-owned and custom-item manual shearing interaction paths. */
 @Mixin(Player.class)
 abstract class PlayerShearingContextMixin {
     @WrapMethod(
-            method = "interactOn(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/InteractionResult;")
+            method = "interactOn(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;")
     private InteractionResult smartResourceDrops$scopeManualShearing(
             Entity entity,
             InteractionHand hand,
-            Vec3 interactionLocation,
             Operation<InteractionResult> original
     ) {
         Player self = (Player) (Object) this;
         if (!(self.level() instanceof ServerLevel level)
                 || !(entity instanceof LivingEntity target)
                 || !(entity instanceof Shearable)) {
-            return original.call(entity, hand, interactionLocation);
+            return original.call(entity, hand);
         }
 
         try (ShearingActionContext.Scope scope =
                      ShearingActionContext.beginManual(target, level, self)) {
             try {
-                InteractionResult result = original.call(entity, hand, interactionLocation);
+                InteractionResult result = original.call(entity, hand);
                 scope.complete();
                 return result;
             } catch (RuntimeException | Error exception) {

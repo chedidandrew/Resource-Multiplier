@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "entries": [
+    "smart_resource_drops_gametest:pathological_block_loot",
+    "smart_resource_drops_gametest:entity_final_loot"
+  ]
+}

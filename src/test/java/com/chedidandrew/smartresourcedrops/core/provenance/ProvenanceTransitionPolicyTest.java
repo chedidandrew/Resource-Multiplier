@@ -24,10 +24,8 @@ final class ProvenanceTransitionPolicyTest {
         assertEquals(PRESERVE, classify(Blocks.DIRT, Blocks.FARMLAND));
         assertEquals(PRESERVE, classify(Blocks.DIRT, Blocks.DIRT_PATH));
         assertEquals(PRESERVE, classify(Blocks.OAK_LOG, Blocks.STRIPPED_OAK_LOG));
-        assertEquals(PRESERVE, classify(
-            Blocks.COPPER_BLOCK.weathering().unaffected(),
-            Blocks.COPPER_BLOCK.weathering().exposed()));
-        assertEquals(PRESERVE, classify(Blocks.CONCRETE_POWDER.white(), Blocks.CONCRETE.white()));
+        assertEquals(PRESERVE, classify(Blocks.COPPER_BLOCK, Blocks.EXPOSED_COPPER));
+        assertEquals(PRESERVE, classify(Blocks.WHITE_CONCRETE_POWDER, Blocks.WHITE_CONCRETE));
     }
 
     @Test

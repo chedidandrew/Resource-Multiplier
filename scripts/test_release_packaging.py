@@ -47,7 +47,7 @@ for development_entry in (
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest$Phase.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.class",
-    "fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
+    "fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
 ):
     require(
         validate_neoforge_jar.is_development_test_entry(development_entry),
@@ -107,12 +107,12 @@ def write_minimum_release_entries(
         },
         "mixins": ["smart_resource_drops.mixins.json"],
         "depends": {
-            "fabricloader": ">=0.19.3",
-            "minecraft": "~26.2",
-            "java": ">=25",
-            "fabric-api": ">=0.158.0+26.2",
+            "fabricloader": ">=0.19.5",
+            "minecraft": "1.21.11",
+            "java": ">=21",
+            "fabric-api": ">=0.141.6+1.21.11",
         },
-        "suggests": {"modmenu": ">=20.0.0"},
+        "suggests": {"modmenu": ">=17.0.0"},
     }
     if metadata_overrides is not None:
         metadata.update(metadata_overrides)
@@ -160,7 +160,6 @@ def write_minimum_release_entries(
                     "minecraft:copper_golem",
                     "minecraft:mooshroom",
                     "minecraft:snow_golem",
-                    "minecraft:sulfur_cube",
                 ],
             }).encode()
         else:
@@ -209,7 +208,7 @@ for forbidden in (
     ".build/core-tests/Example.class",
     "run/config/smart_resource_drops.json",
     "logs/latest.log",
-    "dist/SmartResourceMultiplier-1.3.0-source.zip",
+    "dist/SmartResourceMultiplier-1.3.0+mc1.21.11-source.zip",
     "out/production/Example.class",
     ".idea/workspace.xml",
     ".vs/SmartResourceDrops/v17/.suo",
@@ -257,6 +256,7 @@ for missing_source in (
     "docs/PERFORMANCE.md",
     "docs/PUBLIC_RELEASE_CHECKLIST.md",
     "docs/releases/1.3.0.md",
+    "docs/releases/1.3.0+mc1.21.11.md",
     "docs/TESTING.md",
     "docs/images/general-config.webp",
     "docs/images/block-overrides.webp",
@@ -286,7 +286,7 @@ for missing_source in (
     "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.java",
     "neoforge/src/optionalchanneltest/resources/META-INF/neoforge.mods.toml",
     "neoforge/src/test/resources/fixtures/README.md",
-    "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
+    "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
     "tools/run_neoforge_multiplayer_smoke.sh",
     "tools/run_neoforge_optional_channel_smoke.sh",
     "tools/run_neoforge_oversized_wire_smoke.sh",
@@ -481,7 +481,7 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
         "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest$Phase.class",
         "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.class",
         "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.class",
-        "fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
+        "fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
     )
     for forbidden_entry in forbidden_jar_entries:
         forbidden_jar = temp_root / (forbidden_entry.replace("/", "_") + ".jar")

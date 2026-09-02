@@ -1,7 +1,7 @@
 package com.chedidandrew.smartresourcedrops.client;
 
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -216,20 +216,20 @@ final class EntityFilterScreen extends SmartDropsSubScreen {
     }
 
     @Override
-    public void extractRenderState(
-            final GuiGraphicsExtractor graphics,
+    public void render(
+            final GuiGraphics graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
         final Component explanation = Component.translatable(this.session.entityFilterMode()
                 == SmartDropsConfig.FilterMode.BLACKLIST
                 ? "smart_resource_drops.gui.entity_filter_blacklist_explanation"
                 : "smart_resource_drops.gui.entity_filter_whitelist_explanation");
         final int left = this.contentLeft();
         final int modeWidth = Math.min(170, Math.max(104, this.contentWidth() / 3));
-        graphics.text(
+        graphics.drawString(
                 this.font,
                 ConfigUiText.fitted(
                         this.font,
@@ -239,14 +239,14 @@ final class EntityFilterScreen extends SmartDropsSubScreen {
                 this.contentTop() + 6,
                 0xFFA0A0A0);
         if (!this.session.entityDropsEnabled() && !this.session.multiplyMobExperience()) {
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     Component.translatable("smart_resource_drops.gui.control_inactive"),
                     this.width / 2,
                     this.contentTop() + 48,
                     0xFFB08080);
         } else if (this.totalRows > this.shownRows) {
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     Component.translatable(
                             "smart_resource_drops.gui.entities_result_limit",
@@ -255,7 +255,7 @@ final class EntityFilterScreen extends SmartDropsSubScreen {
                     this.contentTop() + 48,
                     0xFFFFFF80);
         } else if (this.totalRows == 0) {
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     Component.translatable("smart_resource_drops.gui.entity_filter_none"),
                     this.width / 2,

@@ -1,8 +1,6 @@
 package com.chedidandrew.smartresourcedrops.core.util;
 
 import net.minecraft.SharedConstants;
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.Bootstrap;
@@ -219,7 +217,7 @@ final class BlockLootOutputBudgetTest {
     }
 
     private static ItemStack stack(final int count, final int maximumStackSize) {
-        final ItemStack stack = new ItemStack(Holder.direct(Items.DIAMOND, DataComponentMap.EMPTY), count);
+        final ItemStack stack = new ItemStack(Items.DIAMOND, count);
         stack.set(DataComponents.MAX_STACK_SIZE, maximumStackSize);
         return stack;
     }

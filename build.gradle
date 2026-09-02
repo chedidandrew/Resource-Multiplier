@@ -1,10 +1,11 @@
 plugins {
-    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
     id 'maven-publish'
 }
 
 def modVersionValue = providers.gradleProperty('mod_version').get()
 def minecraftVersionValue = providers.gradleProperty('minecraft_version').get()
+def javaVersionValue = providers.gradleProperty('java_version').get().toInteger()
 def loaderVersionValue = providers.gradleProperty('loader_version').get()
 def fabricVersionValue = providers.gradleProperty('fabric_version').get()
 def modMenuVersionValue = providers.gradleProperty('modmenu_version').get()
@@ -71,15 +72,16 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraftVersionValue}"
-    implementation "net.fabricmc:fabric-loader:${loaderVersionValue}"
-    implementation "net.fabricmc.fabric-api:fabric-api:${fabricVersionValue}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${loaderVersionValue}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricVersionValue}"
 
     // Compile-only keeps optional client integration off dedicated-server tests and published POMs.
-    compileOnly "com.terraformersmc:modmenu:${modMenuVersionValue}"
+    modCompileOnly "com.terraformersmc:modmenu:${modMenuVersionValue}"
 
     // Opt-in only for the real client smoke test; omitted from normal builds and dedicated-server runs.
     if (providers.gradleProperty('include_modmenu_runtime').map { it.toBoolean() }.getOrElse(false)) {
-        localRuntime "com.terraformersmc:modmenu:${modMenuVersionValue}"
+        modLocalRuntime "com.terraformersmc:modmenu:${modMenuVersionValue}"
     }
 
     testImplementation platform("org.junit:junit-bom:${junitVersionValue}")
@@ -115,7 +117,7 @@ tasks.named('processGametestResources') {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.release = 25
+    options.release = javaVersionValue
     options.encoding = 'UTF-8'
     // Report deprecated APIs used by this project's compiled source without making warnings fatal.
     options.compilerArgs.add('-Xlint:deprecation')
@@ -133,11 +135,11 @@ tasks.named('wrapper', Wrapper) {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(javaVersionValue)
     }
     withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
+    sourceCompatibility = JavaVersion.toVersion(javaVersionValue)
+    targetCompatibility = JavaVersion.toVersion(javaVersionValue)
 }
 
 jar {

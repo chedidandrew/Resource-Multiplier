@@ -144,7 +144,7 @@ public final class ClientConfigState {
             return;
         }
 
-        final Screen current = minecraft.gui.screen();
+        final Screen current = minecraft.screen;
         if (!(current instanceof SmartDropsConfigLoadingScreen loading)
                 || !loading.acceptsRequest(payload.requestId())) {
             SmartResourceDrops.LOGGER.debug(
@@ -201,7 +201,7 @@ public final class ClientConfigState {
         if (minecraft.getConnection() == null || payload.revision() <= 0L) {
             return;
         }
-        final Screen current = minecraft.gui.screen();
+        final Screen current = minecraft.screen;
         final Screen resultParent;
         final long visibleRevision;
         final ConfigEditorSession visibleSession;
@@ -244,7 +244,7 @@ public final class ClientConfigState {
             visibleSession.setStatus(Component.translatable(
                     "smart_resource_drops.gui.server_changed_draft_kept").getString());
             if (current instanceof ResetAllSettingsConfirmScreen && visibleRoot != null) {
-                minecraft.gui.setScreen(visibleRoot);
+                minecraft.setScreen(visibleRoot);
             }
             SmartResourceDrops.LOGGER.debug(
                     "Kept dirty config draft after server revision advanced to {}",
@@ -253,7 +253,7 @@ public final class ClientConfigState {
         }
 
         invalidatePendingMutations();
-        minecraft.gui.setScreen(new SmartDropsConfigLoadingScreen(resultParent));
+        minecraft.setScreen(new SmartDropsConfigLoadingScreen(resultParent));
         SmartResourceDrops.LOGGER.debug(
                 "Reloading clean config editor after server {} advanced revision to {}",
                 payload.changeKind(),
@@ -269,7 +269,7 @@ public final class ClientConfigState {
         if (!REQUESTS.isCurrent(payload.requestId(), connection)) {
             return;
         }
-        final Screen current = minecraft.gui.screen();
+        final Screen current = minecraft.screen;
         if (!(current instanceof SmartDropsConfigLoadingScreen loading)
                 || !loading.acceptsRequest(payload.requestId())
                 || !REQUESTS.accept(payload.requestId(), connection)) {
@@ -281,7 +281,7 @@ public final class ClientConfigState {
                 || payload.result() == ConfigSnapshotPayload.PatchResult.RESET_UNAUTHORIZED;
         if (unauthorized) {
             pendingCompactResult = payload.result();
-            minecraft.gui.setScreen(new SmartDropsConfigLoadingScreen(loading.resultParent()));
+            minecraft.setScreen(new SmartDropsConfigLoadingScreen(loading.resultParent()));
             return;
         }
 
@@ -289,12 +289,12 @@ public final class ClientConfigState {
         if (returnScreen instanceof SmartDropsConfigScreen root) {
             root.editorSession().markServerRevisionAdvanced(payload.revision());
             root.editorSession().setStatus(statusFor(payload.result()));
-            minecraft.gui.setScreen(root);
+            minecraft.setScreen(root);
             return;
         }
 
         pendingCompactResult = payload.result();
-        minecraft.gui.setScreen(new SmartDropsConfigLoadingScreen(loading.resultParent()));
+        minecraft.setScreen(new SmartDropsConfigLoadingScreen(loading.resultParent()));
     }
 
     public static boolean isCurrent(final int requestId, final Minecraft minecraft) {
@@ -332,7 +332,7 @@ public final class ClientConfigState {
             return;
         }
         ClientCommandQueue.cancelCoalesced(CONFIG_REQUEST_QUEUE_KEY);
-        final Screen current = minecraft.gui.screen();
+        final Screen current = minecraft.screen;
         if (current instanceof SmartDropsConfigLoadingScreen loading
                 && loading.acceptsRequest(requestId)) {
             loading.showError(reason);
@@ -350,7 +350,7 @@ public final class ClientConfigState {
         pendingCompactResult = ConfigSnapshotPayload.PatchResult.NONE;
         invalidateCachedSnapshot();
         if (wasLoading) {
-            final Screen current = minecraft.gui.screen();
+            final Screen current = minecraft.screen;
             if (current instanceof SmartDropsConfigLoadingScreen loading
                     && loading.acceptsRequest(requestId)) {
                 loading.showError(ConfigRequestLifecycle.Failure.DISCONNECTED);
@@ -369,7 +369,7 @@ public final class ClientConfigState {
 
     private static void showLoadingOverlay(final Minecraft minecraft) {
         if (minecraft.player != null) {
-            minecraft.player.sendOverlayMessage(Component.translatable("smart_resource_drops.gui.loading"));
+            minecraft.player.displayClientMessage(Component.translatable("smart_resource_drops.gui.loading"), true);
         }
     }
 

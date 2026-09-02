@@ -23,7 +23,7 @@ import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.chunk.PalettedContainerFactory;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.UpgradeData;
-import net.minecraft.world.level.chunk.storage.RegionFileStorage;
+import net.minecraft.world.level.chunk.storage.IOWorker;
 import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
 import net.minecraft.world.level.chunk.storage.SerializableChunkData;
 import net.neoforged.neoforge.attachment.AttachmentHolder;
@@ -34,11 +34,12 @@ import org.junit.jupiter.api.io.TempDir;
 
 final class LegacyFabricProvenanceMigrationTest {
     private static final String FABRIC_CHUNK_FIXTURE =
-            "/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64";
+            "/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64";
     private static final String FABRIC_CHUNK_SHA256 =
-            "b36540e977c8dd932e8a2841787657cc74cf3e3e2029b50c9e3c05877ba07690";
-    private static final ChunkPos FABRIC_CHUNK_POS = new ChunkPos(-435018, -913934);
+            "c390fc16519a7b9f9a1fc29feab66209bca96b5db8bff6e659b239d16d36a38d";
+    private static final ChunkPos FABRIC_CHUNK_POS = new ChunkPos(-554625, -233041);
     private static final int FABRIC_PACKED_POSITION = -13958;
+    private static final int FABRIC_DATA_VERSION = 4671;
 
     @Test
     void decodesValidFabricData() {
@@ -111,12 +112,13 @@ final class LegacyFabricProvenanceMigrationTest {
     }
 
     @Test
-    void fabricAuthoredChunkImportsAndSurvivesNativeRegionReopen(
+    void fabric12111ChunkImportsAndSurvivesNativeRegionReopen(
             @TempDir final Path regionDirectory
     ) throws Exception {
         final CompoundTag fabricChunk = readFabricChunkFixture();
-        assertEquals(FABRIC_CHUNK_POS.x(), fabricChunk.getIntOr("xPos", 0));
-        assertEquals(FABRIC_CHUNK_POS.z(), fabricChunk.getIntOr("zPos", 0));
+        assertEquals(FABRIC_DATA_VERSION, fabricChunk.getIntOr("DataVersion", 0));
+        assertEquals(FABRIC_CHUNK_POS.x, fabricChunk.getIntOr("xPos", 0));
+        assertEquals(FABRIC_CHUNK_POS.z, fabricChunk.getIntOr("zPos", 0));
         assertTrue(fabricChunk.contains(LegacyFabricProvenanceMigration.FABRIC_ATTACHMENT_ROOT));
         assertFalse(fabricChunk.contains("neoforge:attachments"));
 
@@ -141,14 +143,14 @@ final class LegacyFabricProvenanceMigrationTest {
                 "fabric-migration-fixture",
                 Level.OVERWORLD,
                 "chunk");
-        try (RegionFileStorage storage = new RegionFileStorage(storageInfo, regionDirectory, true)) {
-            storage.write(FABRIC_CHUNK_POS, neoForgeSavedChunk);
-            storage.flush();
+        try (TestIOWorker storage = new TestIOWorker(storageInfo, regionDirectory, true)) {
+            storage.store(FABRIC_CHUNK_POS, neoForgeSavedChunk).join();
+            storage.synchronize(true).join();
         }
 
         final CompoundTag reopenedChunk;
-        try (RegionFileStorage storage = new RegionFileStorage(storageInfo, regionDirectory, true)) {
-            reopenedChunk = storage.read(FABRIC_CHUNK_POS);
+        try (TestIOWorker storage = new TestIOWorker(storageInfo, regionDirectory, true)) {
+            reopenedChunk = storage.loadAsync(FABRIC_CHUNK_POS).join().orElse(null);
         }
         assertTrue(reopenedChunk != null, "Native chunk disappeared after region close and reopen");
         assertFalse(reopenedChunk.contains(LegacyFabricProvenanceMigration.FABRIC_ATTACHMENT_ROOT));
@@ -205,10 +207,10 @@ final class LegacyFabricProvenanceMigrationTest {
         final byte[] bytes;
         try (InputStream resource = LegacyFabricProvenanceMigrationTest.class
                 .getResourceAsStream(FABRIC_CHUNK_FIXTURE)) {
-            assertTrue(resource != null, "Missing Fabric-authored chunk fixture");
+            assertTrue(resource != null, "Missing Fabric 1.21.11 migration fixture");
             bytes = Base64.getMimeDecoder().decode(resource.readAllBytes());
         }
-        assertEquals(11088, bytes.length);
+        assertEquals(10861, bytes.length);
         assertEquals(
                 FABRIC_CHUNK_SHA256,
                 HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes)));
@@ -229,5 +231,16 @@ final class LegacyFabricProvenanceMigrationTest {
         final PlacedBlockData data = new PlacedBlockData();
         data.add(packedPosition);
         return data;
+    }
+
+    /** Exposes Minecraft's protected 1.21.11 region-I/O constructor to this test only. */
+    private static final class TestIOWorker extends IOWorker {
+        private TestIOWorker(
+                final RegionStorageInfo storageInfo,
+                final Path regionDirectory,
+                final boolean sync
+        ) {
+            super(storageInfo, regionDirectory, sync);
+        }
     }
 }

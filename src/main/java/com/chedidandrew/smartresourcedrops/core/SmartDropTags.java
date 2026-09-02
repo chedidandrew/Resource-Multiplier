@@ -44,7 +44,7 @@ public final class SmartDropTags {
 
     public static Set<String> matchingConfiguredTags(BlockState state, Set<String> configuredTags) {
         LinkedHashSet<String> matches = new LinkedHashSet<>();
-        state.typeHolder().tags().forEach(tag -> {
+        state.getBlock().builtInRegistryHolder().tags().forEach(tag -> {
             String id = tag.location().toString();
             if (configuredTags.contains(id) || configuredTags.contains("#" + id)) {
                 matches.add(id);
@@ -55,7 +55,7 @@ public final class SmartDropTags {
 
     public static Set<String> allMatchingFilterTags(BlockState state, Set<String> first, Set<String> second) {
         LinkedHashSet<String> matches = new LinkedHashSet<>();
-        state.typeHolder().tags().forEach(tag -> {
+        state.getBlock().builtInRegistryHolder().tags().forEach(tag -> {
             String id = tag.location().toString();
             if (first.contains(id) || second.contains(id)) {
                 matches.add(id);

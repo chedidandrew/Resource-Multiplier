@@ -10,8 +10,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import net.minecraft.SharedConstants;
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -63,6 +61,6 @@ final class StackConsolidatorTest {
     }
 
     private static ItemStack stack(final net.minecraft.world.item.Item item, final int count) {
-        return new ItemStack(Holder.direct(item, DataComponentMap.EMPTY), count);
+        return new ItemStack(item, count);
     }
 }

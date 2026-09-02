@@ -1,7 +1,7 @@
 package com.chedidandrew.smartresourcedrops.client;
 
 import com.chedidandrew.smartresourcedrops.core.entity.EntityCategory;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -143,7 +143,7 @@ final class EntityOverridesScreen extends SmartDropsSubScreen {
                                     .append(Component.translatable(
                                             "smart_resource_drops.gui.entity_category_estimated_tooltip"))
                             : Component.literal(info.displayName() + "\n" + info.id()),
-                    () -> this.minecraft.gui.setScreen(new EntityRuleEditScreen(
+                    () -> this.minecraft.setScreen(new EntityRuleEditScreen(
                             this.root,
                             this,
                             this.session,
@@ -154,13 +154,13 @@ final class EntityOverridesScreen extends SmartDropsSubScreen {
     }
 
     @Override
-    public void extractRenderState(
-            final GuiGraphicsExtractor graphics,
+    public void render(
+            final GuiGraphics graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
         if (this.search == null) {
             return;
         }
@@ -182,7 +182,7 @@ final class EntityOverridesScreen extends SmartDropsSubScreen {
                     "smart_resource_drops.gui.entities_result_count",
                     this.totalMatches);
         }
-        graphics.centeredText(
+        graphics.drawCenteredString(
                 this.font,
                 ConfigUiText.fitted(this.font, hint, this.contentWidth()),
                 this.width / 2,
@@ -190,13 +190,13 @@ final class EntityOverridesScreen extends SmartDropsSubScreen {
                 0xFFA0A0A0);
         if (this.totalMatches == 0) {
             final int centerY = Math.min(this.contentBottom() - 24, y + 42);
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     Component.translatable("smart_resource_drops.gui.entities_empty"),
                     this.width / 2,
                     centerY,
                     0xFFE0E0E0);
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     Component.translatable("smart_resource_drops.gui.entities_empty_help"),
                     this.width / 2,

@@ -2,7 +2,7 @@ package com.chedidandrew.smartresourcedrops.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.input.KeyEvent;
@@ -151,8 +151,8 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         }
 
         @Override
-        public void extractContent(
-                final GuiGraphicsExtractor graphics,
+        public void renderContent(
+                final GuiGraphics graphics,
                 final int mouseX,
                 final int mouseY,
                 final boolean hovered,
@@ -181,8 +181,8 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
             ClippedText primary = clip(font, row.primary(), availableWidth);
             ClippedText secondary = clip(font, row.secondary(), availableWidth);
-            graphics.text(font, primary.text(), left, lineY, PRIMARY_COLOR);
-            graphics.text(font, secondary.text(), left, lineY + 10, SECONDARY_COLOR);
+            graphics.drawString(font, primary.text(), left, lineY, PRIMARY_COLOR);
+            graphics.drawString(font, secondary.text(), left, lineY + 10, SECONDARY_COLOR);
 
             int detailWidth = row.leftDetail().getString().isEmpty() || row.rightDetail().getString().isEmpty()
                     ? availableWidth
@@ -190,9 +190,9 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
             ClippedText leftDetail = clip(font, row.leftDetail(), detailWidth);
             ClippedText rightDetail = clip(font, row.rightDetail(), detailWidth);
             int detailY = lineY + 20;
-            graphics.text(font, leftDetail.text(), left, detailY, DETAIL_COLOR);
+            graphics.drawString(font, leftDetail.text(), left, detailY, DETAIL_COLOR);
             int rightDetailX = right - font.width(rightDetail.text());
-            graphics.text(font, rightDetail.text(), rightDetailX, detailY, DETAIL_COLOR);
+            graphics.drawString(font, rightDetail.text(), rightDetailX, detailY, DETAIL_COLOR);
 
             boolean truncated = primary.truncated()
                     || secondary.truncated()

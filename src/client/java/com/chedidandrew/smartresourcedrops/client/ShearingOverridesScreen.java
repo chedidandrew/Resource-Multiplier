@@ -1,7 +1,7 @@
 package com.chedidandrew.smartresourcedrops.client;
 
 import com.chedidandrew.smartresourcedrops.core.shearing.ShearingClassification;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -107,7 +107,7 @@ final class ShearingOverridesScreen extends SmartDropsSubScreen {
                             .append(action),
                     tooltipFor(info),
                     standard
-                            ? () -> this.minecraft.gui.setScreen(new ShearingRuleEditScreen(
+                            ? () -> this.minecraft.setScreen(new ShearingRuleEditScreen(
                                     this.root,
                                     this,
                                     this.session,
@@ -141,13 +141,13 @@ final class ShearingOverridesScreen extends SmartDropsSubScreen {
     }
 
     @Override
-    public void extractRenderState(
-            final GuiGraphicsExtractor graphics,
+    public void render(
+            final GuiGraphics graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
         if (this.search == null) {
             return;
         }
@@ -164,7 +164,7 @@ final class ShearingOverridesScreen extends SmartDropsSubScreen {
                     "smart_resource_drops.gui.shearing_result_count",
                     this.totalMatches);
         }
-        graphics.centeredText(
+        graphics.drawCenteredString(
                 this.font,
                 ConfigUiText.fitted(this.font, hint, this.contentWidth()),
                 this.width / 2,
@@ -173,7 +173,7 @@ final class ShearingOverridesScreen extends SmartDropsSubScreen {
         if (this.totalMatches == 0) {
             final int centerY = Math.min(this.contentBottom() - 24, y + 42);
             final boolean emptyQuery = this.search.getValue().isBlank();
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     Component.translatable(emptyQuery
                             ? "smart_resource_drops.gui.shearing_empty"
@@ -181,7 +181,7 @@ final class ShearingOverridesScreen extends SmartDropsSubScreen {
                     this.width / 2,
                     centerY,
                     0xFFE0E0E0);
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     Component.translatable(emptyQuery
                             ? "smart_resource_drops.gui.shearing_empty_help"

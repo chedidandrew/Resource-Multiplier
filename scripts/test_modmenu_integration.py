@@ -166,7 +166,7 @@ require(
 )
 require('Commands.literal("smartdrops")' in commands, "The stable /smartdrops command literal changed")
 require(
-    'ClientCommands.literal("smartdropsgui")' in client,
+    'ClientCommandManager.literal("smartdropsgui")' in client,
     "The stable /smartdropsgui command literal changed",
 )
 
@@ -181,9 +181,9 @@ require(
     fabric.get("suggests", {}).get("modmenu") == ">=${modmenu_version}",
     "Mod Menu must remain an optional suggested dependency",
 )
-require("compileOnly \"com.terraformersmc:modmenu:${modMenuVersionValue}\"" in build, "Mod Menu must be compile-only")
+require("modCompileOnly \"com.terraformersmc:modmenu:${modMenuVersionValue}\"" in build, "Mod Menu must be compile-only")
 require("https://maven.terraformersmc.com/" in build, "Terraformers release repository is missing")
-require(re.search(r"^modmenu_version=20\.0\.0$", props, re.MULTILINE) is not None, "Expected Mod Menu 20.0.0 pin")
+require(re.search(r"^modmenu_version=17\.0\.0$", props, re.MULTILINE) is not None, "Expected Mod Menu 17.0.0 pin")
 require("implements ModMenuApi" in integration, "Integration must implement ModMenuApi")
 require("SmartDropsConfigScreens::create" in integration, "Mod Menu must use the shared config-screen route")
 require("SmartDropsConfigScreens.create" in client, "/smartdropsgui must use the same config-screen route")
@@ -205,7 +205,7 @@ require('Component.literal("Retry")' not in loading, "Loading screen should use 
 require("void removed()" in loading and "cancelRequest(this.requestId)" in loading, "Removing a loading screen must cancel its request")
 require("this.retryButton.active = this.state == State.ERROR" in loading, "Resize must preserve Retry availability")
 require("REQUESTS.isCurrent" in state and "loading.acceptsRequest" in state, "Late or stale snapshots must be ignored")
-require("minecraft.gui.screen()" in state, "Responses must verify the requesting screen is still current")
+require("minecraft.screen" in state, "Responses must verify the requesting screen is still current")
 require("tryParseSnapshotJson" in state and "decoded.isEmpty()" in state, "Invalid authoritative snapshots must enter ERROR")
 require("ConfigPatchPayload" in state, "Client config state must submit the bounded patch payload")
 require("ClientNetworkBridge.send(new ConfigPatchPayload" in state, "Apply must send its patch immediately")
@@ -671,7 +671,7 @@ require(
     re.search(r"extends\s+ObjectSelectionList\s*<", structured_list) is not None,
     "StructuredConfigList must extend ObjectSelectionList",
 )
-require(re.search(r"\bextractContent\s*\(", structured_list) is not None, "Structured list rows must render through list-entry content extraction")
+require(re.search(r"\brenderContent\s*\(", structured_list) is not None, "Structured list rows must render through list-entry content rendering")
 require(re.search(r"\bmouseClicked\s*\(", structured_list) is not None, "Structured list rows must handle selection without child Buttons")
 for forbidden in ("import net.minecraft.client.gui.components.Button", "Button.builder(", "new Button("):
     require(forbidden not in structured_list, f"StructuredConfigList must not allocate a Button per row: {forbidden}")
@@ -938,7 +938,7 @@ require(
     "A rate-limited tiny patch must not amplify into a full config snapshot response",
 )
 
-# Minecraft 26.2 interprets six-digit RGB literals as alpha=0. Check every editor
+# Minecraft 1.21.11 interprets six-digit RGB literals as alpha=0. Check every editor
 # rendering source so newly added child screens cannot silently reintroduce invisible text.
 render_sources = {
     "loading screen": loading,
@@ -1136,6 +1136,6 @@ all_resources = "\n".join(
     for path in (ROOT / "src/main/resources").rglob("*")
     if path.is_file() and path.suffix in {".json", ".mcmeta", ".txt"}
 )
-require("#minecraft:tall_flowers" not in all_resources, "Invalid Minecraft 26.2 tall_flower tag was reintroduced")
+require("#minecraft:tall_flowers" not in all_resources, "Invalid Minecraft 1.21.11 tall_flower tag was reintroduced")
 
 print("Hierarchical Mod Menu integration checks: PASS")

@@ -4,6 +4,24 @@ All notable changes are documented here.
 
 ## Unreleased
 
+## 1.3.0+mc1.21.11 - 2026-09-01
+
+### Added
+
+- Added maintained Fabric and NeoForge builds for Minecraft Java Edition 1.21.11 while keeping Minecraft 26.2 on `main` as the newest/default release line.
+- Added a version-correct Fabric 1.21.11 placement-provenance fixture for the one-way Fabric-to-NeoForge migration checks.
+
+### Changed
+
+- Ported both loader builds from Java 25 to the Java 21 toolchain required by Minecraft 1.21.11.
+- Adapted loader APIs, networking, GUI rendering, shearing hooks, registry access, GameTests, metadata, validators, and packaging to their Minecraft 1.21.11 equivalents without changing the shared schema 3 configuration or public mod identity.
+- Removed the 26.2-only Sulfur Cube from the 1.21.11 shearing safety list and tags.
+
+### Release status
+
+- Publication is prepared from the dedicated `backport/1.21.11` branch under tag `v1.3.0+mc1.21.11`; the final tested commit must authorize the guarded workflow before it can publish.
+- The release workflow deliberately uses `make_latest: false`, so GitHub continues to present Minecraft 26.2 tag `v1.3.0` as **Latest**.
+
 ## 1.3.0 - 2026-09-01
 
 ### Added

@@ -121,7 +121,6 @@ def source_tests() -> None:
         "minecraft:copper_golem",
         "minecraft:mooshroom",
         "minecraft:snow_golem",
-        "minecraft:sulfur_cube",
     }
     assert special_shearing.get("replace") is False
 

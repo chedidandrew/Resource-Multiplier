@@ -1,5 +1,4 @@
 {
   "type": "smart_resource_drops:gametest_entity_final_loot",
-  "conditions": [],
-  "priority": 1000
+  "conditions": []
 }

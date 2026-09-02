@@ -1,6 +1,6 @@
 # GitHub publication guide
 
-The canonical public source repository is [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier). User downloads are published on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier), and ordinary bug or compatibility reports are handled through [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues). Smart Resource Multiplier `1.3.0` provides separate Fabric and NeoForge files for Minecraft 26.2.
+The canonical public source repository is [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier). User downloads are published on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier), and ordinary bug or compatibility reports are handled through [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues). Minecraft 26.2 remains the newest/default line on `main`; the maintained `backport/1.21.11` branch provides separate Fabric and NeoForge `1.3.0+mc1.21.11` files.
 
 ## Clone and contribute
 
@@ -15,13 +15,13 @@ git push -u origin your-change
 
 ## CI
 
-`.github/workflows/build.yml` runs on branch pushes, pull requests, and manual dispatch. With Java 25 it validates both loader builds, runs the shared and loader-specific JUnit/GameTest suites, exercises real client GUI and multiplayer authority paths under Xvfb, audits both playable JARs, and verifies the one-way Fabric-to-NeoForge provenance migration. Build artifacts remain loader-labelled. Tag pushes are handled only by the guarded release workflow.
+`.github/workflows/build.yml` runs on branch pushes, pull requests, and manual dispatch. This backport uses Java 21 to validate both loader builds, run the shared and loader-specific JUnit/GameTest suites, exercise real client GUI and multiplayer authority paths under Xvfb, audit both playable JARs, and verify the one-way Fabric-to-NeoForge provenance migration. Build artifacts remain loader-labelled. Tag pushes are handled only by the guarded release workflow.
 
 ## Release
 
 Always rebuild both versioned JARs from source. Renaming an older JAR does not update embedded loader metadata, manifests, package records, or checksums.
 
-A stable source commit must set the same `mod_version` in both Gradle property files and set `release_ready=true`. Pushing that commit to `main` updates the public source without creating a GitHub Release. A matching `v<version>` tag is a separate, optional action: only that tag invokes the guarded GitHub-release workflow, which verifies the latch, version equality, main ancestry, full dual-loader test chain, and deterministic package before publishing.
+A stable source commit must set the same `mod_version` in both Gradle property files and set `release_ready=true`. The 1.21.11 source remains on `backport/1.21.11`; it is never merged into `main`. Tag `v1.3.0+mc1.21.11` invokes the guarded release workflow, which verifies the latch, version equality, backport-branch ancestry, full dual-loader test chain, and deterministic package before publishing. The workflow explicitly uses `make_latest: false`, so the Minecraft 26.2 `v1.3.0` release remains GitHub's **Latest** release.
 
 ## Public links
 

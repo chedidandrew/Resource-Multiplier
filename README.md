@@ -14,17 +14,17 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml"><img alt="Build and verify" src="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml/badge.svg?branch=main"></a>
-  <img alt="Minecraft 26.2" src="https://img.shields.io/badge/Minecraft-26.2-62B47A">
+  <a href="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml"><img alt="Build and verify" src="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.11"></a>
+  <img alt="Minecraft 1.21.11" src="https://img.shields.io/badge/Minecraft-1.21.11-62B47A">
   <img alt="Fabric and NeoForge loaders" src="https://img.shields.io/badge/Loaders-Fabric%20%7C%20NeoForge-DBD0B4">
   <a href="https://www.curseforge.com/minecraft/mc-mods/resource-multiplier"><img alt="Download on CurseForge" src="https://img.shields.io/badge/Download-CurseForge-F16436?logo=curseforge&amp;logoColor=white"></a>
-  <img alt="Java 25" src="https://img.shields.io/badge/Java-25-ED8B00?logo=openjdk&amp;logoColor=white">
+  <img alt="Java 21" src="https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&amp;logoColor=white">
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/License-MIT-2EA44F"></a>
-  <img alt="Stable release 1.3.0" src="https://img.shields.io/badge/Status-1.3.0-Release-2EA44F">
+  <img alt="Stable 1.21.11 backport" src="https://img.shields.io/badge/Status-1.3.0%2Bmc1.21.11-Release-2EA44F">
 </p>
 
 > [!IMPORTANT]
-> **Current stable release:** Smart Resource Multiplier `1.3.0` for Minecraft Java Edition 26.2, available as separate Fabric and NeoForge files with the same gameplay, configuration schema, commands, and GUI.
+> **Current stable release:** Minecraft 26.2 remains the newest, default release on the `main` branch. This maintained branch provides the same Smart Resource Multiplier `1.3.0` feature set for Minecraft Java Edition 1.21.11 as separate Fabric and NeoForge files.
 
 > [!NOTE]
 > Fabric and NeoForge store placed-block provenance in loader-specific chunk-data envelopes. Migration from Fabric to NeoForge is supported and validated, but it is intentionally one-way; back up a world before changing loaders and do not repeatedly switch the same world between them.
@@ -77,9 +77,9 @@ These are real captures of the shared configuration interface used by both loade
 
 ## Download
 
-Download the current release from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier). Source code and release checksums are maintained on [GitHub](https://github.com/chedidandrew/Resource-Multiplier).
+Download the current release from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier). Source code, the dedicated 1.21.11 backport release, and checksums are maintained on [GitHub](https://github.com/chedidandrew/Resource-Multiplier).
 
-Choose exactly one loader-specific file: `smart-resource-multiplier-1.3.0.jar` for Fabric or `smart-resource-multiplier-neoforge-1.3.0.jar` for NeoForge. Remove older copies first and never install both files in the same Minecraft instance.
+Choose exactly one loader-specific file: `smart-resource-multiplier-1.3.0+mc1.21.11.jar` for Fabric or `smart-resource-multiplier-neoforge-1.3.0+mc1.21.11.jar` for NeoForge. Remove older copies first and never install both files in the same Minecraft instance.
 
 You can also [build the current source](#build-from-source). Do not download JARs from unofficial mirrors.
 
@@ -87,13 +87,13 @@ You can also [build the current source](#build-from-source). Do not download JAR
 
 | Component | Supported version |
 | --- | --- |
-| Minecraft Java Edition | 26.2 |
-| Mod loader | Fabric Loader 0.19.3+ or NeoForge 26.2.0.72+ |
-| Fabric API | 0.158.0+26.2 for Fabric only |
-| Java | 25, required by Minecraft 26.2 |
-| Configuration-list integration | Mod Menu 20.0.0+ optional on Fabric; native Configure support on NeoForge |
+| Minecraft Java Edition | 1.21.11 |
+| Mod loader | Fabric Loader 0.19.5+ or NeoForge 21.11.45+ |
+| Fabric API | 0.141.6+1.21.11 for Fabric only |
+| Java | 21, required by Minecraft 1.21.11 |
+| Configuration-list integration | Mod Menu 17.0.0+ optional on Fabric; native Configure support on NeoForge |
 
-1. Install Minecraft Java Edition 26.2.
+1. Install Minecraft Java Edition 1.21.11.
 2. Install either Fabric Loader or NeoForge.
 3. When using Fabric, install the matching Fabric API.
 4. Place only the matching Fabric or NeoForge Smart Resource Multiplier JAR in the `mods` folder.
@@ -146,7 +146,7 @@ Smart Resource Multiplier supports documented vanilla, Fabric, and NeoForge boun
 
 ## Build from source
 
-Java 25 is required. The included Gradle wrapper verifies its pinned Gradle distribution. The root build produces the Fabric JAR in `build/libs/`; the NeoForge build produces its JAR in `neoforge/build/libs/`.
+Java 21 is required. The included Gradle wrapper verifies its pinned Gradle distribution. The root build produces the Fabric JAR in `build/libs/`; the NeoForge build produces its JAR in `neoforge/build/libs/`.
 
 macOS or Linux:
 
@@ -162,7 +162,7 @@ gradlew.bat clean build
 gradlew.bat -p neoforge clean build
 ```
 
-The stable source builds `build/libs/smart-resource-multiplier-1.3.0.jar` and `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0.jar`. Gradle automatically selects an installed Java 25 toolchain—or downloads one when absent—even if the active shell uses an older supported JVM. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
+The stable backport source builds `build/libs/smart-resource-multiplier-1.3.0+mc1.21.11.jar` and `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.21.11.jar`. Gradle automatically selects an installed Java 21 toolchain—or downloads one when absent. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
 
 ## Documentation
 

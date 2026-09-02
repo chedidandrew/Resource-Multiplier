@@ -18,7 +18,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.storage.RegionFileStorage;
+import net.minecraft.world.level.chunk.storage.IOWorker;
 import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.Mod;
@@ -34,9 +34,9 @@ public final class NeoForgeMigrationRestartSmokeTest {
     private static final String WORLD_NAME = "migration-smoke-world";
     private static final String IMPORT_MARKER = "migration-import.success";
     private static final String RESTART_MARKER = "migration-restart.success";
-    private static final ChunkPos FABRIC_CHUNK_POS = new ChunkPos(-435018, -913934);
+    private static final ChunkPos FABRIC_CHUNK_POS = new ChunkPos(-554625, -233041);
     private static final int FABRIC_PACKED_POSITION = -13958;
-    private static final BlockPos FABRIC_BLOCK_POS = new BlockPos(-6960278, -55, -14622937);
+    private static final BlockPos FABRIC_BLOCK_POS = new BlockPos(-8873990, -55, -3728649);
     private static final AtomicBoolean REGISTERED = new AtomicBoolean();
 
     private Phase phase;
@@ -148,13 +148,13 @@ public final class NeoForgeMigrationRestartSmokeTest {
     private CompoundTag readPersistedChunk() throws IOException {
         final Path regionDirectory = this.testDirectory
                 .resolve(WORLD_NAME)
-                .resolve("dimensions/minecraft/overworld/region");
+                .resolve("region");
         final RegionStorageInfo storageInfo = new RegionStorageInfo(
                 "fabric-migration-server-smoke",
                 Level.OVERWORLD,
                 "chunk");
-        try (RegionFileStorage storage = new RegionFileStorage(storageInfo, regionDirectory, true)) {
-            final CompoundTag chunk = storage.read(FABRIC_CHUNK_POS);
+        try (TestIOWorker storage = new TestIOWorker(storageInfo, regionDirectory, true)) {
+            final CompoundTag chunk = storage.loadAsync(FABRIC_CHUNK_POS).join().orElse(null);
             if (chunk == null) {
                 throw new AssertionError("Migration fixture chunk is missing from " + regionDirectory);
             }
@@ -189,6 +189,17 @@ public final class NeoForgeMigrationRestartSmokeTest {
     private static void require(final boolean condition, final String message) {
         if (!condition) {
             throw new AssertionError(message);
+        }
+    }
+
+    /** Exposes Minecraft's protected 1.21.11 region-I/O constructor to this test only. */
+    private static final class TestIOWorker extends IOWorker {
+        private TestIOWorker(
+                final RegionStorageInfo storageInfo,
+                final Path regionDirectory,
+                final boolean sync
+        ) {
+            super(storageInfo, regionDirectory, sync);
         }
     }
 

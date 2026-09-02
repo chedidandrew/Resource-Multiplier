@@ -136,7 +136,7 @@ final class AdvancedConfigScreen extends SmartDropsSubScreen {
                     setter.set(!currentValue);
                     // Reinitializing the same screen refreshes every immutable row
                     // without leaving keyboard focus attached to a replaced entry.
-                    minecraft.gui.setScreen(this);
+                    minecraft.setScreen(this);
                 }));
     }
 
@@ -156,7 +156,7 @@ final class AdvancedConfigScreen extends SmartDropsSubScreen {
                 summary,
                 PREVIEW,
                 tooltip,
-                () -> minecraft.gui.setScreen(new PresetPreviewScreen(
+                () -> minecraft.setScreen(new PresetPreviewScreen(
                         root,
                         this,
                         session,

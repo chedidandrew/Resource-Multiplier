@@ -1,7 +1,7 @@
 package com.chedidandrew.smartresourcedrops.client;
 
 import com.chedidandrew.smartresourcedrops.core.shearing.ShearingClassification;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -91,17 +91,17 @@ final class ShearingRuleEditScreen extends SmartDropsSubScreen {
     }
 
     @Override
-    public void extractRenderState(
-            final GuiGraphicsExtractor graphics,
+    public void render(
+            final GuiGraphics graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
         final int left = this.contentLeft();
         final int top = this.contentTop();
         if (this.kind == Kind.ENTITY) {
-            graphics.text(
+            graphics.drawString(
                     this.font,
                     ConfigUiText.fitted(
                             this.font,
@@ -110,7 +110,7 @@ final class ShearingRuleEditScreen extends SmartDropsSubScreen {
                     left,
                     top,
                     0xFFA0A0A0);
-            graphics.text(
+            graphics.drawString(
                     this.font,
                     Component.translatable(
                             "smart_resource_drops.gui.shearing_classification_value",
@@ -119,7 +119,7 @@ final class ShearingRuleEditScreen extends SmartDropsSubScreen {
                     top + 12,
                     0xFFE0E0E0);
         } else {
-            graphics.centeredText(
+            graphics.drawCenteredString(
                     this.font,
                     ConfigUiText.fitted(
                             this.font,
@@ -133,8 +133,8 @@ final class ShearingRuleEditScreen extends SmartDropsSubScreen {
 
         final int detailsY = top + (this.height < 220 ? 52 : 76);
         final Integer configured = this.configuredValue();
-        graphics.text(this.font, ConfigUiText.configured(configured), left, detailsY, 0xFFE0E0E0);
-        graphics.text(
+        graphics.drawString(this.font, ConfigUiText.configured(configured), left, detailsY, 0xFFE0E0E0);
+        graphics.drawString(
                 this.font,
                 this.kind == Kind.ENTITY && !this.session.shearingEntityEditable(this.key)
                         ? Component.translatable("smart_resource_drops.gui.shearing_fixed_vanilla")
@@ -147,7 +147,7 @@ final class ShearingRuleEditScreen extends SmartDropsSubScreen {
             final Component inherited = this.kind == Kind.DEFAULT
                     ? Component.translatable("smart_resource_drops.gui.global_source")
                     : Component.translatable("smart_resource_drops.gui.shearing_default_source");
-            graphics.text(
+            graphics.drawString(
                     this.font,
                     Component.translatable("smart_resource_drops.gui.inherited_from", inherited),
                     left,

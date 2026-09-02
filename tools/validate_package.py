@@ -38,8 +38,8 @@ EXPECTED_ICON_SIZE = 512
 EXPECTED_ICON_SHA256 = "db216ccd6058404de18f797ebb5be87a313899a27c3f1971fdf086b8637dc190"
 EXPECTED_SOURCE_DEPENDS = {
     "fabricloader": ">=${loader_version}",
-    "minecraft": "~${minecraft_version}",
-    "java": ">=25",
+    "minecraft": "${minecraft_version}",
+    "java": ">=21",
     "fabric-api": ">=${fabric_version}",
 }
 
@@ -152,6 +152,7 @@ required = [
     "docs/BRANDING.md",
     "docs/NEOFORGE_PORT.md",
     "docs/releases/1.3.0.md",
+    "docs/releases/1.3.0+mc1.21.11.md",
     "docs/releases/1.2.2.md",
     "docs/releases/1.2.3.md",
     "docs/images/general-config.webp",
@@ -196,7 +197,7 @@ required = [
     "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/client/ClientEntityCategoryTagIndexTest.java",
     "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigrationTest.java",
     "neoforge/src/test/resources/fixtures/README.md",
-    "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
+    "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
     "tools/run_neoforge_multiplayer_smoke.sh",
     "tools/run_neoforge_optional_channel_smoke.sh",
     "tools/run_neoforge_oversized_wire_smoke.sh",
@@ -208,7 +209,7 @@ for relative in required:
 migration_fixture = (
     ROOT
     / "neoforge/src/test/resources/fixtures/"
-    / "fabric-placement-provenance-chunk--435018--913934.nbt.b64"
+    / "fabric-placement-provenance-chunk--554625--233041.nbt.b64"
 )
 if migration_fixture.is_file():
     try:
@@ -217,13 +218,13 @@ if migration_fixture.is_file():
     except (OSError, UnicodeError, ValueError) as exc:
         fail(f"Fabric placement-provenance fixture is not valid Base64: {exc}")
     else:
-        if len(migration_fixture_bytes) != 11_088:
+        if len(migration_fixture_bytes) != 10_861:
             fail(
                 "Fabric placement-provenance fixture decoded size changed: "
                 f"{len(migration_fixture_bytes)} bytes"
             )
         if hashlib.sha256(migration_fixture_bytes).hexdigest() != (
-            "b36540e977c8dd932e8a2841787657cc74cf3e3e2029b50c9e3c05877ba07690"
+            "c390fc16519a7b9f9a1fc29feab66209bca96b5db8bff6e659b239d16d36a38d"
         ):
             fail("Fabric placement-provenance fixture differs from the reviewed Fabric chunk bytes")
 
@@ -379,11 +380,12 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
-    "mod_version": "1.3.0",
-    "minecraft_version": "26.2",
-    "loader_version": "0.19.3",
+    "mod_version": "1.3.0+mc1.21.11",
+    "minecraft_version": "1.21.11",
+    "java_version": "21",
+    "loader_version": "0.19.5",
     "loom_version": "1.17.20",
-    "fabric_version": "0.158.0+26.2",
+    "fabric_version": "0.141.6+1.21.11",
     "maven_group": "com.chedidandrew",
     "archives_base_name": "smart-resource-multiplier",
 }
@@ -391,7 +393,7 @@ for key, expected in expected_properties.items():
     if properties.get(key) != expected:
         fail(f"gradle.properties {key} must be {expected!r}, found {properties.get(key)!r}")
 if properties.get("release_ready") != "true":
-    fail("The stable Smart Resource Multiplier 1.3.0 source must keep release_ready=true")
+    fail("The stable Minecraft 1.21.11 backport source must keep release_ready=true")
 
 neoforge_properties: dict[str, str] = {}
 for raw_line in (ROOT / "neoforge/gradle.properties").read_text(encoding="utf-8").splitlines():
@@ -405,9 +407,10 @@ if neoforge_properties.get("mod_version") != properties["mod_version"]:
         f"{properties['mod_version']!r} and {neoforge_properties.get('mod_version')!r}"
     )
 expected_neoforge_properties = {
-    "minecraft_version": "26.2",
-    "neo_version": "26.2.0.72",
-    "moddev_version": "2.0.144",
+    "minecraft_version": "1.21.11",
+    "java_version": "21",
+    "neo_version": "21.11.45",
+    "moddev_version": "2.0.146",
     "mod_id": "smart_resource_drops",
     "mod_name": "Smart Resource Multiplier",
     "archives_base_name": "smart-resource-multiplier-neoforge",
@@ -445,12 +448,12 @@ for marker in (
     '<h1 align="center">Smart Resource Multiplier</h1>',
     'src="src/main/resources/assets/smart_resource_drops/icon.png"',
     'alt="Smart Resource Multiplier icon"',
-    "actions/workflows/build.yml/badge.svg?branch=main",
-    "Minecraft-26.2",
+    "actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.11",
+    "Minecraft-1.21.11",
     "Loaders-Fabric%20%7C%20NeoForge",
-    "Java-25",
+    "Java-21",
     "License-MIT",
-    "Status-1.3.0-Release",
+    "Status-1.3.0%2Bmc1.21.11-Release",
     "> [!IMPORTANT]",
     "Current stable release:",
     "www.curseforge.com/minecraft/mc-mods/resource-multiplier",
@@ -567,7 +570,7 @@ compatibility_contracts = {
         'Commands.literal("smartdrops")',
     ),
     "src/client/java/com/chedidandrew/smartresourcedrops/platform/fabric/client/FabricClientEntrypoint.java": (
-        'ClientCommands.literal("smartdropsgui")',
+        'ClientCommandManager.literal("smartdropsgui")',
         '"smart_resource_drops:open_config_gui"',
     ),
     "src/main/java/com/chedidandrew/smartresourcedrops/config/ConfigManager.java": (
@@ -682,8 +685,8 @@ mixin = read_json(ROOT / "src/main/resources/smart_resource_drops.mixins.json")
 if isinstance(mixin, dict):
     if mixin.get("required") is not True:
         fail("Production mixin configuration must be required")
-    if mixin.get("compatibilityLevel") != "JAVA_25":
-        fail("Mixin compatibility level must be JAVA_25")
+    if mixin.get("compatibilityLevel") != "JAVA_21":
+        fail("Mixin compatibility level must be JAVA_21")
     package_name = mixin.get("package", "")
     listed = mixin.get("mixins")
     if isinstance(listed, list):
@@ -848,9 +851,9 @@ if isinstance(plants_tag, dict):
         fail("Plants category tag values must be a list")
     else:
         if "#minecraft:tall_flowers" in plant_values:
-            fail("Plants category uses removed Minecraft 26.2 tag #minecraft:tall_flowers")
+            fail("Plants category uses unavailable Minecraft 1.21.11 tag #minecraft:tall_flowers")
         if "#minecraft:flowers" not in plant_values:
-            fail("Plants category must include the Minecraft 26.2 #minecraft:flowers tag")
+            fail("Plants category must include the Minecraft 1.21.11 #minecraft:flowers tag")
 
 entity_categories = (
     "bosses",
@@ -933,14 +936,13 @@ expected_special_shearing = {
     "minecraft:copper_golem",
     "minecraft:mooshroom",
     "minecraft:snow_golem",
-    "minecraft:sulfur_cube",
 }
 if isinstance(special_shearing, dict):
     if special_shearing.get("replace") is not False:
         fail("Special shearing tag must remain datapack-extensible with replace=false")
     special_values = special_shearing.get("values")
     if not isinstance(special_values, list) or set(special_values) != expected_special_shearing:
-        fail("Production special shearing tag differs from the audited Minecraft 26.2 safety set")
+        fail("Production special shearing tag differs from the audited Minecraft 1.21.11 safety set")
     if any("gametest" in str(value) or "fixture" in str(value) for value in special_values):
         fail("Development-only shearing fixture leaked into the production special tag")
 
@@ -969,11 +971,11 @@ build_gradle = (ROOT / "build.gradle").read_text(encoding="utf-8")
 for expected in [
     "splitEnvironmentSourceSets",
     "withSourcesJar",
-    "JavaLanguageVersion.of(25)",
-    "options.release = 25",
+    "JavaLanguageVersion.of(javaVersionValue)",
+    "options.release = javaVersionValue",
     "useJUnitPlatform",
     "configureTests",
-    "compileOnly \"com.terraformersmc:modmenu",
+    "modCompileOnly \"com.terraformersmc:modmenu",
     "runClientGameTest",
     "-Xlint:deprecation",
 ]:
@@ -996,19 +998,16 @@ for relative in (
     if "BuiltInRegistries.ENTITY_TYPE.wrapAsHolder" not in source_text:
         fail(f"{relative} does not use the supported registry holder access")
 
-game_test_sources = list((ROOT / "src/gametest/java").rglob("*.java"))
-for source in game_test_sources:
-    if "makeMockServerPlayerInLevel" in source.read_text(encoding="utf-8"):
-        fail(f"Deprecated mock-player helper remains in {source.relative_to(ROOT)}")
-
 game_test_player_helper = (
     ROOT / "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/GameTestPlayers.java"
 ).read_text(encoding="utf-8")
 if (
-    "makeMockServerPlayer(GameType.SURVIVAL)" not in game_test_player_helper
+    "makeMockServerPlayerInLevel()" not in game_test_player_helper
     or "static ServerPlayer survival" not in game_test_player_helper
+    or "static ServerPlayer withGameMode" not in game_test_player_helper
+    or '@SuppressWarnings("removal")' not in game_test_player_helper
 ):
-    fail("GameTests must centralize supported survival mock-player construction")
+    fail("GameTests must centralize the Minecraft 1.21.11 server-player compatibility helper")
 
 entity_game_tests = (
     ROOT
@@ -1177,7 +1176,7 @@ for required_migration_contract in (
     "dependsOn tasks.named('runMigrationImportServerTest')",
     "migration-import.success",
     "migration-restart.success",
-    "b36540e977c8dd932e8a2841787657cc74cf3e3e2029b50c9e3c05877ba07690",
+    "c390fc16519a7b9f9a1fc29feab66209bca96b5db8bff6e659b239d16d36a38d",
 ):
     if required_migration_contract not in neoforge_build:
         fail(
@@ -1195,8 +1194,9 @@ if "tools/package_release.py --output-dir dist" not in release_workflow or "dist
 for required_release_gate in (
     'test "$release_ready" = "true"',
     "git merge-base --is-ancestor",
-    "refs/remotes/origin/main",
+    "refs/remotes/origin/backport/1.21.11",
     "fetch-depth: 0",
+    "make_latest: false",
 ):
     if required_release_gate not in release_workflow:
         fail(f"The release workflow is missing its publication safety gate: {required_release_gate}")

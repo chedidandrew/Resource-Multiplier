@@ -33,11 +33,8 @@ public final class NeoForgeGameTestBlockLootFixtures {
                 RecordCodecBuilder.mapCodec(instance -> codecStart(instance)
                         .apply(instance, PathologicalBlockLootModifier::new));
 
-        public PathologicalBlockLootModifier(
-                final LootItemCondition[] conditions,
-                final int priority
-        ) {
-            super(conditions, priority);
+        public PathologicalBlockLootModifier(final LootItemCondition[] conditions) {
+            super(conditions);
         }
 
         @Override

@@ -193,7 +193,9 @@ final class BlockInspectionFormatter {
     }
 
     static String describeState(BlockState state) {
-        List<String> values = state.getValues().map(Object::toString).toList();
+        List<String> values = state.getValues().entrySet().stream()
+                .map(entry -> entry.getKey().getName() + "=" + entry.getValue())
+                .toList();
         if (values.isEmpty()) {
             return "Default";
         }

@@ -21,14 +21,14 @@ final class FabricNetworking {
     }
 
     static void register() {
-        PayloadTypeRegistry.serverboundPlay().register(ConfigRequestPayload.TYPE, ConfigRequestPayload.CODEC);
-        PayloadTypeRegistry.serverboundPlay().register(ConfigPatchPayload.TYPE, ConfigPatchPayload.CODEC);
-        PayloadTypeRegistry.serverboundPlay().register(ConfigResetPayload.TYPE, ConfigResetPayload.CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(ConfigSnapshotPayload.TYPE, ConfigSnapshotPayload.CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(
+        PayloadTypeRegistry.playC2S().register(ConfigRequestPayload.TYPE, ConfigRequestPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(ConfigPatchPayload.TYPE, ConfigPatchPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(ConfigResetPayload.TYPE, ConfigResetPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(ConfigSnapshotPayload.TYPE, ConfigSnapshotPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(
                 ConfigInvalidationPayload.TYPE,
                 ConfigInvalidationPayload.CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(
+        PayloadTypeRegistry.playS2C().register(
                 ConfigMutationResultPayload.TYPE,
                 ConfigMutationResultPayload.CODEC);
 

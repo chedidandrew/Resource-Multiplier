@@ -15,6 +15,7 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.LootItemFunction;
+import net.minecraft.world.level.storage.loot.functions.LootItemFunctionType;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -41,6 +42,10 @@ public final class NeoForgeGameTestEntityFixtures {
                 NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS,
                 SmartResourceDrops.id("gametest_entity_final_loot"),
                 () -> FinalLootModifier.CODEC);
+        event.register(
+                Registries.LOOT_FUNCTION_TYPE,
+                SmartResourceDrops.id("gametest_exception_trigger"),
+                () -> ExceptionTrigger.TYPE);
     }
 
     @SubscribeEvent
@@ -69,11 +74,8 @@ public final class NeoForgeGameTestEntityFixtures {
                 RecordCodecBuilder.mapCodec(instance -> codecStart(instance)
                         .apply(instance, FinalLootModifier::new));
 
-        public FinalLootModifier(
-                final LootItemCondition[] conditions,
-                final int priority
-        ) {
-            super(conditions, priority);
+        public FinalLootModifier(final LootItemCondition[] conditions) {
+            super(conditions);
         }
 
         @Override
@@ -99,6 +101,8 @@ public final class NeoForgeGameTestEntityFixtures {
     private static final class ExceptionTrigger implements LootItemFunction {
         private static final ExceptionTrigger INSTANCE = new ExceptionTrigger();
         private static final MapCodec<ExceptionTrigger> CODEC = MapCodec.unit(INSTANCE);
+        private static final LootItemFunctionType<ExceptionTrigger> TYPE =
+                new LootItemFunctionType<>(CODEC);
 
         @Override
         public ItemStack apply(final ItemStack stack, final LootContext context) {
@@ -107,8 +111,8 @@ public final class NeoForgeGameTestEntityFixtures {
         }
 
         @Override
-        public MapCodec<? extends LootItemFunction> codec() {
-            return CODEC;
+        public LootItemFunctionType<? extends LootItemFunction> getType() {
+            return TYPE;
         }
     }
 }

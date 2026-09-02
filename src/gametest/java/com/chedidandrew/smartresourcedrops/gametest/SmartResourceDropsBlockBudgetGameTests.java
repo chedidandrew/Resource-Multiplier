@@ -10,7 +10,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
@@ -41,7 +41,7 @@ public final class SmartResourceDropsBlockBudgetGameTests {
         GameTestBlockLootFixtures.reset();
         try {
             configure();
-            final ServerPlayer player = (ServerPlayer) helper.makeMockServerPlayer(GameType.SURVIVAL);
+            final ServerPlayer player = GameTestPlayers.withGameMode(helper, GameType.SURVIVAL);
             final ItemStack tool = new ItemStack(Items.DIAMOND_SHOVEL);
 
             final BlockPos playerPos = helper.absolutePos(new BlockPos(1, 2, 1));
@@ -225,7 +225,7 @@ public final class SmartResourceDropsBlockBudgetGameTests {
 
     private static List<ItemEntity> dropsNear(final GameTestHelper helper, final BlockPos pos) {
         return helper.getLevel().getEntities(
-                EntityTypes.ITEM,
+                EntityType.ITEM,
                 new AABB(pos).inflate(1.5D),
                 ItemEntity::isAlive);
     }
