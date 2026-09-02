@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -19,25 +20,28 @@ import net.neoforged.neoforge.common.NeoForge;
 /** Test-run-only check for NeoForge resource discovery and the formerly blank category screen. */
 @Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.CLIENT)
 public final class NeoForgeClientCategorySmokeTest {
-    private static final int TIMEOUT_TICKS = 1_200;
+    private static final int TIMEOUT_TICKS = 2_400;
+    private static final AtomicBoolean REGISTERED = new AtomicBoolean();
     private int ticks;
     private EntityCategoryScreen categoryScreen;
     private ConfigEditorSession session;
 
     public NeoForgeClientCategorySmokeTest() {
-        NeoForge.EVENT_BUS.addListener(
-                ClientTickEvent.Post.class,
-                this::onClientTick);
+        if (REGISTERED.compareAndSet(false, true)) {
+            NeoForge.EVENT_BUS.addListener(
+                    ClientTickEvent.Post.class,
+                    this::onClientTick);
+        }
     }
 
     private void onClientTick(final ClientTickEvent.Post event) {
         final Minecraft minecraft = Minecraft.getInstance();
         try {
-            if (++this.ticks > TIMEOUT_TICKS) {
-                throw new AssertionError("Timed out waiting for the NeoForge category smoke test");
-            }
             if (minecraft.gui.overlay() != null) {
                 return;
+            }
+            if (++this.ticks > TIMEOUT_TICKS) {
+                throw new AssertionError("Timed out waiting for the NeoForge category smoke test");
             }
             if (this.categoryScreen == null) {
                 if (!(minecraft.gui.screen() instanceof TitleScreen titleScreen)) {

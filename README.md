@@ -27,7 +27,7 @@
 > **Current stable release:** Smart Resource Multiplier `1.2.3` for Minecraft Java Edition 26.2 and Fabric. This patch adds the full-name high-resolution production icon and reproducible Java 25 toolchain selection without changing gameplay or compatibility identifiers.
 
 > [!NOTE]
-> A NeoForge 26.2 port is under active validation in [`neoforge/`](neoforge/). It shares the production gameplay and GUI implementation, passes the portable server and Entity Categories client suites, and remains clearly marked as a validation build until the multiplayer and existing-world migration gates in [`docs/NEOFORGE_PORT.md`](docs/NEOFORGE_PORT.md) are complete.
+> The `1.3.0-beta.1` source line adds the NeoForge 26.2 port in [`neoforge/`](neoforge/) while retaining the Fabric build. It shares the production gameplay and GUI implementation and remains a non-publishing beta (`release_ready=false`) until the multiplayer and existing-world migration gates in [`docs/NEOFORGE_PORT.md`](docs/NEOFORGE_PORT.md) are complete.
 
 Smart Resource Multiplier speeds up repetitive gathering by multiplying the final loot Minecraft already calculated. Fortune, Silk Touch, Looting, loot-table changes, item components, NBT, and legal stack sizes are preserved because the mod works after normal loot evaluation instead of replacing it.
 
@@ -160,7 +160,7 @@ Windows CMD:
 gradlew.bat clean build
 ```
 
-The expected artifact is `build/libs/smart-resource-multiplier-1.2.3.jar`. Gradle automatically selects an installed Java 25 toolchain—or downloads one when absent—even if the active shell uses an older supported JVM. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
+The current source builds `build/libs/smart-resource-multiplier-1.3.0-beta.1.jar`; the published stable download remains `1.2.3`. Gradle automatically selects an installed Java 25 toolchain—or downloads one when absent—even if the active shell uses an older supported JVM. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
 
 ## Documentation
 

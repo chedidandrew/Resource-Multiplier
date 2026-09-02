@@ -336,7 +336,7 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
-    "mod_version": "1.2.3",
+    "mod_version": "1.3.0-beta.1",
     "minecraft_version": "26.2",
     "loader_version": "0.19.3",
     "loom_version": "1.17.20",
@@ -347,8 +347,8 @@ expected_properties = {
 for key, expected in expected_properties.items():
     if properties.get(key) != expected:
         fail(f"gradle.properties {key} must be {expected!r}, found {properties.get(key)!r}")
-if properties.get("release_ready") != "true":
-    fail("The Smart Resource Multiplier 1.2.3 stable release must keep release_ready=true")
+if properties.get("release_ready") != "false":
+    fail("The Smart Resource Multiplier 1.3.0 beta must keep release_ready=false")
 
 settings_text = (ROOT / "settings.gradle").read_text(encoding="utf-8")
 if "rootProject.name = 'SmartResourceMultiplier'" not in settings_text:

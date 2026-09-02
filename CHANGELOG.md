@@ -4,7 +4,19 @@ All notable changes are documented here.
 
 ## Unreleased
 
-No unreleased changes.
+### Added
+
+- Added a native NeoForge 26.2 build alongside Fabric while sharing the production gameplay, configuration, commands, networking protocol, and GUI implementation.
+- Added NeoForge persistence, placement-provenance migration, shearing, client configuration, dedicated-server GameTests, physical-client smoke coverage, and release-grade JAR validation.
+
+### Fixed
+
+- Fixed the NeoForge Entity Categories screen so all nine categories and tag-based classifications load correctly.
+- Made the headless NeoForge client smoke test wait for the loading overlay and register only once, preventing slow Linux CI startup from producing a false timeout.
+
+### Release status
+
+- Set the development version to `1.3.0-beta.1` with publication locked until the remaining multiplayer and existing-world migration gates pass.
 
 ## 1.2.3 - 2026-08-31
 

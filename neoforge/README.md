@@ -44,7 +44,7 @@ It opens the production screen, verifies all nine rows and tag-dependent classif
 The playable artifact is:
 
 ```text
-neoforge/build/libs/smart-resource-multiplier-neoforge-1.2.3.jar
+neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0-beta.1.jar
 ```
 
 Validate the rebuilt playable JAR from the repository root with:
