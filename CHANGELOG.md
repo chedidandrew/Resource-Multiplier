@@ -4,6 +4,8 @@ All notable changes are documented here.
 
 ## Unreleased
 
+## 1.3.0 - 2026-09-01
+
 ### Added
 
 - Added a native NeoForge 26.2 build alongside Fabric while sharing the production gameplay, configuration, commands, networking protocol, and GUI implementation.
@@ -11,15 +13,24 @@ All notable changes are documented here.
 - Added a separate-process NeoForge client/server smoke gate covering all six configuration channels, non-operator read-only authority, operator promotion, server-authoritative global and near-limit block edits, returned snapshots, local oversized-edit rejection, and reset.
 - Added a byte-exact Fabric-authored placement-provenance fixture and regression that imports it, writes the migrated native attachment to Anvil storage, closes and reopens that storage, and reloads it into a fresh chunk.
 - Added a two-dedicated-JVM migration gate that loads the captured Fabric chunk through `ServerLevel`, verifies gameplay provenance, performs a real server save, then restarts and verifies native disk data plus gameplay lookup without the legacy envelope.
+- Added release packaging for separate Fabric and NeoForge JARs with matching versions, loader-specific filenames, validation, checksums, and CurseForge upload guidance.
+- Added physical optional-channel coverage proving a NeoForge-only server accepts an unmodded client and a client with the mod accepts an unmodded server without exposing unsafe configuration fallbacks.
+
+### Changed
+
+- Renamed the General-screen block experience controls to **Multiply Block XP** and **Block XP Multiplier**. Their tooltips now explicitly direct players to the separate Mob XP settings under Entity Drops. This is a presentation-only clarification; configuration keys, defaults, gameplay, persistence, and networking are unchanged.
+- Promoted the tested Fabric and NeoForge builds to stable `1.3.0`. Both loader builds share the gameplay, schema 3 configuration, commands, and GUI while retaining small loader-specific adapters.
 
 ### Fixed
 
 - Fixed the NeoForge Entity Categories screen so all nine categories and tag-based classifications load correctly.
 - Made the headless NeoForge client smoke test wait for the loading overlay and register only once, preventing slow Linux CI startup from producing a false timeout.
+- Verified the connected NeoForge GUI applies entity override/filter and shearing edits through the real server-authoritative root Apply/Reset flow, clears cached authority state on disconnect, and renegotiates all channels on reconnect.
+- Verified oversized malicious NeoForge configuration payloads are rejected before decoding can mutate configuration; the server remains healthy and responsive after disconnecting only the offending client.
 
 ### Release status
 
-- Set the development version to `1.3.0-beta.1` with publication locked until the remaining multiplayer, connected-GUI, packaging, and loader-parity gates pass.
+- Set both loader versions to stable `1.3.0` and enabled the release-ready source state after the complete Fabric and NeoForge validation matrix passed.
 
 ## 1.2.3 - 2026-08-31
 

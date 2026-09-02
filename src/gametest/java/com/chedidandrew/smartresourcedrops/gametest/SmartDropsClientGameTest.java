@@ -70,9 +70,9 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
     private static final String GLOBAL_MULTIPLIER_TOOLTIP =
             "Default multiplier used when no more specific override exists.";
     private static final String MULTIPLY_XP_TOOLTIP =
-            "Multiply XP produced by eligible block breaks.";
+            "Multiply XP produced by eligible block breaks. Mob XP is configured separately under Entity Drops.";
     private static final String XP_MULTIPLIER_TOOLTIP =
-            "Sets the multiplier for XP produced by eligible block breaks when block XP multiplication is enabled.";
+            "Sets the multiplier for XP produced by eligible block breaks. Mob XP uses its own multiplier under Entity Drops.";
     private static final Map<String, String> ROOT_NAVIGATION_TOOLTIPS = Map.of(
             DIMENSIONS_KEY,
             "Configure block-drop multipliers for specific dimensions.",
@@ -1088,8 +1088,8 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 "General screen unexpectedly contains a registry list");
         require(hasWidgetLabel(screen, "Global Multiplier"),
                 "General screen omitted the global multiplier control");
-        require(hasWidgetLabel(screen, "Experience Multiplier"),
-                "General screen omitted the experience multiplier control");
+        require(hasWidgetLabel(screen, "Block XP Multiplier"),
+                "General screen omitted the block XP multiplier control");
         require(!screen.editorSession().isDirty(), "A newly opened General screen was dirty");
         require(screen.applyButton() != null, "General screen did not expose Apply");
         require(!screen.applyButton().active, "Apply must be disabled for a clean session");
@@ -1134,13 +1134,13 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         }
 
         final Button multiplyExperience = buttons(screen).stream()
-                .filter(button -> button.getMessage().getString().startsWith("Multiply Experience:"))
+                .filter(button -> button.getMessage().getString().startsWith("Multiply Block XP:"))
                 .findFirst()
-                .orElseThrow(() -> new AssertionError("Root omitted Multiply Experience"));
+                .orElseThrow(() -> new AssertionError("Root omitted Multiply Block XP"));
         assertWidgetTooltip(
                 multiplyExperience,
                 MULTIPLY_XP_TOOLTIP,
-                "Multiply Experience block-XP tooltip");
+                "Multiply Block XP tooltip");
         assertMultiplierTooltipPropagation(
                 client,
                 screen,
@@ -1149,7 +1149,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         assertMultiplierTooltipPropagation(
                 client,
                 screen,
-                "Experience Multiplier",
+                "Block XP Multiplier",
                 XP_MULTIPLIER_TOOLTIP);
 
         for (AbstractWidget widget : widgets(screen)) {
@@ -1311,7 +1311,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
     ) {
         final boolean originallyEnabled = root.editorSession().multiplyExperience();
         if (originallyEnabled) {
-            clickButtonWithPrefix(context, root, "Multiply Experience:");
+            clickButtonWithPrefix(context, root, "Multiply Block XP:");
         }
 
         final List<Button> decrements = buttonsWithLabel(root, "-");
@@ -1322,7 +1322,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 "XP multiplier adjustments stayed active while XP multiplication was off");
 
         if (originallyEnabled) {
-            clickButtonWithPrefix(context, root, "Multiply Experience:");
+            clickButtonWithPrefix(context, root, "Multiply Block XP:");
             require(!root.editorSession().isDirty(), "Restoring the XP toggle did not return to clean state");
         }
     }
@@ -1378,10 +1378,10 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 "Source selector did not cycle back to clean state");
 
         final boolean multiplyXp = session.multiplyExperience();
-        clickButtonWithPrefix(context, root, "Multiply Experience:");
+        clickButtonWithPrefix(context, root, "Multiply Block XP:");
         require(session.multiplyExperience() != multiplyXp && session.isDirty(),
                 "Experience toggle did not stage a change");
-        clickButtonWithPrefix(context, root, "Multiply Experience:");
+        clickButtonWithPrefix(context, root, "Multiply Block XP:");
         require(session.multiplyExperience() == multiplyXp && !session.isDirty(),
                 "Experience toggle did not restore clean state");
 

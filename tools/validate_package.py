@@ -151,6 +151,7 @@ required = [
     "docs/REBRAND.md",
     "docs/BRANDING.md",
     "docs/NEOFORGE_PORT.md",
+    "docs/releases/1.3.0.md",
     "docs/releases/1.2.2.md",
     "docs/releases/1.2.3.md",
     "docs/images/general-config.webp",
@@ -183,13 +184,22 @@ required = [
     "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structure/empty.nbt",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOptionalClientOnlySmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.java",
+    "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.java",
+    "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.java",
+    "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.java",
+    "neoforge/src/optionalchanneltest/resources/META-INF/neoforge.mods.toml",
     "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/client/ClientEntityCategoryTagIndexTest.java",
     "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigrationTest.java",
     "neoforge/src/test/resources/fixtures/README.md",
     "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
     "tools/run_neoforge_multiplayer_smoke.sh",
+    "tools/run_neoforge_optional_channel_smoke.sh",
+    "tools/run_neoforge_oversized_wire_smoke.sh",
 ]
 for relative in required:
     if not (ROOT / relative).is_file():
@@ -303,8 +313,10 @@ form_markers = {
     ".github/ISSUE_TEMPLATE/bug_report.yml": (
         "name: Bug report",
         "id: reproduction",
-        "Fabric Loader version",
-        "Fabric API version",
+        "id: loader",
+        "Mod loader version",
+        "Loader-specific dependencies",
+        "NeoForge",
         "Java version",
         "never upload an entire development world",
         "SECURITY.md",
@@ -312,6 +324,8 @@ form_markers = {
     ),
     ".github/ISSUE_TEMPLATE/mod_compatibility.yml": (
         "name: Mod compatibility report",
+        "id: loader",
+        "NeoForge",
         "id: other-mod-link",
         "id: registry-id",
         "id: inspection-category",
@@ -365,7 +379,7 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
-    "mod_version": "1.3.0-beta.1",
+    "mod_version": "1.3.0",
     "minecraft_version": "26.2",
     "loader_version": "0.19.3",
     "loom_version": "1.17.20",
@@ -376,8 +390,34 @@ expected_properties = {
 for key, expected in expected_properties.items():
     if properties.get(key) != expected:
         fail(f"gradle.properties {key} must be {expected!r}, found {properties.get(key)!r}")
-if properties.get("release_ready") != "false":
-    fail("The Smart Resource Multiplier 1.3.0 beta must keep release_ready=false")
+if properties.get("release_ready") != "true":
+    fail("The stable Smart Resource Multiplier 1.3.0 source must keep release_ready=true")
+
+neoforge_properties: dict[str, str] = {}
+for raw_line in (ROOT / "neoforge/gradle.properties").read_text(encoding="utf-8").splitlines():
+    line = raw_line.strip()
+    if line and not line.startswith("#") and "=" in line:
+        key, value = line.split("=", 1)
+        neoforge_properties[key.strip()] = value.strip()
+if neoforge_properties.get("mod_version") != properties["mod_version"]:
+    fail(
+        "Fabric and NeoForge mod_version values must match exactly, found "
+        f"{properties['mod_version']!r} and {neoforge_properties.get('mod_version')!r}"
+    )
+expected_neoforge_properties = {
+    "minecraft_version": "26.2",
+    "neo_version": "26.2.0.72",
+    "moddev_version": "2.0.144",
+    "mod_id": "smart_resource_drops",
+    "mod_name": "Smart Resource Multiplier",
+    "archives_base_name": "smart-resource-multiplier-neoforge",
+}
+for key, expected in expected_neoforge_properties.items():
+    if neoforge_properties.get(key) != expected:
+        fail(
+            f"neoforge/gradle.properties {key} must be {expected!r}, "
+            f"found {neoforge_properties.get(key)!r}"
+        )
 
 settings_text = (ROOT / "settings.gradle").read_text(encoding="utf-8")
 if "rootProject.name = 'SmartResourceMultiplier'" not in settings_text:
@@ -386,7 +426,8 @@ if "rootProject.name = 'SmartResourceMultiplier'" not in settings_text:
 rebrand_text = (ROOT / "docs/REBRAND.md").read_text(encoding="utf-8")
 for marker in (
     "Smart Resource Multiplier",
-    "smart-resource-multiplier-1.2.3.jar",
+    "smart-resource-multiplier-1.3.0.jar",
+    "smart-resource-multiplier-neoforge-1.3.0.jar",
     "smart_resource_drops",
     "config/smart_resource_drops.json",
     "/smartdrops",
@@ -406,10 +447,10 @@ for marker in (
     'alt="Smart Resource Multiplier icon"',
     "actions/workflows/build.yml/badge.svg?branch=main",
     "Minecraft-26.2",
-    "Loader-Fabric",
+    "Loaders-Fabric%20%7C%20NeoForge",
     "Java-25",
     "License-MIT",
-    "Status-1.2.3-Release",
+    "Status-1.3.0-Release",
     "> [!IMPORTANT]",
     "Current stable release:",
     "www.curseforge.com/minecraft/mc-mods/resource-multiplier",
@@ -595,6 +636,7 @@ for source_root in (
     ROOT / "neoforge/src/test",
     ROOT / "neoforge/src/gametest",
     ROOT / "neoforge/src/clienttest",
+    ROOT / "neoforge/src/optionalchanneltest",
 ):
     for path in source_root.rglob("*"):
         if path.is_file() and path.suffix in {".java", ".json", ".mcmeta", ".txt"}:
@@ -622,6 +664,7 @@ java_roots = (
     ROOT / "neoforge/src/test/java",
     ROOT / "neoforge/src/gametest/java",
     ROOT / "neoforge/src/clienttest/java",
+    ROOT / "neoforge/src/optionalchanneltest/java",
     ROOT / "tools/core-tests",
 )
 for java_root in java_roots:
@@ -1065,9 +1108,21 @@ for required_neoforge_gate in (
     "runClientCategoryTest",
     "runMigrationRestartServerTest",
     "tools/run_neoforge_multiplayer_smoke.sh",
+    "tools/run_neoforge_optional_channel_smoke.sh",
+    "tools/run_neoforge_oversized_wire_smoke.sh",
 ):
     if required_neoforge_gate not in build_workflow:
         fail(f"The regular build workflow is missing its NeoForge gate: {required_neoforge_gate}")
+
+for required_release_neoforge_gate in (
+    "tools/run_neoforge_optional_channel_smoke.sh",
+    "tools/run_neoforge_oversized_wire_smoke.sh",
+):
+    if required_release_neoforge_gate not in release_workflow:
+        fail(
+            "The release workflow is missing its NeoForge network gate: "
+            f"{required_release_neoforge_gate}"
+        )
 
 multiplayer_runner = (ROOT / "tools/run_neoforge_multiplayer_smoke.sh").read_text(
     encoding="utf-8"
@@ -1082,6 +1137,39 @@ for required_multiplayer_contract in (
         fail(
             "NeoForge multiplayer CI runner is missing its task/pass-marker contract: "
             f"{required_multiplayer_contract}"
+        )
+
+optional_channel_runner = (
+    ROOT / "tools/run_neoforge_optional_channel_smoke.sh"
+).read_text(encoding="utf-8")
+for required_optional_channel_contract in (
+    "runOptionalClientOnlyServerTest",
+    "runOptionalClientOnlyClientTest",
+    "runOptionalServerOnlyServerTest",
+    "runOptionalServerOnlyClientTest",
+    "NeoForge optional-channel server probe passed",
+    "NeoForge optional-channel client passed",
+):
+    if required_optional_channel_contract not in optional_channel_runner:
+        fail(
+            "NeoForge optional-channel CI runner is missing its task/pass-marker contract: "
+            f"{required_optional_channel_contract}"
+        )
+
+oversized_wire_runner = (
+    ROOT / "tools/run_neoforge_oversized_wire_smoke.sh"
+).read_text(encoding="utf-8")
+for required_oversized_wire_contract in (
+    "runOversizedWireServerTest",
+    "runOversizedWireClientTest",
+    "1048577 > 1048576",
+    "NeoForge oversized-wire server smoke passed",
+    "NeoForge oversized-wire client smoke passed",
+):
+    if required_oversized_wire_contract not in oversized_wire_runner:
+        fail(
+            "NeoForge oversized-wire CI runner is missing its task/pass-marker contract: "
+            f"{required_oversized_wire_contract}"
         )
 
 neoforge_build = (ROOT / "neoforge/build.gradle").read_text(encoding="utf-8")

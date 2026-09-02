@@ -29,11 +29,11 @@ Before: resource-multiplier-1.2.1.jar
 After:  smart-resource-multiplier-1.2.2.jar
 ```
 
-The current icon-and-toolchain patch continues that convention as `smart-resource-multiplier-1.2.3.jar`.
+Version `1.3.0` keeps `smart-resource-multiplier-1.3.0.jar` for Fabric and adds the unambiguous `smart-resource-multiplier-neoforge-1.3.0.jar` for NeoForge. Install exactly one loader-matching file.
 
 Release source and bundle names likewise change from the `ResourceMultiplier-*` prefix to `SmartResourceMultiplier-*`.
 
-Before installing `1.2.2` or newer, remove the older `resource-multiplier-*.jar` file from the `mods` folder. Keeping both files would make Fabric discover two JARs that declare the same stable mod ID.
+Before installing `1.2.2` or newer, remove the older `resource-multiplier-*.jar` file from the `mods` folder. Also remove any older Smart Resource Multiplier copy before installing `1.3.0`; never place both Fabric and NeoForge JARs in the same instance because they declare the same stable mod ID.
 
 ## Repository and storefront links
 
@@ -41,4 +41,4 @@ The GitHub repository URL remains `chedidandrew/Resource-Multiplier` so existing
 
 ## Icon history
 
-The icon was intentionally unchanged in the published `1.2.2` rebrand so binary artwork review remained separate from compatibility-sensitive naming changes. Version `1.2.3` packages the separately approved `512x512` **SMART RESOURCE MULTIPLIER** diamond-mining artwork documented in [BRANDING.md](BRANDING.md). The change affects branding only and keeps the existing Fabric icon path.
+The icon was intentionally unchanged in the published `1.2.2` rebrand so binary artwork review remained separate from compatibility-sensitive naming changes. Version `1.2.3` introduced the separately approved `512x512` **SMART RESOURCE MULTIPLIER** diamond-mining artwork documented in [BRANDING.md](BRANDING.md); both `1.3.0` loader builds package those exact approved bytes.

@@ -1,6 +1,6 @@
 # GitHub publication guide
 
-The canonical public source repository is [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier). User downloads are published on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier), and ordinary bug or compatibility reports are handled through [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues). Smart Resource Multiplier `1.2.3` is the current published Fabric 26.2 release.
+The canonical public source repository is [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier). User downloads are published on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier), and ordinary bug or compatibility reports are handled through [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues). Smart Resource Multiplier `1.3.0` provides separate Fabric and NeoForge files for Minecraft 26.2.
 
 ## Clone and contribute
 
@@ -15,13 +15,13 @@ git push -u origin your-change
 
 ## CI
 
-`.github/workflows/build.yml` runs on branch pushes, pull requests, and manual dispatch. With Java 25 it runs the source and package validators, the complete core and mapped-Minecraft JUnit suites, all required dedicated-server GameTests, the Fabric Loom build, and the real client GUI and authority GameTests under Xvfb. The playable JAR, sources JAR, and a clean `git archive` source snapshot are uploaded together as a `SmartResourceMultiplier-<commit>` Actions artifact. Tag pushes are handled only by the guarded release workflow.
+`.github/workflows/build.yml` runs on branch pushes, pull requests, and manual dispatch. With Java 25 it validates both loader builds, runs the shared and loader-specific JUnit/GameTest suites, exercises real client GUI and multiplayer authority paths under Xvfb, audits both playable JARs, and verifies the one-way Fabric-to-NeoForge provenance migration. Build artifacts remain loader-labelled. Tag pushes are handled only by the guarded release workflow.
 
 ## Release
 
-Always rebuild a versioned JAR from source. Renaming an older JAR does not update its embedded Fabric metadata, manifest, package records, or checksums.
+Always rebuild both versioned JARs from source. Renaming an older JAR does not update embedded loader metadata, manifests, package records, or checksums.
 
-A stable release commit must set `mod_version` to the intended version and `release_ready=true`. After the exact `main` commit passes Build and verify, tag that commit with the matching `v<version>` tag. The guarded release workflow verifies the latch, tag-to-version equality, and main ancestry before rebuilding, testing, packaging, and publishing.
+A stable source commit must set the same `mod_version` in both Gradle property files and set `release_ready=true`. Pushing that commit to `main` updates the public source without creating a GitHub Release. A matching `v<version>` tag is a separate, optional action: only that tag invokes the guarded GitHub-release workflow, which verifies the latch, version equality, main ancestry, full dual-loader test chain, and deterministic package before publishing.
 
 ## Public links
 
@@ -30,7 +30,7 @@ A stable release commit must set `mod_version` to the intended version and `rele
 - Bug and compatibility reports: [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues)
 - Optional support: [Ko-fi](https://ko-fi.com/andrewchedid), [PayPal](https://www.paypal.com/paypalme/chedidandrew), and [Cash App](https://cash.app/%24AndrewChedid)
 
-The same destinations are locked by package validation and exposed through Fabric or Mod Menu metadata. `.github/FUNDING.yml` supplies GitHub's sponsor button.
+The same destinations are locked by package validation and exposed through loader metadata and optional Mod Menu integration. `.github/FUNDING.yml` supplies GitHub's sponsor button.
 
 ## Repository presentation and settings checklist
 
@@ -50,6 +50,7 @@ minecraft
 minecraft-mod
 fabric
 fabricmc
+neoforge
 java
 loot
 server-side

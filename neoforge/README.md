@@ -55,7 +55,23 @@ After that server reports `Done`, start the physical client in the second window
 
 The server uses an isolated test world on port `25578`; both isolated game directories are recreated for each run. Success requires both Gradle processes to exit cleanly and both logs to report their multiplayer smoke-test pass marker. On Linux, `bash tools/run_neoforge_multiplayer_smoke.sh` compiles once, coordinates both processes under Xvfb, enforces timeouts, and verifies those markers.
 
-This smoke check negotiates all six config channels; proves a fresh non-operator receives a read-only root screen; promotes that same player; applies and receives a server-authoritative global edit and a maximum-capacity block-rule snapshot; rejects an oversized edit locally before transport; and resets the server configuration. It does not yet cover the optional-channel client-only/server-only matrix, reconnect behavior, entity/filter/shearing child screens, or malicious oversized wire input.
+This smoke check negotiates all six config channels and invokes the production `/smartdropsgui` command. It proves a fresh non-operator receives a read-only root screen, promotes that same player, navigates and edits the connected entity override/filter and shearing child screens, applies their shared patch from General, receives the exact server-authoritative values, fills block rules to maximum capacity, rejects an oversized edit locally before transport, and completes the real Reset Everything confirmation. It then disconnects with a request outstanding, proves cached authority state was cleared, reconnects over a new connection with all six channels, and receives a fresh editable reset snapshot.
+
+Run the isolated client-only/server-only installation matrix on Linux with:
+
+```bash
+bash tools/run_neoforge_optional_channel_smoke.sh
+```
+
+This launches two physical client/server pairs with the production mod installed on only one side at a time. It requires both joins and disconnects to complete cleanly, checks each channel direction whose destination lacks the mod is unavailable, and confirms the client-only connected config route fails closed instead of exposing editable local defaults.
+
+Run the isolated malicious oversized-wire gate on Linux with:
+
+```bash
+bash tools/run_neoforge_oversized_wire_smoke.sh
+```
+
+This bypasses the typed client encoder and sends a 1,048,577-character patch over the negotiated payload ID. The gate requires rejection at the 1,048,576-character decoder limit, unchanged server configuration and revision, 40 subsequent healthy ticks, a responsive `/smartdrops status` command, clean client/server exits, and independent pass markers.
 
 Run the two-JVM placement-provenance migration gate with:
 
@@ -68,7 +84,7 @@ That one command seeds a minimal Anvil region with the hash-locked Fabric-author
 The playable artifact is:
 
 ```text
-neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0-beta.1.jar
+neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0.jar
 ```
 
 Validate the rebuilt playable JAR from the repository root with:
@@ -81,6 +97,6 @@ The validator rejects Fabric classes/metadata, test fixtures, nested dependencie
 
 ## Validation state
 
-The module clean-builds, passes 164 JUnit tests and all 65 dedicated-server GameTests (including NeoForge-native loader and mixin audits), starts a dedicated server through `Done`, passes a physical-client Entity Categories screen check, and passes the separate-process multiplayer authority check described above. Migration now passes both the focused Anvil close/reopen regression and the two-dedicated-JVM `ServerLevel` import, native save, restart, disk-envelope, and gameplay-lookup gate.
+The module clean-builds, passes 164 JUnit tests and all 65 dedicated-server GameTests (including NeoForge-native loader and mixin audits), starts a dedicated server through `Done`, passes a physical-client Entity Categories screen check, passes the connected GUI/reconnect authority check, passes the client-only/server-only optional-channel matrix, and rejects malicious oversized wire input without mutating server state. Migration now passes both the focused Anvil close/reopen regression and the two-dedicated-JVM `ServerLevel` import, native save, restart, disk-envelope, and gameplay-lookup gate.
 
-It is not yet a public parity build. The remaining gates include the other connected GUI domains, optional-channel and reconnect cases, malicious oversized wire input, and broader whole-world migration coverage beyond the single captured 26.2 chunk. See `docs/NEOFORGE_PORT.md` for the full checklist and the one-way world-migration warning.
+Version `1.3.0` is the stable NeoForge counterpart to the Fabric build for the documented mod behavior. Broader whole-world migration coverage beyond the single captured 26.2 chunk remains outside the proven matrix. See `docs/NEOFORGE_PORT.md` for the full checklist and the one-way world-migration warning.

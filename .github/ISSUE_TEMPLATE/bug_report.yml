@@ -12,7 +12,7 @@ body:
     id: smartdrops-version
     attributes:
       label: Smart Resource Multiplier version
-      placeholder: 1.2.1
+      placeholder: 1.3.0
     validations:
       required: true
   - type: input
@@ -22,20 +22,28 @@ body:
       placeholder: "26.2"
     validations:
       required: true
+  - type: dropdown
+    id: loader
+    attributes:
+      label: Mod loader
+      options:
+        - Fabric
+        - NeoForge
+    validations:
+      required: true
   - type: input
     id: loader-version
     attributes:
-      label: Fabric Loader version
-      placeholder: "0.19.3"
+      label: Mod loader version
+      placeholder: "Fabric Loader 0.19.3 or NeoForge 26.2.0.72"
     validations:
       required: true
   - type: input
-    id: fabric-api-version
+    id: loader-dependencies
     attributes:
-      label: Fabric API version
-      placeholder: "0.158.0+26.2"
-    validations:
-      required: true
+      label: Loader-specific dependencies
+      description: Fabric users should include the Fabric API version. NeoForge users may leave this blank unless another required dependency is installed.
+      placeholder: "Fabric API 0.158.0+26.2"
   - type: input
     id: java-version
     attributes:

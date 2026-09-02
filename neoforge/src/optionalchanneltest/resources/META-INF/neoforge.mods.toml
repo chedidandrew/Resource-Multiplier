@@ -1,0 +1,23 @@
+license="MIT"
+
+[[mods]]
+modId="smart_resource_drops_optional_channel_probe"
+version="1.0.0"
+displayName="Smart Resource Multiplier Optional-Channel Probe"
+description='''
+Test-only installation-matrix observer. This mod is never packaged for release.
+'''
+
+[[dependencies.smart_resource_drops_optional_channel_probe]]
+modId="neoforge"
+type="required"
+versionRange="[26.2.0.72,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.smart_resource_drops_optional_channel_probe]]
+modId="minecraft"
+type="required"
+versionRange="[26.2]"
+ordering="NONE"
+side="BOTH"

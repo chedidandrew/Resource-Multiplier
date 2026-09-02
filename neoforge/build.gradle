@@ -40,9 +40,26 @@ def clientTestSourceSet = sourceSets.create('clienttest')
 clientTestSourceSet.java.setSrcDirs(['src/clienttest/java'])
 clientTestSourceSet.resources.setSrcDirs(['src/clienttest/resources'])
 
+// A deliberately separate test mod. Its classes can be loaded without the
+// production mod so the optional-channel matrix represents a genuinely absent
+// Smart Resource Multiplier installation rather than a disabled entrypoint.
+def optionalChannelTestSourceSet = sourceSets.create('optionalchanneltest')
+optionalChannelTestSourceSet.java.setSrcDirs(['src/optionalchanneltest/java'])
+optionalChannelTestSourceSet.resources.setSrcDirs(['src/optionalchanneltest/resources'])
+
 def clientCategoryTestDirectory = layout.buildDirectory.dir('client-category-test')
 def multiplayerServerDirectory = layout.buildDirectory.dir('multiplayer-test/server')
 def multiplayerClientDirectory = layout.buildDirectory.dir('multiplayer-test/client')
+def optionalClientOnlyServerDirectory =
+        layout.buildDirectory.dir('optional-channel-test/client-only/server')
+def optionalClientOnlyClientDirectory =
+        layout.buildDirectory.dir('optional-channel-test/client-only/client')
+def optionalServerOnlyServerDirectory =
+        layout.buildDirectory.dir('optional-channel-test/server-only/server')
+def optionalServerOnlyClientDirectory =
+        layout.buildDirectory.dir('optional-channel-test/server-only/client')
+def oversizedWireServerDirectory = layout.buildDirectory.dir('oversized-wire-test/server')
+def oversizedWireClientDirectory = layout.buildDirectory.dir('oversized-wire-test/client')
 def migrationTestDirectory = layout.buildDirectory.dir('migration-server-test')
 def migrationFixtureRelativePath =
         'src/test/resources/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64'
@@ -85,6 +102,93 @@ def prepareMultiplayerClientTest = tasks.register('prepareMultiplayerClientTest'
         directory.mkdirs()
         // Quick Play must not be held behind first-run accessibility onboarding;
         // that clean-profile path is covered independently by clientCategoryTest.
+        new File(directory, 'options.txt').setText('onboardAccessibility:false\n', 'UTF-8')
+    }
+}
+def prepareOptionalClientOnlyServerTest = tasks.register('prepareOptionalClientOnlyServerTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = optionalClientOnlyServerDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
+        new File(directory, 'server.properties').setText('''\
+online-mode=false
+server-port=25580
+level-name=optional-client-only-world
+gamemode=creative
+difficulty=peaceful
+spawn-protection=0
+view-distance=3
+simulation-distance=3
+motd=Smart Resource Multiplier optional client-only smoke test
+''', 'UTF-8')
+    }
+}
+def prepareOptionalClientOnlyClientTest = tasks.register('prepareOptionalClientOnlyClientTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = optionalClientOnlyClientDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'options.txt').setText('onboardAccessibility:false\n', 'UTF-8')
+    }
+}
+def prepareOptionalServerOnlyServerTest = tasks.register('prepareOptionalServerOnlyServerTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = optionalServerOnlyServerDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
+        new File(directory, 'server.properties').setText('''\
+online-mode=false
+server-port=25581
+level-name=optional-server-only-world
+gamemode=creative
+difficulty=peaceful
+spawn-protection=0
+view-distance=3
+simulation-distance=3
+motd=Smart Resource Multiplier optional server-only smoke test
+''', 'UTF-8')
+    }
+}
+def prepareOptionalServerOnlyClientTest = tasks.register('prepareOptionalServerOnlyClientTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = optionalServerOnlyClientDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'options.txt').setText('onboardAccessibility:false\n', 'UTF-8')
+    }
+}
+def prepareOversizedWireServerTest = tasks.register('prepareOversizedWireServerTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = oversizedWireServerDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
+        new File(directory, 'server.properties').setText('''\
+online-mode=false
+server-port=25579
+level-name=oversized-wire-smoke-world
+gamemode=creative
+difficulty=peaceful
+spawn-protection=0
+view-distance=4
+simulation-distance=4
+motd=Smart Resource Multiplier oversized-wire smoke test
+''', 'UTF-8')
+    }
+}
+def prepareOversizedWireClientTest = tasks.register('prepareOversizedWireClientTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = oversizedWireClientDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
         new File(directory, 'options.txt').setText('onboardAccessibility:false\n', 'UTF-8')
     }
 }
@@ -171,21 +275,44 @@ motd=Smart Resource Multiplier migration restart smoke test
 neoForge {
     version = neo_version
 
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+        smartResourceDropsGameTest {
+            sourceSet(sourceSets.main)
+            sourceSet(gameTestSourceSet)
+        }
+        smartResourceDropsClientTest {
+            sourceSet(sourceSets.main)
+            sourceSet(clientTestSourceSet)
+        }
+        optionalChannelProbe {
+            sourceSet(optionalChannelTestSourceSet)
+        }
+    }
+
     runs {
-        client { client() }
+        client {
+            client()
+            loadedMods.set([neoForge.mods.getByName(mod_id)])
+        }
         server {
             server()
+            loadedMods.set([neoForge.mods.getByName(mod_id)])
             programArgument '--nogui'
         }
         gameTestServer {
             type = 'gameTestServer'
             sourceSet = gameTestSourceSet
+            loadedMods.set([neoForge.mods.getByName('smartResourceDropsGameTest')])
             programArgument '--tests'
             programArgument 'smart_resource_drops_gametest:*'
         }
         clientCategoryTest {
             client()
             sourceSet = clientTestSourceSet
+            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
             gameDirectory = clientCategoryTestDirectory
             systemProperty 'smart_resource_drops.clientCategoryTest', 'true'
             taskBefore prepareClientCategoryTest
@@ -193,6 +320,7 @@ neoForge {
         multiplayerServerTest {
             server()
             sourceSet = clientTestSourceSet
+            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
             gameDirectory = multiplayerServerDirectory
             systemProperty 'smart_resource_drops.multiplayerTest', 'true'
             taskBefore prepareMultiplayerServerTest
@@ -201,15 +329,76 @@ neoForge {
         multiplayerClientTest {
             client()
             sourceSet = clientTestSourceSet
+            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
             gameDirectory = multiplayerClientDirectory
             systemProperty 'smart_resource_drops.multiplayerTest', 'true'
             taskBefore prepareMultiplayerClientTest
             programArgument '--quickPlayMultiplayer'
             programArgument '127.0.0.1:25578'
         }
+        optionalClientOnlyServerTest {
+            server()
+            sourceSet = optionalChannelTestSourceSet
+            loadedMods.set([neoForge.mods.getByName('optionalChannelProbe')])
+            gameDirectory = optionalClientOnlyServerDirectory
+            systemProperty 'smart_resource_drops.optionalChannelTest', 'clientOnly'
+            taskBefore prepareOptionalClientOnlyServerTest
+            programArgument '--nogui'
+        }
+        optionalClientOnlyClientTest {
+            client()
+            sourceSet = clientTestSourceSet
+            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
+            gameDirectory = optionalClientOnlyClientDirectory
+            systemProperty 'smart_resource_drops.optionalClientOnlyTest', 'true'
+            taskBefore prepareOptionalClientOnlyClientTest
+            programArgument '--quickPlayMultiplayer'
+            programArgument '127.0.0.1:25580'
+        }
+        optionalServerOnlyServerTest {
+            server()
+            sourceSet = optionalChannelTestSourceSet
+            loadedMods.set([
+                    neoForge.mods.getByName(mod_id),
+                    neoForge.mods.getByName('optionalChannelProbe')])
+            gameDirectory = optionalServerOnlyServerDirectory
+            systemProperty 'smart_resource_drops.optionalChannelTest', 'serverOnly'
+            taskBefore prepareOptionalServerOnlyServerTest
+            programArgument '--nogui'
+        }
+        optionalServerOnlyClientTest {
+            client()
+            sourceSet = optionalChannelTestSourceSet
+            loadedMods.set([neoForge.mods.getByName('optionalChannelProbe')])
+            gameDirectory = optionalServerOnlyClientDirectory
+            systemProperty 'smart_resource_drops.optionalServerOnlyClientTest', 'true'
+            taskBefore prepareOptionalServerOnlyClientTest
+            programArgument '--quickPlayMultiplayer'
+            programArgument '127.0.0.1:25581'
+        }
+        oversizedWireServerTest {
+            server()
+            sourceSet = clientTestSourceSet
+            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
+            gameDirectory = oversizedWireServerDirectory
+            systemProperty 'smart_resource_drops.oversizedWireTest', 'true'
+            taskBefore prepareOversizedWireServerTest
+            programArgument '--nogui'
+        }
+        oversizedWireClientTest {
+            client()
+            sourceSet = clientTestSourceSet
+            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
+            gameDirectory = oversizedWireClientDirectory
+            systemProperty 'smart_resource_drops.oversizedWireTest', 'true'
+            taskBefore prepareOversizedWireClientTest
+            programArgument '--quickPlayMultiplayer'
+            programArgument '127.0.0.1:25579'
+        }
         migrationImportServerTest {
             server()
             sourceSet = clientTestSourceSet
+            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
             gameDirectory = migrationTestDirectory
             systemProperty 'smart_resource_drops.migrationTestPhase', 'import'
             systemProperty 'smart_resource_drops.migrationTestDirectory',
@@ -220,6 +409,7 @@ neoForge {
         migrationRestartServerTest {
             server()
             sourceSet = clientTestSourceSet
+            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
             gameDirectory = migrationTestDirectory
             systemProperty 'smart_resource_drops.migrationTestPhase', 'restart'
             systemProperty 'smart_resource_drops.migrationTestDirectory',
@@ -228,20 +418,17 @@ neoForge {
         }
     }
 
-    mods {
-        "${mod_id}" {
-            sourceSet(sourceSets.main)
-            sourceSet(gameTestSourceSet)
-            sourceSet(clientTestSourceSet)
-        }
-    }
-
     addModdingDependenciesTo(gameTestSourceSet)
     addModdingDependenciesTo(clientTestSourceSet)
+    addModdingDependenciesTo(optionalChannelTestSourceSet)
 
     unitTest {
         enable()
         testedMod = mods."${mod_id}"
+        // Test fixtures are folded into testedMod by ModDevGradle. Loading every
+        // run-only model here repeats the same main output under multiple mod keys
+        // and makes the JUnit worker lose its test classes.
+        loadedMods.set([mods."${mod_id}"])
     }
 }
 

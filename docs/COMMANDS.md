@@ -1,6 +1,6 @@
 # Smart Resource Multiplier command reference
 
-This reference applies to **Smart Resource Multiplier 1.2.3**. The command entry points remain legacy-compatible: server commands use `/smartdrops`, and the client configuration screen uses `/smartdropsgui`.
+This reference applies to **Smart Resource Multiplier 1.3.0** on Fabric and NeoForge. The command entry points remain legacy-compatible: server commands use `/smartdrops`, and the client configuration screen uses `/smartdropsgui`.
 
 Administrative configuration mutations are server-authoritative. They are validated, persisted, and published as one configuration update; if persistence fails, the live configuration is not changed. For the JSON field reference and defaults, see [CONFIGURATION.md](CONFIGURATION.md).
 
@@ -150,7 +150,7 @@ The command parser accepts the absolute ranges shown above. The stored result ma
 
 Source mode does not bypass the master switch, filter policy, block-entity safety, or the independent player/explosion/automation source gates. Placement provenance continues to be recorded while protection is off. See [ANTI_DUPE.md](ANTI_DUPE.md) for piston, falling-block, transformation, and persistence behavior.
 
-There are no `/smartdrops admin entity ...` mutation branches in 1.2.0. Entity-death settings are edited through the Entity Drops configuration screens or `config/smart_resource_drops.json`; `/smartdrops inspect entity` and `/smartdrops validate` remain the command-line diagnostics for that domain.
+There are no `/smartdrops admin entity ...` mutation branches in 1.3.0. Entity-death settings are edited through the Entity Drops configuration screens or `config/smart_resource_drops.json`; `/smartdrops inspect entity` and `/smartdrops validate` remain the command-line diagnostics for that domain.
 
 ## Multiplier rules, hierarchy, and `inherit`
 

@@ -38,9 +38,15 @@ for development_entry in (
     "com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.class",
     "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.class",
     "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest$Phase.class",
+    "com/chedidandrew/smartresourcedrops/client/NeoForgeOptionalClientOnlySmokeTest.class",
+    "com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.class",
+    "com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.class",
+    "com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.class",
+    "com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest$Phase.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.class",
+    "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.class",
     "fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
 ):
     require(
@@ -203,7 +209,7 @@ for forbidden in (
     ".build/core-tests/Example.class",
     "run/config/smart_resource_drops.json",
     "logs/latest.log",
-    "dist/SmartResourceMultiplier-1.2.3-source.zip",
+    "dist/SmartResourceMultiplier-1.3.0-source.zip",
     "out/production/Example.class",
     ".idea/workspace.xml",
     ".vs/SmartResourceDrops/v17/.suo",
@@ -250,6 +256,7 @@ for missing_source in (
     "docs/IMPLEMENTATION_LOG.md",
     "docs/PERFORMANCE.md",
     "docs/PUBLIC_RELEASE_CHECKLIST.md",
+    "docs/releases/1.3.0.md",
     "docs/TESTING.md",
     "docs/images/general-config.webp",
     "docs/images/block-overrides.webp",
@@ -269,11 +276,20 @@ for missing_source in (
     "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeMixinAuditGameTests.java",
     "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/entity_final_loot.json",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOptionalClientOnlySmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.java",
+    "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.java",
+    "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.java",
+    "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.java",
+    "neoforge/src/optionalchanneltest/resources/META-INF/neoforge.mods.toml",
     "neoforge/src/test/resources/fixtures/README.md",
     "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
     "tools/run_neoforge_multiplayer_smoke.sh",
+    "tools/run_neoforge_optional_channel_smoke.sh",
+    "tools/run_neoforge_oversized_wire_smoke.sh",
     "tools/validate_neoforge_jar.py",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityClassifier.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityDropTags.java",
@@ -313,6 +329,30 @@ for required_build_input in (
         required_build_input in jar_build_relatives,
         f"JAR freshness inputs omitted {required_build_input}",
     )
+
+neoforge_jar_build_relatives = tuple(
+    path.relative_to(ROOT).as_posix() for path in package_release.neoforge_jar_build_inputs()
+)
+for required_build_input in (
+    "gradle.properties",
+    "src/main/resources/assets/smart_resource_drops/lang/en_us.json",
+    "neoforge/build.gradle",
+    "neoforge/gradle.properties",
+    "neoforge/settings.gradle",
+    "neoforge/src/main/templates/META-INF/neoforge.mods.toml",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeEntrypoint.java",
+):
+    require(
+        required_build_input in neoforge_jar_build_relatives,
+        f"NeoForge JAR freshness inputs omitted {required_build_input}",
+    )
+
+root_properties = package_release.parse_properties(ROOT / "gradle.properties")
+neoforge_properties = package_release.parse_properties(ROOT / "neoforge/gradle.properties")
+require(
+    root_properties["mod_version"] == neoforge_properties["mod_version"],
+    "Fabric and NeoForge release versions drifted",
+)
 
 with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-") as temp_dir:
     temp_root = Path(temp_dir)
@@ -432,9 +472,15 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
         "com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.class",
         "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.class",
         "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest$Phase.class",
+        "com/chedidandrew/smartresourcedrops/client/NeoForgeOptionalClientOnlySmokeTest.class",
+        "com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.class",
+        "com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.class",
+        "com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.class",
+        "com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.class",
         "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.class",
         "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest$Phase.class",
         "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.class",
+        "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.class",
         "fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
     )
     for forbidden_entry in forbidden_jar_entries:

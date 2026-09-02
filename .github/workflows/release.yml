@@ -11,7 +11,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -50,12 +50,17 @@ jobs:
         run: |
           tag_version="${GITHUB_REF_NAME#v}"
           mod_version="$(sed -n 's/^mod_version=//p' gradle.properties)"
+          neoforge_mod_version="$(sed -n 's/^mod_version=//p' neoforge/gradle.properties)"
           test "$tag_version" = "$mod_version" || {
             echo "Tag $GITHUB_REF_NAME does not match mod_version=$mod_version" >&2
             exit 1
           }
+          test "$neoforge_mod_version" = "$mod_version" || {
+            echo "NeoForge mod_version=$neoforge_mod_version does not match Fabric mod_version=$mod_version" >&2
+            exit 1
+          }
 
-      - name: Validate, test, and build release JAR
+      - name: Validate, test, and build Fabric release JAR
         run: |
           python3 tools/validate_package.py
           python3 scripts/test_release_packaging.py
@@ -70,7 +75,31 @@ jobs:
       - name: Run client GUI and authority tests
         run: xvfb-run -a ./gradlew --no-daemon runClientGameTest
 
-      - name: Create deterministic release bundle
+      - name: Validate, test, and build NeoForge release JAR
+        run: |
+          ./gradlew -p neoforge --no-daemon clean build runGameTestServer
+          python3 tools/validate_neoforge_jar.py
+
+      - name: Run NeoForge Fabric-world migration gate
+        timeout-minutes: 10
+        run: ./gradlew -p neoforge --no-daemon --console=plain runMigrationRestartServerTest
+
+      - name: Run NeoForge physical-client category gate
+        run: xvfb-run -a ./gradlew -p neoforge --no-daemon runClientCategoryTest
+
+      - name: Run NeoForge multiplayer parity gate
+        timeout-minutes: 15
+        run: bash tools/run_neoforge_multiplayer_smoke.sh
+
+      - name: Run NeoForge optional-channel installation matrix
+        timeout-minutes: 15
+        run: bash tools/run_neoforge_optional_channel_smoke.sh
+
+      - name: Run NeoForge malicious oversized-wire gate
+        timeout-minutes: 12
+        run: bash tools/run_neoforge_oversized_wire_smoke.sh
+
+      - name: Create deterministic dual-loader release bundle
         run: python3 tools/package_release.py --output-dir dist
 
       - name: Publish GitHub release

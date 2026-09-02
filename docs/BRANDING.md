@@ -17,4 +17,4 @@ The approved `1254x1254` artwork was downscaled to `512x512` with high-quality L
 
 GitHub Release `v1.2.2` was published before this visual refresh and remains historical release evidence. Its packaged icon is the earlier pre-refresh artwork with SHA-256 `b8a56ed24db3a2e812271d69fd021a5756469ac0d649ebd7cc3f205d7d276694`.
 
-Version `1.2.3` publishes the reviewed replacement without rewriting the already published `v1.2.2` artifact. It does not change gameplay, the `smart_resource_drops` mod ID, configuration paths or schema, commands, datapack/network namespace, saved-world provenance, permissions, or anti-duplication behavior.
+Version `1.2.3` introduced the reviewed replacement without rewriting the already published `v1.2.2` artifact. Both Fabric and NeoForge `1.3.0` JARs retain the exact approved icon. The artwork does not change gameplay, the `smart_resource_drops` mod ID, configuration paths or schema, commands, datapack/network namespace, saved-world provenance, permissions, or anti-duplication behavior.

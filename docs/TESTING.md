@@ -1,8 +1,10 @@
 # Smart Resource Multiplier testing and verification
 
-## 1.3.0-beta.1 NeoForge validation build
+## 1.3.0 stable Fabric and NeoForge release
 
-The current source adds a NeoForge 26.2 target without changing the established Fabric artifact. It remains a validation beta with `release_ready=false`; the results here are evidence for the port, not approval to publish it as full loader parity.
+The stable `1.3.0` source provides separate Fabric and NeoForge 26.2 artifacts with `release_ready=true`. The loaders share the production gameplay, schema 3 configuration, commands, payload policy, and GUI, with thin loader-specific entrypoints, networking, and provenance-storage adapters.
+
+The General-screen labels **Multiply Block XP** and **Block XP Multiplier** now make their block-only scope explicit, while their tooltips point to the independent Mob XP controls under Entity Drops. This presentation-only clarification does not change configuration fields, defaults, or multiplier behavior and is shared by both loader builds.
 
 The current NeoForge validation sequence is:
 
@@ -14,15 +16,21 @@ python3 scripts/test_release_packaging.py
 python3 tools/validate_neoforge_jar.py
 xvfb-run -a ./gradlew -p neoforge --no-daemon runClientCategoryTest
 bash tools/run_neoforge_multiplayer_smoke.sh
+bash tools/run_neoforge_optional_channel_smoke.sh
+bash tools/run_neoforge_oversized_wire_smoke.sh
 ```
 
-On 2026-09-01, the NeoForge build passed 164 JUnit tests (158 shared plus 6 NeoForge-focused tests), all 65 dedicated-server GameTests, the physical-client Entity Categories check, and the separately launched multiplayer client/server gate. That multiplayer gate negotiates all six configuration channels; observes a fresh non-operator's read-only root screen and later operator promotion; applies a server-authoritative global edit; fills block rules to the configured maximum and receives the authoritative snapshot; rejects an oversized local edit before it reaches the wire; and resets the server configuration. The runner requires clean exits plus independent client and server success markers.
+On 2026-09-01, the NeoForge build passed 164 JUnit tests (158 shared plus 6 NeoForge-focused tests), all 65 dedicated-server GameTests, the physical-client Entity Categories check, and the separately launched multiplayer client/server gate. That multiplayer gate negotiates all six configuration channels; invokes the production `/smartdropsgui` route; observes a fresh non-operator's read-only root screen and later operator promotion; navigates the connected Entity Drops, exact override, exact filter, Shearing Drops, shearing default, and exact shearing-override editors; stages changes with the real rows and multiplier buttons; returns through Back; and applies one shared patch from General. Both processes verify the authoritative entity/filter/shearing values. It then fills block rules to the configured maximum, rejects an oversized local edit before transport, completes the real Reset Everything confirmation, disconnects with a request outstanding, verifies cached state was cleared, reconnects over a new connection with all six channels, and receives a fresh editable reset snapshot. The runner requires clean exits plus independent client and server success markers.
+
+The malicious-wire gate independently bypasses the normal typed client encoder and submits a 1,048,577-character patch to the negotiated NeoForge payload ID. Its runner requires the exact server-side `1,048,577 > 1,048,576` decoder rejection, disconnection of only the offending client, byte-equivalent snapshot JSON at the same revision, 40 subsequent healthy server ticks, a responsive `/smartdrops status` command, clean client/server exits, and independent success markers. The local separate-process run passed on 2026-09-01.
+
+The optional-channel runner launches two isolated physical client/server pairs. In the first, the production mod exists only on the client; it joins cleanly, observes the server-bound channels as unavailable, and keeps the connected config route in a fail-closed loading/error state instead of exposing editable local defaults. In the second, the production mod exists only on the server; a production-unmodded client joins cleanly while the server observes its client-bound channels as unavailable. Both pairs disconnect and exit cleanly. The local matrix passed on 2026-09-01.
 
 Existing-world migration coverage uses byte-for-byte Fabric-authored evidence rather than a synthetic NeoForge substitute. The Base64 fixture decodes to the exact 11,088-byte uncompressed Fabric chunk NBT with SHA-256 `b36540e977c8dd932e8a2841787657cc74cf3e3e2029b50c9e3c05877ba07690`. The test imports its legacy provenance, serializes the native NeoForge attachment, writes and flushes a temporary Anvil region, closes and reopens that region, and deserializes the native data into a fresh chunk while checking native-data precedence.
 
 The dedicated migration command adds the full runtime boundary for that captured chunk. Its import JVM loads the seeded Anvil data through a real `ServerLevel`, verifies `PlacementTracker` sees the legacy position, requires the chunk to be dirty, and calls `MinecraftServer.saveEverything`. A second dedicated-server JVM verifies the persisted legacy envelope is gone, the native NeoForge attachment is present, and the gameplay lookup still succeeds. Both phases must write independent success markers. The local two-JVM run passed on 2026-09-01.
 
-These passes do not yet prove the optional-channel client-only/server-only matrix, disconnect/reconnect behavior, entity override/filter/shearing GUI edits, or malicious oversized wire input. The migration proof is one authentic Minecraft 26.2 chunk embedded in a minimal test region; it is not a complete-world, older-version, custom-dimension, or modded-registry migration matrix. Those broader cases remain release gates.
+The migration proof is one authentic Minecraft 26.2 chunk embedded in a minimal test region; it is not a complete-world, older-version, custom-dimension, or modded-registry migration matrix. Those broader cases remain documented compatibility limits, so players must back up worlds before the supported one-way Fabric-to-NeoForge move.
 
 ## 1.2.3 stable icon and toolchain release
 
@@ -42,7 +50,7 @@ bash tools/run_core_tests.sh
 xvfb-run -a ./gradlew --no-daemon runClientGameTest
 ```
 
-The expected playable artifact is `build/libs/smart-resource-multiplier-1.2.3.jar`. Inspection must confirm public name `Smart Resource Multiplier`, version `1.2.3`, stable mod ID `smart_resource_drops`, the approved icon bytes, embedded MIT license, no nested JARs, and no GameTest classes or resources. The exact clean-checkout run, artifact size, ZIP-entry count, and SHA-256 are recorded in `BUILD_STATUS.md` after CI passes.
+The expected playable artifact is `build/libs/smart-resource-multiplier-1.2.3.jar`. Inspection must confirm public name `Smart Resource Multiplier`, version `1.2.3`, stable mod ID `smart_resource_drops`, the approved icon bytes, embedded MIT license, no nested JARs, and no GameTest classes or resources. The preserved release record is [`releases/1.2.3.md`](releases/1.2.3.md); `BUILD_STATUS.md` describes the current stable release rather than this historical artifact.
 
 No new hands-on gameplay matrix is required because the gameplay implementation is unchanged. Runtime client and dedicated-server tests remain required because the visible title, reset prompts, command headers, metadata, and packaged artifact identity must be exercised through real runtime paths.
 

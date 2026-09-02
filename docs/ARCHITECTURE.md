@@ -76,10 +76,9 @@ Snapshot requests and patch acknowledgements carry an ID and the client binds a 
 
 ## Dependency policy
 
-Runtime requirements are only:
+Runtime requirements are deliberately loader-specific and minimal:
 
-- Fabric Loader
-- Fabric API
-- Minecraft
+- Fabric build: Fabric Loader, Fabric API, and Minecraft
+- NeoForge build: NeoForge and Minecraft
 
-Gson is supplied by Minecraft. No Cloth Config, Kotlin runtime, or utility library is required. Mod Menu is a compile-only optional client integration and is not present on the dedicated-server runtime classpath.
+Gson is supplied by Minecraft. No Cloth Config, Kotlin runtime, or utility library is required. Mod Menu is a compile-only optional Fabric client integration and is not present on the dedicated-server runtime classpath; NeoForge uses its native configuration-screen factory.

@@ -8,7 +8,7 @@ If `blacklist` is absent or `null`, the safety blacklist is installed for compat
 
 ## Schema 3 shearing settings
 
-Smart Resource Multiplier 1.2.3 uses schema 3. The icon and build-toolchain refresh changes no configuration field, default, migration rule, or authority behavior. These settings form an independent 256-entry domain and do not consume the block or death-entity rule budgets.
+Smart Resource Multiplier 1.3.0 uses the same schema 3 configuration on Fabric and NeoForge. The loader port and clearer block-XP labels change no configuration field, default, migration rule, or authority behavior. These settings form an independent 256-entry domain and do not consume the block or death-entity rule budgets.
 
 | Field | Fresh/reset default | Meaning |
 | --- | ---: | --- |
@@ -45,7 +45,7 @@ Adding a rule requires the entity to exist in the live registry, be certified st
 | `filterMode` | `BLACKLIST` | Interpret filter sets as blacklist or whitelist |
 | `playerMining` | `true` | Allow ordinary player mining to use configured multipliers |
 | `multiplyExperience` | `false` | Independently multiply block XP |
-| `experienceMultiplier` | `2` | XP multiplier when enabled |
+| `experienceMultiplier` | `2` | Multiplier for eligible block-break XP when enabled |
 | `explosions` | `true` | Allow explosion-created block loot to multiply |
 | `automatedMining` | `false` | Allow supported non-player `Block.dropResources` paths |
 | `protectBlockEntities` | `true` | Exclude blocks carrying block entities |
@@ -238,7 +238,7 @@ Automation compatibility is intentionally opt-in. A machine must use a vanilla `
 
 `/smartdropsgui` and Mod Menu's optional Configure button share one route. When that route opens with no play connection or integrated server—normally through Mod Menu on the title screen—it edits the global local file as defaults for future singleplayer worlds. Once a play connection or integrated server exists, the route is exclusively server-authoritative: it requests a sanitized live snapshot and never falls back to the client file. Regular players receive a read-only view. Operators and the integrated-server owner can stage and apply:
 
-- Global and XP multipliers
+- Global block-drop and block-XP multipliers
 - Placement protection, source mode, and filter mode
 - Per-block overrides searchable by namespaced ID or translated block name
 - Category overrides

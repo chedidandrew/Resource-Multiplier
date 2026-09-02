@@ -1,10 +1,10 @@
 # Smart Resource Multiplier roadmap
 
-## Current 1.2.3 status
+## Current 1.3.0 status
 
-Smart Resource Multiplier `1.2.3` is a compatibility-preserving icon and build-toolchain patch. It publishes the approved high-resolution full-name artwork and lets Gradle select or provision the required Java 25 compiler from an older supported Gradle JVM. It adds no gameplay system and changes no multiplier rule, safety gate, configuration field, default, schema, networking behavior, permission path, persistence identifier, or mixin target.
+Smart Resource Multiplier `1.3.0` provides native Fabric and NeoForge 26.2 builds from one shared gameplay/configuration/GUI implementation. Both loader files preserve schema 3, commands, multiplayer authority, block/entity/shearing rules, safety budgets, and the `smart_resource_drops` compatibility namespace. The General screen now labels block XP explicitly; mob XP remains an independent setting under Entity Drops.
 
-The `smart_resource_drops` mod ID and datapack/network namespace, `config/smart_resource_drops.json`, saved placement provenance, Java package, `/smartdrops`, and `/smartdropsgui` remain stable. Version `1.2.3` packages the approved **SMART RESOURCE MULTIPLIER** diamond-mining icon documented in [BRANDING.md](BRANDING.md), while tagged `v1.2.2` retains its historical pre-refresh icon. Future feature work remains governed by the historical scope and safety decisions below.
+The `smart_resource_drops` mod ID and datapack/network namespace, `config/smart_resource_drops.json`, Java package, `/smartdrops`, and `/smartdropsgui` remain stable. Fabric-to-NeoForge placed-block provenance migration is validated but intentionally one-way because the loaders use different chunk-data envelopes; back up worlds before changing loaders. Both artifacts package the approved **SMART RESOURCE MULTIPLIER** diamond-mining icon documented in [BRANDING.md](BRANDING.md). Future feature work remains governed by the historical scope and safety decisions below.
 
 ## Historical roadmap
 

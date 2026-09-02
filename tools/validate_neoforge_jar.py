@@ -35,12 +35,23 @@ REQUIRED_CLASSES = {
     "com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/SerializableChunkDataLegacyProvenanceMixin.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/ServerPlayerGameModeMixin.class",
 }
-FORBIDDEN_PARTS = {"clienttest", "fixture", "fixtures", "gametest", "test", "tests"}
+FORBIDDEN_PARTS = {
+    "clienttest",
+    "fixture",
+    "fixtures",
+    "gametest",
+    "optionaltest",
+    "test",
+    "tests",
+}
 FORBIDDEN_TEST_CLASS_PREFIXES = {
     "com/chedidandrew/smartresourcedrops/client/neoforgeclientcategorysmoketest",
     "com/chedidandrew/smartresourcedrops/client/neoforgemultiplayerclientsmoketest",
+    "com/chedidandrew/smartresourcedrops/client/neoforgeoptionalclientonlysmoketest",
+    "com/chedidandrew/smartresourcedrops/client/neoforgeoversizedwireclientsmoketest",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemigrationrestartsmoketest",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemultiplayerserversmoketest",
+    "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgeoversizedwireserversmoketest",
 }
 
 

@@ -129,7 +129,47 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Upload NeoForge validation artifact
+      - name: Run NeoForge optional-channel installation matrix
+        timeout-minutes: 15
+        run: bash tools/run_neoforge_optional_channel_smoke.sh
+
+      - name: Upload NeoForge optional-channel smoke logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: SmartResourceMultiplier-NeoForge-optional-channel-logs-${{ github.sha }}
+          path: |
+            neoforge/build/optional-channel-smoke-logs/
+            neoforge/build/optional-channel-test/client-only/server/logs/
+            neoforge/build/optional-channel-test/client-only/server/crash-reports/
+            neoforge/build/optional-channel-test/client-only/client/logs/
+            neoforge/build/optional-channel-test/client-only/client/crash-reports/
+            neoforge/build/optional-channel-test/server-only/server/logs/
+            neoforge/build/optional-channel-test/server-only/server/crash-reports/
+            neoforge/build/optional-channel-test/server-only/client/logs/
+            neoforge/build/optional-channel-test/server-only/client/crash-reports/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run NeoForge malicious oversized-wire smoke test
+        timeout-minutes: 12
+        run: bash tools/run_neoforge_oversized_wire_smoke.sh
+
+      - name: Upload NeoForge oversized-wire smoke logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: SmartResourceMultiplier-NeoForge-oversized-wire-logs-${{ github.sha }}
+          path: |
+            neoforge/build/oversized-wire-smoke-logs/
+            neoforge/build/oversized-wire-test/server/logs/
+            neoforge/build/oversized-wire-test/server/crash-reports/
+            neoforge/build/oversized-wire-test/client/logs/
+            neoforge/build/oversized-wire-test/client/crash-reports/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload NeoForge playable artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: SmartResourceMultiplier-NeoForge-${{ github.sha }}

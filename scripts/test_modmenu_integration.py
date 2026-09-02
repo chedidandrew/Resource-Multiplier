@@ -318,16 +318,24 @@ require(
 
 block_xp_tooltips = {
     "smart_resource_drops.gui.multiply_xp_tooltip": (
-        "Multiply XP produced by eligible block breaks."
+        "Multiply XP produced by eligible block breaks. Mob XP is configured separately "
+        "under Entity Drops."
     ),
     "smart_resource_drops.gui.xp_multiplier_tooltip": (
-        "Sets the multiplier for XP produced by eligible block breaks when block XP "
-        "multiplication is enabled."
+        "Sets the multiplier for XP produced by eligible block breaks. Mob XP uses its "
+        "own multiplier under Entity Drops."
     ),
 }
 for key, expected in block_xp_tooltips.items():
     require(lang.get(key) == expected, f"Block-XP tooltip changed unexpectedly: {key}")
     require(key in root_screen, f"The root block-XP control must keep using its tooltip key: {key}")
+
+block_xp_labels = {
+    "smart_resource_drops.gui.multiply_xp": "Multiply Block XP",
+    "smart_resource_drops.gui.xp_multiplier": "Block XP Multiplier",
+}
+for key, expected in block_xp_labels.items():
+    require(lang.get(key) == expected, f"Block-XP label changed unexpectedly: {key}")
 
 advanced_screen = children["AdvancedConfigScreen.java"]
 advanced_rows = method_body(advanced_screen, "refreshRows")

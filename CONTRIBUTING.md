@@ -8,7 +8,7 @@ Changes are in scope when they strengthen server-authoritative final-loot multip
 
 Do not add vein mining, tree felling, automatic smelting, magnets, inventory sorting/movement, tool or enchantment rebalancing, or per-biome/tool/enchantment/weather/time rule layers here. Chest/structure loot, fishing, bartering, trading, milking, brushing, egg laying, gifts, breeding output, spawning, crafting/processing, player or armor-stand deaths, equipment, held or picked-up items, entity inventories, direct equipment ejection, beehive/block shearing through the entity subsystem, unsupported custom-machine shearing, and other custom/direct item creation remain excluded. A compatibility change must start from a concrete reproducible case and fail closed outside the supported boundary.
 
-Smart Resource Multiplier 1.2.x has no supported public Java API. Public implementation types are not compatibility promises. Use the documented configuration, commands, project-owned datapack tags, and protected-output tag; a Java API remains deferred until a real third-party case demonstrates that those surfaces cannot solve the integration safely.
+Smart Resource Multiplier 1.3.x has no supported public Java API. Public implementation types are not compatibility promises. Use the documented configuration, commands, project-owned datapack tags, and protected-output tag; a Java API remains deferred until a real third-party case demonstrates that those surfaces cannot solve the integration safely.
 
 ## Security and privacy
 
@@ -23,11 +23,12 @@ Before submitting a change:
 1. Update `CHANGELOG.md` and any affected documentation.
 2. Run every source and release-packaging validator listed in `docs/TESTING.md`.
 3. Run `tools/run_core_tests.ps1` on Windows or `bash tools/run_core_tests.sh` on POSIX.
-4. Run `./gradlew --no-daemon clean test runGameTest build` with Java 25 (`gradlew.bat` on Windows).
-5. Test affected natural, player-placed, piston-moved, falling, transformed, automation, block-entity, entity death-loot/XP, attribution, multiplayer-authority and GUI cases in game.
-6. Include a mapped-class JUnit or dedicated-server GameTest regression for every bug fix when practical; do not present static source checks as runtime proof.
-7. Review `-Xlint:deprecation` output and remove project-source deprecations with supported Minecraft/Fabric APIs. Do not silence a package or turn unrelated dependency warnings into a blanket failure policy.
-8. For validation or output-budget work, test compact/verbose bounds, unknown-reference preservation, integer overflow, whole-list `1x` fallback, statistics, and warning throttling. Record final counts and artifact identity only from the serialized release run.
-9. Keep the playable JAR free of nested/shaded dependencies, fixtures/tests, source files, configuration, logs, worlds, caches, and release bundles. Keep required public templates, documentation, wrapper files, tags, and key sources in the deterministic source archive.
+4. Run the Fabric suite with `./gradlew --no-daemon clean test runGameTest build` and `./gradlew --no-daemon runClientGameTest` using Java 25 (`gradlew.bat` on Windows).
+5. Run the NeoForge suite with `./gradlew -p neoforge --no-daemon clean build runGameTestServer`, followed by the migration, client, and physical multiplayer gates listed in `docs/TESTING.md`.
+6. Test affected natural, player-placed, piston-moved, falling, transformed, automation, block-entity, entity death-loot/XP, attribution, multiplayer-authority and GUI cases in game on both loaders when shared behavior changes.
+7. Include a mapped-class JUnit or dedicated-server GameTest regression for every bug fix when practical; do not present static source checks as runtime proof.
+8. Review `-Xlint:deprecation` output and remove project-source deprecations with supported Minecraft, Fabric, or NeoForge APIs. Do not silence a package or turn unrelated dependency warnings into a blanket failure policy.
+9. For validation or output-budget work, test compact/verbose bounds, unknown-reference preservation, integer overflow, whole-list `1x` fallback, statistics, and warning throttling. Record final counts and artifact identity only from the serialized release run.
+10. Keep both playable JARs free of nested/shaded dependencies, fixtures/tests, source files, configuration, logs, worlds, caches, and release bundles. Keep required public templates, documentation, wrapper files, tags, and key sources in the deterministic source archive.
 
 Avoid new runtime dependencies unless the benefit clearly outweighs the added footprint.

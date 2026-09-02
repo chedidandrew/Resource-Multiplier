@@ -1,5 +1,13 @@
 # Implementation log
 
+## 2026-09-01, Fabric and NeoForge 1.3.0 parity release
+
+Smart Resource Multiplier now builds separate native Fabric and NeoForge 26.2 JARs from one shared gameplay, configuration, commands, networking-policy, and GUI implementation. NeoForge-specific entrypoints, payload registration, configuration-screen registration, placement storage, migration, fake-player handling, and mixins remain isolated under `neoforge/`; the established Fabric artifact and adapter paths remain intact.
+
+The release closes the port with loader-isolated JAR validation; the complete shared JUnit and dedicated-server GameTest suites; real Entity Categories and connected `/smartdropsgui` clients; operator/non-operator authority; entity override/filter and shearing child edits; Apply/confirmed Reset; disconnect/reconnect renegotiation; client-only and server-only optional-channel installations; malicious oversized-wire rejection; and a captured Fabric-authored chunk imported, saved, and restarted through native NeoForge storage. Fabric-to-NeoForge provenance migration is intentionally one-way and the captured-chunk proof is not represented as unlimited whole-world or third-party compatibility.
+
+The General-screen text now says **Multiply Block XP** and **Block XP Multiplier** on both loaders, with tooltips pointing to the independent Mob XP controls under Entity Drops. This changes presentation only: schema 3 fields, defaults, saved configuration, gameplay resolution, and network payloads are unchanged. Stable packaging produces `smart-resource-multiplier-1.3.0.jar` for Fabric and `smart-resource-multiplier-neoforge-1.3.0.jar` for NeoForge; installing both in one instance is unsupported.
+
 ## 2026-08-31, full-name diamond-mining icon refresh
 
 The current production asset now uses the supplied **SMART RESOURCE MULTIPLIER** artwork, featuring a diamond-ore block, diamond pickaxe, scattered diamonds, two upward green arrows, and a purple-and-gold frame. The `1254x1254` source was downscaled with Lanczos resampling to a higher-detail `512x512` production asset at `assets/smart_resource_drops/icon.png`; its SHA-256 is `db216ccd6058404de18f797ebb5be87a313899a27c3f1971fdf086b8637dc190`.

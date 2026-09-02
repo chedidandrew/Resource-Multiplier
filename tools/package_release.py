@@ -8,6 +8,7 @@ import os
 import shutil
 import stat
 import subprocess
+import sys
 import zipfile
 from collections.abc import Iterable, Sequence
 from pathlib import Path, PurePosixPath
@@ -17,6 +18,7 @@ FIXED_TIME = (2026, 8, 29, 0, 0, 0)
 PUBLIC_MOD_NAME = "Smart Resource Multiplier"
 PUBLIC_ARCHIVE_BASE = "SmartResourceMultiplier"
 PLAYABLE_JAR_BASE = "smart-resource-multiplier"
+NEOFORGE_PLAYABLE_JAR_BASE = "smart-resource-multiplier-neoforge"
 PROJECT_HOMEPAGE = "https://www.curseforge.com/minecraft/mc-mods/resource-multiplier"
 PROJECT_SOURCES = "https://github.com/chedidandrew/Resource-Multiplier"
 PROJECT_ISSUES = f"{PROJECT_SOURCES}/issues"
@@ -143,6 +145,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "tools/validate_package.py",
         "tools/validate_neoforge_jar.py",
         "docs/NEOFORGE_PORT.md",
+        "docs/releases/1.3.0.md",
         "neoforge/build.gradle",
         "neoforge/gradle.properties",
         "neoforge/settings.gradle",
@@ -167,13 +170,22 @@ REQUIRED_SOURCE_FILES = frozenset(
         "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structure/empty.nbt",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.java",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.java",
+        "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOptionalClientOnlySmokeTest.java",
+        "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.java",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.java",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.java",
+        "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.java",
+        "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.java",
+        "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.java",
+        "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.java",
+        "neoforge/src/optionalchanneltest/resources/META-INF/neoforge.mods.toml",
         "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/client/ClientEntityCategoryTagIndexTest.java",
         "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigrationTest.java",
         "neoforge/src/test/resources/fixtures/README.md",
         "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--435018--913934.nbt.b64",
         "tools/run_neoforge_multiplayer_smoke.sh",
+        "tools/run_neoforge_optional_channel_smoke.sh",
+        "tools/run_neoforge_oversized_wire_smoke.sh",
     }
 )
 EXCLUDED_PARTS = frozenset(
@@ -344,6 +356,7 @@ FORBIDDEN_RELEASE_JAR_PARTS = frozenset(
         "fixture",
         "fixtures",
         "gametest",
+        "optionaltest",
         "testmod",
     }
 )
@@ -351,8 +364,11 @@ FORBIDDEN_RELEASE_JAR_CLASS_PREFIXES = frozenset(
     {
         "com/chedidandrew/smartresourcedrops/client/neoforgeclientcategorysmoketest",
         "com/chedidandrew/smartresourcedrops/client/neoforgemultiplayerclientsmoketest",
+        "com/chedidandrew/smartresourcedrops/client/neoforgeoptionalclientonlysmoketest",
+        "com/chedidandrew/smartresourcedrops/client/neoforgeoversizedwireclientsmoketest",
         "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemigrationrestartsmoketest",
         "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemultiplayerserversmoketest",
+        "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgeoversizedwireserversmoketest",
     }
 )
 FORBIDDEN_RELEASE_JAR_NAMES = frozenset(
@@ -550,6 +566,51 @@ def jar_build_inputs() -> list[Path]:
     if missing:
         raise ReleasePackageError(f"missing JAR build inputs: {', '.join(sorted(missing))}")
     return sorted(set(files), key=lambda path: path.relative_to(ROOT).as_posix())
+
+
+def neoforge_jar_build_inputs() -> list[Path]:
+    """Return shared and NeoForge-specific files that require rebuilding its JAR."""
+    files = jar_build_inputs()
+    files.extend(
+        ROOT / relative
+        for relative in (
+            "neoforge/build.gradle",
+            "neoforge/gradle.properties",
+            "neoforge/settings.gradle",
+        )
+    )
+    files.extend(path for path in (ROOT / "neoforge/src").rglob("*") if path.is_file())
+    missing = [str(path.relative_to(ROOT)) for path in files if not path.is_file()]
+    if missing:
+        raise ReleasePackageError(
+            f"missing NeoForge JAR build inputs: {', '.join(sorted(missing))}"
+        )
+    return sorted(set(files), key=lambda path: path.relative_to(ROOT).as_posix())
+
+
+def validate_neoforge_release_candidate(jar_path: Path, expected_version: str) -> None:
+    """Run the standalone loader-isolation validator against the expected candidate."""
+    expected = (
+        ROOT
+        / "neoforge"
+        / "build"
+        / "libs"
+        / f"{NEOFORGE_PLAYABLE_JAR_BASE}-{expected_version}.jar"
+    )
+    if jar_path.resolve() != expected.resolve():
+        raise ReleasePackageError(
+            f"unexpected NeoForge candidate path {jar_path}; expected {expected}"
+        )
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "tools/validate_neoforge_jar.py")],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip()
+        raise ReleasePackageError(detail or "NeoForge JAR validator failed")
 
 
 def validate_release_jar(
@@ -876,10 +937,18 @@ def main() -> None:
     args = parser.parse_args()
 
     properties = parse_properties(ROOT / "gradle.properties")
+    neoforge_properties = parse_properties(ROOT / "neoforge/gradle.properties")
     version = properties["mod_version"]
+    neoforge_version = neoforge_properties["mod_version"]
+    if neoforge_version != version:
+        raise SystemExit(
+            "Fabric and NeoForge release versions differ: "
+            f"{version!r} versus {neoforge_version!r}"
+        )
     minecraft_version = properties["minecraft_version"]
     prefix = f"{PUBLIC_ARCHIVE_BASE}-{version}"
     jar_name = f"{PLAYABLE_JAR_BASE}-{version}.jar"
+    neoforge_jar_name = f"{NEOFORGE_PLAYABLE_JAR_BASE}-{version}.jar"
     source_name = f"{prefix}-source.zip"
     checksum_name = f"{prefix}-SHA256SUMS.txt"
     package_readme_name = f"{prefix}-PACKAGE_README.txt"
@@ -905,8 +974,15 @@ def main() -> None:
     jar_source = ROOT / "build" / "libs" / jar_name
     if not jar_source.is_file():
         raise SystemExit(f"Missing Loom-built JAR: {jar_source}. Run ./gradlew clean build first.")
+    neoforge_jar_source = ROOT / "neoforge" / "build" / "libs" / neoforge_jar_name
+    if not neoforge_jar_source.is_file():
+        raise SystemExit(
+            f"Missing NeoForge-built JAR: {neoforge_jar_source}. "
+            "Run ./gradlew -p neoforge clean build first."
+        )
     try:
         build_inputs = jar_build_inputs()
+        neoforge_build_inputs = neoforge_jar_build_inputs()
     except ReleasePackageError as exc:
         raise SystemExit(f"Release JAR input validation failed: {exc}") from exc
     newest_input = max(path.stat().st_mtime for path in build_inputs)
@@ -915,12 +991,20 @@ def main() -> None:
             f"Stale Loom-built JAR: {jar_source}. Java/resource/test or Gradle build inputs are newer; "
             "run ./gradlew clean test runGameTest build first."
         )
+    newest_neoforge_input = max(path.stat().st_mtime for path in neoforge_build_inputs)
+    if neoforge_jar_source.stat().st_mtime + 1 < newest_neoforge_input:
+        raise SystemExit(
+            f"Stale NeoForge-built JAR: {neoforge_jar_source}. Shared/NeoForge build inputs are newer; "
+            "run ./gradlew -p neoforge clean test build first."
+        )
     try:
         validate_release_jar(jar_source, version)
+        validate_neoforge_release_candidate(neoforge_jar_source, version)
     except ReleasePackageError as exc:
         raise SystemExit(f"Release JAR content validation failed: {exc}") from exc
 
     jar_output = output_dir / jar_name
+    neoforge_jar_output = output_dir / neoforge_jar_name
     checksum_output = output_dir / checksum_name
     package_readme_output = output_dir / package_readme_name
     bundle_output = output_dir / bundle_name
@@ -928,15 +1012,17 @@ def main() -> None:
 
     shutil.copyfile(jar_source, jar_output)
     os.chmod(jar_output, 0o644)
+    shutil.copyfile(neoforge_jar_source, neoforge_jar_output)
+    os.chmod(neoforge_jar_output, 0o644)
     try:
         build_source_zip(source_output, prefix, source_inputs)
     except ReleasePackageError as exc:
         raise SystemExit(f"Source package validation failed: {exc}") from exc
 
-    package_readme = f"""Smart Resource Multiplier {version} package\n\nTarget: Minecraft Java {minecraft_version}, Fabric Loader {properties['loader_version']}, Fabric API {properties['fabric_version']}, Java 25.\n\nFiles:\n- {jar_name}: Fabric Loom-built release JAR produced by `gradlew clean build`.\n- {source_name}: Complete GitHub-ready source, tests, documentation, Gradle build, and GitHub Actions workflows.\n- {checksum_name}: SHA-256 hashes for the release JAR and source archive.\n- {prefix}-BUILD_STATUS.md: Validation status and remaining manual in-game release checks.\n\nRelease gate:\nOnly package and publish a JAR produced by the real Java 25 Fabric Loom build. Complete the manual in-game checks in docs/PUBLIC_RELEASE_CHECKLIST.md before making a public release.\n"""
+    package_readme = f"""Smart Resource Multiplier {version} package\n\nTarget: Minecraft Java {minecraft_version}, Java 25. Choose exactly one loader-specific JAR.\n\nFiles:\n- {jar_name}: Fabric release JAR for Fabric Loader {properties['loader_version']} and Fabric API {properties['fabric_version']}.\n- {neoforge_jar_name}: NeoForge release JAR for NeoForge {neoforge_properties['neo_version']}.\n- {source_name}: Complete GitHub-ready dual-loader source, tests, documentation, Gradle builds, and GitHub Actions workflows.\n- {checksum_name}: SHA-256 hashes for both release JARs and the source archive.\n- {prefix}-BUILD_STATUS.md: Validation status and release evidence.\n\nInstallation:\nUpload the two JARs as separate CurseForge files with the correct Fabric or NeoForge loader selection. Never install both JARs in the same Minecraft instance. Back up a world before changing loaders; Fabric-to-NeoForge provenance migration is one-way.\n"""
     package_readme_output.write_text(package_readme, encoding="utf-8", newline="\n")
 
-    checksums = [jar_output, source_output]
+    checksums = [jar_output, neoforge_jar_output, source_output]
     checksum_output.write_text(
         "".join(f"{sha256(path)}  {path.name}\n" for path in checksums),
         encoding="utf-8",
@@ -948,7 +1034,14 @@ def main() -> None:
 
     build_bundle(
         bundle_output,
-        [jar_output, source_output, checksum_output, package_readme_output, status_output],
+        [
+            jar_output,
+            neoforge_jar_output,
+            source_output,
+            checksum_output,
+            package_readme_output,
+            status_output,
+        ],
     )
     bundle_checksum_output.write_text(
         f"{sha256(bundle_output)}  {bundle_output.name}\n",
@@ -958,6 +1051,7 @@ def main() -> None:
 
     print(f"Created {source_output}")
     print(f"Created {jar_output}")
+    print(f"Created {neoforge_jar_output}")
     print(f"Created {checksum_output}")
     print(f"Created {bundle_output}")
     print(f"Created {bundle_checksum_output}")
