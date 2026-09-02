@@ -19,6 +19,9 @@
       "com.chedidandrew.smartresourcedrops.gametest.SmartDropsClientGameTest"
     ]
   },
+  "mixins": [
+    "smart_resource_drops_gametest.mixins.json"
+  ],
   "depends": {
     "fabricloader": "*",
     "minecraft": "1.21.11",

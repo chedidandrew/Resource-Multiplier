@@ -28,12 +28,14 @@ def gameTestSourceSet = sourceSets.create('gametest')
 gameTestSourceSet.java {
     setSrcDirs(['../src/gametest/java', 'src/gametest/java'])
     exclude('**/SmartDropsClientGameTest.java')
+    exclude('**/mixin/client/**')
     exclude('**/fixture/FabricGameTestEntityFixtures.java')
     exclude('**/fixture/FabricGameTestBlockLootFixtures.java')
 }
 gameTestSourceSet.resources {
     setSrcDirs(['../src/gametest/resources', 'src/gametest/resources'])
     exclude('fabric.mod.json')
+    exclude('smart_resource_drops_gametest.mixins.json')
 }
 
 def clientTestSourceSet = sourceSets.create('clienttest')

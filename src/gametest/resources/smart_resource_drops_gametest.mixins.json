@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "com.chedidandrew.smartresourcedrops.gametest.mixin.client",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "FabricClientGameTestTimeoutMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
