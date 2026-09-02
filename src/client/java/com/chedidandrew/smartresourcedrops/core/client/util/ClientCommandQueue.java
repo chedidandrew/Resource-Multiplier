@@ -11,7 +11,6 @@ import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
 import com.chedidandrew.smartresourcedrops.core.util.QueuedWorkDrain;
 import com.chedidandrew.smartresourcedrops.core.util.QueuedWorkDrain.TimedValue;
 
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 
@@ -21,17 +20,15 @@ public final class ClientCommandQueue {
     private static final int MAX_PENDING = 128;
     private static final Map<String, TimedValue<String>> COMMANDS = new LinkedHashMap<>();
     private static final Map<String, TimedValue<Runnable>> ACTIONS = new LinkedHashMap<>();
-    private static boolean initialized;
-
     private ClientCommandQueue() {
     }
 
-    public static synchronized void initialize() {
-        if (initialized) {
-            return;
-        }
-        initialized = true;
-        ClientTickEvents.END_CLIENT_TICK.register(client -> drain(client, false));
+    public static void initialize() {
+        // The active loader invokes tick(Minecraft) from its client post-tick event.
+    }
+
+    public static void tick(final Minecraft client) {
+        drain(client, false);
     }
 
     public static boolean send(final String command) {

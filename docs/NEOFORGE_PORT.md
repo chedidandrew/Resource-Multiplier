@@ -2,56 +2,64 @@
 
 ## Status
 
-Port work started on 2026-09-01 from Fabric 1.2.3. The Fabric implementation remains the behavioral reference and production release until the NeoForge compile, GameTest, client, and dedicated-server gates are green.
+Implementation is now buildable on both loaders. On 2026-09-01, the NeoForge module passed a clean compile/build, 163 JUnit tests (158 shared tests plus 5 NeoForge-focused tests), and all 65 dedicated-server GameTests. Those server tests include the complete shared entity-death, mob-XP, placement/provenance, block-loot-budget, and shearing/dispenser suites plus NeoForge-native server-loader and mixin audits. A dedicated NeoForge server reached `Done`. A physical NeoForge client reached the title screen, opened the production Entity Categories screen, rendered all nine rows and Back, and verified tag-dependent Enderman and Iron Golem classifications without mod or mixin crashes. Fabric also passed a clean build, all 158 JUnit tests, and all 66 dedicated-server GameTests after the adapter refactor.
+
+This remains a validation build rather than a public parity release. Connected config-GUI authority checks, real multiplayer and payload-limit checks, and a real Fabric-authored region migration/save/restart fixture are still pending.
 
 ## Public repository layout
 
-The repository is moving toward a loader-explicit layout without duplicating gameplay policy:
+The staged multi-loader layout keeps one gameplay implementation while making loader boundaries explicit:
 
 ```text
 /
-├── src/                 # current Fabric production source while migration is staged
-├── neoforge/            # NeoForge 26.2 loader target and metadata
-├── docs/                # shared behavior, compatibility, testing, release history
+├── src/main/java/       # canonical gameplay, config, payload, and shared server code
+├── src/client/java/     # canonical GUI/client code
+│   └── .../platform/    # thin Fabric client adapters
+├── neoforge/            # NeoForge build, metadata, adapters, mixins, and focused tests
+├── docs/                # shared behavior, compatibility, testing, and release history
 ├── config-examples/     # shared config schema/examples
 └── tools/               # release and validation tooling
 ```
 
-After NeoForge parity is proven, the next cleanup pass should promote the layout to `common/`, `fabric/`, and `neoforge/`. That move is deliberately deferred until the loader adapters are proven so the existing public Fabric build is not destabilized by a cosmetic source move.
+The NeoForge build consumes the two canonical source trees while excluding `platform/fabric`, then adds its own entrypoints, networking, persistent storage, client hooks, and mixins. A future cleanup may promote the trees to top-level `common/`, `fabric/`, and `neoforge/` modules, but that cosmetic move is deferred until behavior parity is proven.
 
 ## Compatibility contract
 
-The NeoForge port must keep these identifiers stable:
+The NeoForge port keeps these identifiers stable:
 
 - `smart_resource_drops` mod ID and datapack/network namespace
 - `config/smart_resource_drops.json`
 - schema 3 configuration and migration behavior
-- `smart_resource_drops:placed_blocks` saved provenance identity
+- `smart_resource_drops:placed_blocks` provenance identity
 - `/smartdrops` and `/smartdropsgui`
 - `com.chedidandrew.smartresourcedrops` Java namespace
 
-The port must preserve multiplier precedence, source modes, smart placement protection, block-entity protection, piston/falling-block propagation, block/entity/shearing output budgets, XP rules, permissions, GUI revision handling, config atomicity, and malformed/oversized config recovery.
+The implementation is designed to preserve multiplier precedence, source modes, smart placement protection, block-entity protection, piston/falling-block propagation, block/entity/shearing output budgets, XP rules, permissions, GUI revision handling, config atomicity, and malformed/oversized config recovery. The unchecked release gates below still separate that design contract from proven runtime parity.
 
-## Loader adapters required
+## Implemented loader adapter map
 
-Fabric-specific integration points identified during the audit:
+- Fabric and NeoForge entrypoints install their config path, command, lifecycle/tick, fake-player, networking, and placement-storage services before common initialization.
+- Fabric and NeoForge networking preserve the existing payload IDs/codecs. NeoForge channels are optional so server-only and client-optional installations can connect.
+- Physical-client entrypoints keep GUI and client networking classes off dedicated servers.
+- `ClientNetworkBridge` and `ClientModResources` keep client state and installed-mod tag discovery loader-neutral.
+- Fabric uses its persistent chunk attachment; NeoForge uses a nonsynced data attachment with the same logical identity.
+- NeoForge-specific mixins cover placement rollback boundaries, successful post-loot break cleanup, NeoForge `IShearable` dispenser behavior, and legacy Fabric chunk-data capture.
+- Mod Menu remains Fabric-only. NeoForge exposes the same editor through its native config-screen factory.
 
-1. Main entrypoint and block-break callback
-2. Command registration
-3. Payload registration, send/can-send, lifecycle, and server tick callbacks
-4. Client payload handlers, disconnect callback, and `/smartdropsgui`
-5. Client tick queue
-6. Config-directory discovery
-7. Installed-mod resource discovery used by title-screen tag indexes
-8. Persistent chunk attachment used by placement provenance
-9. Fabric fake-player detection in block drop source classification
-10. Mod Menu integration, which remains Fabric-only and must not be a NeoForge dependency
+These adapters are compile- and startup-validated, and all 65 dedicated-server GameTests pass on NeoForge, including the NeoForge-native loader and mixin audits. That is not yet a claim of complete behavior parity.
 
-Everything else should remain shared where the Minecraft 26.2 API surface is loader-neutral.
+## Existing-world migration
+
+Fabric and NeoForge use different chunk-NBT envelopes for attachments. The NeoForge port therefore includes a lazy, one-way importer for Fabric's `smart_resource_drops:placed_blocks` list:
+
+1. Chunk parsing decodes valid Fabric provenance without touching world state on the background thread.
+2. NeoForge's main-thread chunk-load event imports it only when native NeoForge provenance is absent.
+3. The chunk is marked unsaved so its next save uses NeoForge's native attachment format.
+4. Malformed legacy data is ignored instead of crashing the chunk load.
+
+The decoder and runtime mixin carrier have focused tests, but an actual Fabric-authored region save/restart fixture is still required. Always back up a world before changing loaders. Migration is intentionally one-way; repeatedly switching the same world between Fabric and NeoForge is unsupported because a NeoForge save does not preserve Fabric's attachment envelope.
 
 ## NeoForge baseline
-
-The port workspace is pinned to the official NeoForge 26.2 MDK baseline used at kickoff:
 
 - Minecraft `26.2`
 - NeoForge `26.2.0.72`
@@ -60,24 +68,22 @@ The port workspace is pinned to the official NeoForge 26.2 MDK baseline used at 
 
 ## Release gates
 
-A NeoForge JAR is not public-release ready until all of the following pass:
-
-- NeoForge `compileJava`
-- NeoForge `build`
-- dedicated-server startup with no client classloading
-- client startup and configuration GUI smoke test
-- all applicable core JUnit tests
-- equivalent NeoForge GameTests for block loot, provenance, entity loot/XP, shearing, piston/falling-block movement, and output budgets
-- multiplayer permissions and server-authoritative GUI mutation tests
-- Fabric CI still passes unchanged
-- both loader JAR names include their loader suffix
-- release documentation lists Fabric and NeoForge separately
+- [x] NeoForge clean compile/build
+- [x] Shared JUnit suite plus focused NeoForge migration/category tests (163 total)
+- [x] Dedicated server reaches `Done` with no client-classloading or mixin crash
+- [x] Physical client opens Entity Categories with all nine rows, Back, and tagged Enderman/Golem classifications
+- [x] NeoForge dedicated-server harness: all 65 entity/XP, placement/provenance, shearing/dispenser, block-output-budget, and native loader/mixin-audit GameTests
+- [x] Shared entity fixtures have loader-specific Fabric and NeoForge registration/final-loot adapters
+- [x] Fabric clean build, JUnit suite, and all 66 dedicated-server GameTests after the adapter refactor
+- [x] Fabric provenance decoder and NeoForge parse-mixin carrier tests
+- [x] Standalone NeoForge JAR validator rejects loader crossover, test fixtures, nested dependencies, missing mixins, and metadata/icon drift
+- [ ] Real Fabric-authored region migration, NeoForge save, and second-start persistence test
+- [ ] Connected NeoForge `/smartdropsgui`, entity overrides/filters, shearing, Apply/Reset, and permission smoke checks
+- [x] NeoForge-native replacements for both Fabric-loader-only mixin audits
+- [ ] Real multiplayer permissions, optional-channel matrix, server-authoritative edits, and disconnect/reconnect behavior
+- [ ] Near-limit and oversized config patch/snapshot transport behavior
+- [ ] Separate Fabric and NeoForge release documentation and platform metadata
 
 ## Packaging policy
 
-Public artifacts should be named distinctly:
-
-- `smart-resource-multiplier-fabric-<version>.jar`
-- `smart-resource-multiplier-neoforge-<version>.jar`
-
-Never publish one loader's JAR under an ambiguous filename.
+The established Fabric artifact remains `smart-resource-multiplier-<version>.jar`. NeoForge must remain unambiguous as `smart-resource-multiplier-neoforge-<version>.jar`. Never publish the two loader builds under the same filename or mark the NeoForge artifact as Fabric-compatible.

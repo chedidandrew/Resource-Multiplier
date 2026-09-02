@@ -6,8 +6,8 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.chedidandrew.smartresourcedrops.gametest.fixture.GameTestEntityFixtures",
-      "com.chedidandrew.smartresourcedrops.gametest.fixture.GameTestBlockLootFixtures"
+      "com.chedidandrew.smartresourcedrops.gametest.fixture.FabricGameTestEntityFixtures",
+      "com.chedidandrew.smartresourcedrops.gametest.fixture.FabricGameTestBlockLootFixtures"
     ],
     "fabric-gametest": [
       "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsGameTests",

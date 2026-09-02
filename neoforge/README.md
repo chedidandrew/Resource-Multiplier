@@ -1,21 +1,6 @@
 # Smart Resource Multiplier - NeoForge 26.2
 
-This directory is the NeoForge loader target for Minecraft 26.2.
-
-## Port contract
-
-The NeoForge build must preserve the public gameplay contract of the Fabric build:
-
-- mod ID and data namespace: `smart_resource_drops`
-- config file: `config/smart_resource_drops.json`
-- `/smartdrops` and `/smartdropsgui`
-- block, category, dimension, player, source, entity, XP, and shearing multipliers
-- smart player-placement protection, including piston and falling-block provenance
-- server-authoritative GUI editing and revision checks
-- the same bounded output and rate-limit safety rules
-- the same resource tags and language assets
-
-Loader-specific code belongs under this directory. Gameplay policy stays in the existing loader-neutral `core`, `config`, payload, and GUI classes wherever Minecraft APIs permit it.
+This directory is the NeoForge loader target for Minecraft 26.2. It consumes the repository's canonical gameplay, configuration, networking-policy, and GUI sources while keeping NeoForge entrypoints and adapters local to this module.
 
 ## Toolchain
 
@@ -24,14 +9,54 @@ Loader-specific code belongs under this directory. Gameplay policy stays in the 
 - ModDevGradle 2.0.144
 - Java 25
 
-The versions above match the official NeoForge 26.2 MDK baseline current when this port was started.
-
 ## Build
 
-From this directory, use the repository Gradle wrapper with `-p neoforge` once the port branch has completed its compile gate:
+From the repository root on Windows:
 
-```text
-../gradlew -p neoforge build
+```powershell
+.\gradlew.bat -p neoforge clean build
 ```
 
-Do not publish a NeoForge artifact until the parity checklist in `docs/NEOFORGE_PORT.md` is green. The existing Fabric release remains the production artifact while this port is validated.
+From inside this directory on Windows:
+
+```powershell
+..\gradlew.bat clean build
+```
+
+Unix-like equivalents are `./gradlew -p neoforge clean build` from the root and `../gradlew clean build` here.
+
+Run the portable NeoForge gameplay suite from the repository root with:
+
+```powershell
+.\gradlew.bat -p neoforge runGameTestServer
+```
+
+The run is successful only when it reports all 65 required tests passed.
+
+Run the test-only physical-client Entity Categories check with:
+
+```powershell
+.\gradlew.bat -p neoforge runClientCategoryTest
+```
+
+It opens the production screen, verifies all nine rows and tag-dependent classifications, and exits automatically. This test source is not packaged in the playable JAR.
+
+The playable artifact is:
+
+```text
+neoforge/build/libs/smart-resource-multiplier-neoforge-1.2.3.jar
+```
+
+Validate the rebuilt playable JAR from the repository root with:
+
+```powershell
+py -3 tools/validate_neoforge_jar.py
+```
+
+The validator rejects Fabric classes/metadata, test fixtures, nested dependencies, missing mixins, stale loader metadata, the wrong icon, and non-Java-25 bytecode.
+
+## Validation state
+
+The module clean-builds, passes 163 JUnit tests and all 65 dedicated-server GameTests (including NeoForge-native loader and mixin audits), starts a dedicated server through `Done`, and passes a physical-client Entity Categories screen check. It also has a tested one-way decoder/mixin path for Fabric placement provenance.
+
+It is not yet a public parity build. Connected GUI authority checks, multiplayer and large-payload tests, and a real Fabric-region migration/save/restart test remain open. See `docs/NEOFORGE_PORT.md` for the full checklist and the one-way world-migration warning.

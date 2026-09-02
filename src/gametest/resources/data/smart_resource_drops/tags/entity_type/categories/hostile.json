@@ -1,6 +1,18 @@
 {
   "replace": false,
   "values": [
+    "minecraft:blaze",
+    "minecraft:bogged",
+    "minecraft:breeze",
+    "minecraft:creeper",
+    "minecraft:drowned",
+    "minecraft:guardian",
+    "minecraft:husk",
+    "minecraft:phantom",
+    "minecraft:skeleton",
+    "minecraft:slime",
+    "minecraft:witch",
+    "minecraft:zombie",
     "smart_resource_drops_gametest:category_only",
     "smart_resource_drops_gametest:boss",
     "smart_resource_drops_gametest:equipment",

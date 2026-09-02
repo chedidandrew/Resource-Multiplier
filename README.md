@@ -26,6 +26,9 @@
 > [!IMPORTANT]
 > **Current stable release:** Smart Resource Multiplier `1.2.3` for Minecraft Java Edition 26.2 and Fabric. This patch adds the full-name high-resolution production icon and reproducible Java 25 toolchain selection without changing gameplay or compatibility identifiers.
 
+> [!NOTE]
+> A NeoForge 26.2 port is under active validation in [`neoforge/`](neoforge/). It shares the production gameplay and GUI implementation, passes the portable server and Entity Categories client suites, and remains clearly marked as a validation build until the multiplayer and existing-world migration gates in [`docs/NEOFORGE_PORT.md`](docs/NEOFORGE_PORT.md) are complete.
+
 Smart Resource Multiplier speeds up repetitive gathering by multiplying the final loot Minecraft already calculated. Fortune, Silk Touch, Looting, loot-table changes, item components, NBT, and legal stack sizes are preserved because the mod works after normal loot evaluation instead of replacing it.
 
 Placed-block tracking and conservative safety rules prevent common duplication loops. The server owns gameplay settings in multiplayer, while clients can use the optional configuration interface and Mod Menu integration.

@@ -60,10 +60,12 @@ def write_minimum_release_entries(
         "custom": {"modmenu": {"links": dict(package_release.EXPECTED_MODMENU_LINKS)}},
         "icon": "assets/smart_resource_drops/icon.png",
         "entrypoints": {
-            "main": ["com.chedidandrew.smartresourcedrops.SmartResourceDrops"],
-            "client": ["com.chedidandrew.smartresourcedrops.client.SmartResourceDropsClient"],
+            "main": ["com.chedidandrew.smartresourcedrops.platform.fabric.FabricEntrypoint"],
+            "client": [
+                "com.chedidandrew.smartresourcedrops.platform.fabric.client.FabricClientEntrypoint"
+            ],
             "modmenu": [
-                "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsModMenuIntegration"
+                "com.chedidandrew.smartresourcedrops.platform.fabric.client.FabricModMenuIntegration"
             ],
         },
         "mixins": ["smart_resource_drops.mixins.json"],
@@ -231,6 +233,11 @@ for missing_source in (
     "src/test/java/com/chedidandrew/smartresourcedrops/core/util/BlockLootOutputBudgetTest.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/SmartResourceDropsBlockBudgetGameTests.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/GameTestBlockLootFixtures.java",
+    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/FabricGameTestEntityFixtures.java",
+    "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/NeoForgeGameTestEntityFixtures.java",
+    "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeMixinAuditGameTests.java",
+    "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/entity_final_loot.json",
+    "tools/validate_neoforge_jar.py",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityClassifier.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityDropTags.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityLootTags.java",
@@ -407,7 +414,7 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
 
     for missing_entry in (
         "LICENSE_smart-resource-multiplier",
-        "com/chedidandrew/smartresourcedrops/client/SmartResourceDropsClient.class",
+        "com/chedidandrew/smartresourcedrops/platform/fabric/client/FabricClientEntrypoint.class",
         "smart_resource_drops.mixins.json",
         "assets/smart_resource_drops/icon.png",
         "assets/smart_resource_drops/lang/en_us.json",

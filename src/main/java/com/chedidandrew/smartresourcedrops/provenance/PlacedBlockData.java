@@ -1,6 +1,7 @@
 package com.chedidandrew.smartresourcedrops.provenance;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,6 +12,7 @@ public final class PlacedBlockData {
     public static final Codec<PlacedBlockData> CODEC = Codec.INT.listOf().xmap(
             PlacedBlockData::new,
             PlacedBlockData::asSortedList);
+    public static final MapCodec<PlacedBlockData> MAP_CODEC = CODEC.fieldOf("positions");
 
     private final Set<Integer> positions;
 

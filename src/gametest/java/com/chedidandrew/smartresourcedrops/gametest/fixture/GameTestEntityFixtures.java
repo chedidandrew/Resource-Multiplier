@@ -3,11 +3,7 @@ package com.chedidandrew.smartresourcedrops.gametest.fixture;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -32,52 +28,34 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 
-/** Development-only entities and loot hooks used by the dedicated-server GameTests. */
-public final class GameTestEntityFixtures implements ModInitializer {
+/** Loader-neutral entity definitions and state used by the dedicated-server GameTests. */
+public final class GameTestEntityFixtures {
     public static final String MOD_ID = "smart_resource_drops_gametest";
     public static final String COMPONENT_MARKER = "smartdrops-component-fixture";
 
-    public static final EntityType<FixtureAnimal> PASSIVE = register(
-            "passive", MobCategory.CREATURE, FixtureAnimal::new);
-    public static final EntityType<FixtureMonster> HOSTILE = register(
-            "hostile", MobCategory.MONSTER, FixtureMonster::new);
-    public static final EntityType<FixtureNeutral> NEUTRAL = register(
-            "neutral", MobCategory.CREATURE, FixtureNeutral::new);
-    public static final EntityType<FixtureAquatic> AQUATIC = register(
-            "aquatic", MobCategory.WATER_CREATURE, FixtureAquatic::new);
-    public static final EntityType<FixturePathfinder> CATEGORY_ONLY = register(
-            "category_only", MobCategory.AMBIENT, FixturePathfinder::new);
-    public static final EntityType<FixturePathfinder> UNCLASSIFIED = register(
-            "unclassified", MobCategory.MISC, FixturePathfinder::new);
-    public static final EntityType<FixtureMonster> BOSS = register(
-            "boss", MobCategory.MONSTER, FixtureMonster::new);
-    public static final EntityType<FixtureMonster> EQUIPMENT = register(
-            "equipment", MobCategory.MONSTER, FixtureMonster::new);
-    public static final EntityType<FixturePickupMonster> CARRYING = register(
-            "carrying", MobCategory.MONSTER, FixturePickupMonster::new);
-    public static final EntityType<FixtureInventoryMonster> INVENTORY = register(
-            "inventory", MobCategory.MONSTER, FixtureInventoryMonster::new);
-    public static final EntityType<FixtureMonster> COMPONENT_RICH = register(
-            "component_rich", MobCategory.MONSTER, FixtureMonster::new);
-    public static final EntityType<FixtureDirectOutputMonster> DIRECT_OUTPUT = register(
-            "direct_output", MobCategory.MONSTER, FixtureDirectOutputMonster::new);
-    public static final EntityType<FixtureMonster> NESTED_OUTER = register(
-            "nested_outer", MobCategory.MONSTER, FixtureMonster::new);
-    public static final EntityType<FixtureMonster> EXCEPTION = register(
-            "exception", MobCategory.MONSTER, FixtureMonster::new);
-    public static final EntityType<FixtureDuplicateHookMonster> DUPLICATE_HOOK = register(
-            "duplicate_hook", MobCategory.MONSTER, FixtureDuplicateHookMonster::new);
-    public static final EntityType<FixtureMonster> LOOTING_FINAL = register(
-            "looting_final", MobCategory.MONSTER, FixtureMonster::new);
-    public static final EntityType<FixtureMonster> COOKED_FINAL = register(
-            "cooked_final", MobCategory.MONSTER, FixtureMonster::new);
-    public static final EntityType<FixtureMonster> EMPTY = register(
-            "empty", MobCategory.MONSTER, FixtureMonster::new);
-    public static final EntityType<FixtureMonster> UNSTACKABLE = register(
-            "unstackable", MobCategory.MONSTER, FixtureMonster::new);
+    public static EntityType<FixtureAnimal> PASSIVE;
+    public static EntityType<FixtureMonster> HOSTILE;
+    public static EntityType<FixtureNeutral> NEUTRAL;
+    public static EntityType<FixtureAquatic> AQUATIC;
+    public static EntityType<FixturePathfinder> CATEGORY_ONLY;
+    public static EntityType<FixturePathfinder> UNCLASSIFIED;
+    public static EntityType<FixtureMonster> BOSS;
+    public static EntityType<FixtureMonster> EQUIPMENT;
+    public static EntityType<FixturePickupMonster> CARRYING;
+    public static EntityType<FixtureInventoryMonster> INVENTORY;
+    public static EntityType<FixtureMonster> COMPONENT_RICH;
+    public static EntityType<FixtureDirectOutputMonster> DIRECT_OUTPUT;
+    public static EntityType<FixtureMonster> NESTED_OUTER;
+    public static EntityType<FixtureMonster> EXCEPTION;
+    public static EntityType<FixtureDuplicateHookMonster> DUPLICATE_HOOK;
+    public static EntityType<FixtureMonster> LOOTING_FINAL;
+    public static EntityType<FixtureMonster> COOKED_FINAL;
+    public static EntityType<FixtureMonster> EMPTY;
+    public static EntityType<FixtureMonster> UNSTACKABLE;
 
     public static final ResourceKey<LootTable> COMPONENT_RICH_LOOT = lootTable("component_rich");
     public static final ResourceKey<LootTable> NESTED_OUTER_LOOT = lootTable("nested_outer");
@@ -87,9 +65,41 @@ public final class GameTestEntityFixtures implements ModInitializer {
     private static LivingEntity nestedTarget;
     private static boolean throwOnNextExceptionLoot;
 
-    @Override
-    public void onInitialize() {
-        for (EntityType<? extends Mob> type : List.of(
+    private GameTestEntityFixtures() {
+    }
+
+    @FunctionalInterface
+    public interface EntityRegistrar {
+        void register(ResourceKey<EntityType<?>> key, EntityType<?> value);
+    }
+
+    public static void registerEntities(final EntityRegistrar registrar) {
+        if (PASSIVE != null) {
+            throw new IllegalStateException("GameTest entity fixtures are already registered");
+        }
+        PASSIVE = register(registrar, "passive", MobCategory.CREATURE, FixtureAnimal::new);
+        HOSTILE = register(registrar, "hostile", MobCategory.MONSTER, FixtureMonster::new);
+        NEUTRAL = register(registrar, "neutral", MobCategory.CREATURE, FixtureNeutral::new);
+        AQUATIC = register(registrar, "aquatic", MobCategory.WATER_CREATURE, FixtureAquatic::new);
+        CATEGORY_ONLY = register(registrar, "category_only", MobCategory.AMBIENT, FixturePathfinder::new);
+        UNCLASSIFIED = register(registrar, "unclassified", MobCategory.MISC, FixturePathfinder::new);
+        BOSS = register(registrar, "boss", MobCategory.MONSTER, FixtureMonster::new);
+        EQUIPMENT = register(registrar, "equipment", MobCategory.MONSTER, FixtureMonster::new);
+        CARRYING = register(registrar, "carrying", MobCategory.MONSTER, FixturePickupMonster::new);
+        INVENTORY = register(registrar, "inventory", MobCategory.MONSTER, FixtureInventoryMonster::new);
+        COMPONENT_RICH = register(registrar, "component_rich", MobCategory.MONSTER, FixtureMonster::new);
+        DIRECT_OUTPUT = register(registrar, "direct_output", MobCategory.MONSTER, FixtureDirectOutputMonster::new);
+        NESTED_OUTER = register(registrar, "nested_outer", MobCategory.MONSTER, FixtureMonster::new);
+        EXCEPTION = register(registrar, "exception", MobCategory.MONSTER, FixtureMonster::new);
+        DUPLICATE_HOOK = register(registrar, "duplicate_hook", MobCategory.MONSTER, FixtureDuplicateHookMonster::new);
+        LOOTING_FINAL = register(registrar, "looting_final", MobCategory.MONSTER, FixtureMonster::new);
+        COOKED_FINAL = register(registrar, "cooked_final", MobCategory.MONSTER, FixtureMonster::new);
+        EMPTY = register(registrar, "empty", MobCategory.MONSTER, FixtureMonster::new);
+        UNSTACKABLE = register(registrar, "unstackable", MobCategory.MONSTER, FixtureMonster::new);
+    }
+
+    public static List<EntityType<? extends Mob>> mobTypes() {
+        return List.of(
                 PASSIVE,
                 HOSTILE,
                 NEUTRAL,
@@ -108,35 +118,40 @@ public final class GameTestEntityFixtures implements ModInitializer {
                 LOOTING_FINAL,
                 COOKED_FINAL,
                 EMPTY,
-                UNSTACKABLE)) {
-            FabricDefaultAttributeRegistry.register(type, Mob.createMobAttributes());
+                UNSTACKABLE);
+    }
+
+    public static void applyFinalDropFixtures(
+            final boolean componentRich,
+            final boolean nestedOuter,
+            final LootContext context,
+            final List<ItemStack> drops
+    ) {
+        if (componentRich) {
+            COMPONENT_MODIFIER_INVOCATIONS.incrementAndGet();
+            final ItemStack stack = new ItemStack(Items.DIAMOND);
+            final CompoundTag marker = new CompoundTag();
+            marker.putString("fixture", COMPONENT_MARKER);
+            stack.set(DataComponents.CUSTOM_NAME, Component.literal(COMPONENT_MARKER));
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(marker));
+            drops.add(stack);
         }
 
-        LootTableEvents.MODIFY_DROPS.register((table, context, drops) -> {
-            if (table.is(COMPONENT_RICH_LOOT)) {
-                COMPONENT_MODIFIER_INVOCATIONS.incrementAndGet();
-                final ItemStack stack = new ItemStack(Items.DIAMOND);
-                final CompoundTag marker = new CompoundTag();
-                marker.putString("fixture", COMPONENT_MARKER);
-                stack.set(DataComponents.CUSTOM_NAME, Component.literal(COMPONENT_MARKER));
-                stack.set(DataComponents.CUSTOM_DATA, CustomData.of(marker));
-                drops.add(stack);
+        if (nestedOuter && nestedTarget != null) {
+            final LivingEntity target = nestedTarget;
+            nestedTarget = null;
+            final DamageSource source = context.getOptionalParameter(LootContextParams.DAMAGE_SOURCE);
+            if (source != null) {
+                target.hurtServer(context.getLevel(), source, Float.MAX_VALUE);
             }
+        }
+    }
 
-            if (table.is(NESTED_OUTER_LOOT) && nestedTarget != null) {
-                final LivingEntity target = nestedTarget;
-                nestedTarget = null;
-                final DamageSource source = context.getOptionalParameter(LootContextParams.DAMAGE_SOURCE);
-                if (source != null) {
-                    target.hurtServer(context.getLevel(), source, Float.MAX_VALUE);
-                }
-            }
-
-            if (table.is(EXCEPTION_LOOT) && throwOnNextExceptionLoot) {
-                throwOnNextExceptionLoot = false;
-                throw new FixtureLootException();
-            }
-        });
+    public static void throwIfArmedExceptionLoot() {
+        if (throwOnNextExceptionLoot) {
+            throwOnNextExceptionLoot = false;
+            throw new FixtureLootException();
+        }
     }
 
     public static void armNestedLoot(final LivingEntity target) {
@@ -160,6 +175,7 @@ public final class GameTestEntityFixtures implements ModInitializer {
     }
 
     private static <T extends Mob> EntityType<T> register(
+            final EntityRegistrar registrar,
             final String path,
             final MobCategory category,
             final EntityType.EntityFactory<T> factory) {
@@ -169,7 +185,8 @@ public final class GameTestEntityFixtures implements ModInitializer {
                 .sized(0.6F, 1.8F)
                 .clientTrackingRange(8)
                 .build(key);
-        return net.minecraft.core.Registry.register(BuiltInRegistries.ENTITY_TYPE, key, type);
+        registrar.register(key, type);
+        return type;
     }
 
     public static class FixtureAnimal extends Animal {

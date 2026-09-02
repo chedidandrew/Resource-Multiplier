@@ -3,7 +3,7 @@ package com.chedidandrew.smartresourcedrops.core.shearing;
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
 import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 import com.chedidandrew.smartresourcedrops.core.util.BoundedRateLimiter;
-import net.fabricmc.fabric.api.entity.FakePlayer;
+import com.chedidandrew.smartresourcedrops.platform.PlatformPlayerSupport;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -42,7 +42,7 @@ public final class ShearingActionContext {
     ) {
         Objects.requireNonNull(responsiblePlayer, "responsiblePlayer");
         boolean trustedManualSource = responsiblePlayer instanceof ServerPlayer
-                && !(responsiblePlayer instanceof FakePlayer);
+                && !PlatformPlayerSupport.isFakePlayer(responsiblePlayer);
         return begin(
                 target,
                 level,

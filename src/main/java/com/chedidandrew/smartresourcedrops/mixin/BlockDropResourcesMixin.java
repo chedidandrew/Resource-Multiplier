@@ -2,9 +2,9 @@ package com.chedidandrew.smartresourcedrops.mixin;
 
 import com.chedidandrew.smartresourcedrops.core.DropContext;
 import com.chedidandrew.smartresourcedrops.core.DropSource;
+import com.chedidandrew.smartresourcedrops.platform.PlatformPlayerSupport;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -64,8 +64,8 @@ abstract class BlockDropResourcesMixin {
             Operation<Void> original
     ) {
         final boolean realPlayer = level instanceof ServerLevel
-                && breaker instanceof Player
-                && !(breaker instanceof FakePlayer);
+                && breaker instanceof Player player
+                && !PlatformPlayerSupport.isFakePlayer(player);
         if (realPlayer) {
             DropContext.beginPlayer((ServerLevel) level, (Player) breaker, pos, state, blockEntity);
         } else {

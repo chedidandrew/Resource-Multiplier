@@ -6,7 +6,7 @@ modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
 displayURL="https://github.com/chedidandrew/Resource-Multiplier"
-logoFile="assets/smart_resource_drops/icon.png"
+iconFile="assets/smart_resource_drops/icon.png"
 authors="Andrew Chedid"
 description='''
 A lightweight, configurable resource multiplier with smart player-placement protection, entity and shearing multipliers, XP scaling, and an in-game configuration GUI.
@@ -14,6 +14,9 @@ A lightweight, configurable resource multiplier with smart player-placement prot
 
 [[mixins]]
 config="smart_resource_drops.mixins.json"
+
+[[mixins]]
+config="smart_resource_drops.neoforge.mixins.json"
 
 [[dependencies.${mod_id}]]
 modId="neoforge"

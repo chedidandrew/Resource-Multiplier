@@ -88,7 +88,7 @@ def source_tests() -> None:
 
     for cfg in ROOT.rglob("*mixins*.json"):
         data = json.loads(cfg.read_text(encoding="utf-8"))
-        if data.get("package", "").endswith(".mixin"):
+        if cfg.name == "smart_resource_drops.mixins.json":
             joined = " ".join(data.get("mixins", []))
             if "BlockItemPlacementCaptureMixin" in all_text:
                 assert "BlockItemPlacementCaptureMixin" in joined
@@ -97,6 +97,17 @@ def source_tests() -> None:
                 assert "PlayerShearingContextMixin" in joined
                 assert "ShearsDispenseItemBehaviorMixin" in joined
                 assert "LivingEntityShearingLootMixin" in joined
+
+    neoforge_mixins = json.loads((
+        ROOT / "neoforge/src/main/resources/smart_resource_drops.neoforge.mixins.json"
+    ).read_text(encoding="utf-8"))
+    neoforge_joined = " ".join(neoforge_mixins.get("mixins", []))
+    assert {
+        "CommonHooksPlacementMixin",
+        "NeoForgeShearsDispenseItemBehaviorMixin",
+        "SerializableChunkDataLegacyProvenanceMixin",
+        "ServerPlayerGameModeMixin",
+    }.issubset(neoforge_mixins.get("mixins", []))
 
     standard_shearing = json.loads((
         ROOT / "src/main/resources/data/smart_resource_drops/tags/entity_type/shearing/standard_resources.json"

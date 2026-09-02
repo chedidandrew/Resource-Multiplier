@@ -25,10 +25,12 @@ EXPECTED_MODMENU_LINKS = {
     "smart_resource_drops.modmenu.link.cash_app": "https://cash.app/%24AndrewChedid",
 }
 EXPECTED_ENTRYPOINTS = {
-    "main": ["com.chedidandrew.smartresourcedrops.SmartResourceDrops"],
-    "client": ["com.chedidandrew.smartresourcedrops.client.SmartResourceDropsClient"],
+    "main": ["com.chedidandrew.smartresourcedrops.platform.fabric.FabricEntrypoint"],
+    "client": [
+        "com.chedidandrew.smartresourcedrops.platform.fabric.client.FabricClientEntrypoint"
+    ],
     "modmenu": [
-        "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsModMenuIntegration"
+        "com.chedidandrew.smartresourcedrops.platform.fabric.client.FabricModMenuIntegration"
     ],
 }
 EXPECTED_ICON_SIZE = 512
@@ -100,8 +102,14 @@ required = [
     "src/main/java/com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.java",
-    "src/client/java/com/chedidandrew/smartresourcedrops/client/SmartResourceDropsClient.java",
-    "src/client/java/com/chedidandrew/smartresourcedrops/client/SmartResourceDropsModMenuIntegration.java",
+    "src/main/java/com/chedidandrew/smartresourcedrops/platform/PlatformPlayerSupport.java",
+    "src/main/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricEntrypoint.java",
+    "src/main/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricNetworking.java",
+    "src/main/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricPlacementStorage.java",
+    "src/client/java/com/chedidandrew/smartresourcedrops/client/ClientModResources.java",
+    "src/client/java/com/chedidandrew/smartresourcedrops/client/ClientNetworkBridge.java",
+    "src/client/java/com/chedidandrew/smartresourcedrops/platform/fabric/client/FabricClientEntrypoint.java",
+    "src/client/java/com/chedidandrew/smartresourcedrops/platform/fabric/client/FabricModMenuIntegration.java",
     "src/client/java/com/chedidandrew/smartresourcedrops/client/SmartDropsConfigLoadingScreen.java",
     "src/client/java/com/chedidandrew/smartresourcedrops/client/ShearingDropsScreen.java",
     "src/client/java/com/chedidandrew/smartresourcedrops/client/ShearingOverridesScreen.java",
@@ -123,6 +131,8 @@ required = [
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/GameTestPlayers.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/GameTestEntityFixtures.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/GameTestBlockLootFixtures.java",
+    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/FabricGameTestEntityFixtures.java",
+    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/FabricGameTestBlockLootFixtures.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/SmartDropsClientGameTest.java",
     "src/gametest/resources/fabric.mod.json",
     "config-examples/default.json",
@@ -139,13 +149,40 @@ required = [
     "docs/ROADMAP.md",
     "docs/REBRAND.md",
     "docs/BRANDING.md",
+    "docs/NEOFORGE_PORT.md",
     "docs/releases/1.2.2.md",
     "docs/releases/1.2.3.md",
     "docs/images/general-config.webp",
     "docs/images/block-overrides.webp",
     "docs/images/shearing-config.webp",
     "tools/package_release.py",
+    "tools/validate_neoforge_jar.py",
     "scripts/test_release_packaging.py",
+    "neoforge/build.gradle",
+    "neoforge/gradle.properties",
+    "neoforge/settings.gradle",
+    "neoforge/README.md",
+    "neoforge/src/main/templates/META-INF/neoforge.mods.toml",
+    "neoforge/src/main/resources/smart_resource_drops.neoforge.mixins.json",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeEntrypoint.java",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeClientEntrypoint.java",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeNetworking.java",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementStorage.java",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigration.java",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/CommonHooksPlacementMixin.java",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/NeoForgeShearsDispenseItemBehaviorMixin.java",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/SerializableChunkDataLegacyProvenanceMixin.java",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/ServerPlayerGameModeMixin.java",
+    "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeGameTestRegistrar.java",
+    "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeMixinAuditGameTests.java",
+    "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/NeoForgeGameTestBlockLootFixtures.java",
+    "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/NeoForgeGameTestEntityFixtures.java",
+    "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/entity_final_loot.json",
+    "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/pathological_block_loot.json",
+    "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structure/empty.nbt",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.java",
+    "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/client/ClientEntityCategoryTagIndexTest.java",
+    "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigrationTest.java",
 ]
 for relative in required:
     if not (ROOT / relative).is_file():
@@ -442,6 +479,7 @@ public_runtime_roots = [
     ROOT / "src/main",
     ROOT / "src/client",
     ROOT / "src/gametest",
+    ROOT / "neoforge/src/main",
 ]
 old_public_name = re.compile(r"(?<!Smart )Resource Multiplier")
 for runtime_root in public_runtime_roots:
@@ -458,7 +496,7 @@ compatibility_contracts = {
     "src/main/java/com/chedidandrew/smartresourcedrops/command/SmartDropsCommands.java": (
         'Commands.literal("smartdrops")',
     ),
-    "src/client/java/com/chedidandrew/smartresourcedrops/client/SmartResourceDropsClient.java": (
+    "src/client/java/com/chedidandrew/smartresourcedrops/platform/fabric/client/FabricClientEntrypoint.java": (
         'ClientCommands.literal("smartdropsgui")',
         '"smart_resource_drops:open_config_gui"',
     ),
@@ -471,7 +509,7 @@ compatibility_contracts = {
     "src/main/java/com/chedidandrew/smartresourcedrops/config/SmartDropsConfig.java": (
         "public static final int CURRENT_SCHEMA = 3;",
     ),
-    "src/main/java/com/chedidandrew/smartresourcedrops/provenance/PlacementTracker.java": (
+    "src/main/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricPlacementStorage.java": (
         'SmartResourceDrops.id("placed_blocks")',
     ),
     "src/main/java/com/chedidandrew/smartresourcedrops/mixin/LivingEntityDeathLootMixin.java": (
@@ -757,6 +795,25 @@ for category in entity_categories:
         elif not all(isinstance(value, (str, dict)) for value in values):
             fail(f"Entity category {category} contains an invalid tag value")
 
+# ModDev composes the main and GameTest resource roots into one development mod,
+# where a same-path GameTest tag can shadow rather than layer over production data.
+# Keep every shared overlay a superset so the physical client smoke still sees
+# the packaged vanilla classifications while the server suite adds its fixtures.
+game_test_entity_tag_root = (
+    ROOT / "src/gametest/resources/data/smart_resource_drops/tags/entity_type/categories"
+)
+for game_test_tag_path in game_test_entity_tag_root.glob("*.json"):
+    production_tag_path = entity_tag_root / game_test_tag_path.name
+    production_tag = read_json(production_tag_path)
+    game_test_tag = read_json(game_test_tag_path)
+    if isinstance(production_tag, dict) and isinstance(game_test_tag, dict):
+        production_values = production_tag.get("values", [])
+        game_test_values = game_test_tag.get("values", [])
+        if any(value not in game_test_values for value in production_values):
+            fail(
+                f"GameTest entity category {game_test_tag_path.stem} shadows production values"
+            )
+
 boss_tag = read_json(entity_tag_root / "bosses.json")
 if isinstance(boss_tag, dict):
     expected_bosses = {
@@ -893,12 +950,12 @@ if isinstance(game_test_metadata, dict):
     if not isinstance(game_test_entrypoints, dict) or not game_test_entrypoints.get("fabric-client-gametest"):
         fail("GameTest metadata is missing the Fabric client GameTest entrypoint")
     elif (
-        "com.chedidandrew.smartresourcedrops.gametest.fixture.GameTestEntityFixtures"
+        "com.chedidandrew.smartresourcedrops.gametest.fixture.FabricGameTestEntityFixtures"
         not in game_test_entrypoints.get("main", [])
     ):
-        fail("GameTest metadata is missing the development-only entity fixture initializer")
+        fail("GameTest metadata is missing the Fabric entity-fixture adapter")
     elif (
-        "com.chedidandrew.smartresourcedrops.gametest.fixture.GameTestBlockLootFixtures"
+        "com.chedidandrew.smartresourcedrops.gametest.fixture.FabricGameTestBlockLootFixtures"
         not in game_test_entrypoints.get("main", [])
     ):
         fail("GameTest metadata is missing the development-only block-loot fixture initializer")

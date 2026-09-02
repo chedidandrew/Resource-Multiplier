@@ -31,10 +31,12 @@ EXPECTED_MODMENU_LINKS = {
     "smart_resource_drops.modmenu.link.cash_app": "https://cash.app/%24AndrewChedid",
 }
 EXPECTED_ENTRYPOINTS = {
-    "main": ["com.chedidandrew.smartresourcedrops.SmartResourceDrops"],
-    "client": ["com.chedidandrew.smartresourcedrops.client.SmartResourceDropsClient"],
+    "main": ["com.chedidandrew.smartresourcedrops.platform.fabric.FabricEntrypoint"],
+    "client": [
+        "com.chedidandrew.smartresourcedrops.platform.fabric.client.FabricClientEntrypoint"
+    ],
     "modmenu": [
-        "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsModMenuIntegration"
+        "com.chedidandrew.smartresourcedrops.platform.fabric.client.FabricModMenuIntegration"
     ],
 }
 EXPECTED_MIXIN_DECLARATIONS = ["smart_resource_drops.mixins.json"]
@@ -73,6 +75,14 @@ REQUIRED_SOURCE_FILES = frozenset(
         "gradle/wrapper/gradle-wrapper.properties",
         "settings.gradle",
         "src/main/java/com/chedidandrew/smartresourcedrops/SmartResourceDrops.java",
+        "src/main/java/com/chedidandrew/smartresourcedrops/platform/PlatformPlayerSupport.java",
+        "src/main/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricEntrypoint.java",
+        "src/main/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricNetworking.java",
+        "src/main/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricPlacementStorage.java",
+        "src/client/java/com/chedidandrew/smartresourcedrops/client/ClientModResources.java",
+        "src/client/java/com/chedidandrew/smartresourcedrops/client/ClientNetworkBridge.java",
+        "src/client/java/com/chedidandrew/smartresourcedrops/platform/fabric/client/FabricClientEntrypoint.java",
+        "src/client/java/com/chedidandrew/smartresourcedrops/platform/fabric/client/FabricModMenuIntegration.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/config/ConfigLoadDiagnostics.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/command/ConfigValidationFormatter.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/config/ConfigValidationReport.java",
@@ -126,8 +136,38 @@ REQUIRED_SOURCE_FILES = frozenset(
         "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/SmartResourceDropsShearingGameTests.java",
         "src/gametest/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingGameTestAccess.java",
         "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/GameTestBlockLootFixtures.java",
+        "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/GameTestEntityFixtures.java",
+        "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/FabricGameTestBlockLootFixtures.java",
+        "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/FabricGameTestEntityFixtures.java",
         "tools/package_release.py",
         "tools/validate_package.py",
+        "tools/validate_neoforge_jar.py",
+        "docs/NEOFORGE_PORT.md",
+        "neoforge/build.gradle",
+        "neoforge/gradle.properties",
+        "neoforge/settings.gradle",
+        "neoforge/README.md",
+        "neoforge/src/main/templates/META-INF/neoforge.mods.toml",
+        "neoforge/src/main/resources/smart_resource_drops.neoforge.mixins.json",
+        "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeEntrypoint.java",
+        "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeClientEntrypoint.java",
+        "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeNetworking.java",
+        "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementStorage.java",
+        "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigration.java",
+        "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/CommonHooksPlacementMixin.java",
+        "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/NeoForgeShearsDispenseItemBehaviorMixin.java",
+        "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/SerializableChunkDataLegacyProvenanceMixin.java",
+        "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/ServerPlayerGameModeMixin.java",
+        "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeGameTestRegistrar.java",
+        "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeMixinAuditGameTests.java",
+        "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/NeoForgeGameTestBlockLootFixtures.java",
+        "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/NeoForgeGameTestEntityFixtures.java",
+        "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/entity_final_loot.json",
+        "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/pathological_block_loot.json",
+        "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structure/empty.nbt",
+        "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.java",
+        "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/client/ClientEntityCategoryTagIndexTest.java",
+        "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigrationTest.java",
     }
 )
 EXCLUDED_PARTS = frozenset(
@@ -203,8 +243,9 @@ REQUIRED_RELEASE_JAR_ENTRIES = frozenset(
         "smart_resource_drops.mixins.json",
         "LICENSE_smart-resource-multiplier",
         "com/chedidandrew/smartresourcedrops/SmartResourceDrops.class",
-        "com/chedidandrew/smartresourcedrops/client/SmartResourceDropsClient.class",
-        "com/chedidandrew/smartresourcedrops/client/SmartResourceDropsModMenuIntegration.class",
+        "com/chedidandrew/smartresourcedrops/platform/fabric/FabricEntrypoint.class",
+        "com/chedidandrew/smartresourcedrops/platform/fabric/client/FabricClientEntrypoint.class",
+        "com/chedidandrew/smartresourcedrops/platform/fabric/client/FabricModMenuIntegration.class",
         "com/chedidandrew/smartresourcedrops/config/ConfigLoadDiagnostics.class",
         "com/chedidandrew/smartresourcedrops/config/ConfigValidationReport.class",
         "com/chedidandrew/smartresourcedrops/config/ConfigValidator.class",

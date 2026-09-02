@@ -2,7 +2,7 @@ package com.chedidandrew.smartresourcedrops.core.entity;
 
 import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
-import net.fabricmc.fabric.api.entity.FakePlayer;
+import com.chedidandrew.smartresourcedrops.platform.PlatformPlayerSupport;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -44,7 +44,7 @@ public final class EntityMultiplierResolver {
             LivingEntity entity,
             @Nullable ServerPlayer viewer
     ) {
-        boolean realViewer = viewer != null && !(viewer instanceof FakePlayer);
+        boolean realViewer = viewer != null && !PlatformPlayerSupport.isFakePlayer(viewer);
         EntityKillAttribution attribution = realViewer
                 ? EntityKillAttribution.direct(viewer.getUUID(), true)
                 : EntityKillAttribution.none(false);
@@ -110,7 +110,7 @@ public final class EntityMultiplierResolver {
     }
 
     public static boolean isRealPlayer(@Nullable Entity entity) {
-        return entity instanceof Player && !(entity instanceof FakePlayer);
+        return entity instanceof Player player && !PlatformPlayerSupport.isFakePlayer(player);
     }
 
     public static @Nullable Player resolvedTamedOwner(@Nullable Entity entity) {

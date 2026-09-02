@@ -9,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CLIENT = ROOT / "src/client/java/com/chedidandrew/smartresourcedrops/client"
+FABRIC_CLIENT = ROOT / "src/client/java/com/chedidandrew/smartresourcedrops/platform/fabric/client"
 
 
 def require(condition: bool, message: str) -> None:
@@ -51,9 +52,10 @@ lang = json.loads(read(ROOT / "src/main/resources/assets/smart_resource_drops/la
 public_name = "Smart Resource Multiplier"
 legacy_public_name = "Smart Resource" + " Drops"
 
-integration = read(CLIENT / "SmartResourceDropsModMenuIntegration.java")
+integration = read(FABRIC_CLIENT / "FabricModMenuIntegration.java")
 routes = read(CLIENT / "SmartDropsConfigScreens.java")
-client = read(CLIENT / "SmartResourceDropsClient.java")
+client = read(FABRIC_CLIENT / "FabricClientEntrypoint.java")
+client_bridge = read(CLIENT / "ClientNetworkBridge.java")
 queue = read(CLIENT / "../core/client/util/ClientCommandQueue.java")
 loading = read(CLIENT / "SmartDropsConfigLoadingScreen.java")
 state = read(CLIENT / "ClientConfigState.java")
@@ -68,6 +70,9 @@ entity_filter = read(CLIENT / "EntityFilterScreen.java")
 sub_screen = read(CLIENT / "SmartDropsSubScreen.java")
 structured_list = read(CLIENT / "StructuredConfigList.java")
 networking = read(ROOT / "src/main/java/com/chedidandrew/smartresourcedrops/network/SmartDropsNetworking.java")
+fabric_networking = read(
+    ROOT / "src/main/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricNetworking.java"
+)
 reset_payload = read(ROOT / "src/main/java/com/chedidandrew/smartresourcedrops/network/ConfigResetPayload.java")
 invalidation_payload = read(
     ROOT / "src/main/java/com/chedidandrew/smartresourcedrops/network/ConfigInvalidationPayload.java"
@@ -168,7 +173,7 @@ require(
 # Mod Menu remains optional and both entry points use one routing policy.
 entrypoints = fabric.get("entrypoints", {})
 require(
-    "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsModMenuIntegration"
+    "com.chedidandrew.smartresourcedrops.platform.fabric.client.FabricModMenuIntegration"
     in entrypoints.get("modmenu", []),
     "fabric.mod.json must register the Mod Menu entrypoint",
 )
@@ -203,12 +208,15 @@ require("REQUESTS.isCurrent" in state and "loading.acceptsRequest" in state, "La
 require("minecraft.gui.screen()" in state, "Responses must verify the requesting screen is still current")
 require("tryParseSnapshotJson" in state and "decoded.isEmpty()" in state, "Invalid authoritative snapshots must enter ERROR")
 require("ConfigPatchPayload" in state, "Client config state must submit the bounded patch payload")
-require("ClientPlayNetworking.send(new ConfigPatchPayload" in state, "Apply must send its patch immediately")
+require("ClientNetworkBridge.send(new ConfigPatchPayload" in state, "Apply must send its patch immediately")
 require("ConfigResetPayload" in state, "Client config state must submit the dedicated reset payload")
 require(
-    "ClientPlayNetworking.send(new ConfigResetPayload" in state,
+    "ClientNetworkBridge.send(new ConfigResetPayload" in state,
     "Reset must send one dedicated request instead of expanding defaults into patches",
 )
+require("ClientNetworkBridge.install" in client, "Fabric must install the loader-neutral client transport")
+require("ClientPlayNetworking.send(payload)" in client, "Fabric transport must send through Fabric networking")
+require("interface Transport" in client_bridge, "The shared client transport contract is missing")
 require("context.client().execute" in client, "Snapshot handling must cross an explicit client-thread boundary")
 require(
     "ClientPlayConnectionEvents.DISCONNECT.register" in client and "ClientCommandQueue.clear();" in client,
@@ -515,17 +523,18 @@ require(
 # the session's block catalogue is first requested.
 require("class ClientCategoryTagIndex" in category_tag_index, "ClientCategoryTagIndex must remain a client-only resolver")
 require(
-    re.search(r"\bFabricLoader\s*\.\s*getInstance\s*\(\s*\)\s*\.\s*getAllMods\s*\(\s*\)", category_tag_index)
-    is not None,
-    "ClientCategoryTagIndex must inspect resources from all installed mods",
+    "ClientModResources.findAll(relative)" in category_tag_index,
+    "ClientCategoryTagIndex must use the loader-neutral installed-resource locator",
 )
 require(
     '"data/%s/tags/block/%s.json"' in category_tag_index,
     "ClientCategoryTagIndex must resolve the installed block-tag JSON layout",
 )
 require(
-    re.search(r"\bmod\s*\.\s*findPath\s*\(", method_body(category_tag_index, "resources")) is not None,
-    "ClientCategoryTagIndex must locate tag JSON through each installed ModContainer",
+    re.search(r"\bFabricLoader\s*\.\s*getInstance\s*\(\s*\)\s*\.\s*getAllMods\s*\(\s*\)", client)
+    is not None
+    and re.search(r"\bmod\s*\.\s*findPath\s*\(", method_body(client, "findResources")) is not None,
+    "Fabric must expose installed-mod resources through the loader-neutral locator",
 )
 tag_read_body = method_body(category_tag_index, "readValues")
 for contract in (
@@ -707,13 +716,15 @@ require(
 )
 require("writeVarLong(payload.expectedRevision())" in reset_payload, "Reset revision must be encoded on the wire")
 require(
-    "registerGlobalReceiver(ConfigResetPayload.TYPE" in networking,
+    "registerGlobalReceiver(ConfigResetPayload.TYPE" in fabric_networking
+    and "SmartDropsNetworking.handleReset" in fabric_networking,
     "The server must register the dedicated reset receiver",
 )
+handle_reset_body = method_body(networking, "handleReset")
 apply_reset_body = method_body(networking, "applyReset")
 after_reset_body = method_body(networking, "afterAuthoritativeReset")
 require(
-    "canEditConfiguration(player)" in apply_reset_body,
+    "canEditConfiguration(player)" in handle_reset_body,
     "The reset receiver must revalidate permission server-side at mutation time",
 )
 require(
@@ -745,17 +756,12 @@ require_before(
     "clearPendingPatches()",
     "Pending patches may be cleared only after the reset transaction succeeds",
 )
-reset_receiver_start = networking.find("registerGlobalReceiver(ConfigResetPayload.TYPE")
-reset_receiver_end = networking.find("ServerTickEvents.END_SERVER_TICK", reset_receiver_start)
-reset_receiver = networking[reset_receiver_start:reset_receiver_end]
 require(
-    reset_receiver_start >= 0
-    and reset_receiver_end > reset_receiver_start
-    and reset_receiver.count("sendMutationResult(") == 3,
+    handle_reset_body.count("sendMutationResult(") == 3,
     "Every unauthorized, stale, or cooldown reset rejection must use the compact response path",
 )
 require(
-    "sendSnapshot(" not in reset_receiver,
+    "sendSnapshot(" not in handle_reset_body,
     "A rejected tiny reset packet must not bypass the bounded full-snapshot response path",
 )
 require(
@@ -895,9 +901,10 @@ if re.search(r"\bremoved\s*\(", root_screen) is not None:
 
 # Server-side authorization, validation, coalescing, and anti-amplification must not
 # regress while the client UI is reorganized.
+handle_patch_body = method_body(networking, "handlePatch")
 require_before(
-    networking,
-    "if (!acceptOrQueuePatch(player, payload, editableAtReceipt))",
+    handle_patch_body,
+    "if (acceptOrQueuePatch(player, payload, editableAtReceipt))",
     "applyPatch(player, payload)",
     "Rate limiting must apply to authorized as well as unauthorized patch requests",
 )
@@ -915,11 +922,11 @@ require(
 )
 require("isSingleplayerOwner" in networking, "The integrated-server owner must be editable without cheats")
 require("hasValuesWithinBounds" in manager, "Server patches must reject out-of-range multipliers")
-cooldown_start = networking.find("if (!acceptOrQueuePatch(player, payload, editableAtReceipt))")
-apply_start = networking.find("applyPatch(player, payload)", cooldown_start)
+cooldown_start = handle_patch_body.find("if (acceptOrQueuePatch(player, payload, editableAtReceipt))")
+apply_start = handle_patch_body.find("applyPatch(player, payload)", cooldown_start)
 require(cooldown_start >= 0 and apply_start > cooldown_start, "Could not locate the patch cooldown branch")
 require(
-    "sendSnapshot" not in networking[cooldown_start:apply_start],
+    "sendSnapshot" not in handle_patch_body[cooldown_start:apply_start],
     "A rate-limited tiny patch must not amplify into a full config snapshot response",
 )
 

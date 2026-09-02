@@ -13,12 +13,32 @@ base {
 
 repositories {
     mavenCentral()
+    maven {
+        name = 'Fabric'
+        url = 'https://maven.fabricmc.net/'
+    }
 }
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(25)
     withSourcesJar()
 }
+
+def gameTestSourceSet = sourceSets.create('gametest')
+gameTestSourceSet.java {
+    setSrcDirs(['../src/gametest/java', 'src/gametest/java'])
+    exclude('**/SmartDropsClientGameTest.java')
+    exclude('**/fixture/FabricGameTestEntityFixtures.java')
+    exclude('**/fixture/FabricGameTestBlockLootFixtures.java')
+}
+gameTestSourceSet.resources {
+    setSrcDirs(['../src/gametest/resources', 'src/gametest/resources'])
+    exclude('fabric.mod.json')
+}
+
+def clientTestSourceSet = sourceSets.create('clienttest')
+clientTestSourceSet.java.setSrcDirs(['src/clienttest/java'])
+clientTestSourceSet.resources.setSrcDirs(['src/clienttest/resources'])
 
 neoForge {
     version = neo_version
@@ -29,25 +49,50 @@ neoForge {
             server()
             programArgument '--nogui'
         }
-        gameTestServer { type = 'gameTestServer' }
-        configureEach {
-            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        gameTestServer {
+            type = 'gameTestServer'
+            sourceSet = gameTestSourceSet
+            programArgument '--tests'
+            programArgument 'smart_resource_drops_gametest:*'
+        }
+        clientCategoryTest {
+            client()
+            sourceSet = clientTestSourceSet
         }
     }
 
     mods {
         "${mod_id}" {
             sourceSet(sourceSets.main)
+            sourceSet(gameTestSourceSet)
+            sourceSet(clientTestSourceSet)
         }
     }
+
+    addModdingDependenciesTo(gameTestSourceSet)
+    addModdingDependenciesTo(clientTestSourceSet)
+
+    unitTest {
+        enable()
+        testedMod = mods."${mod_id}"
+    }
 }
+
+// Compile the canonical gameplay/config/GUI sources and replace only the thin
+// Fabric integration layer with the adapters under this module.
+sourceSets.main.java {
+    setSrcDirs(['../src/main/java', '../src/client/java', 'src/main/java'])
+    exclude('**/platform/fabric/**')
+}
+
+sourceSets.test.java.setSrcDirs(['../src/test/java', 'src/test/java'])
+sourceSets.test.resources.setSrcDirs(['../src/test/resources', 'src/test/resources'])
 
 // The port intentionally consumes the canonical gameplay resources instead of
 // maintaining a second copy. NeoForge-only metadata lives below this module.
 sourceSets.main.resources {
     srcDir('../src/main/resources')
     exclude('fabric.mod.json')
-    srcDir('src/main/resources')
 }
 
 var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
@@ -69,10 +114,27 @@ var generateModMetadata = tasks.register('generateModMetadata', ProcessResources
 sourceSets.main.resources.srcDir generateModMetadata
 neoForge.ideSyncTask generateModMetadata
 
+dependencies {
+    gametestImplementation sourceSets.main.output
+    // These are compile-only because the shared test bodies retain two Fabric-only
+    // audit methods that the NeoForge registrar deliberately does not register.
+    gametestCompileOnly "net.fabricmc:fabric-loader:${fabric_loader_compile_version}"
+    gametestCompileOnly "net.fabricmc.fabric-api:fabric-gametest-api-v1:${fabric_gametest_compile_version}"
+    clienttestImplementation sourceSets.main.output
+
+    testImplementation platform("org.junit:junit-bom:${junit_version}")
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.release = 25
     options.encoding = 'UTF-8'
     options.compilerArgs.add('-Xlint:deprecation')
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
 }
 
 jar {

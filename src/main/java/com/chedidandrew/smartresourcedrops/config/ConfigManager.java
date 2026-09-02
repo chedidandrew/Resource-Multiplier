@@ -10,7 +10,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.Identifier;
 
 import java.io.IOException;
@@ -998,13 +997,21 @@ public final class ConfigManager {
         return configPath();
     }
 
+    /** Installs the loader's configuration directory before the common initializer loads the file. */
+    public static synchronized void configureConfigDirectory(final Path directory) {
+        if (directory == null) {
+            throw new IllegalArgumentException("Configuration directory cannot be null");
+        }
+        configPath = directory.resolve("smart_resource_drops.json");
+    }
+
     private static Path configPath() {
         Path path = configPath;
         if (path == null) {
             synchronized (ConfigManager.class) {
                 path = configPath;
                 if (path == null) {
-                    path = FabricLoader.getInstance().getConfigDir().resolve("smart_resource_drops.json");
+                    path = Path.of("config", "smart_resource_drops.json");
                     configPath = path;
                 }
             }

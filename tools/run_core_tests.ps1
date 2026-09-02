@@ -1,13 +1,34 @@
 $ErrorActionPreference = 'Stop'
 
-if ([string]::IsNullOrWhiteSpace($env:JAVA_HOME)) {
-    throw 'JAVA_HOME must point to a Java 25 JDK.'
+function Test-Java25Jdk([string] $candidate) {
+    if ([string]::IsNullOrWhiteSpace($candidate)) {
+        return $false
+    }
+    $candidateJavac = Join-Path $candidate 'bin\javac.exe'
+    $candidateJava = Join-Path $candidate 'bin\java.exe'
+    if (-not (Test-Path -LiteralPath $candidateJavac) -or -not (Test-Path -LiteralPath $candidateJava)) {
+        return $false
+    }
+    $version = (& $candidateJavac -version 2>&1 | Select-Object -First 1).ToString()
+    return $version -match '^javac 25(?:\.|$)'
 }
-$javac = Join-Path $env:JAVA_HOME 'bin\javac.exe'
-$java = Join-Path $env:JAVA_HOME 'bin\java.exe'
-if (-not (Test-Path -LiteralPath $javac) -or -not (Test-Path -LiteralPath $java)) {
-    throw "JAVA_HOME does not contain a complete JDK: $env:JAVA_HOME"
+
+$java25Candidates = @($env:JAVA_25_HOME, $env:JAVA_HOME)
+foreach ($base in @('C:\Program Files\Java', 'C:\Program Files\Eclipse Adoptium')) {
+    if (Test-Path -LiteralPath $base) {
+        $java25Candidates += Get-ChildItem -LiteralPath $base -Directory -Filter 'jdk-25*' |
+            Sort-Object Name -Descending |
+            Select-Object -ExpandProperty FullName
+    }
 }
+$resolvedJavaHome = $java25Candidates |
+    Where-Object { Test-Java25Jdk $_ } |
+    Select-Object -First 1
+if ([string]::IsNullOrWhiteSpace($resolvedJavaHome)) {
+    throw 'Java 25 is required. Install a Java 25 JDK or set JAVA_25_HOME/JAVA_HOME to it.'
+}
+$javac = Join-Path $resolvedJavaHome 'bin\javac.exe'
+$java = Join-Path $resolvedJavaHome 'bin\java.exe'
 
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $output = [System.IO.Path]::GetFullPath((Join-Path $repoRoot '.build\core-tests'))

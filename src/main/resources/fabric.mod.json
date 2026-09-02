@@ -17,13 +17,13 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.chedidandrew.smartresourcedrops.SmartResourceDrops"
+      "com.chedidandrew.smartresourcedrops.platform.fabric.FabricEntrypoint"
     ],
     "client": [
-      "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsClient"
+      "com.chedidandrew.smartresourcedrops.platform.fabric.client.FabricClientEntrypoint"
     ],
     "modmenu": [
-      "com.chedidandrew.smartresourcedrops.client.SmartResourceDropsModMenuIntegration"
+      "com.chedidandrew.smartresourcedrops.platform.fabric.client.FabricModMenuIntegration"
     ]
   },
   "mixins": [

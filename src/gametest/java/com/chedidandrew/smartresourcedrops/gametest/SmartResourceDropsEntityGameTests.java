@@ -77,7 +77,7 @@ public final class SmartResourceDropsEntityGameTests {
     }
 
     @GameTest(padding = 32)
-    public void finalFabricLootModifierIsMultipliedOnceWithComponentsIntact(final GameTestHelper helper) {
+    public void finalLoaderLootModifierIsMultipliedOnceWithComponentsIntact(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         GameTestEntityFixtures.resetTransientState();
         try {
@@ -88,15 +88,15 @@ public final class SmartResourceDropsEntityGameTests {
             assertComponentRichDrop(helper, 2, 1, "component-rich 1x identity");
             helper.assertTrue(
                     GameTestEntityFixtures.COMPONENT_MODIFIER_INVOCATIONS.get() == 1,
-                    "Fabric final-drop modifier ran more than once at 1x");
+                    "Final-drop modifier ran more than once at 1x");
 
             GameTestEntityFixtures.resetTransientState();
             configureEntityTest(config -> exactMultiplier(config, GameTestEntityFixtures.COMPONENT_RICH, 3));
             killByPlayer(helper, spawn(helper, GameTestEntityFixtures.COMPONENT_RICH, 6), player);
-            assertComponentRichDrop(helper, 6, 3, "component-rich Fabric-modified loot");
+            assertComponentRichDrop(helper, 6, 3, "component-rich loader-modified loot");
             helper.assertTrue(
                     GameTestEntityFixtures.COMPONENT_MODIFIER_INVOCATIONS.get() == 1,
-                    "Fabric final-drop modifier ran more than once");
+                    "Final-drop modifier ran more than once");
         } finally {
             GameTestEntityFixtures.resetTransientState();
             restoreEntityConfiguration(previous);

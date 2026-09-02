@@ -15,7 +15,6 @@ import com.chedidandrew.smartresourcedrops.network.ConfigSnapshotPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigInvalidationPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigMutationResultPayload;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -35,22 +34,22 @@ public final class ClientConfigState {
     }
 
     public static RequestStart request(final Minecraft minecraft) {
-        final Object connection = minecraft.getConnection();
+        final Object connection = connectionIdentity(minecraft);
         if (connection == null) {
             return RequestStart.failed(StartFailure.NO_CONNECTION);
         }
-        if (!ClientPlayNetworking.canSend(ConfigRequestPayload.TYPE)) {
+        if (!ClientNetworkBridge.canSend(ConfigRequestPayload.TYPE)) {
             return RequestStart.failed(StartFailure.CHANNEL_UNAVAILABLE);
         }
 
         final int requestId = REQUESTS.begin(connection);
         final boolean queued = ClientCommandQueue.runCoalesced(CONFIG_REQUEST_QUEUE_KEY, () -> {
-            if (!REQUESTS.isCurrent(requestId, minecraft.getConnection())) {
+            if (!REQUESTS.isCurrent(requestId, connectionIdentity(minecraft))) {
                 SmartResourceDrops.LOGGER.debug("Skipped stale queued config request #{}", requestId);
                 return;
             }
             try {
-                ClientPlayNetworking.send(new ConfigRequestPayload(requestId));
+                ClientNetworkBridge.send(new ConfigRequestPayload(requestId));
                 SmartResourceDrops.LOGGER.debug("Sent config request #{}", requestId);
             } catch (RuntimeException exception) {
                 SmartResourceDrops.LOGGER.debug("Could not send config request #{}", requestId, exception);
@@ -74,11 +73,11 @@ public final class ClientConfigState {
             final long expectedRevision,
             final ConfigPatch patch
     ) {
-        final Object connection = minecraft.getConnection();
+        final Object connection = connectionIdentity(minecraft);
         if (connection == null) {
             return RequestStart.failed(StartFailure.NO_CONNECTION);
         }
-        if (!ClientPlayNetworking.canSend(ConfigPatchPayload.TYPE)) {
+        if (!ClientNetworkBridge.canSend(ConfigPatchPayload.TYPE)) {
             return RequestStart.failed(StartFailure.CHANNEL_UNAVAILABLE);
         }
 
@@ -95,7 +94,7 @@ public final class ClientConfigState {
         final int requestId = REQUESTS.begin(connection);
         try {
             ClientCommandQueue.cancelCoalesced(CONFIG_REQUEST_QUEUE_KEY);
-            ClientPlayNetworking.send(new ConfigPatchPayload(requestId, expectedRevision, json));
+            ClientNetworkBridge.send(new ConfigPatchPayload(requestId, expectedRevision, json));
             SmartResourceDrops.LOGGER.debug("Sent config patch #{} ({} chars)", requestId, json.length());
         } catch (RuntimeException exception) {
             REQUESTS.fail(requestId, connection, ConfigRequestLifecycle.Failure.SEND_FAILED);
@@ -108,11 +107,11 @@ public final class ClientConfigState {
 
     /** Sends one revision-guarded, server-authoritative reset transaction. */
     public static RequestStart reset(final Minecraft minecraft, final long expectedRevision) {
-        final Object connection = minecraft.getConnection();
+        final Object connection = connectionIdentity(minecraft);
         if (connection == null) {
             return RequestStart.failed(StartFailure.NO_CONNECTION);
         }
-        if (!ClientPlayNetworking.canSend(ConfigResetPayload.TYPE)) {
+        if (!ClientNetworkBridge.canSend(ConfigResetPayload.TYPE)) {
             return RequestStart.failed(StartFailure.CHANNEL_UNAVAILABLE);
         }
 
@@ -121,7 +120,7 @@ public final class ClientConfigState {
         ClientCommandQueue.cancelCoalesced(CONFIG_REQUEST_QUEUE_KEY);
         invalidateCachedSnapshot();
         try {
-            ClientPlayNetworking.send(new ConfigResetPayload(requestId, expectedRevision));
+            ClientNetworkBridge.send(new ConfigResetPayload(requestId, expectedRevision));
             SmartResourceDrops.LOGGER.debug(
                     "Sent config reset #{} against revision {}",
                     requestId,
@@ -136,7 +135,7 @@ public final class ClientConfigState {
     }
 
     public static void accept(final ConfigSnapshotPayload payload, final Minecraft minecraft) {
-        final Object connection = minecraft.getConnection();
+        final Object connection = connectionIdentity(minecraft);
         if (!REQUESTS.isCurrent(payload.requestId(), connection)) {
             SmartResourceDrops.LOGGER.debug(
                     "Ignored stale config snapshot #{} (current request #{})",
@@ -182,7 +181,7 @@ public final class ClientConfigState {
     }
 
     public static Optional<CachedSnapshot> cachedSnapshot(final Minecraft minecraft) {
-        final Object connection = minecraft.getConnection();
+        final Object connection = connectionIdentity(minecraft);
         if (connection == null || connection != cachedConnection || cachedSnapshotJson == null) {
             return Optional.empty();
         }
@@ -266,7 +265,7 @@ public final class ClientConfigState {
             final ConfigMutationResultPayload payload,
             final Minecraft minecraft
     ) {
-        final Object connection = minecraft.getConnection();
+        final Object connection = connectionIdentity(minecraft);
         if (!REQUESTS.isCurrent(payload.requestId(), connection)) {
             return;
         }
@@ -299,7 +298,7 @@ public final class ClientConfigState {
     }
 
     public static boolean isCurrent(final int requestId, final Minecraft minecraft) {
-        return REQUESTS.isCurrent(requestId, minecraft.getConnection());
+        return REQUESTS.isCurrent(requestId, connectionIdentity(minecraft));
     }
 
     /**
@@ -329,7 +328,7 @@ public final class ClientConfigState {
             final Minecraft minecraft,
             final ConfigRequestLifecycle.Failure reason
     ) {
-        if (!REQUESTS.fail(requestId, minecraft.getConnection(), reason)) {
+        if (!REQUESTS.fail(requestId, connectionIdentity(minecraft), reason)) {
             return;
         }
         ClientCommandQueue.cancelCoalesced(CONFIG_REQUEST_QUEUE_KEY);
@@ -360,6 +359,12 @@ public final class ClientConfigState {
                     "Config GUI transition LOADING -> ERROR for request #{} (DISCONNECTED)",
                     requestId);
         }
+    }
+
+    /** Stable identity shared by Fabric and NeoForge disconnect events. */
+    public static Object connectionIdentity(final Minecraft minecraft) {
+        final var listener = minecraft.getConnection();
+        return listener == null ? null : listener.getConnection();
     }
 
     private static void showLoadingOverlay(final Minecraft minecraft) {

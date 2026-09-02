@@ -20,10 +20,10 @@ import com.chedidandrew.smartresourcedrops.core.shearing.ShearingRuleTrace;
 import com.chedidandrew.smartresourcedrops.core.shearing.ShearingSource;
 import com.chedidandrew.smartresourcedrops.core.shearing.ShearingTags;
 import com.chedidandrew.smartresourcedrops.network.SmartDropsNetworking;
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
@@ -56,9 +56,8 @@ public final class SmartDropsCommands {
     private SmartDropsCommands() {
     }
 
-    public static void register() {
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
-                dispatcher.register(buildRoot()));
+    public static void register(final CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(buildRoot());
     }
 
     static LiteralArgumentBuilder<CommandSourceStack> buildRoot() {

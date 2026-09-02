@@ -1,4 +1,12 @@
 {
   "replace": false,
-  "values": ["smart_resource_drops_gametest:boss"]
+  "values": [
+    "minecraft:ender_dragon",
+    "minecraft:wither",
+    "minecraft:warden",
+    "minecraft:elder_guardian",
+    "minecraft:ravager",
+    "minecraft:evoker",
+    "smart_resource_drops_gametest:boss"
+  ]
 }

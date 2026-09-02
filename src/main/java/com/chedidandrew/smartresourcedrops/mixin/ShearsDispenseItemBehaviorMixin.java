@@ -20,7 +20,8 @@ abstract class ShearsDispenseItemBehaviorMixin {
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/entity/Shearable;shear(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/sounds/SoundSource;Lnet/minecraft/world/item/ItemStack;)V"),
-            require = 1,
+            // NeoForge replaces this call with IShearable; its loader-specific mixin handles that path.
+            require = 0,
             expect = 1)
     private static void smartResourceDrops$scopeVanillaDispenserShearing(
             Shearable shearable,

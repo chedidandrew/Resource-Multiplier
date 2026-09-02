@@ -117,9 +117,13 @@ abstract class PistonMovingBlockEntityMixin implements ProtectedPistonMovement {
 
         carrier.smartResourceDrops$setCaptured(true);
         BlockPos source = destination.relative(entity.getMovementDirection().getOpposite());
-        boolean sourceWasPlaced = PlacementTracker.remove(serverLevel, source);
+        boolean sourceWasPlaced = PlacementTracker.isMarked(serverLevel, source);
         carrier.smartResourceDrops$setProtectDestination(
                 sourceWasPlaced || ConfigManager.get().conservativePistonProtection);
+        entity.setChanged();
+        if (sourceWasPlaced) {
+            PlacementTracker.remove(serverLevel, source);
+        }
     }
 
     @Unique

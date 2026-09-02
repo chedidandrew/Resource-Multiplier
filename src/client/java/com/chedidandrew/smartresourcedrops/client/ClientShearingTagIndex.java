@@ -5,15 +5,10 @@ import com.chedidandrew.smartresourcedrops.core.shearing.ShearingTags;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -34,7 +29,7 @@ final class ClientShearingTagIndex {
     }
 
     static Entries load() {
-        final Resolver resolver = new Resolver(List.copyOf(FabricLoader.getInstance().getAllMods()));
+        final Resolver resolver = new Resolver();
         return new Entries(
                 resolver.resolve(STANDARD_RESOURCES_ID),
                 resolver.resolve(SPECIAL_ID));
@@ -52,13 +47,8 @@ final class ClientShearingTagIndex {
     }
 
     private static final class Resolver {
-        private final List<ModContainer> mods;
         private final Map<String, Set<String>> cache = new HashMap<>();
         private final Set<String> resolving = new HashSet<>();
-
-        private Resolver(final List<ModContainer> mods) {
-            this.mods = List.copyOf(mods);
-        }
 
         private Set<String> resolve(final String rawTagId) {
             final String tagId = normalizeId(rawTagId);
@@ -74,7 +64,7 @@ final class ClientShearingTagIndex {
             }
             final LinkedHashSet<String> types = new LinkedHashSet<>();
             try {
-                for (Path resource : resources(tagId)) {
+                for (ClientModResources.Resource resource : resources(tagId)) {
                     readValues(resource, types);
                 }
             } finally {
@@ -85,7 +75,7 @@ final class ClientShearingTagIndex {
             return result;
         }
 
-        private List<Path> resources(final String tagId) {
+        private List<ClientModResources.Resource> resources(final String tagId) {
             final int separator = tagId.indexOf(':');
             final String namespace = separator < 0 ? "minecraft" : tagId.substring(0, separator);
             final String value = separator < 0 ? tagId : tagId.substring(separator + 1);
@@ -93,15 +83,14 @@ final class ClientShearingTagIndex {
                 return List.of();
             }
             final String relative = TAG_ROOT.formatted(namespace, value);
-            final ArrayList<Path> paths = new ArrayList<>();
-            for (ModContainer mod : this.mods) {
-                mod.findPath(relative).ifPresent(paths::add);
-            }
-            return paths;
+            return ClientModResources.findAll(relative);
         }
 
-        private void readValues(final Path resource, final LinkedHashSet<String> types) {
-            try (Reader reader = Files.newBufferedReader(resource, StandardCharsets.UTF_8)) {
+        private void readValues(
+                final ClientModResources.Resource resource,
+                final LinkedHashSet<String> types
+        ) {
+            try (Reader reader = new InputStreamReader(resource.open(), StandardCharsets.UTF_8)) {
                 final JsonElement parsed = JsonParser.parseReader(reader);
                 if (!parsed.isJsonObject()) {
                     return;

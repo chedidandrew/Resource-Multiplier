@@ -40,16 +40,21 @@ abstract class LevelPlacementCaptureMixin {
             PlacementProvenanceBridge.isPersistentlyPlaced(level, pos),
             updateFlags
         );
+        if (PlacementCapture.active(change.level())) {
+            PlacementCapture.recordChange(
+                    change.level(),
+                    change.pos(),
+                    change.oldState(),
+                    change.wasPlaced(),
+                    change.updateFlags());
+            return original.call(pos, requestedState, updateFlags, updateLimit);
+        }
         final boolean changed = original.call(pos, requestedState, updateFlags, updateLimit);
         if (!changed) {
             return false;
         }
 
         final BlockState finalState = change.level().getBlockState(change.pos());
-        if (PlacementCapture.active(change.level()) && !finalState.isAir() && finalState != change.oldState()) {
-            PlacementCapture.recordCandidate(change.level(), change.pos());
-        }
-
         if (!change.wasPlaced() || (change.updateFlags() & SMARTDROPS_MOVED_BY_PISTON) != 0) {
             return true;
         }

@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.WeakHashMap;
 import java.util.function.BooleanSupplier;
@@ -12,10 +13,7 @@ import java.util.function.BooleanSupplier;
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
 import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
@@ -31,98 +29,103 @@ public final class SmartDropsNetworking {
     private static final Map<ServerPlayer, PendingPatch> PENDING_PATCHES = new WeakHashMap<>();
     private static final ThreadLocal<UUID> PUBLICATION_ACKNOWLEDGED_PLAYER = new ThreadLocal<>();
     private static volatile MinecraftServer activeServer;
+    private static volatile Transport transport;
 
     private SmartDropsNetworking() {
     }
 
-    public static void registerCommon() {
-        PayloadTypeRegistry.serverboundPlay().register(ConfigRequestPayload.TYPE, ConfigRequestPayload.CODEC);
-        PayloadTypeRegistry.serverboundPlay().register(ConfigPatchPayload.TYPE, ConfigPatchPayload.CODEC);
-        PayloadTypeRegistry.serverboundPlay().register(ConfigResetPayload.TYPE, ConfigResetPayload.CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(ConfigSnapshotPayload.TYPE, ConfigSnapshotPayload.CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(
-                ConfigInvalidationPayload.TYPE,
-                ConfigInvalidationPayload.CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(
-                ConfigMutationResultPayload.TYPE,
-                ConfigMutationResultPayload.CODEC);
-
+    public static void initialize(final Transport installedTransport) {
+        transport = Objects.requireNonNull(installedTransport, "installedTransport");
         ConfigManager.setPublicationListener(SmartDropsNetworking::onConfigPublished);
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> activeServer = server);
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-            if (activeServer == server) {
-                activeServer = null;
-            }
-        });
+    }
 
-        ServerPlayNetworking.registerGlobalReceiver(ConfigRequestPayload.TYPE, (payload, context) -> {
-            final ServerPlayer player = context.player();
-            SmartResourceDrops.LOGGER.debug(
-                    "Received config request #{} from {}",
-                    payload.requestId(),
-                    player.getScoreboardName());
-            final long now = player.level().getGameTime();
-            synchronized (LAST_REQUEST_TICK) {
-                final Long previous = LAST_REQUEST_TICK.get(player);
-                if (previous != null && now >= previous && now - previous < REQUEST_COOLDOWN_TICKS) {
-                    PENDING_REQUESTS.put(
-                            player,
-                            new PendingRequest(payload.requestId(), previous + REQUEST_COOLDOWN_TICKS));
-                    return;
-                }
-                LAST_REQUEST_TICK.put(player, now);
-            }
-            sendSnapshot(player, payload.requestId());
-        });
-        ServerPlayNetworking.registerGlobalReceiver(ConfigPatchPayload.TYPE, (payload, context) -> {
-            final ServerPlayer player = context.player();
-            final boolean editableAtReceipt = canEditConfiguration(player);
-            SmartResourceDrops.LOGGER.debug(
-                    "Received config patch #{} from {} (editable={})",
-                    payload.requestId(),
-                    player.getScoreboardName(),
-                    editableAtReceipt);
-            if (!acceptOrQueuePatch(player, payload, editableAtReceipt)) {
+    public static void serverStarted(final MinecraftServer server) {
+        activeServer = server;
+    }
+
+    public static void serverStopped(final MinecraftServer server) {
+        if (activeServer == server) {
+            activeServer = null;
+        }
+        synchronized (LAST_REQUEST_TICK) {
+            LAST_REQUEST_TICK.clear();
+            PENDING_REQUESTS.clear();
+        }
+        synchronized (LAST_PATCH_TICK) {
+            LAST_PATCH_TICK.clear();
+            PENDING_PATCHES.clear();
+        }
+        synchronized (LAST_RESET_TICK) {
+            LAST_RESET_TICK.clear();
+        }
+    }
+
+    public static void serverTick() {
+        flushPendingRequests();
+        flushPendingPatches();
+    }
+
+    public static void handleRequest(final ConfigRequestPayload payload, final ServerPlayer player) {
+        SmartResourceDrops.LOGGER.debug(
+                "Received config request #{} from {}",
+                payload.requestId(),
+                player.getScoreboardName());
+        final long now = player.level().getGameTime();
+        synchronized (LAST_REQUEST_TICK) {
+            final Long previous = LAST_REQUEST_TICK.get(player);
+            if (previous != null && now >= previous && now - previous < REQUEST_COOLDOWN_TICKS) {
+                PENDING_REQUESTS.put(
+                        player,
+                        new PendingRequest(payload.requestId(), previous + REQUEST_COOLDOWN_TICKS));
                 return;
             }
+            LAST_REQUEST_TICK.put(player, now);
+        }
+        sendSnapshot(player, payload.requestId());
+    }
+
+    public static void handlePatch(final ConfigPatchPayload payload, final ServerPlayer player) {
+        final boolean editableAtReceipt = canEditConfiguration(player);
+        SmartResourceDrops.LOGGER.debug(
+                "Received config patch #{} from {} (editable={})",
+                payload.requestId(),
+                player.getScoreboardName(),
+                editableAtReceipt);
+        if (acceptOrQueuePatch(player, payload, editableAtReceipt)) {
             applyPatch(player, payload);
-        });
-        ServerPlayNetworking.registerGlobalReceiver(ConfigResetPayload.TYPE, (payload, context) -> {
-            final ServerPlayer player = context.player();
-            final boolean editableAtReceipt = canEditConfiguration(player);
-            SmartResourceDrops.LOGGER.debug(
-                    "Received config reset #{} from {} at revision {} (editable={})",
+        }
+    }
+
+    public static void handleReset(final ConfigResetPayload payload, final ServerPlayer player) {
+        final boolean editableAtReceipt = canEditConfiguration(player);
+        SmartResourceDrops.LOGGER.debug(
+                "Received config reset #{} from {} at revision {} (editable={})",
+                payload.requestId(),
+                player.getScoreboardName(),
+                payload.expectedRevision(),
+                editableAtReceipt);
+        if (!editableAtReceipt) {
+            sendMutationResult(
+                    player,
                     payload.requestId(),
-                    player.getScoreboardName(),
-                    payload.expectedRevision(),
-                    editableAtReceipt);
-            if (!editableAtReceipt) {
-                sendMutationResult(
-                        player,
-                        payload.requestId(),
-                        ConfigSnapshotPayload.PatchResult.RESET_UNAUTHORIZED);
-                return;
-            }
-            if (payload.expectedRevision() != ConfigManager.revision()) {
-                sendMutationResult(
-                        player,
-                        payload.requestId(),
-                        ConfigSnapshotPayload.PatchResult.RESET_REJECTED);
-                return;
-            }
-            if (!acceptReset(player)) {
-                sendMutationResult(
-                        player,
-                        payload.requestId(),
-                        ConfigSnapshotPayload.PatchResult.RESET_REJECTED);
-                return;
-            }
-            applyReset(player, payload);
-        });
-        ServerTickEvents.END_SERVER_TICK.register(server -> {
-            flushPendingRequests();
-            flushPendingPatches();
-        });
+                    ConfigSnapshotPayload.PatchResult.RESET_UNAUTHORIZED);
+            return;
+        }
+        if (payload.expectedRevision() != ConfigManager.revision()) {
+            sendMutationResult(
+                    player,
+                    payload.requestId(),
+                    ConfigSnapshotPayload.PatchResult.RESET_REJECTED);
+            return;
+        }
+        if (!acceptReset(player)) {
+            sendMutationResult(
+                    player,
+                    payload.requestId(),
+                    ConfigSnapshotPayload.PatchResult.RESET_REJECTED);
+            return;
+        }
+        applyReset(player, payload);
     }
 
     private static void flushPendingRequests() {
@@ -280,11 +283,11 @@ public final class SmartDropsNetworking {
             final int requestId,
             final ConfigSnapshotPayload.PatchResult result
     ) {
-        if (!ServerPlayNetworking.canSend(player, ConfigMutationResultPayload.TYPE)) {
+        if (!transport().canSend(player, ConfigMutationResultPayload.TYPE)) {
             sendSnapshot(player, requestId, result);
             return;
         }
-        ServerPlayNetworking.send(player, new ConfigMutationResultPayload(
+        transport().send(player, new ConfigMutationResultPayload(
                 requestId,
                 ConfigManager.revision(),
                 canEditConfiguration(player),
@@ -329,8 +332,8 @@ public final class SmartDropsNetworking {
     ) {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (acknowledgedPlayer.map(id -> !id.equals(player.getUUID())).orElse(true)
-                    && ServerPlayNetworking.canSend(player, ConfigInvalidationPayload.TYPE)) {
-                ServerPlayNetworking.send(player, new ConfigInvalidationPayload(
+                    && transport().canSend(player, ConfigInvalidationPayload.TYPE)) {
+                transport().send(player, new ConfigInvalidationPayload(
                         revision,
                         kind == ConfigManager.PublicationKind.RESET
                                 ? ConfigInvalidationPayload.ChangeKind.RESET
@@ -348,7 +351,7 @@ public final class SmartDropsNetworking {
             final int requestId,
             final ConfigSnapshotPayload.PatchResult patchResult
     ) {
-        if (!ServerPlayNetworking.canSend(player, ConfigSnapshotPayload.TYPE)) {
+        if (!transport().canSend(player, ConfigSnapshotPayload.TYPE)) {
             return;
         }
 
@@ -364,7 +367,7 @@ public final class SmartDropsNetworking {
         }
 
         final boolean editable = canEditConfiguration(player);
-        ServerPlayNetworking.send(player, new ConfigSnapshotPayload(
+        transport().send(player, new ConfigSnapshotPayload(
                 requestId,
                 snapshot.revision(),
                 json,
@@ -383,6 +386,21 @@ public final class SmartDropsNetworking {
     static boolean canEditConfiguration(final ServerPlayer player) {
         return player.level().getServer().isSingleplayerOwner(player.nameAndId())
                 || player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
+    }
+
+    private static Transport transport() {
+        final Transport current = transport;
+        if (current == null) {
+            throw new IllegalStateException("Config networking has not been installed by the active loader");
+        }
+        return current;
+    }
+
+    /** Loader adapter for negotiated server-to-client play payloads. */
+    public interface Transport {
+        boolean canSend(ServerPlayer player, CustomPacketPayload.Type<?> type);
+
+        void send(ServerPlayer player, CustomPacketPayload payload);
     }
 
     private record PendingRequest(int requestId, long eligibleTick) {
