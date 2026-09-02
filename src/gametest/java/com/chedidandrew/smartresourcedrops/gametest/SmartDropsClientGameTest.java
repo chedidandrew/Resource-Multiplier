@@ -32,6 +32,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestDedicatedServerCon
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.CloudStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -45,12 +46,17 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.util.FormattedCharSequence;
 import org.joml.Vector2ic;
 
 /** End-to-end GUI and authority checks in real Minecraft client/server runtimes. */
 @SuppressWarnings("UnstableApiUsage")
 public final class SmartDropsClientGameTest implements FabricClientGameTest {
+    private static final int TEST_FRAMERATE_LIMIT = 20;
+    private static final int TEST_RENDER_DISTANCE = 2;
+    private static final int TEST_SIMULATION_DISTANCE = 5;
+    private static final double TEST_ENTITY_DISTANCE_SCALE = 0.5D;
     private static final int BLOCK_RESULT_LIMIT = 200;
     private static final int VANILLA_TOOLTIP_WIDTH = 170;
     private static final String APPLY_KEY = "Apply Changes";
@@ -120,9 +126,28 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
 
     @Override
     public void runTest(final ClientGameTestContext context) {
-        verifyTitleScreenLocalDefaults(context);
+        configureResourceEfficientClientOptions(context);
         verifyIntegratedServerOwnerAndApply(context);
+        verifyTitleScreenLocalDefaults(context);
         verifyDedicatedServerPermissions(context);
+    }
+
+    private static void configureResourceEfficientClientOptions(final ClientGameTestContext context) {
+        context.runOnClient(client -> {
+            // Xvfb uses CPU-backed rendering on GitHub-hosted runners. Keep enough CPU available
+            // for the integrated server while preserving every GUI and authority assertion.
+            client.options.framerateLimit().set(TEST_FRAMERATE_LIMIT);
+            client.options.renderDistance().set(TEST_RENDER_DISTANCE);
+            client.options.simulationDistance().set(TEST_SIMULATION_DISTANCE);
+            client.options.enableVsync().set(false);
+            client.options.cloudStatus().set(CloudStatus.OFF);
+            client.options.particles().set(ParticleStatus.MINIMAL);
+            client.options.entityDistanceScaling().set(TEST_ENTITY_DISTANCE_SCALE);
+            client.options.entityShadows().set(false);
+            client.options.ambientOcclusion().set(false);
+            client.options.biomeBlendRadius().set(0);
+            client.options.menuBackgroundBlurriness().set(0);
+        });
     }
 
     private static void verifyTitleScreenLocalDefaults(final ClientGameTestContext context) {
