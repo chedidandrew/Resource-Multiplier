@@ -248,7 +248,7 @@ public final class ShearingActionContext {
                     entityId,
                     targetUuid,
                     position,
-                    dimension.identifier(),
+                    dimension.location(),
                     source,
                     result.limitExceeded(),
                     result.originalItems(),
@@ -270,7 +270,7 @@ public final class ShearingActionContext {
                     entityId,
                     targetUuid,
                     position,
-                    dimension.identifier(),
+                    dimension.location(),
                     source,
                     failure);
         }

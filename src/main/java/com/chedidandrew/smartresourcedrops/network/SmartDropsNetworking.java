@@ -16,7 +16,6 @@ import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.Permissions;
 
 public final class SmartDropsNetworking {
     private static final long REQUEST_COOLDOWN_TICKS = 40L;
@@ -384,8 +383,8 @@ public final class SmartDropsNetworking {
     }
 
     static boolean canEditConfiguration(final ServerPlayer player) {
-        return player.level().getServer().isSingleplayerOwner(player.nameAndId())
-                || player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
+        return player.level().getServer().isSingleplayerOwner(player.getGameProfile())
+                || player.hasPermissions(2);
     }
 
     private static Transport transport() {

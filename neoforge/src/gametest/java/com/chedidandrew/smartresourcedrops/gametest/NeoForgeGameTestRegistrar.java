@@ -6,120 +6,120 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.function.Consumer;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestGenerator;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.block.Rotation;
+import net.minecraft.gametest.framework.StructureUtils;
+import net.minecraft.gametest.framework.TestFunction;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
-import net.neoforged.neoforge.registries.RegisterEvent;
 
-/** Registers the loader-neutral Fabric GameTest bodies with NeoForge's 1.21.11 registry API. */
-@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID)
+/** Registers the shared test methods through NeoForge 21.1's pre-registry GameTest event. */
+@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public final class NeoForgeGameTestRegistrar {
-    private static final String TEST_NAMESPACE = "smart_resource_drops_gametest";
-    private static final Identifier EMPTY_STRUCTURE = id("empty");
-    private static final Set<String> EXCLUDED = Set.of(
-            "dedicatedServerLoadsEveryRequiredMixin",
-            "dedicatedServerAuditsAllThreeShearingMixins");
-    private static final List<TestSpec> TESTS = discover();
+    public static final int EXPECTED_TEST_COUNT = 64;
+    private static final String STRUCTURE = "smart_resource_drops_gametest:wide";
+    private static final List<Class<?>> SHARED_TEST_CLASSES = List.of(
+            SmartResourceDropsGameTests.class,
+            SmartResourceDropsShearingGameTests.class,
+            SmartResourceDropsBlockBudgetGameTests.class,
+            SmartResourceDropsEntityGameTests.class);
+    private static final List<Class<?>> NEOFORGE_TEST_CLASSES = List.of(
+            NeoForgeAutomationAuthorityGameTests.class,
+            NeoForgeMixinAuditGameTests.class);
 
-    private NeoForgeGameTestRegistrar() {}
-
-    @SubscribeEvent
-    public static void registerFunctions(final RegisterEvent event) {
-        event.register(Registries.TEST_FUNCTION, helper -> {
-            for (TestSpec spec : TESTS) {
-                helper.register(spec.id(), spec.function());
-            }
-        });
+    private NeoForgeGameTestRegistrar() {
     }
 
     @SubscribeEvent
     public static void registerTests(final RegisterGameTestsEvent event) {
-        final Holder<TestEnvironmentDefinition> environment =
-                event.registerEnvironment(id("environment"));
-        for (TestSpec spec : TESTS) {
-            final ResourceKey<Consumer<GameTestHelper>> functionKey =
-                    ResourceKey.create(Registries.TEST_FUNCTION, spec.id());
-            final TestData<Holder<TestEnvironmentDefinition>> data = new TestData<>(
-                    environment, EMPTY_STRUCTURE, 20, 0, true, Rotation.NONE,
-                    false, 1, 1, false);
-            event.registerTest(spec.id(), new FunctionGameTestInstance(functionKey, data));
+        try {
+            event.register(NeoForgeGameTestRegistrar.class.getDeclaredMethod("generatedSharedTests"));
+        } catch (NoSuchMethodException impossible) {
+            throw new IllegalStateException("NeoForge GameTest generator method disappeared", impossible);
         }
-    }
 
-    private static List<TestSpec> discover() {
-        final List<TestSpec> result = new ArrayList<>();
-        addTests(result, SmartResourceDropsGameTests.class);
-        addTests(result, SmartResourceDropsShearingGameTests.class);
-        addTests(result, SmartResourceDropsBlockBudgetGameTests.class);
-        addTests(result, SmartResourceDropsEntityGameTests.class);
-        addTests(result, NeoForgeMixinAuditGameTests.class);
-        return List.copyOf(result);
-    }
-
-    private static void addTests(final List<TestSpec> result, final Class<?> type) {
-        Arrays.stream(type.getDeclaredMethods())
+        final List<Method> nativeMethods = NEOFORGE_TEST_CLASSES.stream()
+                .flatMap(type -> Arrays.stream(type.getDeclaredMethods()))
                 .filter(method -> Modifier.isPublic(method.getModifiers()))
                 .filter(method -> !Modifier.isStatic(method.getModifiers()))
-                .filter(method -> method.getReturnType() == void.class)
-                .filter(method -> Arrays.equals(
-                        method.getParameterTypes(), new Class<?>[] {GameTestHelper.class}))
-                .filter(method -> !EXCLUDED.contains(method.getName()))
-                .sorted(Comparator.comparing(Method::getName))
-                .map(method -> spec(type, method))
-                .forEach(result::add);
-    }
+                .filter(method -> method.isAnnotationPresent(GameTest.class))
+                .sorted(Comparator
+                        .comparing((Method method) -> method.getDeclaringClass().getName())
+                        .thenComparing(Method::getName))
+                .toList();
+        nativeMethods.forEach(event::register);
 
-    private static TestSpec spec(final Class<?> type, final Method method) {
-        final Object target;
-        try {
-            target = type.getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException exception) {
-            throw new ExceptionInInitializerError(exception);
+        final int discovered = sharedMethods().size() + nativeMethods.size();
+        if (discovered != EXPECTED_TEST_COUNT) {
+            throw new IllegalStateException(
+                    "Expected " + EXPECTED_TEST_COUNT + " NeoForge GameTests, discovered " + discovered);
         }
-        final Consumer<GameTestHelper> function = helper -> invoke(method, target, helper);
-        final String path = (type.getSimpleName() + "_" + method.getName())
-                .replaceAll("([a-z])([A-Z])", "$1_$2")
-                .toLowerCase(Locale.ROOT);
-        return new TestSpec(id(path), function);
+        SmartResourceDrops.LOGGER.info(
+                "Registered exactly {} NeoForge 1.21.1 GameTests",
+                discovered);
     }
 
-    private static void invoke(
-            final Method method,
-            final Object target,
-            final GameTestHelper helper) {
+    /**
+     * NeoForge 21.1 prefixes ordinary test templates with the declaring class.
+     * A generator preserves Fabric's full-ID annotations while binding every
+     * shared method to one explicit binary 1.21.1 structure.
+     */
+    @GameTestGenerator
+    public static Collection<TestFunction> generatedSharedTests() {
+        final ArrayList<TestFunction> tests = new ArrayList<>();
+        for (Method method : sharedMethods()) {
+            final GameTest annotation = method.getAnnotation(GameTest.class);
+            final String className = method.getDeclaringClass().getSimpleName().toLowerCase();
+            final String testName = className + "." + method.getName().toLowerCase();
+            tests.add(new TestFunction(
+                    annotation.batch(),
+                    testName,
+                    STRUCTURE,
+                    StructureUtils.getRotationForRotationSteps(annotation.rotationSteps()),
+                    annotation.timeoutTicks(),
+                    annotation.setupTicks(),
+                    annotation.required(),
+                    annotation.manualOnly(),
+                    annotation.requiredSuccesses(),
+                    annotation.attempts(),
+                    annotation.skyAccess(),
+                    helper -> invoke(method, helper)));
+        }
+        return List.copyOf(tests);
+    }
+
+    private static List<Method> sharedMethods() {
+        return SHARED_TEST_CLASSES.stream()
+                .flatMap(type -> Arrays.stream(type.getDeclaredMethods()))
+                .filter(method -> Modifier.isPublic(method.getModifiers()))
+                .filter(method -> !Modifier.isStatic(method.getModifiers()))
+                .filter(method -> method.isAnnotationPresent(GameTest.class))
+                .sorted(Comparator
+                        .comparing((Method method) -> method.getDeclaringClass().getName())
+                        .thenComparing(Method::getName))
+                .toList();
+    }
+
+    private static void invoke(final Method method, final GameTestHelper helper) {
         try {
-            method.invoke(target, helper);
-        } catch (InvocationTargetException exception) {
-            final Throwable cause = exception.getCause();
+            final Object instance = method.getDeclaringClass().getDeclaredConstructor().newInstance();
+            method.invoke(instance, helper);
+        } catch (InvocationTargetException failure) {
+            final Throwable cause = failure.getCause();
             if (cause instanceof RuntimeException runtime) {
                 throw runtime;
             }
             if (cause instanceof Error error) {
                 throw error;
             }
-            throw new RuntimeException("GameTest threw a checked exception: " + method, cause);
-        } catch (ReflectiveOperationException exception) {
-            throw new RuntimeException("Could not invoke GameTest: " + method, exception);
+            throw new RuntimeException(cause);
+        } catch (ReflectiveOperationException failure) {
+            throw new IllegalStateException("Could not invoke GameTest " + method, failure);
         }
     }
-
-    private static Identifier id(final String path) {
-        return Identifier.fromNamespaceAndPath(TEST_NAMESPACE, path);
-    }
-
-    private record TestSpec(Identifier id, Consumer<GameTestHelper> function) {}
 }

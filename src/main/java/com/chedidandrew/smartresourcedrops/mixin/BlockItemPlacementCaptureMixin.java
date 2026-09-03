@@ -20,7 +20,7 @@ abstract class BlockItemPlacementCaptureMixin {
         boolean succeeded = false;
         try {
             final InteractionResult result = original.call(context);
-            succeeded = result instanceof InteractionResult.Success;
+            succeeded = result.consumesAction();
             return result;
         } finally {
             PlacementCapture.end(succeeded);

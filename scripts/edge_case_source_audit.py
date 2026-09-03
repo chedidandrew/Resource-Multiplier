@@ -13,7 +13,7 @@ check("legal-stack multiplier", "StackConsolidator" in all_text and "getMaxStack
 check("multi-block placement transaction", "BlockItemPlacementCaptureMixin" in all_text and "PlacementCapture.begin" in all_text and "PlacementCapture.end" in all_text)
 check("remove-before-drop cache bounded", "MAX_ENTRIES_PER_LEVEL" in all_text and "MAX_AGE_TICKS" in all_text)
 check("client queue bounded", "MAX_PENDING" in all_text and "QUIET_PERIOD_NANOS" in all_text)
-check("namespaced parser", "StringArgumentType.greedyString()" in all_text and "Identifier.tryParse" in all_text)
+check("namespaced parser", "StringArgumentType.greedyString()" in all_text and "ResourceLocation.tryParse" in all_text)
 # BEFORE handlers must not consume provenance. Flag obvious remove/consume calls in their nearby block.
 bad=[]
 for p,t in text.items():
@@ -28,8 +28,8 @@ check(
     "entity shearing uses only scoped final-helper hooks",
     "PlayerShearingContextMixin" in all_text
     and "ShearsDispenseItemBehaviorMixin" in all_text
-    and "LivingEntityShearingLootMixin" in all_text
-    and "dropFromShearingLootTable" in all_text,
+    and "SheepShearingLootMixin" in all_text
+    and "spawnAtLocation" in all_text,
 )
 check(
     "shearing output budget is independently bounded",
@@ -40,7 +40,10 @@ check(
     "known vanilla special shearables fail closed",
     "KNOWN_VANILLA_SPECIAL_IDS" in all_text
     and "minecraft:mooshroom" in all_text
-    and "minecraft:copper_golem" in all_text,
+    and "minecraft:snow_golem" in all_text
+    and "minecraft:copper_golem" not in (
+        ROOT / "src/main/resources/data/smart_resource_drops/tags/entity_type/shearing/special.json"
+    ).read_text(encoding="utf-8"),
 )
 failed=[c for c in checks if not c[1]]
 for name,ok,detail in checks: print(("PASS" if ok else "FAIL")+": "+name+(" ("+detail+")" if detail else ""))

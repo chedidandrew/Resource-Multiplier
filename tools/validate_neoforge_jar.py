@@ -25,14 +25,12 @@ MIXIN_CONFIGS = {
 REQUIRED_CLASSES = {
     "com/chedidandrew/smartresourcedrops/SmartResourceDrops.class",
     "com/chedidandrew/smartresourcedrops/platform/PlatformPlayerSupport.class",
-    "com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigration.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeClientEntrypoint.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeEntrypoint.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeNetworking.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementStorage.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/CommonHooksPlacementMixin.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/NeoForgeShearsDispenseItemBehaviorMixin.class",
-    "com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/SerializableChunkDataLegacyProvenanceMixin.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/ServerPlayerGameModeMixin.class",
 }
 FORBIDDEN_PARTS = {
@@ -49,9 +47,10 @@ FORBIDDEN_TEST_CLASS_PREFIXES = {
     "com/chedidandrew/smartresourcedrops/client/neoforgemultiplayerclientsmoketest",
     "com/chedidandrew/smartresourcedrops/client/neoforgeoptionalclientonlysmoketest",
     "com/chedidandrew/smartresourcedrops/client/neoforgeoversizedwireclientsmoketest",
-    "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemigrationrestartsmoketest",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemultiplayerserversmoketest",
+    "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgeplacementpersistencesmoketest",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgeoversizedwireserversmoketest",
+    "com/chedidandrew/smartresourcedrops/packagedprobe/",
 }
 
 
@@ -67,7 +66,9 @@ def is_development_test_entry(name: str) -> bool:
     if parts.intersection(FORBIDDEN_PARTS):
         return True
     return any(
-        folded == prefix + ".class" or folded.startswith(prefix + "$")
+        (prefix.endswith("/") and folded.startswith(prefix))
+        or folded == prefix + ".class"
+        or folded.startswith(prefix + "$")
         for prefix in FORBIDDEN_TEST_CLASS_PREFIXES
     )
 
@@ -219,6 +220,28 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
                     errors.append("NeoForge metadata does not reference the production icon")
             if metadata.get("license") != "MIT":
                 errors.append("NeoForge metadata does not declare the MIT license")
+            if metadata.get("modLoader") != "javafml":
+                errors.append("NeoForge metadata must use the FML 4 javafml loader")
+            if metadata.get("loaderVersion") != "[4,)":
+                errors.append("NeoForge metadata must declare loaderVersion='[4,)'")
+
+            expected_properties = properties(ROOT / "neoforge/gradle.properties")
+            dependencies = metadata.get("dependencies", {}).get(MOD_ID, []) \
+                    if isinstance(metadata.get("dependencies"), dict) else []
+            expected_dependencies = {
+                "neoforge": f"[{expected_properties['neo_version']},)",
+                "minecraft": expected_properties["minecraft_version_range"],
+            }
+            actual_dependencies = {
+                item.get("modId"): item.get("versionRange")
+                for item in dependencies
+                if isinstance(item, dict)
+            } if isinstance(dependencies, list) else {}
+            if actual_dependencies != expected_dependencies:
+                errors.append(
+                    "NeoForge metadata dependencies differ from the exact 1.21.1/21.1.249 target: "
+                    f"{actual_dependencies!r}"
+                )
             declared_mixins = metadata.get("mixins")
             declared_configs = {
                 item.get("config")
@@ -253,17 +276,17 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
             ).read_bytes():
                 errors.append("embedded icon differs from the approved production icon")
 
-            try:
-                class_header = archive.read(
-                    "com/chedidandrew/smartresourcedrops/SmartResourceDrops.class"
-                )[:8]
-                magic, _, major = struct.unpack(">IHH", class_header)
+            for class_name in sorted(name for name in names if name.endswith(".class")):
+                try:
+                    magic, _, major = struct.unpack(">IHH", archive.read(class_name)[:8])
+                except struct.error as exc:
+                    errors.append(f"cannot inspect {class_name!r} bytecode: {exc}")
+                    continue
                 if magic != 0xCAFEBABE or major != expected_class_major:
                     errors.append(
-                        f"main class is not Java {expected_java_version} bytecode (major={major})"
+                        f"{class_name!r} is not Java {expected_java_version} bytecode "
+                        f"(major={major})"
                     )
-            except (KeyError, struct.error) as exc:
-                errors.append(f"cannot inspect main class bytecode: {exc}")
     except (OSError, zipfile.BadZipFile) as exc:
         raise ValidationError(f"cannot read {jar_path}: {exc}") from exc
 

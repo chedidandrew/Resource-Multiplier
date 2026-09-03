@@ -42,6 +42,20 @@ EXPECTED_ENTRYPOINTS = {
     ],
 }
 EXPECTED_MIXIN_DECLARATIONS = ["smart_resource_drops.mixins.json"]
+EXPECTED_PRODUCTION_MIXINS = [
+    "BlockDropResourcesMixin",
+    "BlockStateBaseDropsMixin",
+    "ExperienceOrbMixin",
+    "LivingEntityDeathLootMixin",
+    "PlayerShearingContextMixin",
+    "ShearsDispenseItemBehaviorMixin",
+    "SheepShearingLootMixin",
+    "FallingBlockEntityMixin",
+    "PistonMovingBlockEntityMixin",
+    "BlockItemPlacementCaptureMixin",
+    "LevelPlacementCaptureMixin",
+]
+EXPECTED_FABRIC_CLASS_MAJOR = 65
 REQUIRED_SOURCE_FILES = frozenset(
     {
         ".gitignore",
@@ -94,6 +108,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "src/main/java/com/chedidandrew/smartresourcedrops/core/BlockLootBudgetWarnings.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/core/util/BlockLootOutputBudget.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/core/util/BoundedRateLimiter.java",
+        "src/main/java/com/chedidandrew/smartresourcedrops/core/util/AtomicConfigWriter.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/core/util/LootOutputBudget.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityClassifier.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityDropTags.java",
@@ -103,7 +118,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleTrace.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingTags.java",
-        "src/main/java/com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.java",
+        "src/main/java/com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.java",
         "src/client/java/com/chedidandrew/smartresourcedrops/client/ShearingDropsScreen.java",
@@ -128,6 +143,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "src/main/resources/fabric.mod.json",
         "src/main/resources/smart_resource_drops.mixins.json",
         "src/test/java/com/chedidandrew/smartresourcedrops/config/ConfigValidatorTest.java",
+        "src/test/java/com/chedidandrew/smartresourcedrops/core/util/AtomicConfigWriterTest.java",
         "src/test/resources/config/migration/schema-1.json",
         "src/test/resources/config/migration/schema-2.json",
         "src/test/java/com/chedidandrew/smartresourcedrops/core/util/BlockLootOutputBudgetTest.java",
@@ -136,17 +152,29 @@ REQUIRED_SOURCE_FILES = frozenset(
         "src/test/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolverTest.java",
         "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/SmartResourceDropsBlockBudgetGameTests.java",
         "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/SmartResourceDropsShearingGameTests.java",
+        "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/FabricAutomationAuthorityGameTests.java",
+        "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/FabricMixinAuditGameTests.java",
+        "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/mixin/FabricGameTestLootTableMixin.java",
+        "src/gametest/resources/data/smart_resource_drops_gametest/gametest/structure/wide.snbt",
+        "src/gametest/resources/fabric.mod.json",
+        "src/gametest/resources/smart_resource_drops_gametest.mixins.json",
+        "src/clienttest/java/com/chedidandrew/smartresourcedrops/client/FabricClientSmokeTest.java",
+        "src/clienttest/java/com/chedidandrew/smartresourcedrops/client/FabricMultiplayerClientSmokeTest.java",
+        "src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricMultiplayerServerSmokeTest.java",
+        "src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricPlacementPersistenceSmokeTest.java",
+        "src/clienttest/resources/fabric.mod.json",
         "src/gametest/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingGameTestAccess.java",
         "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/GameTestBlockLootFixtures.java",
         "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/GameTestEntityFixtures.java",
         "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/FabricGameTestBlockLootFixtures.java",
         "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/FabricGameTestEntityFixtures.java",
         "tools/package_release.py",
+        "tools/prepare_fabric_ci_artifact.py",
         "tools/validate_package.py",
         "tools/validate_neoforge_jar.py",
         "docs/NEOFORGE_PORT.md",
         "docs/releases/1.3.0.md",
-        "docs/releases/1.3.0+mc1.21.11.md",
+        "docs/releases/1.3.0+mc1.21.1.md",
         "neoforge/build.gradle",
         "neoforge/gradle.properties",
         "neoforge/settings.gradle",
@@ -157,33 +185,34 @@ REQUIRED_SOURCE_FILES = frozenset(
         "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeClientEntrypoint.java",
         "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeNetworking.java",
         "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementStorage.java",
-        "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigration.java",
         "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/CommonHooksPlacementMixin.java",
         "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/NeoForgeShearsDispenseItemBehaviorMixin.java",
-        "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/SerializableChunkDataLegacyProvenanceMixin.java",
         "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/ServerPlayerGameModeMixin.java",
         "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeGameTestRegistrar.java",
+        "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeAutomationAuthorityGameTests.java",
         "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeMixinAuditGameTests.java",
         "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/NeoForgeGameTestBlockLootFixtures.java",
         "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/NeoForgeGameTestEntityFixtures.java",
         "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/entity_final_loot.json",
         "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/pathological_block_loot.json",
-        "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structure/empty.nbt",
+        "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structure/wide.nbt",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.java",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.java",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOptionalClientOnlySmokeTest.java",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.java",
-        "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.java",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.java",
+        "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementPersistenceSmokeTest.java",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.java",
         "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.java",
         "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.java",
         "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.java",
         "neoforge/src/optionalchanneltest/resources/META-INF/neoforge.mods.toml",
+        "neoforge/src/packagedprobetest/java/com/chedidandrew/smartresourcedrops/packagedprobe/PackagedClientProbe.java",
+        "neoforge/src/packagedprobetest/java/com/chedidandrew/smartresourcedrops/packagedprobe/PackagedProbeSupport.java",
+        "neoforge/src/packagedprobetest/java/com/chedidandrew/smartresourcedrops/packagedprobe/PackagedServerProbe.java",
+        "neoforge/src/packagedprobetest/resources/META-INF/neoforge.mods.toml",
         "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/client/ClientEntityCategoryTagIndexTest.java",
-        "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigrationTest.java",
-        "neoforge/src/test/resources/fixtures/README.md",
-        "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
+        "tools/run_fabric_multiplayer_smoke.sh",
         "tools/run_neoforge_multiplayer_smoke.sh",
         "tools/run_neoforge_optional_channel_smoke.sh",
         "tools/run_neoforge_oversized_wire_smoke.sh",
@@ -280,7 +309,7 @@ REQUIRED_RELEASE_JAR_ENTRIES = frozenset(
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.class",
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleTrace.class",
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingTags.class",
-        "com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.class",
+        "com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.class",
         "com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.class",
         "com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.class",
         "assets/smart_resource_drops/icon.png",
@@ -364,12 +393,17 @@ FORBIDDEN_RELEASE_JAR_PARTS = frozenset(
 FORBIDDEN_RELEASE_JAR_CLASS_PREFIXES = frozenset(
     {
         "com/chedidandrew/smartresourcedrops/client/neoforgeclientcategorysmoketest",
+        "com/chedidandrew/smartresourcedrops/client/fabricclientsmoketest",
+        "com/chedidandrew/smartresourcedrops/client/fabricmultiplayerclientsmoketest",
+        "com/chedidandrew/smartresourcedrops/platform/fabric/fabricmultiplayerserversmoketest",
+        "com/chedidandrew/smartresourcedrops/platform/fabric/fabricplacementpersistencesmoketest",
         "com/chedidandrew/smartresourcedrops/client/neoforgemultiplayerclientsmoketest",
         "com/chedidandrew/smartresourcedrops/client/neoforgeoptionalclientonlysmoketest",
         "com/chedidandrew/smartresourcedrops/client/neoforgeoversizedwireclientsmoketest",
-        "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemigrationrestartsmoketest",
         "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemultiplayerserversmoketest",
+        "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgeplacementpersistencesmoketest",
         "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgeoversizedwireserversmoketest",
+        "com/chedidandrew/smartresourcedrops/packagedprobe/",
     }
 )
 FORBIDDEN_RELEASE_JAR_NAMES = frozenset(
@@ -650,7 +684,9 @@ def validate_release_jar(
                 if any(part in FORBIDDEN_RELEASE_JAR_PARTS for part in parts):
                     errors.append(f"development-only test fixture entry {name!r}")
                 if any(
-                    folded == prefix + ".class" or folded.startswith(prefix + "$")
+                    (prefix.endswith("/") and folded.startswith(prefix))
+                    or folded == prefix + ".class"
+                    or folded.startswith(prefix + "$")
                     for prefix in FORBIDDEN_RELEASE_JAR_CLASS_PREFIXES
                 ):
                     errors.append(f"development-only smoke-test class entry {name!r}")
@@ -660,6 +696,17 @@ def validate_release_jar(
                     errors.append(f"nested archive or source-package entry {name!r}")
                 if folded.endswith(".gametest.mixins.json"):
                     errors.append(f"development-only GameTest mixin entry {name!r}")
+                if folded.endswith(".class"):
+                    class_header = archive.read(info)[:8]
+                    if len(class_header) < 8 or class_header[:4] != b"\xca\xfe\xba\xbe":
+                        errors.append(f"invalid Java class-file header in {name!r}")
+                    else:
+                        class_major = int.from_bytes(class_header[6:8], "big")
+                        if class_major != EXPECTED_FABRIC_CLASS_MAJOR:
+                            errors.append(
+                                f"Java class-file major for {name!r} is {class_major}; "
+                                f"expected {EXPECTED_FABRIC_CLASS_MAJOR} (Java 21)"
+                            )
 
             collisions: dict[str, list[str]] = {}
             for name in names:
@@ -679,6 +726,19 @@ def validate_release_jar(
             else:
                 if embedded_license != (ROOT / "LICENSE").read_bytes():
                     errors.append("embedded release JAR license differs from the repository MIT license")
+
+            try:
+                embedded_icon = archive.read("assets/smart_resource_drops/icon.png")
+            except KeyError:
+                pass
+            else:
+                approved_icon = (
+                    ROOT / "src/main/resources/assets/smart_resource_drops/icon.png"
+                ).read_bytes()
+                if embedded_icon != approved_icon:
+                    errors.append(
+                        "embedded release JAR icon differs from the approved production icon"
+                    )
 
             try:
                 metadata = json.loads(archive.read("fabric.mod.json"))
@@ -760,6 +820,17 @@ def validate_release_jar(
                         if not isinstance(mixin_package, str) or not mixin_package:
                             errors.append(f"declared mixin config {config_name!r} has no package")
                             continue
+                        if mixin_config.get("mixins") != EXPECTED_PRODUCTION_MIXINS:
+                            errors.append(
+                                f"declared mixin config {config_name!r} does not contain the "
+                                "exact audited 1.21.1 production mixin set"
+                            )
+                        for side in ("client", "server"):
+                            if mixin_config.get(side, []) != []:
+                                errors.append(
+                                    f"declared mixin config {config_name!r} contains unexpected "
+                                    f"{side!r} production mixins"
+                                )
                         for side in ("mixins", "client", "server"):
                             classes = mixin_config.get(side, [])
                             if not isinstance(classes, list):
@@ -824,7 +895,6 @@ def validate_release_jar(
                     elif tag_entry.endswith("/entity_type/shearing/special.json"):
                         expected_special = {
                             "minecraft:bogged",
-                            "minecraft:copper_golem",
                             "minecraft:mooshroom",
                             "minecraft:snow_golem",
                         }
@@ -1019,7 +1089,7 @@ def main() -> None:
     except ReleasePackageError as exc:
         raise SystemExit(f"Source package validation failed: {exc}") from exc
 
-    package_readme = f"""Smart Resource Multiplier {version} package\n\nTarget: Minecraft Java {minecraft_version}, Java {properties['java_version']}. Choose exactly one loader-specific JAR.\n\nFiles:\n- {jar_name}: Fabric release JAR for Fabric Loader {properties['loader_version']} and Fabric API {properties['fabric_version']}.\n- {neoforge_jar_name}: NeoForge release JAR for NeoForge {neoforge_properties['neo_version']}.\n- {source_name}: Complete GitHub-ready dual-loader source, tests, documentation, Gradle builds, and GitHub Actions workflows.\n- {checksum_name}: SHA-256 hashes for both release JARs and the source archive.\n- {prefix}-BUILD_STATUS.md: Validation status and release evidence.\n\nInstallation:\nUpload the two JARs as separate CurseForge files with the correct Fabric or NeoForge loader selection. Never install both JARs in the same Minecraft instance. Back up a world before changing loaders; Fabric-to-NeoForge provenance migration is one-way.\n"""
+    package_readme = f"""Smart Resource Multiplier {version} package\n\nTarget: Minecraft Java {minecraft_version}, Java {properties['java_version']}. Choose exactly one loader-specific JAR.\n\nFiles:\n- {jar_name}: Fabric release JAR for Fabric Loader {properties['loader_version']} and Fabric API {properties['fabric_version']}.\n- {neoforge_jar_name}: NeoForge release JAR for NeoForge {neoforge_properties['neo_version']}.\n- {source_name}: Complete GitHub-ready dual-loader source, tests, documentation, Gradle builds, and GitHub Actions workflows.\n- {checksum_name}: SHA-256 hashes for both release JARs and the source archive.\n- {prefix}-BUILD_STATUS.md: Validation status and release evidence.\n\nInstallation:\nUpload the two JARs as separate CurseForge files with the correct Fabric or NeoForge loader selection. Never install both JARs in the same Minecraft instance. Back up a world before changing Minecraft versions or mod loaders; world downgrades and cross-loader placed-block-data migration are unsupported on this backport.\n"""
     package_readme_output.write_text(package_readme, encoding="utf-8", newline="\n")
 
     checksums = [jar_output, neoforge_jar_output, source_output]

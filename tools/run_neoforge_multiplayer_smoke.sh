@@ -6,7 +6,7 @@ readonly READY_TIMEOUT_SECONDS=180
 readonly CLIENT_TIMEOUT_SECONDS=300
 readonly SERVER_SHUTDOWN_TIMEOUT_SECONDS=60
 readonly SERVER_READY_MARKER='For help, type "help"'
-readonly CLIENT_PASS_MARKER='NeoForge multiplayer client smoke test passed: /smartdropsgui, permissions, connected entity/filter/shearing child Apply, six channels, near-limit patch, oversized rejection, confirmed reset, disconnect cleanup, and reconnect'
+readonly CLIENT_PASS_MARKER='NeoForge multiplayer client smoke test passed: /smartdropsgui, non-op denial, operator connected entity/filter/shearing child Apply, six channels, near-limit patch, oversized rejection, confirmed reset, disconnect cleanup, and reconnect'
 readonly SERVER_PASS_MARKER='NeoForge multiplayer server smoke test passed: non-op, promotion, connected entity/filter/shearing GUI patch, near-limit patch, confirmed reset, disconnect, and reconnect'
 
 readonly REPOSITORY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

@@ -3,6 +3,9 @@ package com.chedidandrew.smartresourcedrops.client;
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
 import com.chedidandrew.smartresourcedrops.core.entity.EntityCategory;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +27,8 @@ public final class NeoForgeClientCategorySmokeTest {
     private static final int TIMEOUT_TICKS = 2_400;
     private static final AtomicBoolean REGISTERED = new AtomicBoolean();
     private int ticks;
+    private int phase;
+    private SmartDropsConfigScreen root;
     private EntityCategoryScreen categoryScreen;
     private ConfigEditorSession session;
 
@@ -45,61 +50,127 @@ public final class NeoForgeClientCategorySmokeTest {
             if (++this.ticks > TIMEOUT_TICKS) {
                 throw new AssertionError("Timed out waiting for the NeoForge category smoke test");
             }
-            if (this.categoryScreen == null) {
-                final Screen initialMenu = minecraft.screen;
-                if (!(initialMenu instanceof TitleScreen)
-                        && !(initialMenu instanceof AccessibilityOnboardingScreen)) {
-                    return;
-                }
-                verifyPackagedResources();
-                final Screen routed = SmartDropsConfigScreens.create(initialMenu);
-                if (!(routed instanceof SmartDropsConfigScreen root)) {
-                    throw new AssertionError("Initial-menu config route did not open local defaults");
-                }
-                this.session = root.editorSession();
-                this.categoryScreen = new EntityCategoryScreen(root, root, this.session);
-                minecraft.setScreen(this.categoryScreen);
-                return;
+            switch (this.phase) {
+                case 0 -> openRoot(minecraft);
+                case 1 -> openEntityDrops(minecraft);
+                case 2 -> openCategories(minecraft);
+                case 3 -> verifyRowsAndOpenEditor(minecraft);
+                case 4 -> verifyEditAndDirtyPropagation(minecraft);
+                default -> throw new AssertionError("Unexpected category smoke phase " + this.phase);
             }
-            if (minecraft.screen != this.categoryScreen) {
-                return;
-            }
-
-            final StructuredConfigList list = this.categoryScreen.children().stream()
-                    .filter(StructuredConfigList.class::isInstance)
-                    .map(StructuredConfigList.class::cast)
-                    .findFirst()
-                    .orElseThrow(() -> new AssertionError("Entity Categories list was not initialized"));
-            if (list.rowCount() != EntityCategory.values().length) {
-                throw new AssertionError(
-                        "Expected " + EntityCategory.values().length
-                                + " entity-category rows, found " + list.rowCount());
-            }
-            final String expectedBack = Component
-                    .translatable("smart_resource_drops.gui.back")
-                    .getString();
-            final boolean hasBack = this.categoryScreen.children().stream()
-                    .filter(Button.class::isInstance)
-                    .map(Button.class::cast)
-                    .map(Button::getMessage)
-                    .map(Component::getString)
-                    .anyMatch(expectedBack::equals);
-            if (!hasBack) {
-                throw new AssertionError("Entity Categories screen has no Back button");
-            }
-
-            assertSelected("minecraft:enderman", EntityCategory.NEUTRAL);
-            assertSelected("minecraft:iron_golem", EntityCategory.GOLEMS);
-            SmartResourceDrops.LOGGER.info(
-                    "NeoForge client category smoke test passed: {} rows, tagged entity classifications, and Back button",
-                    list.rowCount());
-            minecraft.stop();
         } catch (Throwable failure) {
             SmartResourceDrops.LOGGER.error("NeoForge client category smoke test failed", failure);
             throw failure instanceof Error error
                     ? error
                     : new AssertionError("NeoForge client category smoke test failed", failure);
         }
+    }
+
+    private void openRoot(final Minecraft minecraft) throws Exception {
+        final Screen initialMenu = minecraft.screen;
+        if (!(initialMenu instanceof TitleScreen)
+                && !(initialMenu instanceof AccessibilityOnboardingScreen)) {
+            return;
+        }
+        verifyPackagedResources();
+        final Screen routed = SmartDropsConfigScreens.create(initialMenu);
+        if (!(routed instanceof SmartDropsConfigScreen openedRoot)) {
+            throw new AssertionError("Initial-menu config route did not open local defaults");
+        }
+        this.root = openedRoot;
+        this.session = openedRoot.editorSession();
+        minecraft.setScreen(openedRoot);
+        this.phase = 1;
+    }
+
+    private void openEntityDrops(final Minecraft minecraft) {
+        if (minecraft.screen != this.root) {
+            return;
+        }
+        press(buttonWithLabel(this.root, "Entity Drops"));
+        this.phase = 2;
+    }
+
+    private void openCategories(final Minecraft minecraft) {
+        if (!(minecraft.screen instanceof EntityDropsScreen entityDrops)) {
+            return;
+        }
+        final StructuredConfigList list = onlyList(entityDrops);
+        if (!this.session.entityDropsEnabled()) {
+            rowWithPrimary(list, "Entity Drops").action().run();
+            if (!this.session.entityDropsEnabled()) {
+                throw new AssertionError("Entity Drops could not be enabled for physical category editing");
+            }
+        }
+        rowWithPrimary(onlyList(entityDrops), "Entity Categories").action().run();
+        this.phase = 3;
+    }
+
+    private void verifyRowsAndOpenEditor(final Minecraft minecraft) {
+        if (!(minecraft.screen instanceof EntityCategoryScreen openedCategories)) {
+            return;
+        }
+        this.categoryScreen = openedCategories;
+        final StructuredConfigList list = onlyList(openedCategories);
+        if (list.rowCount() != EntityCategory.values().length) {
+            throw new AssertionError(
+                    "Expected " + EntityCategory.values().length
+                            + " entity-category rows, found " + list.rowCount());
+        }
+        buttonWithLabel(openedCategories, Component
+                .translatable("smart_resource_drops.gui.back")
+                .getString());
+        assertSelected("minecraft:enderman", EntityCategory.NEUTRAL);
+        assertSelected("minecraft:iron_golem", EntityCategory.GOLEMS);
+        assertSelected("minecraft:cow", EntityCategory.PASSIVE);
+        rowWithPrimary(
+                list,
+                ConfigUiText.entityCategoryName(EntityCategory.PASSIVE).getString())
+                .action()
+                .run();
+        this.phase = 4;
+    }
+
+    private void verifyEditAndDirtyPropagation(final Minecraft minecraft) throws Exception {
+        if (!(minecraft.screen instanceof EntityRuleEditScreen editor)) {
+            return;
+        }
+        final Button plus = buttonWithLabel(editor, "+");
+        if (!plus.active) {
+            throw new AssertionError("Entity Categories editor was not physically editable");
+        }
+        press(plus);
+        if (!Integer.valueOf(0).equals(
+                this.session.entityCategoryMultiplier(EntityCategory.PASSIVE))) {
+            throw new AssertionError("Passive category editor did not stage explicit 0x");
+        }
+        press(buttonWithLabel(editor, "Back"));
+        if (minecraft.screen != this.categoryScreen
+                || !this.categoryScreen.unsavedChangesIndicatorVisible()) {
+            throw new AssertionError("Entity Categories edit did not propagate dirty state to its list");
+        }
+        press(buttonWithLabel(this.categoryScreen, "Back"));
+        if (!(minecraft.screen instanceof EntityDropsScreen entityDrops)
+                || !entityDrops.unsavedChangesIndicatorVisible()) {
+            throw new AssertionError("Entity Categories dirty state did not propagate to Entity Drops");
+        }
+        press(buttonWithLabel(entityDrops, "Back"));
+        if (minecraft.screen != this.root || !this.session.isDirty() || !this.root.applyButton().active) {
+            throw new AssertionError("Entity Categories dirty state did not reach root Apply");
+        }
+        SmartResourceDrops.LOGGER.info(
+                "NeoForge client category smoke test passed: {} rows, tagged classifications, production navigation, physical edit, Back, dirty propagation, and root Apply",
+                EntityCategory.values().length);
+        final String testDirectory = System.getProperty(
+                "smart_resource_drops.clientCategoryTestDirectory");
+        if (testDirectory == null || testDirectory.isBlank()) {
+            throw new AssertionError("Missing NeoForge category test directory property");
+        }
+        Files.writeString(
+                Path.of(testDirectory).resolve("client-category.success"),
+                "pass\n",
+                StandardCharsets.UTF_8);
+        minecraft.stop();
     }
 
     private static void verifyPackagedResources() throws Exception {
@@ -128,6 +199,11 @@ public final class NeoForgeClientCategorySmokeTest {
                 .contains("minecraft:iron_golem")) {
             throw new AssertionError("Iron Golem is missing from the Golems category tag");
         }
+        if (resolved.values().stream().mapToInt(Set::size).sum() <= 20
+                || resolved.values().stream().anyMatch(values ->
+                        values.contains("minecraft:copper_golem"))) {
+            throw new AssertionError("Target-native entity catalog was empty, incomplete, or exposed copper_golem");
+        }
     }
 
     private void assertSelected(
@@ -142,5 +218,41 @@ public final class NeoForgeClientCategorySmokeTest {
                     entityId + " resolved as " + info.selectedCategory()
                             + " (estimated=" + info.categoryEstimated() + "), expected " + expected);
         }
+    }
+
+    private static StructuredConfigList onlyList(final Screen screen) {
+        final List<StructuredConfigList> lists = screen.children().stream()
+                .filter(StructuredConfigList.class::isInstance)
+                .map(StructuredConfigList.class::cast)
+                .toList();
+        if (lists.size() != 1) {
+            throw new AssertionError(
+                    "Expected one structured list on " + screen.getClass().getSimpleName());
+        }
+        return lists.getFirst();
+    }
+
+    private static StructuredConfigList.Row rowWithPrimary(
+            final StructuredConfigList list,
+            final String primary
+    ) {
+        return list.rows().stream()
+                .filter(row -> primary.equals(row.primary().getString()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Missing structured row " + primary));
+    }
+
+    private static Button buttonWithLabel(final Screen screen, final String label) {
+        return screen.children().stream()
+                .filter(Button.class::isInstance)
+                .map(Button.class::cast)
+                .filter(button -> label.equals(button.getMessage().getString()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError(
+                        screen.getClass().getSimpleName() + " omitted button " + label));
+    }
+
+    private static void press(final Button button) {
+        button.onPress();
     }
 }

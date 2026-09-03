@@ -114,7 +114,7 @@ public final class NeoForgeOversizedWireClientSmokeTest {
                 hostilePacket = channel.alloc().buffer(OVERSIZED_JSON_LENGTH + 128);
                 VarInt.write(hostilePacket, customPayloadPacketId);
                 final FriendlyByteBuf payload = new FriendlyByteBuf(hostilePacket);
-                payload.writeIdentifier(ConfigPatchPayload.TYPE.id());
+                payload.writeResourceLocation(ConfigPatchPayload.TYPE.id());
                 payload.writeVarInt(ATTACK_REQUEST_ID);
                 payload.writeVarLong(0L);
                 payload.writeVarInt(OVERSIZED_JSON_LENGTH);

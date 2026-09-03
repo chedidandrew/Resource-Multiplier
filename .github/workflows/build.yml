@@ -12,7 +12,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -44,23 +44,58 @@ jobs:
           ./gradlew --no-daemon clean test runGameTest build
 
       - name: Run client GUI and authority tests
-        run: xvfb-run -a ./gradlew --no-daemon runClientGameTest
+        run: xvfb-run -a ./gradlew --no-daemon runClientSmoke
+
+      - name: Verify Fabric native placement persistence across restarts
+        run: ./gradlew --no-daemon runPersistenceVerifyAbsentServerSmoke
+
+      - name: Run Fabric multiplayer authority and reconnect smoke test
+        timeout-minutes: 12
+        run: bash tools/run_fabric_multiplayer_smoke.sh
+
+      - name: Validate and stage the exact playable Fabric JAR
+        run: python3 tools/prepare_fabric_ci_artifact.py --output-dir build/ci-fabric-artifact
+
+      - name: Upload Fabric client/server smoke logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: SmartResourceMultiplier-Fabric-smoke-logs-${{ github.sha }}
+          path: |
+            build/fabric-client-smoke/logs/
+            build/fabric-client-smoke/crash-reports/
+            build/fabric-multiplayer-smoke-logs/
+            build/fabric-multiplayer-smoke/server/logs/
+            build/fabric-multiplayer-smoke/server/crash-reports/
+            build/fabric-multiplayer-smoke/client/logs/
+            build/fabric-multiplayer-smoke/client/crash-reports/
+            build/fabric-persistence-smoke/logs/
+            build/fabric-persistence-smoke/crash-reports/
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Create source snapshot
         run: git archive --format=zip --output=build/source-snapshot.zip HEAD
 
-      - name: Upload build artifacts
+      - name: Upload validated Fabric playable artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: SmartResourceMultiplier-${{ github.sha }}
-          path: |
-            build/libs/*.jar
-            build/source-snapshot.zip
+          name: SmartResourceMultiplier-Fabric-${{ github.sha }}
+          path: build/ci-fabric-artifact/*.jar
+          if-no-files-found: error
+
+      - name: Upload source snapshot
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: SmartResourceMultiplier-source-${{ github.sha }}
+          path: build/source-snapshot.zip
           if-no-files-found: error
 
   neoforge:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # A first NeoForm/asset preparation can consume well over 25 minutes before
+    # the required server, client, persistence, and multiplayer gates begin.
+    timeout-minutes: 150
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -84,32 +119,16 @@ jobs:
       - name: Validate NeoForge playable JAR
         run: python3 tools/validate_neoforge_jar.py
 
-      - name: Run NeoForge Fabric migration restart gate
-        timeout-minutes: 10
-        run: |
-          set -o pipefail
-          mkdir -p neoforge/build/migration-server-smoke-logs
-          ./gradlew -p neoforge --no-daemon --console=plain runMigrationRestartServerTest \
-            2>&1 | tee neoforge/build/migration-server-smoke-logs/gradle-console.log
-
-      - name: Upload NeoForge migration restart logs
-        if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: SmartResourceMultiplier-NeoForge-migration-logs-${{ github.sha }}
-          path: |
-            neoforge/build/migration-server-smoke-logs/
-            neoforge/build/migration-server-test/logs/
-            neoforge/build/migration-server-test/crash-reports/
-            neoforge/build/migration-server-test/hs_err_pid*.log
-            neoforge/build/migration-server-test/replay_pid*.log
-            neoforge/build/migration-server-test/migration-import.success
-            neoforge/build/migration-server-test/migration-restart.success
-          if-no-files-found: warn
-          retention-days: 7
+      - name: Verify NeoForge native placement persistence across restarts
+        run: ./gradlew -p neoforge --no-daemon runPersistenceVerifyAbsentServerTest
 
       - name: Run NeoForge client category smoke test
         run: xvfb-run -a ./gradlew -p neoforge --no-daemon runClientCategoryTest
+
+      - name: Run clean packaged-JAR-only NeoForge server and client gates
+        run: |
+          ./gradlew -p neoforge --no-daemon runPackagedServerTest
+          xvfb-run -a ./gradlew -p neoforge --no-daemon runPackagedClientTest
 
       - name: Run NeoForge multiplayer authority smoke test
         timeout-minutes: 12

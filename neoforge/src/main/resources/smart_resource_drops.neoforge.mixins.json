@@ -5,7 +5,6 @@
   "mixins": [
     "CommonHooksPlacementMixin",
     "NeoForgeShearsDispenseItemBehaviorMixin",
-    "SerializableChunkDataLegacyProvenanceMixin",
     "ServerPlayerGameModeMixin"
   ],
   "injectors": {

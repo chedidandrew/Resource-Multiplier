@@ -4,7 +4,7 @@ import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 
 import java.util.Map;
@@ -31,7 +31,7 @@ public final class ShearingRuleResolver {
         Holder<EntityType<?>> holder = BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(type);
         boolean standardTagged = holder.is(ShearingTags.STANDARD_RESOURCES);
         boolean specialTagged = holder.is(ShearingTags.SPECIAL);
-        Identifier identifier = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        ResourceLocation identifier = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         String entityId = identifier == null ? "minecraft:unregistered" : identifier.toString();
         return trace(config, entityId, standardTagged, specialTagged, source);
     }
@@ -48,9 +48,11 @@ public final class ShearingRuleResolver {
         Objects.requireNonNull(source, "source");
 
         boolean knownVanillaSpecial = ShearingTags.isKnownVanillaSpecial(entityId);
+        boolean supportedStandard = standardTagged
+                && ShearingTags.isSupportedStandardTarget(entityId);
         ShearingClassification classification = specialTagged || knownVanillaSpecial
                 ? ShearingClassification.SPECIAL
-                : standardTagged
+                : supportedStandard
                         ? ShearingClassification.STANDARD_RESOURCE
                         : ShearingClassification.UNKNOWN;
         int maximum = Math.max(1, Math.min(
@@ -91,9 +93,9 @@ public final class ShearingRuleResolver {
             return result(
                     entityId,
                     classification,
-                    false,
-                    false,
-                    false,
+                    standardTagged,
+                    specialTagged,
+                    knownVanillaSpecial,
                     source,
                     config,
                     sourceEnabled,
@@ -101,7 +103,9 @@ public final class ShearingRuleResolver {
                     exactOverride,
                     1,
                     ShearingRuleTrace.RuleSource.UNKNOWN_SAFETY,
-                    "unknown shearables require explicit standard-resource certification");
+                    standardTagged
+                            ? "Minecraft 1.21.1 supports final-output multiplication for sheep only; other standard-resource tag members remain vanilla 1x"
+                            : "unknown shearables are fixed at vanilla 1x on Minecraft 1.21.1");
         }
         if (!config.enabled) {
             return result(

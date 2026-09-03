@@ -2,7 +2,7 @@ package com.chedidandrew.smartresourcedrops.optionaltest;
 
 import java.util.List;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /** Loader-independent identifiers used without loading the production mod. */
 final class OptionalChannelIds {
@@ -28,6 +28,6 @@ final class OptionalChannelIds {
 
     private static CustomPacketPayload.Type<?> type(final String path) {
         return new CustomPacketPayload.Type<>(
-                Identifier.fromNamespaceAndPath(PRODUCTION_MOD_ID, path));
+                ResourceLocation.fromNamespaceAndPath(PRODUCTION_MOD_ID, path));
     }
 }

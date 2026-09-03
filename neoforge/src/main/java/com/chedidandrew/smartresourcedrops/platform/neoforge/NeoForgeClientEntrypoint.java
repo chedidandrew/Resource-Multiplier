@@ -1,6 +1,7 @@
 package com.chedidandrew.smartresourcedrops.platform.neoforge;
 
 import java.io.FileNotFoundException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,9 +29,8 @@ import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
-import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlersEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 /** Physical-client-only NeoForge bootstrap. */
 @Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.CLIENT)
@@ -48,13 +48,10 @@ public final class NeoForgeClientEntrypoint {
 
             @Override
             public void send(final CustomPacketPayload payload) {
-                ClientPacketDistributor.sendToServer(payload);
+                PacketDistributor.sendToServer(payload);
             }
         });
-
-        modBus.addListener(
-                RegisterClientPayloadHandlersEvent.class,
-                NeoForgeClientEntrypoint::registerPayloadHandlers);
+        NeoForgeNetworking.installClientReceiver(NeoForgeClientEntrypoint::handleClientPayload);
         NeoForge.EVENT_BUS.addListener(
                 RegisterClientCommandsEvent.class,
                 NeoForgeClientEntrypoint::registerClientCommands);
@@ -69,15 +66,17 @@ public final class NeoForgeClientEntrypoint {
                 (ignoredContainer, parent) -> SmartDropsConfigScreens.create(parent));
     }
 
-    private static void registerPayloadHandlers(final RegisterClientPayloadHandlersEvent event) {
-        event.register(ConfigSnapshotPayload.TYPE, (payload, context) -> {
-            SmartResourceDrops.LOGGER.debug("Received config snapshot #{} on the client", payload.requestId());
-            ClientConfigState.accept(payload, Minecraft.getInstance());
-        });
-        event.register(ConfigInvalidationPayload.TYPE, (payload, context) ->
-                ClientConfigState.acceptInvalidation(payload, Minecraft.getInstance()));
-        event.register(ConfigMutationResultPayload.TYPE, (payload, context) ->
-                ClientConfigState.acceptMutationResult(payload, Minecraft.getInstance()));
+    private static void handleClientPayload(final CustomPacketPayload payload) {
+        if (payload instanceof ConfigSnapshotPayload snapshot) {
+            SmartResourceDrops.LOGGER.debug("Received config snapshot #{} on the client", snapshot.requestId());
+            ClientConfigState.accept(snapshot, Minecraft.getInstance());
+        } else if (payload instanceof ConfigInvalidationPayload invalidation) {
+            ClientConfigState.acceptInvalidation(invalidation, Minecraft.getInstance());
+        } else if (payload instanceof ConfigMutationResultPayload result) {
+            ClientConfigState.acceptMutationResult(result, Minecraft.getInstance());
+        } else {
+            SmartResourceDrops.LOGGER.warn("Ignored unexpected client payload type {}", payload.type().id());
+        }
     }
 
     private static void registerClientCommands(final RegisterClientCommandsEvent event) {
@@ -111,17 +110,16 @@ public final class NeoForgeClientEntrypoint {
     private static List<ClientModResources.Resource> findResources(final String relativePath) {
         final ArrayList<ClientModResources.Resource> resources = new ArrayList<>();
         ModList.get().forEachModFile(file -> {
-            final var contents = file.getContents();
-            if (!contents.containsFile(relativePath)) {
+            final var resourcePath = file.findResource(relativePath.split("/"));
+            if (!Files.isRegularFile(resourcePath)) {
                 return;
             }
             final String source = file.getFileName() + "!/" + relativePath;
             resources.add(new ClientModResources.Resource(source, () -> {
-                final var input = contents.openFile(relativePath);
-                if (input == null) {
+                if (!Files.isRegularFile(resourcePath)) {
                     throw new FileNotFoundException(source);
                 }
-                return input;
+                return Files.newInputStream(resourcePath);
             }));
         });
         return resources;

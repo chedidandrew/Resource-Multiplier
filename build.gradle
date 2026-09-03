@@ -21,12 +21,107 @@ base {
 }
 
 def gameTestSourceSet = sourceSets.create('gametest')
+gameTestSourceSet.java {
+    exclude('**/SmartDropsClientGameTest.java')
+    exclude('**/mixin/client/**')
+}
 gameTestSourceSet.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
 gameTestSourceSet.runtimeClasspath += sourceSets.main.runtimeClasspath
 
+// Materialize Loom's client source set before the separate run-only client
+// harness extends its compile/runtime paths.
 loom {
     splitEnvironmentSourceSets()
+}
 
+// Fabric API 0.116.x predates the client GameTest API. Keep the physical GUI
+// regression harness in a separate, run-only mod so none of its entrypoints or
+// marker logic can enter the production JAR.
+def clientTestSourceSet = sourceSets.create('clienttest')
+clientTestSourceSet.java.setSrcDirs(['src/clienttest/java'])
+clientTestSourceSet.resources.setSrcDirs(['src/clienttest/resources'])
+clientTestSourceSet.compileClasspath += (sourceSets.main.output
+        + sourceSets.client.output
+        + sourceSets.client.compileClasspath)
+clientTestSourceSet.runtimeClasspath += (sourceSets.main.runtimeClasspath
+        + sourceSets.client.runtimeClasspath)
+
+def clientSmokeDirectory = layout.buildDirectory.dir('fabric-client-smoke')
+def multiplayerServerDirectory = layout.buildDirectory.dir('fabric-multiplayer-smoke/server')
+def multiplayerClientDirectory = layout.buildDirectory.dir('fabric-multiplayer-smoke/client')
+def persistenceServerDirectory = layout.buildDirectory.dir('fabric-persistence-smoke')
+def prepareClientSmoke = tasks.register('prepareClientSmoke') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = clientSmokeDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'options.txt').setText('''\
+onboardAccessibility:false
+maxFps:20
+enableVsync:false
+renderDistance:2
+simulationDistance:5
+''', 'UTF-8')
+    }
+}
+def prepareMultiplayerServerSmoke = tasks.register('prepareMultiplayerServerSmoke') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = multiplayerServerDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
+        new File(directory, 'server.properties').setText('''\
+online-mode=false
+server-port=25577
+level-name=fabric-authority-smoke-world
+gamemode=creative
+difficulty=peaceful
+spawn-protection=0
+view-distance=3
+simulation-distance=3
+motd=Smart Resource Multiplier Fabric authority smoke
+''', 'UTF-8')
+    }
+}
+def prepareMultiplayerClientSmoke = tasks.register('prepareMultiplayerClientSmoke') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = multiplayerClientDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'options.txt').setText('''\
+onboardAccessibility:false
+maxFps:20
+enableVsync:false
+renderDistance:2
+simulationDistance:5
+''', 'UTF-8')
+    }
+}
+def preparePersistenceServerSmoke = tasks.register('preparePersistenceServerSmoke') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = persistenceServerDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
+        new File(directory, 'server.properties').setText('''\
+online-mode=false
+server-port=0
+level-name=fabric-persistence-smoke-world
+gamemode=creative
+difficulty=peaceful
+spawn-protection=0
+view-distance=3
+simulation-distance=3
+motd=Smart Resource Multiplier Fabric persistence smoke
+''', 'UTF-8')
+    }
+}
+
+loom {
     mods {
         smart_resource_drops {
             sourceSet sourceSets.main
@@ -35,31 +130,81 @@ loom {
         smart_resource_drops_gametest {
             sourceSet gameTestSourceSet
         }
+        smart_resource_drops_clienttest {
+            sourceSet clientTestSourceSet
+        }
+    }
+
+    runs {
+        clientSmoke {
+            client()
+            name = 'Fabric 1.21.1 client GUI smoke'
+            source clientTestSourceSet
+            runDir 'build/fabric-client-smoke'
+            property 'smart_resource_drops.fabricClientSmoke', 'true'
+            property 'smart_resource_drops.fabricClientSmokeMarker',
+                    file('build/fabric-client-smoke/client-smoke.success').absolutePath
+        }
+        multiplayerServerSmoke {
+            server()
+            name = 'Fabric 1.21.1 multiplayer authority server smoke'
+            source clientTestSourceSet
+            runDir 'build/fabric-multiplayer-smoke/server'
+            property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
+            programArg '--nogui'
+        }
+        multiplayerClientSmoke {
+            client()
+            name = 'Fabric 1.21.1 multiplayer authority client smoke'
+            source clientTestSourceSet
+            runDir 'build/fabric-multiplayer-smoke/client'
+            property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
+            programArg '--quickPlayMultiplayer'
+            programArg '127.0.0.1:25577'
+        }
+        persistenceMarkServerSmoke {
+            server()
+            name = 'Fabric 1.21.1 placement persistence mark/save smoke'
+            source clientTestSourceSet
+            runDir 'build/fabric-persistence-smoke'
+            property 'smart_resource_drops.fabricPersistenceTestPhase', 'mark'
+            property 'smart_resource_drops.fabricPersistenceTestDirectory',
+                    file('build/fabric-persistence-smoke').absolutePath
+            programArg '--nogui'
+        }
+        persistenceRemoveServerSmoke {
+            server()
+            name = 'Fabric 1.21.1 placement persistence remove/save smoke'
+            source clientTestSourceSet
+            runDir 'build/fabric-persistence-smoke'
+            property 'smart_resource_drops.fabricPersistenceTestPhase', 'remove'
+            property 'smart_resource_drops.fabricPersistenceTestDirectory',
+                    file('build/fabric-persistence-smoke').absolutePath
+            programArg '--nogui'
+        }
+        persistenceVerifyAbsentServerSmoke {
+            server()
+            name = 'Fabric 1.21.1 placement persistence verify-absent smoke'
+            source clientTestSourceSet
+            runDir 'build/fabric-persistence-smoke'
+            property 'smart_resource_drops.fabricPersistenceTestPhase', 'verify_absent'
+            property 'smart_resource_drops.fabricPersistenceTestDirectory',
+                    file('build/fabric-persistence-smoke').absolutePath
+            programArg '--nogui'
+        }
     }
 }
-
-gameTestSourceSet.compileClasspath += sourceSets.client.output + sourceSets.client.compileClasspath
 
 fabricApi {
     configureTests {
         createSourceSet = false
         enableGameTests = true
-        enableClientGameTests = true
         eula = true
     }
 }
 
 loom.runs.named('gameTest') {
     source gameTestSourceSet
-}
-
-loom.runs.named('clientGameTest') {
-    source gameTestSourceSet
-}
-
-// Keep client classes out of the dedicated GameTest runtime while exposing them to the client-only runner.
-tasks.named('runClientGameTest') {
-    classpath += sourceSets.client.runtimeClasspath
 }
 
 repositories {
@@ -78,6 +223,7 @@ dependencies {
 
     // Compile-only keeps optional client integration off dedicated-server tests and published POMs.
     modCompileOnly "com.terraformersmc:modmenu:${modMenuVersionValue}"
+    compileOnly 'org.jspecify:jspecify:1.0.0'
 
     // Opt-in only for the real client smoke test; omitted from normal builds and dedicated-server runs.
     if (providers.gradleProperty('include_modmenu_runtime').map { it.toBoolean() }.getOrElse(false)) {
@@ -113,6 +259,126 @@ tasks.named('processGametestResources') {
     inputs.property 'version', modVersionValue
     filesMatching('fabric.mod.json') {
         expand(version: modVersionValue)
+    }
+}
+
+tasks.named('processClienttestResources') {
+    inputs.property 'version', modVersionValue
+    filesMatching('fabric.mod.json') {
+        expand(version: modVersionValue)
+    }
+}
+
+tasks.named('runClientSmoke') {
+    dependsOn prepareClientSmoke
+    doLast {
+        final File marker = file('build/fabric-client-smoke/client-smoke.success')
+        if (!marker.isFile()) {
+            throw new GradleException(
+                    "Fabric client smoke exited without success marker ${marker}")
+        }
+        final File logFile = file('build/fabric-client-smoke/logs/latest.log')
+        final String log = logFile.isFile() ? logFile.getText('UTF-8') : ''
+        if (!logFile.isFile()
+                || log.readLines().any { line -> line.contains('/ERROR]') || line.contains('/FATAL]') }
+                || log.contains('Game crashed!')) {
+            throw new GradleException('Fabric client smoke logged an error, fatal event, or crash')
+        }
+    }
+}
+
+tasks.named('runGameTest') {
+    doFirst {
+        final File logFile = layout.buildDirectory.file('run/gameTest/logs/latest.log').get().asFile
+        if (logFile.exists() && !logFile.delete()) {
+            throw new GradleException("Could not remove stale Fabric GameTest log ${logFile}")
+        }
+        extensions.extraProperties.set('smartDropsGameTestStartedAt', System.currentTimeMillis())
+    }
+    doLast {
+        final File logFile = layout.buildDirectory.file('run/gameTest/logs/latest.log').get().asFile
+        final long startedAt = extensions.extraProperties.get('smartDropsGameTestStartedAt') as long
+        if (!logFile.isFile() || logFile.lastModified() < startedAt) {
+            throw new GradleException("Fabric GameTest run did not produce a fresh ${logFile}")
+        }
+        final String log = logFile.getText('UTF-8')
+        for (String evidence : [
+                '64 tests are now running',
+                '64 GAME TESTS COMPLETE',
+                'All 64 required tests passed',
+                'Game test server shutting down']) {
+            if (!log.contains(evidence)) {
+                throw new GradleException(
+                        "Fabric GameTest run is missing exact execution evidence: ${evidence}")
+            }
+        }
+        for (String failure : ['required tests failed', 'Game crashed!', '[❌]']) {
+            if (log.contains(failure)) {
+                throw new GradleException(
+                        "Fabric GameTest run contains failure evidence: ${failure}")
+            }
+        }
+    }
+}
+
+tasks.named('runMultiplayerServerSmoke') {
+    dependsOn prepareMultiplayerServerSmoke
+}
+
+tasks.named('runMultiplayerClientSmoke') {
+    dependsOn prepareMultiplayerClientSmoke
+}
+
+tasks.named('runPersistenceMarkServerSmoke') {
+    dependsOn preparePersistenceServerSmoke
+    doFirst {
+        final File marker = file('build/fabric-persistence-smoke/fabric-persistence-mark.success')
+        if (marker.exists() && !marker.delete()) {
+            throw new GradleException("Could not remove stale Fabric persistence marker ${marker}")
+        }
+    }
+    doLast {
+        final File marker = file('build/fabric-persistence-smoke/fabric-persistence-mark.success')
+        if (!marker.isFile()) {
+            throw new GradleException("Fabric persistence mark server exited without ${marker}")
+        }
+    }
+}
+
+tasks.named('runPersistenceRemoveServerSmoke') {
+    dependsOn tasks.named('runPersistenceMarkServerSmoke')
+    doFirst {
+        final File marker = file('build/fabric-persistence-smoke/fabric-persistence-remove.success')
+        if (marker.exists() && !marker.delete()) {
+            throw new GradleException("Could not remove stale Fabric persistence marker ${marker}")
+        }
+    }
+    doLast {
+        final File marker = file('build/fabric-persistence-smoke/fabric-persistence-remove.success')
+        if (!marker.isFile()) {
+            throw new GradleException("Fabric persistence remove server exited without ${marker}")
+        }
+    }
+}
+
+tasks.named('runPersistenceVerifyAbsentServerSmoke') {
+    dependsOn tasks.named('runPersistenceRemoveServerSmoke')
+    doFirst {
+        final File marker = file('build/fabric-persistence-smoke/fabric-persistence-absent.success')
+        if (marker.exists() && !marker.delete()) {
+            throw new GradleException("Could not remove stale Fabric persistence marker ${marker}")
+        }
+    }
+    doLast {
+        for (String markerName : [
+                'fabric-persistence-mark.success',
+                'fabric-persistence-remove.success',
+                'fabric-persistence-absent.success']) {
+            final File marker = file("build/fabric-persistence-smoke/${markerName}")
+            if (!marker.isFile()) {
+                throw new GradleException("Fabric persistence restart gate exited without ${marker}")
+            }
+        }
     }
 }
 

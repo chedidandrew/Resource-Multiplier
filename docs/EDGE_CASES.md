@@ -26,10 +26,10 @@ Smart Resource Multiplier multiplies the loot result produced by Minecraft, not 
 - Automation that bypasses vanilla `Block.dropResources` and creates items itself is outside the safe multiplication boundary.
 - Entity standard-loot ownership is claimed only when the first real stack is emitted, so an empty preliminary table cannot consume the death's exactly-once guard. Nested duplicate wrappers multiply one time. Mod-created entity output is cumulatively bounded to 262,144 items and 4,096 stacks per death; once exceeded, later standard-table callbacks remain vanilla.
 - Mob XP uses a one-shot identity token for the exact `ExperienceOrb.award` call. A nested unrelated award cannot inherit the mob rule, and an amplified result above 634,112 remains at its original amount.
-- Entity shearing is eligible only for an identity-matched real-player or exact vanilla-dispenser scope, current standard-resource tag membership, absence from special safety, and final output through `dropFromShearingLootTable`. An override alone cannot certify an unknown entity.
+- On Minecraft 1.21.1, entity shearing multiplication is eligible only for vanilla Sheep in an identity-matched real-player or exact vanilla-dispenser scope. An override or datapack tag alone cannot make another entity eligible because this target has no safe generic final-output hook.
 - A `0x` eligible shear still performs the state transition and tool path once while suppressing standard helper loot. Special and unknown shearables stay vanilla `1x` regardless of configured defaults.
 - Multiple helper calls share one cumulative preflight capped at 1,024 multiplied items and 256 source entries or materialized legal stacks. Overflow emits the complete original action output through each original consumer; an exception after collection attempts original output once, clears context, and rethrows the original failure.
-- Mooshroom, Snow Golem, Bogged, and Copper Golem are hard special cases. Direct equipment ejection, beehives, leash removal, and block shearing are outside the entity-shearing scope.
+- Mooshroom, Snow Golem, and Bogged are hard special cases on 1.21.1. Direct equipment ejection, beehives, leash removal, and block shearing are outside the entity-shearing scope.
 
 ## Multiplayer
 

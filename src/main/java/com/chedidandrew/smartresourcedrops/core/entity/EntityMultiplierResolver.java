@@ -11,11 +11,13 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.entity.decoration.Mannequin;
 import net.minecraft.world.entity.player.Player;
 import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 
 /** Builds rule-engine input from authoritative server entities. */
 public final class EntityMultiplierResolver {
@@ -56,12 +58,11 @@ public final class EntityMultiplierResolver {
     }
 
     public static EntityKillAttribution resolveAttribution(LivingEntity entity, DamageSource source) {
-        boolean vanillaPlayerKilled = entity.getLastHurtByPlayerMemoryTime() > 0;
-        Player rememberedPlayer = vanillaPlayerKilled ? entity.getLastHurtByPlayer() : null;
+        EntityKillOriginAccess access = (EntityKillOriginAccess) entity;
+        boolean vanillaPlayerKilled = access.smartResourceDrops$hasRememberedPlayerKill();
+        Player rememberedPlayer = vanillaPlayerKilled ? access.smartResourceDrops$rememberedPlayer() : null;
         UUID rememberedPlayerId = isRealPlayer(rememberedPlayer) ? rememberedPlayer.getUUID() : null;
-        EntityKillAttribution.Kind rememberedOrigin = entity instanceof EntityKillOriginAccess access
-                ? access.smartResourceDrops$rememberedKillOrigin()
-                : EntityKillAttribution.Kind.NONE;
+        EntityKillAttribution.Kind rememberedOrigin = access.smartResourceDrops$rememberedKillOrigin();
         Entity immediate = source.getEntity();
         if (isRealPlayer(immediate)) {
             Player player = (Player) immediate;
@@ -93,9 +94,12 @@ public final class EntityMultiplierResolver {
             @Nullable UUID rememberedPlayerId,
             EntityKillAttribution.Kind rememberedOrigin
     ) {
-        if (!vanillaPlayerKilled
-                || rememberedOrigin != EntityKillAttribution.Kind.DIRECT_PLAYER
-                || !immediatePlayerId.equals(rememberedPlayerId)) {
+        // In 1.21.1 LivingEntity records the immediate player directly inside
+        // hurt(), before the lethal die/drop path runs and before our RETURN
+        // observer can classify the remembered origin. Matching that live
+        // vanilla player record is therefore the authoritative direct-kill
+        // proof for the current call.
+        if (!vanillaPlayerKilled || !immediatePlayerId.equals(rememberedPlayerId)) {
             return EntityKillAttribution.none(vanillaPlayerKilled);
         }
         return EntityKillAttribution.direct(immediatePlayerId, true);
@@ -105,8 +109,7 @@ public final class EntityMultiplierResolver {
         return config.enabled
                 && (config.entityDropsEnabled || config.multiplyMobExperience)
                 && !(entity instanceof Player)
-                && !(entity instanceof ArmorStand)
-                && !(entity instanceof Mannequin);
+                && !(entity instanceof ArmorStand);
     }
 
     public static boolean isRealPlayer(@Nullable Entity entity) {
@@ -120,7 +123,15 @@ public final class EntityMultiplierResolver {
         if (entity instanceof TamableAnimal tamable && !tamable.isTame()) {
             return null;
         }
-        LivingEntity rootOwner = ownable.getRootOwner();
+        LivingEntity rootOwner = ownable.getOwner();
+        Set<LivingEntity> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+        while (rootOwner instanceof OwnableEntity nested && visited.add(rootOwner)) {
+            LivingEntity next = nested.getOwner();
+            if (next == null) {
+                break;
+            }
+            rootOwner = next;
+        }
         return isRealPlayer(rootOwner) ? (Player) rootOwner : null;
     }
 
@@ -132,15 +143,12 @@ public final class EntityMultiplierResolver {
     ) {
         EntityClassification classification = EntityClassifier.classify(entity);
         boolean permanentlyExcluded = entity instanceof Player
-                || entity instanceof ArmorStand
-                || entity instanceof Mannequin;
+                || entity instanceof ArmorStand;
         String exclusionReason = entity instanceof Player
                 ? "players are never entity-drop targets"
                 : entity instanceof ArmorStand
                         ? "armor stands are never entity-drop targets"
-                        : entity instanceof Mannequin
-                                ? "mannequins are never entity-drop targets"
-                                : "none";
+                        : "none";
         return EntityRuleEngine.trace(config, new EntityRuleInput(
                 classification.entityId(),
                 classification,

@@ -34,7 +34,7 @@ final class FabricPlacementStorage implements PlacementTracker.Storage {
         final AttachmentTarget target = (AttachmentTarget) (Object) chunk;
         final PlacedBlockData data = target.getAttachedOrCreate(PLACED_BLOCKS);
         if (data.add(packedPosition)) {
-            chunk.markUnsaved();
+            chunk.setUnsaved(true);
         }
     }
 
@@ -49,7 +49,7 @@ final class FabricPlacementStorage implements PlacementTracker.Storage {
         if (data.isEmpty()) {
             target.removeAttached(PLACED_BLOCKS);
         }
-        chunk.markUnsaved();
+        chunk.setUnsaved(true);
         return true;
     }
 }

@@ -1,4 +1,4 @@
 {
   "type": "minecraft:entity",
-  "pools": []
+  "pools": [{"rolls": 1.0, "entries": [{"type": "minecraft:item", "name": "minecraft:structure_void"}]}]
 }

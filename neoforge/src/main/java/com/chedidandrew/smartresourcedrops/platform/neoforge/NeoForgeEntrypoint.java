@@ -7,11 +7,11 @@ import com.chedidandrew.smartresourcedrops.network.SmartDropsNetworking;
 import com.chedidandrew.smartresourcedrops.platform.PlatformPlayerSupport;
 import com.chedidandrew.smartresourcedrops.provenance.PlacementTracker;
 
-import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
@@ -22,7 +22,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 public final class NeoForgeEntrypoint {
     public NeoForgeEntrypoint(final IEventBus modBus) {
         ConfigManager.configureConfigDirectory(FMLPaths.CONFIGDIR.get());
-        PlatformPlayerSupport.installFakePlayerPredicate(Player::isFakePlayer);
+        PlatformPlayerSupport.installFakePlayerPredicate(player -> player instanceof FakePlayer);
 
         NeoForgePlacementStorage.register(modBus);
         PlacementTracker.installStorage(new NeoForgePlacementStorage());

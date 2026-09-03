@@ -4,13 +4,13 @@ import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 import com.chedidandrew.smartresourcedrops.provenance.PlacementTracker;
 import com.chedidandrew.smartresourcedrops.provenance.ProtectedPistonMovement;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.piston.PistonMovingBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -73,15 +73,23 @@ abstract class PistonMovingBlockEntityMixin implements ProtectedPistonMovement {
 
 
     @Inject(method = "saveAdditional", at = @At("TAIL"))
-    private void smartResourceDrops$savePistonProvenance(ValueOutput output, CallbackInfo callback) {
+    private void smartResourceDrops$savePistonProvenance(
+            CompoundTag output,
+            HolderLookup.Provider registries,
+            CallbackInfo callback
+    ) {
         output.putBoolean(SMART_RESOURCE_DROPS_CAPTURED, smartResourceDrops$captured);
         output.putBoolean(SMART_RESOURCE_DROPS_PROTECT_DESTINATION, smartResourceDrops$protectDestination);
     }
 
     @Inject(method = "loadAdditional", at = @At("TAIL"))
-    private void smartResourceDrops$loadPistonProvenance(ValueInput input, CallbackInfo callback) {
-        smartResourceDrops$captured = input.getBooleanOr(SMART_RESOURCE_DROPS_CAPTURED, false);
-        smartResourceDrops$protectDestination = input.getBooleanOr(SMART_RESOURCE_DROPS_PROTECT_DESTINATION, false);
+    private void smartResourceDrops$loadPistonProvenance(
+            CompoundTag input,
+            HolderLookup.Provider registries,
+            CallbackInfo callback
+    ) {
+        smartResourceDrops$captured = input.getBoolean(SMART_RESOURCE_DROPS_CAPTURED);
+        smartResourceDrops$protectDestination = input.getBoolean(SMART_RESOURCE_DROPS_PROTECT_DESTINATION);
     }
 
     @Override

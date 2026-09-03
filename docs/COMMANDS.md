@@ -263,9 +263,9 @@ Shearing resolution is fail-closed:
 known/tagged special safety > unknown/uncertified safety > master disabled > selected source disabled > exact entity > shearing default > global
 ```
 
-Adding an exact rule requires the entity type to exist in the live registry, be present in `#smart_resource_drops:shearing/standard_resources`, and not be a known or tagged special transformation. Unknown and special types remain fixed at vanilla `1x`. Removing a rule with `inherit` is allowed even when the entity is now missing, uncertified, or special; a currently certified standard type then returns to the default shearing rule.
+On Minecraft 1.21.1, adding an exact rule requires the live entity type to be vanilla Sheep. This target has no safe generic final-output hook for custom living-entity shearing, so extra members of `#smart_resource_drops:shearing/standard_resources` remain visible only as unsupported compatibility data and stay at vanilla `1x`. Unknown and special types also remain fixed at `1x`. Removing a rule with `inherit` remains allowed even when the entity is missing or unsupported.
 
-For eligible standard-helper output within the whole-action safety budget, `0x` suppresses the helper-produced items while the real shearing state transition, event/sound path, and tool behavior still happen once. An action exceeding the source-entry/materialized-legal-stack preflight falls back wholly to its original vanilla `1x` output even when `0x` is configured. Smart Resource Multiplier never reruns the shearing loot table or repeats the shear action. See [COMPATIBILITY.md](COMPATIBILITY.md#certifying-a-compatible-modded-shearable) before certifying a modded entity.
+For eligible Sheep output within the whole-action safety budget, `0x` suppresses the emitted wool while the real shearing state transition, event/sound path, and tool behavior still happen once. An action exceeding the source-entry/materialized-legal-stack preflight falls back wholly to its original vanilla `1x` output. Smart Resource Multiplier never reruns the shearing action.
 
 ## Presets
 

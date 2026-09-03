@@ -23,8 +23,8 @@ Before submitting a change:
 1. Update `CHANGELOG.md` and any affected documentation.
 2. Run every source and release-packaging validator listed in `docs/TESTING.md`.
 3. Run `tools/run_core_tests.ps1` on Windows or `bash tools/run_core_tests.sh` on POSIX.
-4. Run the Fabric suite with `./gradlew --no-daemon clean test runGameTest build` and `./gradlew --no-daemon runClientGameTest` using the Java toolchain declared by `java_version` in `gradle.properties` (Java 21 on this branch; use `gradlew.bat` on Windows).
-5. Run the NeoForge suite with `./gradlew -p neoforge --no-daemon clean build runGameTestServer`, followed by the migration, client, and physical multiplayer gates listed in `docs/TESTING.md`.
+4. Run the Fabric suite with `./gradlew --no-daemon clean test runGameTest build`, `./gradlew --no-daemon runClientSmoke`, and `bash tools/run_fabric_multiplayer_smoke.sh` using the Java toolchain declared by `java_version` in `gradle.properties` (Java 21 on this branch; use `gradlew.bat` on Windows).
+5. Run the NeoForge suite with `./gradlew -p neoforge --no-daemon clean build runGameTestServer`, followed by the persistence, packaged-JAR, client, and physical multiplayer gates listed in `docs/TESTING.md`.
 6. Test affected natural, player-placed, piston-moved, falling, transformed, automation, block-entity, entity death-loot/XP, attribution, multiplayer-authority and GUI cases in game on both loaders when shared behavior changes.
 7. Include a mapped-class JUnit or dedicated-server GameTest regression for every bug fix when practical; do not present static source checks as runtime proof.
 8. Review `-Xlint:deprecation` output and remove project-source deprecations with supported Minecraft, Fabric, or NeoForge APIs. Do not silence a package or turn unrelated dependency warnings into a blanket failure policy.

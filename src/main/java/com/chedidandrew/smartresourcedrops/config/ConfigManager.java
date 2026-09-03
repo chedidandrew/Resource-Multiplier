@@ -10,7 +10,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,6 +24,11 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 public final class ConfigManager {
+    @FunctionalInterface
+    interface ConfigWriter {
+        void write(Path target, String content) throws IOException;
+    }
+
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     private static volatile SmartDropsConfig config = SmartDropsConfig.safeExistingFileDefaults();
     private static volatile Path configPath;
@@ -33,6 +38,7 @@ public final class ConfigManager {
     private static ConfigLoadDiagnostics loadDiagnostics = ConfigLoadDiagnostics.empty();
     private static volatile PublicationListener publicationListener = (revision, kind) -> {
     };
+    private static volatile ConfigWriter configWriter = AtomicConfigWriter::write;
 
     private static final Set<String> SCHEMA_TWO_ENTITY_FIELDS = Set.of(
             "entityDropsEnabled",
@@ -187,7 +193,7 @@ public final class ConfigManager {
             final String operation
     ) {
         try {
-            AtomicConfigWriter.write(path, GSON.toJson(candidate));
+            configWriter.write(path, GSON.toJson(candidate));
             return true;
         } catch (IOException exception) {
             SmartResourceDrops.LOGGER.error("Could not " + operation + "; the active configuration was not changed", exception);
@@ -376,7 +382,7 @@ public final class ConfigManager {
         }
 
         try {
-            AtomicConfigWriter.write(path, GSON.toJson(candidate));
+            configWriter.write(path, GSON.toJson(candidate));
         } catch (IOException exception) {
             SmartResourceDrops.LOGGER.error(
                     "Could not persist the configuration patch; the active configuration was not changed",
@@ -560,7 +566,7 @@ public final class ConfigManager {
         if (normalized.isEmpty() || normalized.length() > SmartDropsConfig.MAX_RULE_KEY_LENGTH) {
             return null;
         }
-        final Identifier identifier = Identifier.tryParse(normalized);
+        final ResourceLocation identifier = ResourceLocation.tryParse(normalized);
         return identifier == null ? null : identifier.toString();
     }
 
@@ -731,7 +737,7 @@ public final class ConfigManager {
             return true;
         }
         try {
-            AtomicConfigWriter.write(path, GSON.toJson(copy));
+            configWriter.write(path, GSON.toJson(copy));
         } catch (IOException exception) {
             SmartResourceDrops.LOGGER.error(
                     "Could not persist the configuration update; the active configuration was not changed",
@@ -761,7 +767,7 @@ public final class ConfigManager {
     static synchronized boolean reset(final Path path) {
         final SmartDropsConfig defaults = SmartDropsConfig.defaults();
         try {
-            AtomicConfigWriter.write(path, GSON.toJson(defaults));
+            configWriter.write(path, GSON.toJson(defaults));
         } catch (IOException exception) {
             SmartResourceDrops.LOGGER.error(
                     "Could not persist the configuration reset; the active configuration was not changed",
@@ -784,7 +790,7 @@ public final class ConfigManager {
         final SmartDropsConfig candidate = snapshot();
         candidate.sanitize();
         try {
-            AtomicConfigWriter.write(path, GSON.toJson(candidate));
+            configWriter.write(path, GSON.toJson(candidate));
         } catch (IOException exception) {
             SmartResourceDrops.LOGGER.error("Could not save Smart Resource Multiplier config", exception);
             return false;
@@ -817,6 +823,14 @@ public final class ConfigManager {
     public static void setPublicationListener(final PublicationListener listener) {
         publicationListener = listener == null ? (revision, kind) -> {
         } : listener;
+    }
+
+    static synchronized void setConfigWriterForTests(final ConfigWriter writer) {
+        configWriter = writer == null ? AtomicConfigWriter::write : writer;
+    }
+
+    static synchronized void resetConfigWriterForTests() {
+        configWriter = AtomicConfigWriter::write;
     }
 
     static ParsedConfig parseStoredConfig(String json) {

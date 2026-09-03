@@ -66,7 +66,7 @@ public final class EntityDeathContext {
                         session.entityType,
                         session.entityUuid,
                         session.deathPosition,
-                        session.dimension.identifier(),
+                        session.dimension.location(),
                         EntityLootOutputController.MAX_MULTIPLIED_ITEMS,
                         EntityLootOutputController.MAX_MULTIPLIED_STACKS));
     }
@@ -92,7 +92,7 @@ public final class EntityDeathContext {
                     session.entityType,
                     session.entityUuid,
                     session.deathPosition,
-                    session.dimension.identifier(),
+                    session.dimension.location(),
                     amount,
                     EntityExperienceBudget.MAX_MULTIPLIED_XP_AWARD);
         }

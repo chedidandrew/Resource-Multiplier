@@ -43,11 +43,12 @@ for development_entry in (
     "com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.class",
     "com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.class",
     "com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.class",
-    "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.class",
-    "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest$Phase.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.class",
+    "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementPersistenceSmokeTest.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.class",
-    "fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
+    "com/chedidandrew/smartresourcedrops/packagedprobe/PackagedClientProbe.class",
+    "com/chedidandrew/smartresourcedrops/packagedprobe/PackagedProbeSupport.class",
+    "com/chedidandrew/smartresourcedrops/packagedprobe/PackagedServerProbe.class",
 ):
     require(
         validate_neoforge_jar.is_development_test_entry(development_entry),
@@ -86,6 +87,8 @@ def write_minimum_release_entries(
     mixin_config_overrides: dict[str, object] | None = None,
     metadata_overrides: dict[str, object] | None = None,
     license_payload: bytes | None = None,
+    icon_payload: bytes | None = None,
+    class_major: int = package_release.EXPECTED_FABRIC_CLASS_MAJOR,
 ) -> None:
     metadata = {
         "schemaVersion": 1,
@@ -108,11 +111,11 @@ def write_minimum_release_entries(
         "mixins": ["smart_resource_drops.mixins.json"],
         "depends": {
             "fabricloader": ">=0.19.5",
-            "minecraft": "1.21.11",
+            "minecraft": "1.21.1",
             "java": ">=21",
-            "fabric-api": ">=0.141.6+1.21.11",
+            "fabric-api": ">=0.116.17+1.21.1",
         },
-        "suggests": {"modmenu": ">=17.0.0"},
+        "suggests": {"modmenu": ">=11.0.4"},
     }
     if metadata_overrides is not None:
         metadata.update(metadata_overrides)
@@ -122,11 +125,7 @@ def write_minimum_release_entries(
         mixin_config = {
             "package": "com.chedidandrew.smartresourcedrops.mixin",
             "mixins": (
-                [
-                    "PlayerShearingContextMixin",
-                    "ShearsDispenseItemBehaviorMixin",
-                    "LivingEntityShearingLootMixin",
-                ]
+                list(package_release.EXPECTED_PRODUCTION_MIXINS)
                 if mixin_classes is None
                 else mixin_classes
             ),
@@ -142,6 +141,10 @@ def write_minimum_release_entries(
             continue
         if required == "LICENSE_smart-resource-multiplier":
             payload = (ROOT / "LICENSE").read_bytes() if license_payload is None else license_payload
+        elif required == "assets/smart_resource_drops/icon.png":
+            payload = (
+                ROOT / "src/main/resources/assets/smart_resource_drops/icon.png"
+            ).read_bytes() if icon_payload is None else icon_payload
         elif required == "data/smart_resource_drops/tags/item/protected_entity_loot.json":
             payload = json.dumps({
                 "replace": False,
@@ -157,11 +160,12 @@ def write_minimum_release_entries(
                 "replace": False,
                 "values": [
                     "minecraft:bogged",
-                    "minecraft:copper_golem",
                     "minecraft:mooshroom",
                     "minecraft:snow_golem",
                 ],
             }).encode()
+        elif required.endswith(".class"):
+            payload = b"\xca\xfe\xba\xbe\x00\x00" + class_major.to_bytes(2, "big")
         else:
             payload = b'{"replace":false,"values":[]}' if required.endswith(".json") else b"placeholder"
         archive.writestr(required, payload)
@@ -208,7 +212,7 @@ for forbidden in (
     ".build/core-tests/Example.class",
     "run/config/smart_resource_drops.json",
     "logs/latest.log",
-    "dist/SmartResourceMultiplier-1.3.0+mc1.21.11-source.zip",
+    "dist/SmartResourceMultiplier-1.3.0+mc1.21.1-source.zip",
     "out/production/Example.class",
     ".idea/workspace.xml",
     ".vs/SmartResourceDrops/v17/.suo",
@@ -256,7 +260,7 @@ for missing_source in (
     "docs/PERFORMANCE.md",
     "docs/PUBLIC_RELEASE_CHECKLIST.md",
     "docs/releases/1.3.0.md",
-    "docs/releases/1.3.0+mc1.21.11.md",
+    "docs/releases/1.3.0+mc1.21.1.md",
     "docs/TESTING.md",
     "docs/images/general-config.webp",
     "docs/images/block-overrides.webp",
@@ -266,9 +270,11 @@ for missing_source in (
     "src/main/java/com/chedidandrew/smartresourcedrops/config/ConfigValidationReport.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/BlockLootBudgetWarnings.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/util/BlockLootOutputBudget.java",
+    "src/main/java/com/chedidandrew/smartresourcedrops/core/util/AtomicConfigWriter.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/util/LootOutputBudget.java",
     "src/test/java/com/chedidandrew/smartresourcedrops/config/ConfigValidatorTest.java",
     "src/test/java/com/chedidandrew/smartresourcedrops/core/util/BlockLootOutputBudgetTest.java",
+    "src/test/java/com/chedidandrew/smartresourcedrops/core/util/AtomicConfigWriterTest.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/SmartResourceDropsBlockBudgetGameTests.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/GameTestBlockLootFixtures.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/FabricGameTestEntityFixtures.java",
@@ -278,18 +284,30 @@ for missing_source in (
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOptionalClientOnlySmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.java",
-    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementPersistenceSmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.java",
     "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.java",
     "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.java",
     "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.java",
     "neoforge/src/optionalchanneltest/resources/META-INF/neoforge.mods.toml",
-    "neoforge/src/test/resources/fixtures/README.md",
-    "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
+    "neoforge/src/packagedprobetest/java/com/chedidandrew/smartresourcedrops/packagedprobe/PackagedClientProbe.java",
+    "neoforge/src/packagedprobetest/java/com/chedidandrew/smartresourcedrops/packagedprobe/PackagedProbeSupport.java",
+    "neoforge/src/packagedprobetest/java/com/chedidandrew/smartresourcedrops/packagedprobe/PackagedServerProbe.java",
+    "neoforge/src/packagedprobetest/resources/META-INF/neoforge.mods.toml",
+    "src/clienttest/java/com/chedidandrew/smartresourcedrops/client/FabricClientSmokeTest.java",
+    "src/clienttest/java/com/chedidandrew/smartresourcedrops/client/FabricMultiplayerClientSmokeTest.java",
+    "src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricMultiplayerServerSmokeTest.java",
+    "src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricPlacementPersistenceSmokeTest.java",
+    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/FabricAutomationAuthorityGameTests.java",
+    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/FabricMixinAuditGameTests.java",
+    "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeAutomationAuthorityGameTests.java",
+    "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structure/wide.nbt",
+    "tools/run_fabric_multiplayer_smoke.sh",
     "tools/run_neoforge_multiplayer_smoke.sh",
     "tools/run_neoforge_optional_channel_smoke.sh",
     "tools/run_neoforge_oversized_wire_smoke.sh",
+    "tools/prepare_fabric_ci_artifact.py",
     "tools/validate_neoforge_jar.py",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityClassifier.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityDropTags.java",
@@ -438,7 +456,11 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
 
     for label, overrides in (
         ("empty", {"mixins": []}),
-        ("wrong_type", {"mixins": "LivingEntityShearingLootMixin"}),
+        ("wrong_type", {"mixins": "SheepShearingLootMixin"}),
+        (
+            "missing_core_hook",
+            {"mixins": package_release.EXPECTED_PRODUCTION_MIXINS[1:]},
+        ),
     ):
         invalid_mixin_config_jar = temp_root / f"invalid_mixin_config_{label}.jar"
         with zipfile.ZipFile(invalid_mixin_config_jar, "w") as archive:
@@ -450,6 +472,19 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
         else:
             raise AssertionError(f"Playable JAR accepted {label} production mixin configuration")
 
+    wrong_class_major_jar = temp_root / "wrong_class_major.jar"
+    with zipfile.ZipFile(wrong_class_major_jar, "w") as archive:
+        write_minimum_release_entries(archive, class_major=61)
+    try:
+        package_release.validate_release_jar(wrong_class_major_jar, "test")
+    except package_release.ReleasePackageError as exc:
+        require(
+            "class-file major" in str(exc).lower() and "java 21" in str(exc).lower(),
+            "Wrong Fabric class-file-major failure was not explicit",
+        )
+    else:
+        raise AssertionError("Playable JAR accepted non-Java-21 class files")
+
     wrong_license_jar = temp_root / "wrong_embedded_license.jar"
     with zipfile.ZipFile(wrong_license_jar, "w") as archive:
         write_minimum_release_entries(archive, license_payload=b"All Rights Reserved\n")
@@ -460,6 +495,16 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
     else:
         raise AssertionError("Playable JAR accepted a mismatched embedded license")
 
+    wrong_icon_jar = temp_root / "wrong_embedded_icon.jar"
+    with zipfile.ZipFile(wrong_icon_jar, "w") as archive:
+        write_minimum_release_entries(archive, icon_payload=b"not-the-approved-icon")
+    try:
+        package_release.validate_release_jar(wrong_icon_jar, "test")
+    except package_release.ReleasePackageError as exc:
+        require("icon" in str(exc).lower(), "Embedded-icon mismatch failure was not explicit")
+    else:
+        raise AssertionError("Playable JAR accepted a mismatched embedded icon")
+
     forbidden_jar_entries = (
         "com/chedidandrew/smartresourcedrops/gametest/EntityFixture.class",
         "data/smart_resource_drops_gametest/loot_table/entities/fixture.json",
@@ -469,6 +514,14 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
         "src/main/java/LeakedSource.java",
         "build.gradle",
         "run/config/smart_resource_drops.json",
+        "com/chedidandrew/smartresourcedrops/client/FabricClientSmokeTest.class",
+        "com/chedidandrew/smartresourcedrops/client/FabricClientSmokeTest$Phase.class",
+        "com/chedidandrew/smartresourcedrops/client/FabricMultiplayerClientSmokeTest.class",
+        "com/chedidandrew/smartresourcedrops/client/FabricMultiplayerClientSmokeTest$Phase.class",
+        "com/chedidandrew/smartresourcedrops/platform/fabric/FabricMultiplayerServerSmokeTest.class",
+        "com/chedidandrew/smartresourcedrops/platform/fabric/FabricMultiplayerServerSmokeTest$State.class",
+        "com/chedidandrew/smartresourcedrops/platform/fabric/FabricPlacementPersistenceSmokeTest.class",
+        "com/chedidandrew/smartresourcedrops/platform/fabric/FabricPlacementPersistenceSmokeTest$Phase.class",
         "com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.class",
         "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.class",
         "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest$Phase.class",
@@ -477,11 +530,12 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
         "com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.class",
         "com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.class",
         "com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.class",
-        "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.class",
-        "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest$Phase.class",
         "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.class",
+        "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementPersistenceSmokeTest.class",
         "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.class",
-        "fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
+        "com/chedidandrew/smartresourcedrops/packagedprobe/PackagedClientProbe.class",
+        "com/chedidandrew/smartresourcedrops/packagedprobe/PackagedProbeSupport.class",
+        "com/chedidandrew/smartresourcedrops/packagedprobe/PackagedServerProbe.class",
     )
     for forbidden_entry in forbidden_jar_entries:
         forbidden_jar = temp_root / (forbidden_entry.replace("/", "_") + ".jar")
@@ -523,7 +577,7 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
         "data/smart_resource_drops/tags/entity_type/shearing/standard_resources.json",
         "data/smart_resource_drops/tags/entity_type/shearing/special.json",
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.class",
-        "com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.class",
+        "com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.class",
     ):
         incomplete_jar = temp_root / ("missing_" + missing_entry.replace("/", "_") + ".jar")
         with zipfile.ZipFile(incomplete_jar, "w") as archive:

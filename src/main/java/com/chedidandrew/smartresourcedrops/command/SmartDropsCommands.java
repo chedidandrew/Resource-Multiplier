@@ -1,7 +1,7 @@
 package com.chedidandrew.smartresourcedrops.command;
 
 
-import net.minecraft.commands.arguments.IdentifierArgument;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
 import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 import com.chedidandrew.smartresourcedrops.config.ConfigValidationReport;
 import com.chedidandrew.smartresourcedrops.config.ConfigValidator;
@@ -28,11 +28,11 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.entity.EntitySelector;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Shearable;
 import net.minecraft.world.entity.player.Player;
@@ -139,11 +139,11 @@ public final class SmartDropsCommands {
                                                 context.getSource(),
                                                 IntegerArgumentType.getInteger(context, "multiplier")))))
                         .then(Commands.literal("entity")
-                                .then(Commands.argument("entity_id", IdentifierArgument.id())
+                                .then(Commands.argument("entity_id", ResourceLocationArgument.id())
                                         .then(Commands.literal("inherit")
                                                 .executes(context -> clearShearingEntityMultiplier(
                                                         context.getSource(),
-                                                        IdentifierArgument.getId(
+                                                        ResourceLocationArgument.getId(
                                                                 context,
                                                                 "entity_id").toString())))
                                         .then(Commands.argument(
@@ -151,7 +151,7 @@ public final class SmartDropsCommands {
                                                         IntegerArgumentType.integer(0, 64))
                                                 .executes(context -> setShearingEntityMultiplier(
                                                         context.getSource(),
-                                                        IdentifierArgument.getId(
+                                                        ResourceLocationArgument.getId(
                                                                 context,
                                                                 "entity_id").toString(),
                                                                 IntegerArgumentType.getInteger(
@@ -170,17 +170,17 @@ public final class SmartDropsCommands {
                         .then(enumLiteral("whitelist", () -> ConfigManager.update(
                                 config -> config.filterMode = SmartDropsConfig.FilterMode.WHITELIST))))
                 .then(Commands.literal("block")
-                        .then(Commands.argument("block_id", IdentifierArgument.id())
+                        .then(Commands.argument("block_id", ResourceLocationArgument.id())
                                 .then(Commands.argument("multiplier", IntegerArgumentType.integer(0, 64))
                                         .executes(context -> setMapMultiplier(
                                                 context.getSource(),
-                                                IdentifierArgument.getId(context, "block_id").toString(),
+                                                ResourceLocationArgument.getId(context, "block_id").toString(),
                                                 IntegerArgumentType.getInteger(context, "multiplier"),
                                                 RuleMap.BLOCK)))
                                 .then(Commands.literal("inherit")
                                         .executes(context -> clearMapMultiplier(
                                                 context.getSource(),
-                                                IdentifierArgument.getId(context, "block_id").toString(),
+                                                ResourceLocationArgument.getId(context, "block_id").toString(),
                                                 RuleMap.BLOCK)))))
                 .then(Commands.literal("category")
                         .then(Commands.argument("category", StringArgumentType.word())
@@ -196,17 +196,17 @@ public final class SmartDropsCommands {
                                                 StringArgumentType.getString(context, "category"),
                                                 RuleMap.CATEGORY)))))
                 .then(Commands.literal("dimension")
-                        .then(Commands.argument("dimension_id", IdentifierArgument.id())
+                        .then(Commands.argument("dimension_id", ResourceLocationArgument.id())
                                 .then(Commands.argument("multiplier", IntegerArgumentType.integer(0, 64))
                                         .executes(context -> setMapMultiplier(
                                                 context.getSource(),
-                                                IdentifierArgument.getId(context, "dimension_id").toString(),
+                                                ResourceLocationArgument.getId(context, "dimension_id").toString(),
                                                 IntegerArgumentType.getInteger(context, "multiplier"),
                                                 RuleMap.DIMENSION)))
                                 .then(Commands.literal("inherit")
                                         .executes(context -> clearMapMultiplier(
                                                 context.getSource(),
-                                                IdentifierArgument.getId(context, "dimension_id").toString(),
+                                                ResourceLocationArgument.getId(context, "dimension_id").toString(),
                                                 RuleMap.DIMENSION)))))
                 .then(buildListCommand("blacklist", ListKind.BLACKLIST))
                 .then(buildListCommand("whitelist", ListKind.WHITELIST))
@@ -467,7 +467,7 @@ public final class SmartDropsCommands {
         if (map == RuleMap.CATEGORY) {
             return Category.parse(normalized).map(Category::key).orElse(null);
         }
-        Identifier identifier = Identifier.tryParse(normalized);
+        ResourceLocation identifier = ResourceLocation.tryParse(normalized);
         return identifier == null ? null : identifier.toString();
     }
 
@@ -506,7 +506,7 @@ public final class SmartDropsCommands {
         if (normalized.length() > SmartDropsConfig.MAX_RULE_KEY_LENGTH) {
             return null;
         }
-        Identifier identifier = Identifier.tryParse(normalized);
+        ResourceLocation identifier = ResourceLocation.tryParse(normalized);
         return identifier == null ? null : identifier.toString();
     }
 
@@ -619,7 +619,7 @@ public final class SmartDropsCommands {
             return 0;
         }
 
-        ServerLevel level = player.level();
+        ServerLevel level = player.serverLevel();
         HitResult hit = player.pick(player.blockInteractionRange(), 1.0F, false);
         if (player.level() != level) {
             source.sendFailure(Component.literal("Your dimension changed during inspection."));
@@ -670,12 +670,12 @@ public final class SmartDropsCommands {
             return 0;
         }
 
-        final ServerLevel level = player.level();
+        final ServerLevel level = player.serverLevel();
         final double range = player.entityInteractionRange();
         final HitResult hit = ProjectileUtil.getHitResultOnViewVector(
                 player,
-                EntitySelector.CAN_BE_PICKED
-                        .and(EntitySelector.NO_SPECTATORS)
+                EntitySelector.NO_SPECTATORS
+                        .and(Entity::isPickable)
                         .and(entity -> entity instanceof LivingEntity && !(entity instanceof Player)),
                 range);
         if (player.level() != level) {
@@ -689,7 +689,7 @@ public final class SmartDropsCommands {
         }
         if (target.level() != level
                 || target.isRemoved()
-                || !player.isWithinEntityInteractionRange(target, 0.0)) {
+                || player.distanceToSqr(target) > range * range) {
             source.sendFailure(Component.literal("The targeted entity moved or disappeared during inspection."));
             source.sendSuccess(() -> Component.literal(
                     "Look at the entity and run /smartdrops inspect entity again."), false);
@@ -714,7 +714,7 @@ public final class SmartDropsCommands {
                 || target.isRemoved()
                 || target.getId() != entityId
                 || !target.getUUID().equals(entityUuid)
-                || !player.isWithinEntityInteractionRange(target, 0.0)) {
+                || player.distanceToSqr(target) > range * range) {
             source.sendFailure(Component.literal("The targeted entity changed during inspection."));
             source.sendSuccess(() -> Component.literal(
                     "Look at the entity and run /smartdrops inspect entity again."), false);
@@ -749,7 +749,7 @@ public final class SmartDropsCommands {
     }
 
     private static boolean isAdmin(CommandSourceStack source) {
-        return source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
+        return source.hasPermission(2);
     }
 
     private static int message(CommandSourceStack source, String text) {

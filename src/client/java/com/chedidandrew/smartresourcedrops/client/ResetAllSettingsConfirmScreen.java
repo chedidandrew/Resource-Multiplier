@@ -34,7 +34,6 @@ public final class ResetAllSettingsConfirmScreen extends ConfirmScreen {
         return false;
     }
 
-    @Override
     public boolean isInGameUi() {
         return this.minecraft != null && this.minecraft.level != null;
     }

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import base64
 import hashlib
 import json
 import re
@@ -93,6 +92,7 @@ required = [
     "src/main/java/com/chedidandrew/smartresourcedrops/core/util/BlockLootOutputBudget.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/util/BoundedRateLimiter.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/util/LootOutputBudget.java",
+    "src/main/java/com/chedidandrew/smartresourcedrops/core/util/AtomicConfigWriter.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityClassifier.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityDropTags.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityLootTags.java",
@@ -100,7 +100,7 @@ required = [
     "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingOutputBudget.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingTags.java",
-    "src/main/java/com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.java",
+    "src/main/java/com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/platform/PlatformPlayerSupport.java",
@@ -116,6 +116,7 @@ required = [
     "src/client/java/com/chedidandrew/smartresourcedrops/client/ShearingOverridesScreen.java",
     "src/client/java/com/chedidandrew/smartresourcedrops/client/ShearingRuleEditScreen.java",
     "src/test/java/com/chedidandrew/smartresourcedrops/core/util/StackConsolidatorTest.java",
+    "src/test/java/com/chedidandrew/smartresourcedrops/core/util/AtomicConfigWriterTest.java",
     "src/test/java/com/chedidandrew/smartresourcedrops/config/ConfigValidatorTest.java",
     "src/test/java/com/chedidandrew/smartresourcedrops/core/util/BlockLootOutputBudgetTest.java",
     "src/test/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingOutputBudgetTest.java",
@@ -134,7 +135,14 @@ required = [
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/GameTestBlockLootFixtures.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/FabricGameTestEntityFixtures.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/FabricGameTestBlockLootFixtures.java",
-    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/SmartDropsClientGameTest.java",
+    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/FabricAutomationAuthorityGameTests.java",
+    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/FabricMixinAuditGameTests.java",
+    "src/gametest/resources/data/smart_resource_drops_gametest/gametest/structure/wide.snbt",
+    "src/clienttest/java/com/chedidandrew/smartresourcedrops/client/FabricClientSmokeTest.java",
+    "src/clienttest/java/com/chedidandrew/smartresourcedrops/client/FabricMultiplayerClientSmokeTest.java",
+    "src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricMultiplayerServerSmokeTest.java",
+    "src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricPlacementPersistenceSmokeTest.java",
+    "src/clienttest/resources/fabric.mod.json",
     "src/gametest/resources/fabric.mod.json",
     "config-examples/default.json",
     "docs/ARCHITECTURE.md",
@@ -152,13 +160,14 @@ required = [
     "docs/BRANDING.md",
     "docs/NEOFORGE_PORT.md",
     "docs/releases/1.3.0.md",
-    "docs/releases/1.3.0+mc1.21.11.md",
+    "docs/releases/1.3.0+mc1.21.1.md",
     "docs/releases/1.2.2.md",
     "docs/releases/1.2.3.md",
     "docs/images/general-config.webp",
     "docs/images/block-overrides.webp",
     "docs/images/shearing-config.webp",
     "tools/package_release.py",
+    "tools/prepare_fabric_ci_artifact.py",
     "tools/validate_neoforge_jar.py",
     "scripts/test_release_packaging.py",
     "neoforge/build.gradle",
@@ -171,33 +180,34 @@ required = [
     "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeClientEntrypoint.java",
     "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeNetworking.java",
     "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementStorage.java",
-    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigration.java",
     "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/CommonHooksPlacementMixin.java",
     "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/NeoForgeShearsDispenseItemBehaviorMixin.java",
-    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/SerializableChunkDataLegacyProvenanceMixin.java",
     "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/ServerPlayerGameModeMixin.java",
     "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeGameTestRegistrar.java",
     "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeMixinAuditGameTests.java",
+    "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeAutomationAuthorityGameTests.java",
     "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/NeoForgeGameTestBlockLootFixtures.java",
     "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/NeoForgeGameTestEntityFixtures.java",
     "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/entity_final_loot.json",
     "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/pathological_block_loot.json",
-    "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structure/empty.nbt",
+    "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structure/wide.nbt",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOptionalClientOnlySmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.java",
-    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementPersistenceSmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.java",
     "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.java",
     "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.java",
     "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.java",
     "neoforge/src/optionalchanneltest/resources/META-INF/neoforge.mods.toml",
+    "neoforge/src/packagedprobetest/java/com/chedidandrew/smartresourcedrops/packagedprobe/PackagedClientProbe.java",
+    "neoforge/src/packagedprobetest/java/com/chedidandrew/smartresourcedrops/packagedprobe/PackagedProbeSupport.java",
+    "neoforge/src/packagedprobetest/java/com/chedidandrew/smartresourcedrops/packagedprobe/PackagedServerProbe.java",
+    "neoforge/src/packagedprobetest/resources/META-INF/neoforge.mods.toml",
     "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/client/ClientEntityCategoryTagIndexTest.java",
-    "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigrationTest.java",
-    "neoforge/src/test/resources/fixtures/README.md",
-    "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
+    "tools/run_fabric_multiplayer_smoke.sh",
     "tools/run_neoforge_multiplayer_smoke.sh",
     "tools/run_neoforge_optional_channel_smoke.sh",
     "tools/run_neoforge_oversized_wire_smoke.sh",
@@ -205,28 +215,6 @@ required = [
 for relative in required:
     if not (ROOT / relative).is_file():
         fail(f"Missing required file: {relative}")
-
-migration_fixture = (
-    ROOT
-    / "neoforge/src/test/resources/fixtures/"
-    / "fabric-placement-provenance-chunk--554625--233041.nbt.b64"
-)
-if migration_fixture.is_file():
-    try:
-        encoded_fixture = "".join(migration_fixture.read_text(encoding="ascii").split())
-        migration_fixture_bytes = base64.b64decode(encoded_fixture, validate=True)
-    except (OSError, UnicodeError, ValueError) as exc:
-        fail(f"Fabric placement-provenance fixture is not valid Base64: {exc}")
-    else:
-        if len(migration_fixture_bytes) != 10_861:
-            fail(
-                "Fabric placement-provenance fixture decoded size changed: "
-                f"{len(migration_fixture_bytes)} bytes"
-            )
-        if hashlib.sha256(migration_fixture_bytes).hexdigest() != (
-            "c390fc16519a7b9f9a1fc29feab66209bca96b5db8bff6e659b239d16d36a38d"
-        ):
-            fail("Fabric placement-provenance fixture differs from the reviewed Fabric chunk bytes")
 
 wrapper_jar = ROOT / "gradle/wrapper/gradle-wrapper.jar"
 if wrapper_jar.is_file():
@@ -317,6 +305,8 @@ form_markers = {
         "id: loader",
         "Mod loader version",
         "Loader-specific dependencies",
+        "placeholder: 1.3.0+mc1.21.1",
+        'placeholder: "21"',
         "NeoForge",
         "Java version",
         "never upload an entire development world",
@@ -380,20 +370,20 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
-    "mod_version": "1.3.0+mc1.21.11",
-    "minecraft_version": "1.21.11",
+    "mod_version": "1.3.0+mc1.21.1",
+    "minecraft_version": "1.21.1",
     "java_version": "21",
     "loader_version": "0.19.5",
     "loom_version": "1.17.20",
-    "fabric_version": "0.141.6+1.21.11",
+    "fabric_version": "0.116.17+1.21.1",
     "maven_group": "com.chedidandrew",
     "archives_base_name": "smart-resource-multiplier",
 }
 for key, expected in expected_properties.items():
     if properties.get(key) != expected:
         fail(f"gradle.properties {key} must be {expected!r}, found {properties.get(key)!r}")
-if properties.get("release_ready") != "true":
-    fail("The stable Minecraft 1.21.11 backport source must keep release_ready=true")
+if properties.get("release_ready") not in {"false", "true"}:
+    fail("release_ready must be an explicit boolean publication latch")
 
 neoforge_properties: dict[str, str] = {}
 for raw_line in (ROOT / "neoforge/gradle.properties").read_text(encoding="utf-8").splitlines():
@@ -407,9 +397,9 @@ if neoforge_properties.get("mod_version") != properties["mod_version"]:
         f"{properties['mod_version']!r} and {neoforge_properties.get('mod_version')!r}"
     )
 expected_neoforge_properties = {
-    "minecraft_version": "1.21.11",
+    "minecraft_version": "1.21.1",
     "java_version": "21",
-    "neo_version": "21.11.45",
+    "neo_version": "21.1.249",
     "moddev_version": "2.0.146",
     "mod_id": "smart_resource_drops",
     "mod_name": "Smart Resource Multiplier",
@@ -448,12 +438,12 @@ for marker in (
     '<h1 align="center">Smart Resource Multiplier</h1>',
     'src="src/main/resources/assets/smart_resource_drops/icon.png"',
     'alt="Smart Resource Multiplier icon"',
-    "actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.11",
-    "Minecraft-1.21.11",
+    "actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.1",
+    "Minecraft-1.21.1",
     "Loaders-Fabric%20%7C%20NeoForge",
     "Java-21",
     "License-MIT",
-    "Status-1.3.0%2Bmc1.21.11-Release",
+    "Status-1.3.0%2Bmc1.21.1-Testing",
     "> [!IMPORTANT]",
     "Current stable release:",
     "www.curseforge.com/minecraft/mc-mods/resource-multiplier",
@@ -585,9 +575,6 @@ compatibility_contracts = {
     "src/main/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricPlacementStorage.java": (
         'SmartResourceDrops.id("placed_blocks")',
     ),
-    "src/main/java/com/chedidandrew/smartresourcedrops/mixin/LivingEntityDeathLootMixin.java": (
-        '"smart_resource_drops.kill_origin"',
-    ),
     "src/main/java/com/chedidandrew/smartresourcedrops/mixin/FallingBlockEntityMixin.java": (
         '"SmartResourceDropsProtected"',
     ),
@@ -640,6 +627,7 @@ for source_root in (
     ROOT / "neoforge/src/gametest",
     ROOT / "neoforge/src/clienttest",
     ROOT / "neoforge/src/optionalchanneltest",
+    ROOT / "neoforge/src/packagedprobetest",
 ):
     for path in source_root.rglob("*"):
         if path.is_file() and path.suffix in {".java", ".json", ".mcmeta", ".txt"}:
@@ -689,19 +677,28 @@ if isinstance(mixin, dict):
         fail("Mixin compatibility level must be JAVA_21")
     package_name = mixin.get("package", "")
     listed = mixin.get("mixins")
+    expected_production_mixins = [
+        "BlockDropResourcesMixin",
+        "BlockStateBaseDropsMixin",
+        "ExperienceOrbMixin",
+        "LivingEntityDeathLootMixin",
+        "PlayerShearingContextMixin",
+        "ShearsDispenseItemBehaviorMixin",
+        "SheepShearingLootMixin",
+        "FallingBlockEntityMixin",
+        "PistonMovingBlockEntityMixin",
+        "BlockItemPlacementCaptureMixin",
+        "LevelPlacementCaptureMixin",
+    ]
     if isinstance(listed, list):
-        if not listed:
-            fail("Production mixin configuration must not be empty")
+        if listed != expected_production_mixins:
+            fail(
+                "Production mixin configuration must declare the exact audited 1.21.1 set: "
+                f"expected={expected_production_mixins}, actual={listed}"
+            )
         for obsolete in ("BlockItemPlacementMixin", "LevelSetBlockMixin"):
             if obsolete in listed:
                 fail(f"Legacy provenance mixin must not be enabled: {obsolete}")
-        for required_mixin in (
-            "PlayerShearingContextMixin",
-            "ShearsDispenseItemBehaviorMixin",
-            "LivingEntityShearingLootMixin",
-        ):
-            if required_mixin not in listed:
-                fail(f"Required shearing mixin is not enabled: {required_mixin}")
         for name in listed:
             source = ROOT / "src/main/java" / Path(*package_name.split(".")) / f"{name}.java"
             if not source.is_file():
@@ -851,9 +848,9 @@ if isinstance(plants_tag, dict):
         fail("Plants category tag values must be a list")
     else:
         if "#minecraft:tall_flowers" in plant_values:
-            fail("Plants category uses unavailable Minecraft 1.21.11 tag #minecraft:tall_flowers")
+            fail("Plants category uses unavailable Minecraft 1.21.1 tag #minecraft:tall_flowers")
         if "#minecraft:flowers" not in plant_values:
-            fail("Plants category must include the Minecraft 1.21.11 #minecraft:flowers tag")
+            fail("Plants category must include the Minecraft 1.21.1 #minecraft:flowers tag")
 
 entity_categories = (
     "bosses",
@@ -933,7 +930,6 @@ if isinstance(standard_shearing, dict):
 special_shearing = read_json(shearing_tag_root / "special.json")
 expected_special_shearing = {
     "minecraft:bogged",
-    "minecraft:copper_golem",
     "minecraft:mooshroom",
     "minecraft:snow_golem",
 }
@@ -942,7 +938,7 @@ if isinstance(special_shearing, dict):
         fail("Special shearing tag must remain datapack-extensible with replace=false")
     special_values = special_shearing.get("values")
     if not isinstance(special_values, list) or set(special_values) != expected_special_shearing:
-        fail("Production special shearing tag differs from the audited Minecraft 1.21.11 safety set")
+        fail("Production special shearing tag differs from the audited Minecraft 1.21.1 safety set")
     if any("gametest" in str(value) or "fixture" in str(value) for value in special_values):
         fail("Development-only shearing fixture leaked into the production special tag")
 
@@ -976,7 +972,8 @@ for expected in [
     "useJUnitPlatform",
     "configureTests",
     "modCompileOnly \"com.terraformersmc:modmenu",
-    "runClientGameTest",
+    "runClientSmoke",
+    "runPersistenceVerifyAbsentServerSmoke",
     "-Xlint:deprecation",
 ]:
     if expected not in build_gradle:
@@ -1007,7 +1004,7 @@ if (
     or "static ServerPlayer withGameMode" not in game_test_player_helper
     or '@SuppressWarnings("removal")' not in game_test_player_helper
 ):
-    fail("GameTests must centralize the Minecraft 1.21.11 server-player compatibility helper")
+    fail("GameTests must centralize the Minecraft 1.21.1 server-player compatibility helper")
 
 entity_game_tests = (
     ROOT
@@ -1026,8 +1023,10 @@ if isinstance(game_test_metadata, dict):
     if game_test_metadata.get("name") != "Smart Resource Multiplier GameTests":
         fail("GameTest metadata must expose the Smart Resource Multiplier GameTests name")
     game_test_entrypoints = game_test_metadata.get("entrypoints", {})
-    if not isinstance(game_test_entrypoints, dict) or not game_test_entrypoints.get("fabric-client-gametest"):
-        fail("GameTest metadata is missing the Fabric client GameTest entrypoint")
+    if not isinstance(game_test_entrypoints, dict):
+        fail("GameTest metadata must contain an entrypoints object")
+    elif "fabric-client-gametest" in game_test_entrypoints:
+        fail("Fabric 1.21.1 GameTest metadata must not claim the unavailable client GameTest API")
     elif (
         "com.chedidandrew.smartresourcedrops.gametest.fixture.FabricGameTestEntityFixtures"
         not in game_test_entrypoints.get("main", [])
@@ -1095,17 +1094,32 @@ for production_root in (ROOT / "src/main", ROOT / "src/client", ROOT / "neoforge
 
 for workflow in (".github/workflows/build.yml", ".github/workflows/release.yml"):
     workflow_text = (ROOT / workflow).read_text(encoding="utf-8")
-    if "runClientGameTest" not in workflow_text:
-        fail(f"{workflow} must run the client GUI GameTest release gate")
+    if "runClientSmoke" not in workflow_text:
+        fail(f"{workflow} must run the target-native Fabric client GUI smoke gate")
+    if "tools/run_fabric_multiplayer_smoke.sh" not in workflow_text:
+        fail(f"{workflow} must run the real Fabric multiplayer authority gate")
+    if "runPersistenceVerifyAbsentServerSmoke" not in workflow_text:
+        fail(f"{workflow} must run the three-JVM Fabric placement persistence gate")
     if "scripts/test_release_packaging.py" not in workflow_text:
         fail(f"{workflow} must run the deterministic source-packaging regression")
 
 release_workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
 build_workflow = (ROOT / ".github/workflows/build.yml").read_text(encoding="utf-8")
+for required_fabric_artifact_contract in (
+    "tools/prepare_fabric_ci_artifact.py --output-dir build/ci-fabric-artifact",
+    "path: build/ci-fabric-artifact/*.jar",
+    "path: build/source-snapshot.zip",
+):
+    if required_fabric_artifact_contract not in build_workflow:
+        fail(
+            "The regular build workflow is missing its post-build Fabric artifact gate: "
+            f"{required_fabric_artifact_contract}"
+        )
+if "build/libs/*.jar" in build_workflow:
+    fail("The regular build workflow must not upload unvalidated build/libs JARs")
 for required_neoforge_gate in (
     "tools/validate_neoforge_jar.py",
     "runClientCategoryTest",
-    "runMigrationRestartServerTest",
     "tools/run_neoforge_multiplayer_smoke.sh",
     "tools/run_neoforge_optional_channel_smoke.sh",
     "tools/run_neoforge_oversized_wire_smoke.sh",
@@ -1172,29 +1186,40 @@ for required_oversized_wire_contract in (
         )
 
 neoforge_build = (ROOT / "neoforge/build.gradle").read_text(encoding="utf-8")
-for required_migration_contract in (
-    "dependsOn tasks.named('runMigrationImportServerTest')",
-    "migration-import.success",
-    "migration-restart.success",
-    "c390fc16519a7b9f9a1fc29feab66209bca96b5db8bff6e659b239d16d36a38d",
+for game_test_contract in (
+    "gameTestServer {",
+    "smart_resource_drops_gametest",
+    "Registered exactly 64 NeoForge 1.21.1 GameTests",
+    "64 tests are now running",
+    "64 GAME TESTS COMPLETE",
+    "All 64 required tests passed",
+    "runPersistenceVerifyAbsentServerTest",
+    "client-category.success",
+    "runPackagedServerTest",
+    "runPackagedClientTest",
+    "Packaged NeoForge server candidate Smart Resource Multiplier 1.3.0+mc1.21.1",
+    "log.readLines().any { line -> line.contains('/ERROR]') }",
 ):
-    if required_migration_contract not in neoforge_build:
-        fail(
-            "NeoForge two-JVM migration gate is missing its ordering/marker/fixture contract: "
-            f"{required_migration_contract}"
-        )
+    if game_test_contract not in neoforge_build:
+        fail(f"NeoForge GameTest configuration is missing {game_test_contract}")
 if re.search(r"(?m)^\s+tags:\s*", build_workflow):
     fail("The regular build workflow must not duplicate the authoritative release workflow on tags")
 if "branches: ['**']" not in build_workflow or "pull_request:" not in build_workflow:
     fail("The regular build workflow must retain branch-push and pull-request validation")
 if "tags: ['v*']" not in release_workflow:
     fail("The release workflow must remain the sole v* tag workflow")
-if "tools/package_release.py --output-dir dist" not in release_workflow or "dist/*" not in release_workflow:
+if (
+    "tools/package_release.py --output-dir dist" not in release_workflow
+    or "dist/smart-resource-multiplier-1.3.0+mc1.21.1.jar" not in release_workflow
+    or "dist/smart-resource-multiplier-neoforge-1.3.0+mc1.21.1.jar" not in release_workflow
+):
     fail("The release workflow must create and publish the validated deterministic release bundle")
 for required_release_gate in (
+    '[[ "$GITHUB_REF" == refs/tags/* ]]',
+    "refs/tags/v1.3.0+mc1.21.1",
     'test "$release_ready" = "true"',
-    "git merge-base --is-ancestor",
-    "refs/remotes/origin/backport/1.21.11",
+    'test "$tag_commit" = "$branch_commit"',
+    "refs/remotes/origin/backport/1.21.1",
     "fetch-depth: 0",
     "make_latest: false",
 ):

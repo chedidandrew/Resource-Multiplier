@@ -8,6 +8,9 @@ import com.chedidandrew.smartresourcedrops.network.ConfigResetPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigSnapshotPayload;
 import com.chedidandrew.smartresourcedrops.network.SmartDropsNetworking;
 
+import java.util.Objects;
+import java.util.function.Consumer;
+
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.IEventBus;
@@ -18,6 +21,11 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 /** NeoForge registration and transport for the shared config protocol. */
 final class NeoForgeNetworking {
     private static final String PROTOCOL_VERSION = "1";
+    private static volatile Consumer<CustomPacketPayload> clientReceiver = payload -> {
+        // Dedicated servers register the wire format too, but never receive a
+        // clientbound packet. Keeping the default receiver client-class-free
+        // prevents physical-server linkage to net.minecraft.client classes.
+    };
 
     private NeoForgeNetworking() {
     }
@@ -40,6 +48,10 @@ final class NeoForgeNetworking {
         modBus.addListener(RegisterPayloadHandlersEvent.class, NeoForgeNetworking::registerPayloads);
     }
 
+    static void installClientReceiver(final Consumer<CustomPacketPayload> receiver) {
+        clientReceiver = Objects.requireNonNull(receiver, "receiver");
+    }
+
     private static void registerPayloads(final RegisterPayloadHandlersEvent event) {
         final PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION).optional();
         registrar.playToServer(
@@ -60,8 +72,17 @@ final class NeoForgeNetworking {
                 (payload, context) -> SmartDropsNetworking.handleReset(
                         payload,
                         (ServerPlayer) context.player()));
-        registrar.playToClient(ConfigSnapshotPayload.TYPE, ConfigSnapshotPayload.CODEC);
-        registrar.playToClient(ConfigInvalidationPayload.TYPE, ConfigInvalidationPayload.CODEC);
-        registrar.playToClient(ConfigMutationResultPayload.TYPE, ConfigMutationResultPayload.CODEC);
+        registrar.playToClient(
+                ConfigSnapshotPayload.TYPE,
+                ConfigSnapshotPayload.CODEC,
+                (payload, context) -> clientReceiver.accept(payload));
+        registrar.playToClient(
+                ConfigInvalidationPayload.TYPE,
+                ConfigInvalidationPayload.CODEC,
+                (payload, context) -> clientReceiver.accept(payload));
+        registrar.playToClient(
+                ConfigMutationResultPayload.TYPE,
+                ConfigMutationResultPayload.CODEC,
+                (payload, context) -> clientReceiver.accept(payload));
     }
 }

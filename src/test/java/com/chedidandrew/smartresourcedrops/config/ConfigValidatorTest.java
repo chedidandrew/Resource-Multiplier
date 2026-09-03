@@ -333,7 +333,6 @@ final class ConfigValidatorTest {
                             "minecraft:mooshroom",
                             "minecraft:snow_golem",
                             "minecraft:bogged",
-                            "minecraft:copper_golem",
                             "minecraft:sulfur_cube"),
                     true,
                     true);

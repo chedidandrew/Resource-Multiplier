@@ -5,7 +5,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -28,7 +28,7 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 /** NeoForge registration and final-loot adapters for the shared entity GameTest fixtures. */
-@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID)
+@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public final class NeoForgeGameTestEntityFixtures {
     private NeoForgeGameTestEntityFixtures() {
     }
@@ -56,17 +56,23 @@ public final class NeoForgeGameTestEntityFixtures {
         }
     }
 
-    @SubscribeEvent
-    public static void lootTableLoad(final LootTableLoadEvent event) {
-        if (!event.getKey().equals(GameTestEntityFixtures.EXCEPTION_LOOT)) {
-            return;
+    @EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
+    public static final class GameBusEvents {
+        private GameBusEvents() {
         }
-        event.getTable().addPool(LootPool.lootPool()
-                .name("smart_resource_drops_gametest_exception_trigger")
-                .setRolls(ConstantValue.exactly(1.0F))
-                .add(LootItem.lootTableItem(Items.STONE))
-                .apply(() -> ExceptionTrigger.INSTANCE)
-                .build());
+
+        @SubscribeEvent
+        public static void lootTableLoad(final LootTableLoadEvent event) {
+            if (!event.getKey().equals(GameTestEntityFixtures.EXCEPTION_LOOT)) {
+                return;
+            }
+            event.getTable().addPool(LootPool.lootPool()
+                    .name("smart_resource_drops_gametest_exception_trigger")
+                    .setRolls(ConstantValue.exactly(1.0F))
+                    .add(LootItem.lootTableItem(Items.STONE))
+                    .apply(() -> ExceptionTrigger.INSTANCE)
+                    .build());
+        }
     }
 
     public static final class FinalLootModifier extends LootModifier {
@@ -83,10 +89,10 @@ public final class NeoForgeGameTestEntityFixtures {
                 final ObjectArrayList<ItemStack> loot,
                 final LootContext context
         ) {
-            final Identifier id = context.getQueriedLootTableId();
+            final ResourceLocation id = context.getQueriedLootTableId();
             GameTestEntityFixtures.applyFinalDropFixtures(
-                    id.equals(GameTestEntityFixtures.COMPONENT_RICH_LOOT.identifier()),
-                    id.equals(GameTestEntityFixtures.NESTED_OUTER_LOOT.identifier()),
+                    id.equals(GameTestEntityFixtures.COMPONENT_RICH_LOOT.location()),
+                    id.equals(GameTestEntityFixtures.NESTED_OUTER_LOOT.location()),
                     context,
                     loot);
             return loot;

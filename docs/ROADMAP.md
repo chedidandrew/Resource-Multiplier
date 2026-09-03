@@ -1,8 +1,14 @@
 # Smart Resource Multiplier roadmap
 
-## Current 1.3.0 status
+## Current 1.21.1 backport status
 
-Smart Resource Multiplier `1.3.0` provides native Fabric and NeoForge 26.2 builds from one shared gameplay/configuration/GUI implementation. Both loader files preserve schema 3, commands, multiplayer authority, block/entity/shearing rules, safety budgets, and the `smart_resource_drops` compatibility namespace. The General screen now labels block XP explicitly; mob XP remains an independent setting under Entity Drops.
+The `backport/1.21.1` branch targets Fabric and NeoForge with the same schema 3 configuration, commands, GUI, and gameplay policy as the current dual-loader implementation. It deliberately makes no Minecraft world-downgrade or cross-loader placed-block-data migration promise. The target remains release-locked until the loader-native server, client, multiplayer-authority, persistence, packaged-JAR, and artifact-validation gates all pass.
+
+## Historical Minecraft 26.2 / 1.3.0 status
+
+This section records the newer Minecraft 26.2 line from which the 1.21.1 backport was made. It is historical context on this branch, not a compatibility or migration claim for the 1.21.1 artifacts.
+
+Smart Resource Multiplier `1.3.0` provides native Fabric and NeoForge 26.2 builds from one shared gameplay/configuration/GUI implementation. Both loader files preserve schema 3, commands, multiplayer authority, block/entity/shearing rules, safety budgets, and the `smart_resource_drops` compatibility namespace. The General screen labels block XP explicitly; mob XP remains an independent setting under Entity Drops.
 
 The `smart_resource_drops` mod ID and datapack/network namespace, `config/smart_resource_drops.json`, Java package, `/smartdrops`, and `/smartdropsgui` remain stable. Fabric-to-NeoForge placed-block provenance migration is validated but intentionally one-way because the loaders use different chunk-data envelopes; back up worlds before changing loaders. Both artifacts package the approved **SMART RESOURCE MULTIPLIER** diamond-mining icon documented in [BRANDING.md](BRANDING.md). Future feature work remains governed by the historical scope and safety decisions below.
 

@@ -525,11 +525,16 @@ final class SmartDropsConfigTest {
                   "blockMultipliers": {"minecraft:stone": 5},
                   "blacklist": []
                 }
-                """;
+        """;
         Files.writeString(migrationPath, legacy);
-        Files.createDirectory(migrationPath.resolveSibling(migrationPath.getFileName() + ".tmp"));
-
-        assertFalse(ConfigManager.load(migrationPath));
+        ConfigManager.setConfigWriterForTests((target, content) -> {
+            throw new IOException("simulated persistence failure");
+        });
+        try {
+            assertFalse(ConfigManager.load(migrationPath));
+        } finally {
+            ConfigManager.resetConfigWriterForTests();
+        }
 
         assertTrue(ConfigManager.configurationsEqual(activeBefore, ConfigManager.get()));
         assertEquals(revisionBefore, ConfigManager.revision());

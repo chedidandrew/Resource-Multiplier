@@ -1,7 +1,7 @@
 package com.chedidandrew.smartresourcedrops.gametest.fixture;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -16,7 +16,7 @@ public final class GameTestBlockLootFixtures {
     public static final int ITEMS_PER_STACK = 64;
     public static final ResourceKey<LootTable> DIRT_LOOT = ResourceKey.create(
             Registries.LOOT_TABLE,
-            Identifier.fromNamespaceAndPath("minecraft", "blocks/dirt"));
+            ResourceLocation.fromNamespaceAndPath("minecraft", "blocks/dirt"));
 
     private static final AtomicBoolean ARMED = new AtomicBoolean();
 

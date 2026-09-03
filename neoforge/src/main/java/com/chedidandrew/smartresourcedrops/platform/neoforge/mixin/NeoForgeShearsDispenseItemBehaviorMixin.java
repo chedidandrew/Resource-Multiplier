@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(ShearsDispenseItemBehavior.class)
 abstract class NeoForgeShearsDispenseItemBehaviorMixin {
     @WrapOperation(
-            method = "tryShearEntity(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)Z",
+            method = "tryShearLivingEntity(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)Z",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/neoforged/neoforge/common/IShearable;onSheared(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)Ljava/util/List;"),

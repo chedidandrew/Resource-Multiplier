@@ -4,22 +4,23 @@ All notable changes are documented here.
 
 ## Unreleased
 
-## 1.3.0+mc1.21.11 - 2026-09-01
+## 1.3.0+mc1.21.1 - pending
 
 ### Added
 
-- Added maintained Fabric and NeoForge builds for Minecraft Java Edition 1.21.11 while keeping Minecraft 26.2 on `main` as the newest/default release line.
-- Added a version-correct Fabric 1.21.11 placement-provenance fixture for the one-way Fabric-to-NeoForge migration checks.
+- Added Fabric and NeoForge builds for Minecraft Java Edition 1.21.1 while keeping Minecraft 26.2 on `main` as the newest/default release line.
+- Added target-native Java 21 compilation, dedicated-server GameTests, client GUI checks, fake-player authority checks, and physical multiplayer gates.
 
 ### Changed
 
-- Ported both loader builds from Java 25 to the Java 21 toolchain required by Minecraft 1.21.11.
-- Adapted loader APIs, networking, GUI rendering, shearing hooks, registry access, GameTests, metadata, validators, and packaging to their Minecraft 1.21.11 equivalents without changing the shared schema 3 configuration or public mod identity.
-- Removed the 26.2-only Sulfur Cube from the 1.21.11 shearing safety list and tags.
+- Ported both loader builds to the Java 21 toolchain and the exact Fabric/NeoForge APIs required by Minecraft 1.21.1.
+- Adapted networking, GUI rendering, death/XP hooks, registry access, GameTests, metadata, validators, and packaging without changing the shared schema 3 configuration or public mod identity.
+- Limited 1.21.1 shearing multiplication to vanilla Sheep because this target lacks the later generic final-output hook. Special and custom unsupported shearables fail closed at vanilla 1x.
+- Kept configuration compatibility while making no Minecraft world-downgrade or cross-loader placed-block-data migration claim.
 
 ### Release status
 
-- Publication is prepared from the dedicated `backport/1.21.11` branch under tag `v1.3.0+mc1.21.11`; the final tested commit must authorize the guarded workflow before it can publish.
+- Publication is prepared from `backport/1.21.1` under tag `v1.3.0+mc1.21.1`; `release_ready` remains false until the final tested commit is authorized.
 - The release workflow deliberately uses `make_latest: false`, so GitHub continues to present Minecraft 26.2 tag `v1.3.0` as **Latest**.
 
 ## 1.3.0 - 2026-09-01

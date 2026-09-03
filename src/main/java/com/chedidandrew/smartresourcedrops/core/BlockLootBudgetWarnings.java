@@ -30,7 +30,7 @@ final class BlockLootBudgetWarnings {
             final BlockLootOutputBudget.Result result
     ) {
         final String blockId = bounded(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
-        final String dimensionId = bounded(level.dimension().identifier().toString());
+        final String dimensionId = bounded(level.dimension().location().toString());
         final String reason = result.outcome().name();
         if (!LIMITER.tryAcquire(blockId + '|' + reason, System.nanoTime())) {
             return;

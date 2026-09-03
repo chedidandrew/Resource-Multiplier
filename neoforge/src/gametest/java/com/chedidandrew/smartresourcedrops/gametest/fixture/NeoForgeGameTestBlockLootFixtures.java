@@ -15,7 +15,7 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 /** NeoForge adapter for the shared pathological block-loot fixture state. */
-@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID)
+@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public final class NeoForgeGameTestBlockLootFixtures {
     private NeoForgeGameTestBlockLootFixtures() {
     }
@@ -44,7 +44,7 @@ public final class NeoForgeGameTestBlockLootFixtures {
         ) {
             GameTestBlockLootFixtures.appendPathologicalDropsIfArmed(
                     context.getQueriedLootTableId().equals(
-                            GameTestBlockLootFixtures.DIRT_LOOT.identifier()),
+                            GameTestBlockLootFixtures.DIRT_LOOT.location()),
                     generatedLoot);
             return generatedLoot;
         }

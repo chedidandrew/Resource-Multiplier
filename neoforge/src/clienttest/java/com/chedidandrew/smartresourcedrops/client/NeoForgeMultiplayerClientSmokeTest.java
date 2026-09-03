@@ -16,7 +16,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
@@ -37,6 +36,10 @@ public final class NeoForgeMultiplayerClientSmokeTest {
     private int ticks;
     private int phaseTicks;
     private int expectedNearLimitBlockMultipliers;
+    private long initialRevision;
+    private long connectedPatchRevision;
+    private long nearLimitRevision;
+    private int initialGlobalMultiplier;
     private Object firstConnectionIdentity;
 
     public NeoForgeMultiplayerClientSmokeTest() {
@@ -59,6 +62,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
             switch (this.phase) {
                 case WAIT_CONNECTION -> waitForConnection(minecraft);
                 case WAIT_READ_ONLY -> waitForReadOnlySnapshot(minecraft);
+                case WAIT_UNAUTHORIZED -> waitForUnauthorizedResponse(minecraft);
                 case WAIT_PROMOTION -> waitForPromotion(minecraft);
                 case WAIT_EDITABLE -> waitForEditableSnapshot(minecraft);
                 case WAIT_CONNECTED_GUI_PATCH -> waitForConnectedGuiPatch(minecraft);
@@ -106,6 +110,43 @@ public final class NeoForgeMultiplayerClientSmokeTest {
         if (root.editorSession().editable()) {
             throw new AssertionError("Fresh dedicated-server player unexpectedly had operator config access");
         }
+        if (root.resetButton().active || root.applyButton().active) {
+            throw new AssertionError("Non-operator screen exposed mutation controls");
+        }
+        if (root.editorSession().setGlobalMultiplier(
+                root.editorSession().globalMultiplier() + 1)) {
+            throw new AssertionError("Non-operator editor staged a GUI mutation");
+        }
+
+        final ClientConfigState.CachedSnapshot snapshot = ClientConfigState.cachedSnapshot(minecraft)
+                .orElseThrow(() -> new AssertionError("Read-only server snapshot was not cached"));
+        this.initialRevision = snapshot.revision();
+        this.initialGlobalMultiplier = snapshot.config().globalMultiplier;
+        final ConfigPatch unauthorized = new ConfigPatch();
+        unauthorized.globalMultiplier = this.initialGlobalMultiplier + 1;
+        minecraft.setScreen(new SmartDropsConfigLoadingScreen(
+                root,
+                null,
+                unauthorized,
+                this.initialRevision));
+        transition(Phase.WAIT_UNAUTHORIZED);
+    }
+
+    private void waitForUnauthorizedResponse(final Minecraft minecraft) {
+        final Screen screen = minecraft.screen;
+        if (screen instanceof SmartDropsConfigLoadingScreen) {
+            return;
+        }
+        if (!(screen instanceof SmartDropsConfigScreen root)) {
+            return;
+        }
+        if (root.editorSession().editable()
+                || root.editorSession().revision() != this.initialRevision
+                || root.editorSession().globalMultiplier() != this.initialGlobalMultiplier
+                || root.editorSession().status().isBlank()) {
+            throw new AssertionError(
+                    "Unauthorized NeoForge patch was not explicitly denied without mutation");
+        }
         root.onClose();
         transition(Phase.WAIT_PROMOTION);
     }
@@ -130,6 +171,9 @@ public final class NeoForgeMultiplayerClientSmokeTest {
             root.onClose();
             transition(Phase.WAIT_PROMOTION);
             return;
+        }
+        if (root.editorSession().revision() != this.initialRevision) {
+            throw new AssertionError("Permission promotion unexpectedly changed the config revision");
         }
 
         stageConnectedChildScreenEdits(minecraft, root);
@@ -159,6 +203,10 @@ public final class NeoForgeMultiplayerClientSmokeTest {
                         session.shearingEntityMultiplier("minecraft:sheep"))) {
             throw new AssertionError("Connected child-screen Apply was not acknowledged authoritatively");
         }
+        if (session.revision() <= this.initialRevision) {
+            throw new AssertionError("Connected child-screen Apply did not advance the server revision");
+        }
+        this.connectedPatchRevision = session.revision();
 
         final ClientConfigState.CachedSnapshot snapshot = ClientConfigState.cachedSnapshot(minecraft)
                 .orElseThrow(() -> new AssertionError("Connected-GUI server snapshot was not cached"));
@@ -200,6 +248,10 @@ public final class NeoForgeMultiplayerClientSmokeTest {
                             + " exact multipliers; expected " + SmartDropsConfig.MAX_BLOCK_RULE_ENTRIES
                             + " and " + this.expectedNearLimitBlockMultipliers);
         }
+        if (snapshot.revision() <= this.connectedPatchRevision) {
+            throw new AssertionError("Near-limit patch did not advance the server revision");
+        }
+        this.nearLimitRevision = snapshot.revision();
 
         final ConfigPatch oversized = new ConfigPatch();
         for (int index = 0; index <= ConfigPatch.MAX_COLLECTION_EDITS; index++) {
@@ -242,6 +294,9 @@ public final class NeoForgeMultiplayerClientSmokeTest {
                 || root.editorSession().shearingEntityMultiplier("minecraft:sheep") != null) {
             throw new AssertionError(
                     "Server-authoritative Reset confirmation did not restore all child-screen defaults");
+        }
+        if (root.editorSession().revision() <= this.nearLimitRevision) {
+            throw new AssertionError("Server-authoritative Reset did not advance the revision");
         }
 
         if (ClientConfigState.cachedSnapshot(minecraft).isEmpty()) {
@@ -322,7 +377,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
 
         this.phase = Phase.COMPLETE;
         SmartResourceDrops.LOGGER.info(
-                "NeoForge multiplayer client smoke test passed: /smartdropsgui, permissions, connected entity/filter/shearing child Apply, six channels, near-limit patch, oversized rejection, confirmed reset, disconnect cleanup, and reconnect");
+                "NeoForge multiplayer client smoke test passed: /smartdropsgui, non-op denial, operator connected entity/filter/shearing child Apply, six channels, near-limit patch, oversized rejection, confirmed reset, disconnect cleanup, and reconnect");
         minecraft.stop();
     }
 
@@ -498,7 +553,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
     }
 
     private static void press(final Button button) {
-        button.onPress(new KeyEvent(257, 0, 0));
+        button.onPress();
     }
 
     private static <T extends Screen> T requireScreen(
@@ -538,6 +593,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
     private enum Phase {
         WAIT_CONNECTION,
         WAIT_READ_ONLY,
+        WAIT_UNAUTHORIZED,
         WAIT_PROMOTION,
         WAIT_EDITABLE,
         WAIT_CONNECTED_GUI_PATCH,

@@ -1,15 +1,11 @@
 package com.chedidandrew.smartresourcedrops.gametest.fixture;
 
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
-
-/** Fabric adapter for the shared pathological block-loot fixture state. */
+/** Fabric entrypoint retained for the target-native test fixture module. */
 public final class FabricGameTestBlockLootFixtures implements ModInitializer {
     @Override
     public void onInitialize() {
-        LootTableEvents.MODIFY_DROPS.register((table, context, drops) ->
-                GameTestBlockLootFixtures.appendPathologicalDropsIfArmed(
-                        table.is(GameTestBlockLootFixtures.DIRT_LOOT),
-                        drops));
+        // Fabric API 0.116 has no final-drop event. The GameTest-only LootTable
+        // mixin applies the fixture after vanilla generation instead.
     }
 }

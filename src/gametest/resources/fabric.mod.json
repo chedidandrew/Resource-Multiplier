@@ -13,10 +13,9 @@
       "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsGameTests",
       "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsEntityGameTests",
       "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsBlockBudgetGameTests",
-      "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsShearingGameTests"
-    ],
-    "fabric-client-gametest": [
-      "com.chedidandrew.smartresourcedrops.gametest.SmartDropsClientGameTest"
+      "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsShearingGameTests",
+      "com.chedidandrew.smartresourcedrops.gametest.FabricMixinAuditGameTests",
+      "com.chedidandrew.smartresourcedrops.gametest.FabricAutomationAuthorityGameTests"
     ]
   },
   "mixins": [
@@ -24,11 +23,8 @@
   ],
   "depends": {
     "fabricloader": "*",
-    "minecraft": "1.21.11",
+    "minecraft": "1.21.1",
     "fabric-gametest-api-v1": "*",
     "smart_resource_drops": "*"
-  },
-  "suggests": {
-    "fabric-client-gametest-api-v1": "*"
   }
 }

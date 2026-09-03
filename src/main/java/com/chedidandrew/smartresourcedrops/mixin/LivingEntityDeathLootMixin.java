@@ -8,16 +8,13 @@ import com.chedidandrew.smartresourcedrops.core.entity.EntityMultiplierResolver;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.wolf.Wolf;
+import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,70 +25,59 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.UUID;
 import java.util.function.Consumer;
 
 @Mixin(LivingEntity.class)
 abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
-    @Unique
-    private static final String SMART_RESOURCE_DROPS_KILL_ORIGIN_KEY =
-            "smart_resource_drops.kill_origin";
-
-    @Shadow
-    protected int lastHurtByPlayerMemoryTime;
+    @Shadow protected int lastHurtByPlayerTime;
+    @Shadow protected Player lastHurtByPlayer;
 
     @Unique
     private EntityKillAttribution.Kind smartResourceDrops$rememberedKillOrigin =
             EntityKillAttribution.Kind.NONE;
 
-    @WrapMethod(
-            method = "dropAllDeathLoot(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;)V")
+    @WrapMethod(method = "dropAllDeathLoot(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;)V")
     private void smartResourceDrops$scopeStandardDeathLoot(
-            ServerLevel level,
-            DamageSource source,
-            Operation<Void> original
+            final ServerLevel level,
+            final DamageSource source,
+            final Operation<Void> original
     ) {
-        LivingEntity self = (LivingEntity) (Object) this;
+        final LivingEntity self = (LivingEntity) (Object) this;
         try (EntityDeathContext.Scope ignored = EntityDeathContext.begin(self, level, source)) {
             original.call(level, source);
         }
     }
 
     @WrapOperation(
-            method = "dropFromLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;ZLnet/minecraft/resources/ResourceKey;)V",
-             at = @At(
-                     value = "INVOKE",
-                     target = "Lnet/minecraft/world/entity/LivingEntity;dropFromLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;ZLnet/minecraft/resources/ResourceKey;Ljava/util/function/Consumer;)V"),
-             require = 0,
-             expect = 1)
+            method = "dropFromLootTable(Lnet/minecraft/world/damagesource/DamageSource;Z)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/loot/LootTable;getRandomItems(Lnet/minecraft/world/level/storage/loot/LootParams;JLjava/util/function/Consumer;)V"),
+            require = 1,
+            expect = 1)
     private void smartResourceDrops$wrapOnlyStandardLootConsumer(
-            LivingEntity instance,
-            ServerLevel level,
-            DamageSource source,
-            boolean playerKilled,
-            ResourceKey<LootTable> lootTable,
-            Consumer<ItemStack> consumer,
-            Operation<Void> original
+            final LootTable table,
+            final LootParams params,
+            final long seed,
+            final Consumer<ItemStack> consumer,
+            final Operation<Void> original
     ) {
-        Consumer<ItemStack> multiplied = EntityDeathContext.wrapStandardLootConsumer(instance, consumer);
-        original.call(instance, level, source, playerKilled, lootTable, multiplied);
+        final LivingEntity self = (LivingEntity) (Object) this;
+        original.call(table, params, seed,
+                EntityDeathContext.wrapStandardLootConsumer(self, consumer));
     }
 
     @WrapOperation(
-            method = "dropExperience(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)V",
-             at = @At(
-                     value = "INVOKE",
-                     target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V"),
-             require = 0,
-             expect = 1)
+            method = "dropExperience(Lnet/minecraft/world/entity/Entity;)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V"),
+            require = 1,
+            expect = 1)
     private void smartResourceDrops$multiplyOnlyMobDeathExperience(
-            ServerLevel level,
-            Vec3 position,
-            int amount,
-            Operation<Void> original
+            final ServerLevel level,
+            final Vec3 position,
+            final int amount,
+            final Operation<Void> original
     ) {
-        LivingEntity self = (LivingEntity) (Object) this;
-        int multiplied = EntityDeathContext.multiplyExperience(self, amount);
+        final LivingEntity self = (LivingEntity) (Object) this;
+        final int multiplied = EntityDeathContext.multiplyExperience(self, amount);
         try (EntityDeathContext.ExperienceAwardScope ignored =
                      EntityDeathContext.expectMobExperienceAward(level, position, multiplied)) {
             original.call(level, position, multiplied);
@@ -99,12 +85,13 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
     }
 
     @Inject(
-            method = "setLastHurtByPlayer(Lnet/minecraft/world/entity/player/Player;I)V",
-            at = @At("TAIL"))
+            method = "setLastHurtByPlayer(Lnet/minecraft/world/entity/player/Player;)V",
+            at = @At("TAIL"),
+            require = 1,
+            expect = 1)
     private void smartResourceDrops$rememberDirectPlayer(
-            Player player,
-            int timeToRemember,
-            CallbackInfo callback
+            final Player player,
+            final CallbackInfo callback
     ) {
         smartResourceDrops$rememberedKillOrigin = smartResourceDrops$trackingEnabled()
                 && EntityMultiplierResolver.isRealPlayer(player)
@@ -113,76 +100,51 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
     }
 
     @Inject(
-            method = "setLastHurtByPlayer(Ljava/util/UUID;I)V",
-            at = @At("TAIL"))
-    private void smartResourceDrops$clearUnclassifiedUuidAttribution(
-            UUID playerId,
-            int timeToRemember,
-            CallbackInfo callback
+            method = "hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z",
+            at = @At("RETURN"),
+            require = 1,
+            expect = 1)
+    private void smartResourceDrops$rememberSuccessfulDamageOrigin(
+            final DamageSource source,
+            final float amount,
+            final CallbackInfoReturnable<Boolean> callback
     ) {
-        smartResourceDrops$rememberedKillOrigin = EntityKillAttribution.Kind.NONE;
-    }
-
-    @Inject(
-            method = "resolvePlayerResponsibleForDamage(Lnet/minecraft/world/damagesource/DamageSource;)Lnet/minecraft/world/entity/player/Player;",
-            at = @At("RETURN"))
-    private void smartResourceDrops$rememberVanillaAttributionOrigin(
-            DamageSource source,
-            CallbackInfoReturnable<Player> callback
-    ) {
-        if (!smartResourceDrops$trackingEnabled()) {
-            if (source.getEntity() instanceof Player
-                    || source.getEntity() instanceof Wolf wolf && wolf.isTame()) {
-                smartResourceDrops$rememberedKillOrigin = EntityKillAttribution.Kind.NONE;
-            }
+        if (!callback.getReturnValueZ()) {
             return;
         }
-
         if (source.getEntity() instanceof Player player) {
-            smartResourceDrops$rememberedKillOrigin = EntityMultiplierResolver.isRealPlayer(player)
+            smartResourceDrops$rememberedKillOrigin = smartResourceDrops$trackingEnabled()
+                    && EntityMultiplierResolver.isRealPlayer(player)
                     ? EntityKillAttribution.Kind.DIRECT_PLAYER
                     : EntityKillAttribution.Kind.NONE;
         } else if (source.getEntity() instanceof Wolf wolf && wolf.isTame()) {
-            smartResourceDrops$rememberedKillOrigin = EntityMultiplierResolver.resolvedTamedOwner(wolf) != null
+            smartResourceDrops$rememberedKillOrigin = smartResourceDrops$trackingEnabled()
+                    && EntityMultiplierResolver.resolvedTamedOwner(wolf) != null
                     ? EntityKillAttribution.Kind.TAMED_ENTITY
                     : EntityKillAttribution.Kind.NONE;
         }
     }
 
-    @Inject(
-            method = "addAdditionalSaveData(Lnet/minecraft/world/level/storage/ValueOutput;)V",
-            at = @At("TAIL"))
-    private void smartResourceDrops$saveKillOrigin(ValueOutput output, CallbackInfo callback) {
-        if (lastHurtByPlayerMemoryTime > 0
-                && smartResourceDrops$rememberedKillOrigin != EntityKillAttribution.Kind.NONE) {
-            output.putString(
-                    SMART_RESOURCE_DROPS_KILL_ORIGIN_KEY,
-                    smartResourceDrops$rememberedKillOrigin.name());
-        }
-    }
-
-    @Inject(
-            method = "readAdditionalSaveData(Lnet/minecraft/world/level/storage/ValueInput;)V",
-            at = @At("TAIL"))
-    private void smartResourceDrops$loadKillOrigin(ValueInput input, CallbackInfo callback) {
-        smartResourceDrops$rememberedKillOrigin = lastHurtByPlayerMemoryTime > 0
-                ? EntityKillAttribution.Kind.parsePersisted(input.getStringOr(
-                        SMART_RESOURCE_DROPS_KILL_ORIGIN_KEY,
-                        ""))
+    @Override
+    public EntityKillAttribution.Kind smartResourceDrops$rememberedKillOrigin() {
+        return lastHurtByPlayerTime > 0
+                ? smartResourceDrops$rememberedKillOrigin
                 : EntityKillAttribution.Kind.NONE;
     }
 
     @Override
-    public EntityKillAttribution.Kind smartResourceDrops$rememberedKillOrigin() {
-        return lastHurtByPlayerMemoryTime > 0
-                ? smartResourceDrops$rememberedKillOrigin
-                : EntityKillAttribution.Kind.NONE;
+    public boolean smartResourceDrops$hasRememberedPlayerKill() {
+        return lastHurtByPlayerTime > 0 && lastHurtByPlayer != null;
+    }
+
+    @Override
+    public Player smartResourceDrops$rememberedPlayer() {
+        return lastHurtByPlayerTime > 0 ? lastHurtByPlayer : null;
     }
 
     @Unique
     private boolean smartResourceDrops$trackingEnabled() {
         return EntityMultiplierResolver.rulesCouldApply(
-                ConfigManager.get(),
-                (LivingEntity) (Object) this);
+                ConfigManager.get(), (LivingEntity) (Object) this);
     }
 }

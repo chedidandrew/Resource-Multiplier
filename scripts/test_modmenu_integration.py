@@ -183,7 +183,7 @@ require(
 )
 require("modCompileOnly \"com.terraformersmc:modmenu:${modMenuVersionValue}\"" in build, "Mod Menu must be compile-only")
 require("https://maven.terraformersmc.com/" in build, "Terraformers release repository is missing")
-require(re.search(r"^modmenu_version=17\.0\.0$", props, re.MULTILINE) is not None, "Expected Mod Menu 17.0.0 pin")
+require(re.search(r"^modmenu_version=11\.0\.4$", props, re.MULTILINE) is not None, "Expected Mod Menu 11.0.4 pin")
 require("implements ModMenuApi" in integration, "Integration must implement ModMenuApi")
 require("SmartDropsConfigScreens::create" in integration, "Mod Menu must use the shared config-screen route")
 require("SmartDropsConfigScreens.create" in client, "/smartdropsgui must use the same config-screen route")
@@ -671,7 +671,10 @@ require(
     re.search(r"extends\s+ObjectSelectionList\s*<", structured_list) is not None,
     "StructuredConfigList must extend ObjectSelectionList",
 )
-require(re.search(r"\brenderContent\s*\(", structured_list) is not None, "Structured list rows must render through list-entry content rendering")
+require(
+    re.search(r"public\s+void\s+render\s*\(", structured_list) is not None,
+    "Structured list rows must render through the Minecraft 1.21.1 list-entry rendering hook",
+)
 require(re.search(r"\bmouseClicked\s*\(", structured_list) is not None, "Structured list rows must handle selection without child Buttons")
 for forbidden in ("import net.minecraft.client.gui.components.Button", "Button.builder(", "new Button("):
     require(forbidden not in structured_list, f"StructuredConfigList must not allocate a Button per row: {forbidden}")
@@ -706,8 +709,30 @@ require(
     re.search(r"\bConfigManager\s*\.\s*applyLocalPatch\s*\(", root_screen) is not None,
     "Local/default Apply must use atomic patch persistence",
 )
-require("AtomicConfigWriter.write" in manager, "ConfigManager must persist accepted patches through the atomic writer")
+require(
+    "private static volatile ConfigWriter configWriter = AtomicConfigWriter::write;" in manager,
+    "ConfigManager's injectable persistence seam must default to the atomic writer",
+)
+require(
+    manager.count("configWriter.write") == 5,
+    "Every load/update/reset/save persistence path must use the one ConfigWriter seam exactly once",
+)
+require(
+    manager.count("configWriter = AtomicConfigWriter::write;") == 2,
+    "ConfigManager must default and reset its test seam to the production atomic writer",
+)
 require("StandardCopyOption.ATOMIC_MOVE" in atomic_writer, "Local/default saves must retain atomic replacement semantics")
+for atomic_retry_contract in (
+    "Files.createTempFile",
+    "MAX_MOVE_ATTEMPTS = 5",
+    "catch (FileSystemException sharingFailure)",
+    "Thread.currentThread().interrupt()",
+    "Files.deleteIfExists(temp)",
+):
+    require(
+        atomic_retry_contract in atomic_writer,
+        f"Atomic config persistence is missing its bounded Windows sharing-retry contract: {atomic_retry_contract}",
+    )
 require(
     re.search(r"\bnew\s+SmartDropsConfigLoadingScreen\s*\(", root_screen) is not None,
     "Connected Apply must wait for the loading/ack bridge",
@@ -845,12 +870,12 @@ reset_path_match = re.search(
 require(reset_path_match is not None, "Could not isolate the atomic ConfigManager.reset(Path) transaction")
 reset_path_body = reset_path_match.group("body")
 require(
-    reset_path_body.count("AtomicConfigWriter.write") == 1,
+    reset_path_body.count("configWriter.write") == 1,
     "A full reset must persist exactly once through the atomic writer",
 )
 require_before(
     reset_path_body,
-    "AtomicConfigWriter.write",
+    "configWriter.write",
     "publishConfig(defaults, PublicationKind.RESET)",
     "Reset must persist successfully before publishing defaults in memory",
 )
@@ -938,7 +963,7 @@ require(
     "A rate-limited tiny patch must not amplify into a full config snapshot response",
 )
 
-# Minecraft 1.21.11 interprets six-digit RGB literals as alpha=0. Check every editor
+# Minecraft 1.21.1 interprets six-digit RGB literals as alpha=0. Check every editor
 # rendering source so newly added child screens cannot silently reintroduce invisible text.
 render_sources = {
     "loading screen": loading,
@@ -1136,6 +1161,6 @@ all_resources = "\n".join(
     for path in (ROOT / "src/main/resources").rglob("*")
     if path.is_file() and path.suffix in {".json", ".mcmeta", ".txt"}
 )
-require("#minecraft:tall_flowers" not in all_resources, "Invalid Minecraft 1.21.11 tall_flower tag was reintroduced")
+require("#minecraft:tall_flowers" not in all_resources, "Invalid Minecraft 1.21.1 tall_flower tag was reintroduced")
 
 print("Hierarchical Mod Menu integration checks: PASS")
