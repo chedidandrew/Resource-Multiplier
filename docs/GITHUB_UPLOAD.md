@@ -8,8 +8,8 @@ Work on `backport/1.20.1`, keep `release_ready=false`, and push or open a pull r
 
 Expected artifacts:
 
-- `build/libs/smart-resource-multiplier-1.3.0+mc1.20.1.jar` — Fabric
-- `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar` — NeoForge 47
+- `build/libs/smart-resource-multiplier-1.3.1+mc1.20.1.jar` — Fabric
+- `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.1+mc1.20.1.jar` — NeoForge 47
 
 Do not commit generated build directories or rename both files to the same filename.
 
@@ -21,9 +21,9 @@ Before authorizing publication:
 2. Rebuild from a clean checkout of the exact candidate commit with Java 21 launching Gradle and its Java 17 toolchain compiling/running the Minecraft targets.
 3. Validate both final, playable JARs; do not use a NeoForge `devlibs` artifact.
 4. Record final SHA-256 hashes and sizes.
-5. Confirm `mod_version=1.3.0+mc1.20.1` in both Gradle property files.
+5. Confirm `mod_version=1.3.1+mc1.20.1` in both Gradle property files.
 6. Change `release_ready` to `true` only in the exact fully verified commit.
-7. Push that commit to `backport/1.20.1`, then create and push tag `v1.3.0+mc1.20.1` at that commit.
+7. Push that commit to `backport/1.20.1`, then create and push tag `v1.3.1+mc1.20.1` at that commit.
 
 The guarded release workflow rejects branch/manual publication, a mismatched tag or loader version, a tag outside `origin/backport/1.20.1`, a false publication latch, or any failing release gate. It uploads exactly the two loader-labelled JARs and uses `make_latest: false`, preserving the Minecraft 26.2 release as GitHub's **Latest** entry.
 
@@ -33,7 +33,7 @@ Upload the two JARs as separate files under the same project:
 
 - mark the Fabric JAR as Minecraft 1.20.1 / Fabric and require Fabric API;
 - mark the NeoForge JAR as Minecraft 1.20.1 / NeoForge;
-- use the casual-player changelog in `docs/releases/1.3.0+mc1.20.1.md`;
+- use the casual-player changelog in `docs/releases/1.3.1+mc1.20.1.md`;
 - never mark either file compatible with both loaders.
 
 Players should remove older copies and install only one Smart Resource Multiplier JAR. This backport does not claim tested Fabric-to-NeoForge world conversion.

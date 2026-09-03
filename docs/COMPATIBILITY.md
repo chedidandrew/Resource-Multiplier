@@ -1,10 +1,10 @@
 # Smart Resource Multiplier compatibility notes
 
-Smart Resource Multiplier `1.3.0+mc1.20.1` supports Fabric and NeoForge on Minecraft 1.20.1 within the same documented gameplay boundaries. Both builds share the rule resolvers, safety budgets, schema 3 configuration, commands, and GUI; loader-specific adapters handle lifecycle, networking, and placed-block storage. The backport passes shared and loader-specific unit, dedicated/client GameTest, physical multiplayer, package-validator, and playable-JAR gates. Minecraft 26.2 remains the newest/default release on `main`. All named third-party cases remain version- and loader-specific; this document is not a claim that every mod, datapack, or server stack is compatible.
+Smart Resource Multiplier `1.3.1+mc1.20.1` supports Fabric and NeoForge on Minecraft 1.20.1 within the same documented gameplay boundaries. Both builds share the rule resolvers, safety budgets, schema 3 configuration, commands, and GUI; loader-specific adapters handle lifecycle, networking, and placed-block storage. The backport passes shared and loader-specific unit, dedicated/client GameTest, physical multiplayer, package-validator, and playable-JAR gates. Minecraft 26.2 remains the newest/default release on `main`. All named third-party cases remain version- and loader-specific; this document is not a claim that every mod, datapack, or server stack is compatible.
 
-## Smart Resource Multiplier 1.3.0+mc1.20.1 supported shearing boundary
+## Smart Resource Multiplier 1.3.1+mc1.20.1 supported shearing boundary
 
-The `1.3.0+mc1.20.1` implementation recognizes two sources only: a real server player inside `Player.interactOn`, and the exact vanilla dispenser entity call inside `ShearsDispenseItemBehavior.tryShearLivingEntity`. The outer player scope deliberately does not require `Items.SHEARS`, so a compatible custom tool can work if it follows the standard entity interaction path. Loader-recognized fake players, unscoped direct `Shearable.shear` calls, custom machine output, and inference from `SoundSource.BLOCKS` remain unsupported vanilla `1x`.
+The `1.3.1+mc1.20.1` implementation recognizes two sources only: a real server player inside `Player.interactOn`, and the exact vanilla dispenser entity call inside `ShearsDispenseItemBehavior.tryShearLivingEntity`. The outer player scope deliberately does not require `Items.SHEARS`, so a compatible custom tool can work if it follows the standard entity interaction path. Loader-recognized fake players, unscoped direct `Shearable.shear` calls, custom machine output, and inference from `SoundSource.BLOCKS` remain unsupported vanilla `1x`.
 
 Minecraft 1.20.1 Sheep spawns its wool directly while `Shearable.shear` runs. Smart Resource Multiplier captures only those `ItemEntity` spawns inside an eligible player/dispenser scope, applies one bounded transformation after the action, and preserves the original position and motion. Unrelated direct item spawns, inventory insertion, equipment ejection, and output outside that exact scope are not intercepted. On Forge 47, an `IForgeShearable`-only entity's manual `onSheared` result list is transformed once before Forge spawns it; a target that also implements vanilla `Shearable` is deliberately excluded from this Forge-only path so Sheep cannot be multiplied twice.
 
@@ -87,17 +87,17 @@ Every manual compatibility result must record the mod/project name, exact tested
 
 | Category | Mod/project | Exact version | Test date | Smart Resource Multiplier version | Result | Known limitation |
 | --- | --- | --- | --- | --- | --- | --- |
-| Biome/wildlife or passive | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
-| Hostile entity | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
-| Boss | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
-| Equipment/inventory | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
-| Custom shearable | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
-| Automated miner | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
-| Custom placement/drop | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
+| Biome/wildlife or passive | Pending selection | Not tested | Not tested | 1.3.1+mc1.20.1 | Pending | Named third-party case not performed |
+| Hostile entity | Pending selection | Not tested | Not tested | 1.3.1+mc1.20.1 | Pending | Named third-party case not performed |
+| Boss | Pending selection | Not tested | Not tested | 1.3.1+mc1.20.1 | Pending | Named third-party case not performed |
+| Equipment/inventory | Pending selection | Not tested | Not tested | 1.3.1+mc1.20.1 | Pending | Named third-party case not performed |
+| Custom shearable | Pending selection | Not tested | Not tested | 1.3.1+mc1.20.1 | Pending | Named third-party case not performed |
+| Automated miner | Pending selection | Not tested | Not tested | 1.3.1+mc1.20.1 | Pending | Named third-party case not performed |
+| Custom placement/drop | Pending selection | Not tested | Not tested | 1.3.1+mc1.20.1 | Pending | Named third-party case not performed |
 
 ## Integration API stance
 
-Smart Resource Multiplier `1.3.0+mc1.20.1` does not expose a supported public Java API. Other mods and packs should use documented configuration and commands, project-owned category tags, `#smart_resource_drops:protected_entity_loot`, and the audited `#smart_resource_drops:shearing/standard_resources` certification surface rather than bind to public-looking implementation classes. A formal API is deferred until a concrete reproducible third-party case cannot be solved safely through those surfaces and supplies lifecycle, failure, versioning, documentation, and cross-mod test requirements.
+Smart Resource Multiplier `1.3.1+mc1.20.1` does not expose a supported public Java API. Other mods and packs should use documented configuration and commands, project-owned category tags, `#smart_resource_drops:protected_entity_loot`, and the audited `#smart_resource_drops:shearing/standard_resources` certification surface rather than bind to public-looking implementation classes. A formal API is deferred until a concrete reproducible third-party case cannot be solved safely through those surfaces and supplies lifecycle, failure, versioning, documentation, and cross-mod test requirements.
 
 ## Safe defaults
 

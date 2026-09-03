@@ -298,8 +298,10 @@ public final class MultiplierControl implements LayoutElement {
 
         decrementButton.setPosition(controlX, y);
         int valueAreaX = controlX + BUTTON_WIDTH + GAP;
-        int renderedValueWidth = Math.min(VALUE_WIDTH, font.width(valueWidget.getMessage()));
-        valueWidget.setPosition(valueAreaX + (VALUE_WIDTH - renderedValueWidth) / 2, y);
+        // StringWidget centers its text within its own width. Keep the widget
+        // anchored to the full value area rather than shifting that area by
+        // half of the unused text width.
+        valueWidget.setPosition(valueAreaX, y);
         incrementButton.setPosition(valueAreaX + VALUE_WIDTH + GAP, y);
     }
 }

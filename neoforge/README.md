@@ -19,7 +19,7 @@ From the repository root:
 py -3 tools/validate_neoforge_jar.py
 ```
 
-The playable output is `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar`. The final file is SRG-reobfuscated; `build/devlibs` is never a release source.
+The playable output is `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.1+mc1.20.1.jar`. The final file is SRG-reobfuscated; `build/devlibs` is never a release source.
 
 ## Target-native runtime gates
 

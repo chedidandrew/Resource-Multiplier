@@ -4,7 +4,25 @@ All notable changes are documented here.
 
 ## Unreleased
 
-## 1.3.0+mc1.20.1 - release candidate
+## 1.3.1+mc1.20.1 - 2026-09-03
+
+### Fixed
+
+- Moved subcategory scrollbars to the actual right edge of their responsive lists instead of the center-left of the screen.
+- Centered multiplier values correctly between the minus and plus buttons throughout the configuration interface.
+- Applied both corrections to the shared Fabric and NeoForge GUI.
+
+### Verification
+
+- Passed the shared metadata/UI regression checks, all 62 Fabric GameTests, both loader builds, and the physical Fabric and NeoForge client GUI tests.
+- Confirmed the corrected Fabric 1.20.1 interface through manual in-game testing before release.
+
+### Release status
+
+- Published separately from `backport/1.20.1` under tag `v1.3.1+mc1.20.1` with one Fabric JAR and one NeoForge JAR.
+- Uses `make_latest: false`, keeping Minecraft 26.2 tag `v1.3.0` as GitHub's **Latest** release.
+
+## 1.3.0+mc1.20.1 - 2026-09-02
 
 ### Added
 

@@ -29,8 +29,8 @@ assert package.PUBLIC_MOD_NAME == "Smart Resource Multiplier"
 assert package.PUBLIC_ARCHIVE_BASE == "SmartResourceMultiplier"
 assert package.PLAYABLE_JAR_BASE == "smart-resource-multiplier"
 assert package.NEOFORGE_PLAYABLE_JAR_BASE == "smart-resource-multiplier-neoforge"
-assert package.parse_properties(ROOT / "gradle.properties")["mod_version"] == "1.3.0+mc1.20.1"
-assert package.parse_properties(ROOT / "neoforge/gradle.properties")["mod_version"] == "1.3.0+mc1.20.1"
+assert package.parse_properties(ROOT / "gradle.properties")["mod_version"] == "1.3.1+mc1.20.1"
+assert package.parse_properties(ROOT / "neoforge/gradle.properties")["mod_version"] == "1.3.1+mc1.20.1"
 assert "com/chedidandrew/smartresourcedrops/config/ConfigValidator.class" in fabric.EXPECTED_PRODUCTION_CLASSES
 assert "com/chedidandrew/smartresourcedrops/config/ConfigValidator.class" in neo.EXPECTED_PRODUCTION_CLASSES
 assert "com/chedidandrew/smartresourcedrops/platform/fabric/FabricNetworking.class" not in neo.EXPECTED_PRODUCTION_CLASSES

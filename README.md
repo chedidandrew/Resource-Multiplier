@@ -79,7 +79,7 @@ These are real captures of the shared configuration interface used by both loade
 
 Download the current release from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier). Source code, the dedicated 1.20.1 backport release, and checksums are maintained on [GitHub](https://github.com/chedidandrew/Resource-Multiplier).
 
-Choose exactly one loader-specific file: `smart-resource-multiplier-1.3.0+mc1.20.1.jar` for Fabric or `smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar` for NeoForge. Remove older copies first and never install both files in the same Minecraft instance.
+Choose exactly one loader-specific file: `smart-resource-multiplier-1.3.1+mc1.20.1.jar` for Fabric or `smart-resource-multiplier-neoforge-1.3.1+mc1.20.1.jar` for NeoForge. Remove older copies first and never install both files in the same Minecraft instance.
 
 You can also [build the current source](#build-from-source). Do not download JARs from unofficial mirrors.
 
@@ -162,7 +162,7 @@ gradlew.bat clean build
 gradlew.bat -p neoforge clean build
 ```
 
-The stable backport source builds `build/libs/smart-resource-multiplier-1.3.0+mc1.20.1.jar` and `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar`. Launch Gradle with Java 21; Gradle automatically selects an installed Java 17 compilation/runtime toolchain—or downloads one when absent. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
+The stable backport source builds `build/libs/smart-resource-multiplier-1.3.1+mc1.20.1.jar` and `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.1+mc1.20.1.jar`. Launch Gradle with Java 21; Gradle automatically selects an installed Java 17 compilation/runtime toolchain—or downloads one when absent. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
 
 ## Documentation
 

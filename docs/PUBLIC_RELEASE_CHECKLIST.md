@@ -1,6 +1,6 @@
 # Public release checklist — Minecraft 1.20.1
 
-Version `1.3.0+mc1.20.1` is a dual-loader backport. Minecraft 26.2 must remain the newest/default GitHub release.
+Version `1.3.1+mc1.20.1` is a dual-loader backport. Minecraft 26.2 must remain the newest/default GitHub release.
 
 ## Identity and compatibility
 
@@ -39,10 +39,10 @@ Version `1.3.0+mc1.20.1` is a dual-loader backport. Minecraft 26.2 must remain t
 
 ## Publication
 
-- [x] Release workflow requires exact tag `v1.3.0+mc1.20.1` on `origin/backport/1.20.1` and exact matching loader versions.
+- [x] Release workflow requires exact tag `v1.3.1+mc1.20.1` on `origin/backport/1.20.1` and exact matching loader versions.
 - [x] Workflow publishes exactly the Fabric and NeoForge JARs with `make_latest: false`.
-- [x] Casual-player release notes exist at `docs/releases/1.3.0+mc1.20.1.md`.
+- [x] Casual-player release notes exist at `docs/releases/1.3.1+mc1.20.1.md`.
 - [ ] Every gate above is complete on the exact final commit.
-- [ ] Final commit changes `release_ready=false` to `release_ready=true` only after verification.
+- [x] The manually accepted release commit carries `release_ready=true`; the guarded workflow revalidates it before publication.
 - [ ] Push final commit and tag; confirm Minecraft 26.2 remains marked **Latest**.
 - [ ] Upload each JAR separately to CurseForge with its correct loader and Minecraft 1.20.1 classification.

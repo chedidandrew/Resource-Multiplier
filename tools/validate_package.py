@@ -119,7 +119,7 @@ REQUIRED_FILES = [
     "tools/run_neoforge_production_server_smoke.sh",
     ".github/workflows/build.yml",
     ".github/workflows/release.yml",
-    "docs/releases/1.3.0+mc1.20.1.md",
+    "docs/releases/1.3.1+mc1.20.1.md",
 ]
 for required in REQUIRED_FILES:
     if not (ROOT / required).is_file():
@@ -159,7 +159,7 @@ validate_exact(
         "loom_version": "1.17.20",
         "fabric_version": "0.92.12+1.20.1",
         "modmenu_version": "7.2.2",
-        "mod_version": "1.3.0+mc1.20.1",
+        "mod_version": "1.3.1+mc1.20.1",
         "archives_base_name": "smart-resource-multiplier",
     },
     "gradle.properties",
@@ -176,7 +176,7 @@ validate_exact(
         "java_version": "17",
         "neo_version": "1.20.1-47.1.106",
         "moddev_version": "2.0.146",
-        "mod_version": "1.3.0+mc1.20.1",
+        "mod_version": "1.3.1+mc1.20.1",
         "archives_base_name": "smart-resource-multiplier-neoforge",
     },
     "neoforge/gradle.properties",
@@ -424,7 +424,7 @@ require(
 bug_report = read(".github/ISSUE_TEMPLATE/bug_report.yml")
 require(
     bug_report,
-    ["1.3.0+mc1.20.1", 'placeholder: "1.20.1"', "Fabric Loader 0.19.5 or NeoForge 1.20.1-47.1.106", "Fabric API 0.92.12+1.20.1", 'placeholder: "17"'],
+    ["1.3.1+mc1.20.1", 'placeholder: "1.20.1"', "Fabric Loader 0.19.5 or NeoForge 1.20.1-47.1.106", "Fabric API 0.92.12+1.20.1", 'placeholder: "17"'],
     "1.20.1 bug-report template",
 )
 forbid(
@@ -441,7 +441,7 @@ require(
     "Fabric physical-client log gate",
 )
 workflow_release = read(".github/workflows/release.yml")
-require(workflow_release, ["v1.3.0+mc1.20.1", "origin/backport/1.20.1", "tag_commit\" = \"$branch_commit", "release_ready", "make_latest: false", "docs/releases/1.3.0+mc1.20.1.md", "timeout-minutes: 300", "Set up Java 21 Gradle runtime", "Switch to Java 17 for production server", "runPersistenceVerifyAbsentServerTest", "run_neoforge_production_server_smoke.sh", "tools/package_release.py --output dist", "dist/smart-resource-multiplier-1.3.0+mc1.20.1.jar", "dist/smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar"], "release workflow")
+require(workflow_release, ["v1.3.1+mc1.20.1", "origin/backport/1.20.1", "tag_commit\" = \"$branch_commit", "release_ready", "make_latest: false", "docs/releases/1.3.1+mc1.20.1.md", "timeout-minutes: 300", "Set up Java 21 Gradle runtime", "Switch to Java 17 for production server", "runPersistenceVerifyAbsentServerTest", "run_neoforge_production_server_smoke.sh", "tools/package_release.py --output dist", "dist/smart-resource-multiplier-1.3.1+mc1.20.1.jar", "dist/smart-resource-multiplier-neoforge-1.3.1+mc1.20.1.jar"], "release workflow")
 for workflow_name, workflow in (("build workflow", workflow_build), ("release workflow", workflow_release)):
     forbid(workflow, ["runClientGameTest", "runMigrationRestart", "runPackagedServerTest", "runPackagedClientTest", "1.21.11", "21.11.45", "forgeserveruserdev"], workflow_name)
 
@@ -562,6 +562,6 @@ if ERRORS:
         print(f"- {error}", file=sys.stderr)
     raise SystemExit(1)
 
-print("Package validation passed for Smart Resource Multiplier 1.3.0+mc1.20.1.")
+print("Package validation passed for Smart Resource Multiplier 1.3.1+mc1.20.1.")
 print("Targets: Fabric Loader 0.19.5/Fabric API 0.92.12+1.20.1 and NeoForge 1.20.1-47.1.106; Java 17.")
 print(f"Publication latch: {root_props.get('release_ready')} (release workflow independently requires true).")

@@ -67,7 +67,7 @@ The production-server gate installs Forge `1.20.1-47.1.106` from the verified of
 The release artifact is:
 
 ```text
-neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar
+neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.1+mc1.20.1.jar
 ```
 
 Never publish a file from `neoforge/build/devlibs`, never label the NeoForge artifact as Fabric-compatible, and never install both loader JARs in one instance.

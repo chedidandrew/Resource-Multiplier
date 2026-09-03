@@ -23,7 +23,7 @@ def production_source_classes(*source_roots: Path) -> set[str]:
 
 
 MOD_ID = "smart_resource_drops"
-VERSION = "1.3.0+mc1.20.1"
+VERSION = "1.3.1+mc1.20.1"
 ICON = "assets/smart_resource_drops/icon.png"
 LICENSE = "LICENSE_smart-resource-multiplier"
 MIXIN = "smart_resource_drops.mixins.json"

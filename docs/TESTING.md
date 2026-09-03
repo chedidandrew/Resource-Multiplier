@@ -87,4 +87,4 @@ Do not claim compatibility with an unnamed third-party mod from the vanilla/synt
 
 ## Publication rule
 
-Keep `release_ready=false` while any gate is pending or failing. Set it to true only on the exact fully verified commit, then create tag `v1.3.0+mc1.20.1`. The release workflow re-runs the complete suite, publishes exactly one Fabric JAR and one NeoForge JAR, and uses `make_latest: false` so the Minecraft 26.2 release remains first.
+Keep `release_ready=false` while any gate is pending or failing. Set it to true only on the exact fully verified commit, then create tag `v1.3.1+mc1.20.1`. The release workflow re-runs the complete suite, publishes exactly one Fabric JAR and one NeoForge JAR, and uses `make_latest: false` so the Minecraft 26.2 release remains first.

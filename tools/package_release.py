@@ -70,7 +70,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "gradle/wrapper/gradle-wrapper.properties",
         "docs/TESTING.md",
         "docs/PUBLIC_RELEASE_CHECKLIST.md",
-        "docs/releases/1.3.0+mc1.20.1.md",
+        "docs/releases/1.3.1+mc1.20.1.md",
         "src/main/resources/fabric.mod.json",
         "src/main/resources/pack.mcmeta",
         "src/main/resources/smart_resource_drops.mixins.json",
@@ -259,7 +259,7 @@ def _load_validator(name: str, relative: str):
 
 
 def validate_release_jar(jar_path: Path, expected_version: str | None = None) -> tuple[str, ...]:
-    if expected_version is not None and expected_version != "1.3.0+mc1.20.1":
+    if expected_version is not None and expected_version != "1.3.1+mc1.20.1":
         raise ReleasePackageError(f"unexpected Fabric version {expected_version}")
     validator = _load_validator("validate_fabric_jar", "tools/validate_fabric_jar.py")
     try:
@@ -339,8 +339,8 @@ def main() -> int:
         root_props = parse_properties(ROOT / "gradle.properties")
         neo_props = parse_properties(ROOT / "neoforge/gradle.properties")
         version = root_props["mod_version"]
-        if version != "1.3.0+mc1.20.1" or neo_props.get("mod_version") != version:
-            raise ReleasePackageError("Fabric and NeoForge must both use 1.3.0+mc1.20.1")
+        if version != "1.3.1+mc1.20.1" or neo_props.get("mod_version") != version:
+            raise ReleasePackageError("Fabric and NeoForge must both use 1.3.1+mc1.20.1")
         if root_props.get("minecraft_version") != "1.20.1" or root_props.get("java_version") != "17":
             raise ReleasePackageError("release packager is locked to Minecraft 1.20.1 / Java 17")
         require_empty_output_directory(output)

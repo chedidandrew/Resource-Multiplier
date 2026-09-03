@@ -140,6 +140,16 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
     }
 
     /**
+     * Minecraft 1.20.1 derives the vanilla scrollbar position from the full
+     * screen center, ignoring a list moved with {@link #setLeftPos(int)}.
+     * Anchor it to this responsive list's actual right edge instead.
+     */
+    @Override
+    protected int getScrollbarPosition() {
+        return getRowRight() + 4;
+    }
+
+    /**
      * Immutable data for one structured row. Empty components are allowed;
      * {@code tooltip} contains supplemental hover details.
      */
