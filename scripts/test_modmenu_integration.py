@@ -69,6 +69,7 @@ entity_rule_edit = read(CLIENT / "EntityRuleEditScreen.java")
 entity_filter = read(CLIENT / "EntityFilterScreen.java")
 sub_screen = read(CLIENT / "SmartDropsSubScreen.java")
 structured_list = read(CLIENT / "StructuredConfigList.java")
+multiplier_control = read(CLIENT / "MultiplierControl.java")
 networking = read(ROOT / "src/main/java/com/chedidandrew/smartresourcedrops/network/SmartDropsNetworking.java")
 fabric_networking = read(
     ROOT / "src/main/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricNetworking.java"
@@ -685,6 +686,12 @@ require(
 require(
     "setTooltipForNextFrame(tooltip, mouseX, mouseY)" not in structured_list,
     "Structured list tooltips must not send newline-bearing Components to the single-line overload",
+)
+multiplier_layout = method_body(multiplier_control, "repositionWidgets")
+require(
+    "valueWidget.setPosition(valueAreaX, y);" in multiplier_layout
+    and "renderedValueWidth" not in multiplier_layout,
+    "Multiplier values must remain centered in the fixed-width area between the adjustment buttons",
 )
 
 # Apply is staged, dirty-gated, and emits exactly one patch. Local/default authority

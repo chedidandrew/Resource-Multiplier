@@ -174,7 +174,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "tools/validate_neoforge_jar.py",
         "docs/NEOFORGE_PORT.md",
         "docs/releases/1.3.0.md",
-        "docs/releases/1.3.0+mc1.21.1.md",
+        "docs/releases/1.3.1+mc1.21.1.md",
         "neoforge/build.gradle",
         "neoforge/gradle.properties",
         "neoforge/settings.gradle",

@@ -37,4 +37,4 @@ Before publication, the final source commit must pass:
 - a clean packaged-JAR-only server and client test with no development source-set mod;
 - final JAR metadata, Java-21 bytecode, loader-isolation, fixture-isolation, icon, and license validation.
 
-The established filenames are `smart-resource-multiplier-1.3.0+mc1.21.1.jar` for Fabric and `smart-resource-multiplier-neoforge-1.3.0+mc1.21.1.jar` for NeoForge. Install only the file matching the chosen loader.
+The established filenames are `smart-resource-multiplier-1.3.1+mc1.21.1.jar` for Fabric and `smart-resource-multiplier-neoforge-1.3.1+mc1.21.1.jar` for NeoForge. Install only the file matching the chosen loader.

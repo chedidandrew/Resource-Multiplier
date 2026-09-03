@@ -1,14 +1,14 @@
 # Smart Resource Multiplier public release checklist
 
-## Smart Resource Multiplier 1.3.0+mc1.21.1
+## Smart Resource Multiplier 1.3.1+mc1.21.1
 
-Version `1.3.0+mc1.21.1` is the Minecraft 1.21.1 backport for Fabric and NeoForge. The two JARs share gameplay, schema 3 configuration, commands, GUI, safety budgets, and the `smart_resource_drops` compatibility identity while using loader-specific lifecycle, networking, and placed-block-storage adapters. Minecraft 26.2 remains the newest/default release on `main`.
+Version `1.3.1+mc1.21.1` is the Minecraft 1.21.1 backport for Fabric and NeoForge. The two JARs share gameplay, schema 3 configuration, commands, GUI, safety budgets, and the `smart_resource_drops` compatibility identity while using loader-specific lifecycle, networking, and placed-block-storage adapters. Minecraft 26.2 remains the newest/default release on `main`.
 
-This checklist is intentionally incomplete while `release_ready=false`. Check an item only after the named gate passes on the final source commit.
+The publication latch is authorized after local and manual acceptance. The guarded workflow reruns the named gates on the exact tagged commit before publishing.
 
 ## Identity and compatibility
 
-- [x] Fabric and NeoForge metadata target Minecraft 1.21.1, Java 21, and version `1.3.0+mc1.21.1`.
+- [x] Fabric and NeoForge metadata target Minecraft 1.21.1, Java 21, and version `1.3.1+mc1.21.1`.
 - [x] Both builds preserve mod ID and datapack/network namespace `smart_resource_drops`.
 - [x] Both builds preserve `config/smart_resource_drops.json`, schema 3, Java packages, `/smartdrops`, and `/smartdropsgui`.
 - [x] Both General screens say **Multiply Block XP** and **Block XP Multiplier**; Mob XP remains separately configured under Entity Drops.
@@ -38,11 +38,11 @@ This checklist is intentionally incomplete while `release_ready=false`. Check an
 
 ## Packaging and distribution
 
-- [x] Fabric and NeoForge `mod_version` values match at `1.3.0+mc1.21.1`; the source latch remains `release_ready=false` until every gate above passes.
+- [x] Fabric and NeoForge `mod_version` values match at `1.3.1+mc1.21.1`; the guarded release workflow revalidates every gate before publication.
 - [ ] A serialized clean release build produces exactly these two GitHub release assets and no dev/source JARs:
-  - `smart-resource-multiplier-1.3.0+mc1.21.1.jar`
-  - `smart-resource-multiplier-neoforge-1.3.0+mc1.21.1.jar`
+  - `smart-resource-multiplier-1.3.1+mc1.21.1.jar`
+  - `smart-resource-multiplier-neoforge-1.3.1+mc1.21.1.jar`
 - [x] CurseForge instructions require two separate uploads with the correct loader selected and warn never to install both JARs together.
-- [x] `backport/1.21.1` and exact tag `v1.3.0+mc1.21.1` are guarded so the tag must equal the tested branch tip; `make_latest: false` preserves Minecraft 26.2 tag `v1.3.0` as GitHub's **Latest** release.
+- [x] `backport/1.21.1` and exact tag `v1.3.1+mc1.21.1` are guarded so the tag must equal the tested branch tip; `make_latest: false` preserves Minecraft 26.2 tag `v1.3.0` as GitHub's **Latest** release.
 
 Record final commands, counts, file sizes, and SHA-256 values only after the release gate is green.

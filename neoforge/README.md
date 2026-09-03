@@ -44,7 +44,7 @@ Test entrypoints, probes, fixtures, and structures are run-only and must never a
 ## Playable artifact
 
 ```text
-neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.21.1.jar
+neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.1+mc1.21.1.jar
 ```
 
 Validate it from the repository root with:

@@ -160,7 +160,7 @@ required = [
     "docs/BRANDING.md",
     "docs/NEOFORGE_PORT.md",
     "docs/releases/1.3.0.md",
-    "docs/releases/1.3.0+mc1.21.1.md",
+    "docs/releases/1.3.1+mc1.21.1.md",
     "docs/releases/1.2.2.md",
     "docs/releases/1.2.3.md",
     "docs/images/general-config.webp",
@@ -305,7 +305,7 @@ form_markers = {
         "id: loader",
         "Mod loader version",
         "Loader-specific dependencies",
-        "placeholder: 1.3.0+mc1.21.1",
+        "placeholder: 1.3.1+mc1.21.1",
         'placeholder: "21"',
         "NeoForge",
         "Java version",
@@ -370,7 +370,7 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
-    "mod_version": "1.3.0+mc1.21.1",
+    "mod_version": "1.3.1+mc1.21.1",
     "minecraft_version": "1.21.1",
     "java_version": "21",
     "loader_version": "0.19.5",
@@ -1231,7 +1231,7 @@ for game_test_contract in (
     "client-category.success",
     "runPackagedServerTest",
     "runPackagedClientTest",
-    "Packaged NeoForge server candidate Smart Resource Multiplier 1.3.0+mc1.21.1",
+    "Packaged NeoForge server candidate Smart Resource Multiplier 1.3.1+mc1.21.1",
     "log.readLines().any { line -> line.contains('/ERROR]') }",
 ):
     if game_test_contract not in neoforge_build:
@@ -1244,13 +1244,13 @@ if "tags: ['v*']" not in release_workflow:
     fail("The release workflow must remain the sole v* tag workflow")
 if (
     "tools/package_release.py --output-dir dist" not in release_workflow
-    or "dist/smart-resource-multiplier-1.3.0+mc1.21.1.jar" not in release_workflow
-    or "dist/smart-resource-multiplier-neoforge-1.3.0+mc1.21.1.jar" not in release_workflow
+    or "dist/smart-resource-multiplier-1.3.1+mc1.21.1.jar" not in release_workflow
+    or "dist/smart-resource-multiplier-neoforge-1.3.1+mc1.21.1.jar" not in release_workflow
 ):
     fail("The release workflow must create and publish the validated deterministic release bundle")
 for required_release_gate in (
     '[[ "$GITHUB_REF" == refs/tags/* ]]',
-    "refs/tags/v1.3.0+mc1.21.1",
+    "refs/tags/v1.3.1+mc1.21.1",
     'test "$release_ready" = "true"',
     'test "$tag_commit" = "$branch_commit"',
     "refs/remotes/origin/backport/1.21.1",

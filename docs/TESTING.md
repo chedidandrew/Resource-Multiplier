@@ -1,6 +1,6 @@
 # Smart Resource Multiplier testing and verification
 
-## 1.3.0+mc1.21.1 Fabric and NeoForge backport
+## 1.3.1+mc1.21.1 Fabric and NeoForge backport
 
 This branch provides separate Fabric and NeoForge artifacts for Minecraft 1.21.1 using Java 21. The loaders share gameplay, schema 3 configuration, commands, payload policy, and GUI, with loader-specific entrypoints, networking, fake-player handling, and placement storage. Minecraft 26.2 remains the newest/default release line on `main`. Keep `release_ready=false` until every final gate passes on one commit.
 

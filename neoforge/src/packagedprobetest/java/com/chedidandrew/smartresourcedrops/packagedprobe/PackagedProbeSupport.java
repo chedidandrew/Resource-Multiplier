@@ -7,7 +7,7 @@ import java.nio.file.StandardOpenOption;
 import net.neoforged.fml.ModList;
 
 final class PackagedProbeSupport {
-    private static final String EXPECTED_VERSION = "1.3.0+mc1.21.1";
+    private static final String EXPECTED_VERSION = "1.3.1+mc1.21.1";
 
     private PackagedProbeSupport() {
     }

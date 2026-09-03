@@ -4,7 +4,24 @@ All notable changes are documented here.
 
 ## Unreleased
 
-## 1.3.0+mc1.21.1 - pending
+## 1.3.1+mc1.21.1 - 2026-09-03
+
+### Fixed
+
+- Centered multiplier values correctly between the minus and plus buttons throughout the configuration interface.
+- Kept the corrected layout identical between the Fabric and NeoForge builds.
+
+### Verification
+
+- Passed the shared metadata/UI regression checks, all 64 Fabric GameTests, both loader builds, and the physical Fabric and NeoForge client GUI tests.
+- Confirmed the corrected NeoForge 1.21.1 interface through manual in-game testing before release.
+
+### Release status
+
+- Published separately from `backport/1.21.1` under tag `v1.3.1+mc1.21.1` with one Fabric JAR and one NeoForge JAR.
+- Uses `make_latest: false`, keeping Minecraft 26.2 tag `v1.3.0` as GitHub's **Latest** release.
+
+## 1.3.0+mc1.21.1 - 2026-09-02
 
 ### Added
 

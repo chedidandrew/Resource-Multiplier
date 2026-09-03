@@ -1,6 +1,6 @@
 # Smart Resource Multiplier compatibility notes
 
-Smart Resource Multiplier `1.3.0+mc1.21.1` targets Minecraft 1.21.1 on Fabric and NeoForge. Both builds share rule resolvers, safety budgets, schema 3 configuration, commands, and GUI; loader-specific adapters handle lifecycle, networking, fake-player detection, and placed-block storage. Minecraft 26.2 remains the newest/default release on `main`.
+Smart Resource Multiplier `1.3.1+mc1.21.1` targets Minecraft 1.21.1 on Fabric and NeoForge. Both builds share rule resolvers, safety budgets, schema 3 configuration, commands, and GUI; loader-specific adapters handle lifecycle, networking, fake-player detection, and placed-block storage. Minecraft 26.2 remains the newest/default release on `main`.
 
 Compatibility evidence is version- and loader-specific. This document does not claim compatibility with every mod, datapack, server stack, or newer Minecraft world.
 
