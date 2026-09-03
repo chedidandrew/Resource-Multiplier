@@ -310,7 +310,6 @@ public final class SmartDropsConfigLoadingScreen extends Screen {
         return false;
     }
 
-    @Override
     public boolean isInGameUi() {
         return this.minecraft != null && this.minecraft.level != null;
     }

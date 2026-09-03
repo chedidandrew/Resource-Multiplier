@@ -40,6 +40,15 @@ public final class PlacedBlockData {
         return positions.isEmpty();
     }
 
+    public void replaceWith(final PlacedBlockData other) {
+        positions.clear();
+        positions.addAll(other.positions);
+    }
+
+    public void mergeFrom(final PlacedBlockData other) {
+        positions.addAll(other.positions);
+    }
+
     private List<Integer> asSortedList() {
         ArrayList<Integer> sorted = new ArrayList<>(positions);
         sorted.sort(Integer::compareTo);

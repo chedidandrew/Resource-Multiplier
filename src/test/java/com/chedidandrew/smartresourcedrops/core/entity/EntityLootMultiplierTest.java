@@ -1,7 +1,6 @@
 package com.chedidandrew.smartresourcedrops.core.entity;
 
 import net.minecraft.SharedConstants;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.Item;
@@ -40,9 +39,8 @@ final class EntityLootMultiplierTest {
 
     @Test
     void highMultiplierPreservesComponentsAndConsolidatesToLegalStacks() {
-        ItemStack source = stack(Items.DIAMOND, 2);
-        source.set(DataComponents.CUSTOM_NAME, Component.literal("preserved"));
-        source.set(DataComponents.MAX_STACK_SIZE, 16);
+        ItemStack source = stack(Items.SNOWBALL, 2);
+        source.setHoverName(Component.literal("preserved"));
         List<ItemStack> output = new ArrayList<>();
 
         EntityLootMultiplier.emit(output::add, source, 64);
@@ -50,7 +48,7 @@ final class EntityLootMultiplierTest {
         assertEquals(128, output.stream().mapToInt(ItemStack::getCount).sum());
         assertEquals(8, output.size());
         assertTrue(output.stream().allMatch(stack -> stack.getCount() <= stack.getMaxStackSize()));
-        assertTrue(output.stream().allMatch(stack -> ItemStack.isSameItemSameComponents(source, stack)));
+        assertTrue(output.stream().allMatch(stack -> ItemStack.isSameItemSameTags(source, stack)));
         assertEquals(2, source.getCount());
     }
 
@@ -85,8 +83,7 @@ final class EntityLootMultiplierTest {
                 output::add, 64, () -> true, warnings::incrementAndGet);
 
         for (int index = 0; index < 65; index++) {
-            ItemStack unstackable = stack(Items.DIAMOND, 1);
-            unstackable.set(DataComponents.MAX_STACK_SIZE, 1);
+            ItemStack unstackable = stack(Items.DIAMOND_SWORD, 1);
             wrapped.accept(unstackable);
         }
         wrapped.accept(stack(Items.DIAMOND, 2));
@@ -108,29 +105,26 @@ final class EntityLootMultiplierTest {
 
         for (int index = 0; index < 42; index++) {
             ItemStack largeStack = stack(Items.DIAMOND, 99);
-            largeStack.set(DataComponents.MAX_STACK_SIZE, 99);
             wrapped.accept(largeStack);
         }
         wrapped.accept(stack(Items.DIAMOND, 1));
 
         assertTrue(controller.budgetExceeded());
         assertEquals(259_776L, controller.multipliedItems());
-        assertEquals(2_624L, controller.multipliedStacks());
+        assertEquals(4_059L, controller.multipliedStacks());
         assertEquals(259_876, output.stream().mapToInt(ItemStack::getCount).sum());
-        assertEquals(2_626, output.size());
+        assertEquals(4_061, output.size());
         assertEquals(1, warnings.get());
     }
 
     @Test
-    void protectedOutputTagHasStableDatapackIdentifier() {
+    void protectedOutputTagHasStableDatapackResourceLocation() {
         assertEquals(
                 "smart_resource_drops:protected_entity_loot",
                 EntityLootTags.PROTECTED_OUTPUTS.location().toString());
     }
 
     private static ItemStack stack(Item item, int count) {
-        ItemStack stack = new ItemStack(item, count);
-        stack.set(DataComponents.MAX_STACK_SIZE, 64);
-        return stack;
+        return new ItemStack(item, count);
     }
 }

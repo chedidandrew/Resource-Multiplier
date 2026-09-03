@@ -11,29 +11,24 @@ import com.chedidandrew.smartresourcedrops.core.shearing.ShearingRuleTrace;
 import com.chedidandrew.smartresourcedrops.core.shearing.ShearingSource;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.fabricmc.api.EnvType;
-import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.minecraft.gametest.framework.GameTest;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.dispenser.BlockSource;
-import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.cow.MushroomCow;
-import net.minecraft.world.entity.animal.golem.CopperGolem;
-import net.minecraft.world.entity.animal.golem.SnowGolem;
-import net.minecraft.world.entity.animal.sheep.Sheep;
+import net.minecraft.world.entity.animal.MushroomCow;
+import net.minecraft.world.entity.animal.SnowGolem;
+import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.monster.skeleton.Bogged;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -58,7 +53,7 @@ public final class SmartResourceDropsShearingGameTests {
     private static final BlockPos ENTITY_POS = new BlockPos(4, 2, 4);
     private static final BlockPos DISPENSER_POS = new BlockPos(3, 2, 4);
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void freshManualDefaultInheritsGlobalTwoForRealSheep(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -76,7 +71,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void disabledManualSourceKeepsRealSheepVanilla(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -97,7 +92,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void zeroMultiplierSuppressesWoolButCompletesShearing(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -114,7 +109,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void oneMultiplierPreservesVanillaSheepBounds(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -127,7 +122,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void twoMultiplierScalesFinalVanillaSheepLoot(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -141,7 +136,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest(structure = "smart_resource_drops_gametest:wide")
+    @GameTest(template = "smart_resource_drops_gametest:wide")
     public void sixtyFourMultiplierUsesLegalStacksForRealSheep(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -159,7 +154,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void coloredSheepKeepsItsWoolIdentityAndComponents(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -178,7 +173,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void babySheepCannotBeShearedOrDamageTheTool(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -196,7 +191,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void alreadyShearedSheepCannotRepeatTheAction(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -215,7 +210,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void realManualShearingDamagesTheToolExactlyOnce(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -232,7 +227,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void nonShearsInteractionNeverStartsAQualifiedAction(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -249,7 +244,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void disabledVanillaDispenserSourceKeepsSheepVanilla(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -270,7 +265,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest(structure = "smart_resource_drops_gametest:wide")
+    @GameTest(template = "smart_resource_drops_gametest:wide")
     public void enabledVanillaDispenserSourceMultipliesSheep(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -291,7 +286,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void dispenserBeehivePathIsNeverTreatedAsEntityShearing(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -318,7 +313,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void dispenserLeashRemovalStopsBeforeEntityShearing(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -345,7 +340,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void mooshroomTransformationRemainsFixedVanillaOutput(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -365,7 +360,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void snowGolemPumpkinRemovalRemainsFixedVanillaOutput(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -381,43 +376,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
-    public void boggedMushroomRemovalRemainsFixedVanillaOutput(final GameTestHelper helper) {
-        final SmartDropsConfig previous = ConfigManager.snapshot();
-        try {
-            prepareSpecialOverride(helper, "minecraft:bogged");
-            final Bogged bogged = helper.spawnWithNoFreeWill(EntityType.BOGGED, ENTITY_POS);
-            bogged.setSheared(false);
-            shearWithPlayer(helper, bogged, new ItemStack(Items.SHEARS));
-            helper.assertFalse(bogged.readyForShearing(), "Bogged stayed ready after shearing");
-            final int mushrooms = itemTotal(helper, ENTITY_POS, Items.RED_MUSHROOM)
-                    + itemTotal(helper, ENTITY_POS, Items.BROWN_MUSHROOM);
-            helper.assertTrue(mushrooms == 2,
-                    "Special bogged produced " + mushrooms + " mushrooms instead of vanilla 2");
-        } finally {
-            restoreConfiguration(previous);
-        }
-        helper.succeed();
-    }
-
-    @GameTest
-    public void copperGolemDirectEquipmentOutputRemainsSingle(final GameTestHelper helper) {
-        final SmartDropsConfig previous = ConfigManager.snapshot();
-        try {
-            prepareSpecialOverride(helper, "minecraft:copper_golem");
-            final CopperGolem golem = helper.spawnWithNoFreeWill(EntityType.COPPER_GOLEM, ENTITY_POS);
-            golem.setItemSlot(CopperGolem.EQUIPMENT_SLOT_ANTENNA, new ItemStack(Items.POPPY));
-            helper.assertTrue(golem.readyForShearing(), "Copper golem antenna fixture was not shearable");
-            shearWithPlayer(helper, golem, new ItemStack(Items.SHEARS));
-            helper.assertFalse(golem.readyForShearing(), "Copper golem retained its antenna item");
-            assertItemTotal(helper, ENTITY_POS, Items.POPPY, 1, "special copper golem");
-        } finally {
-            restoreConfiguration(previous);
-        }
-        helper.succeed();
-    }
-
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void shearingConfigurationCannotAffectBlockDropPipeline(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -452,7 +411,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void resolverCertifiesSheepThroughTheProductionStandardTag(final GameTestHelper helper) {
         final ShearingRuleTrace trace = ShearingRuleResolver.trace(
                 SmartDropsConfig.defaults(),
@@ -465,7 +424,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void resolverTreatsEveryKnownVanillaSpecialAsFixedVanilla(final GameTestHelper helper) {
         final SmartDropsConfig config = SmartDropsConfig.defaults();
         config.manualShearingDropsEnabled = true;
@@ -473,9 +432,7 @@ public final class SmartResourceDropsShearingGameTests {
         config.inheritDefaultShearingMultiplier = false;
         final List<EntityType<?>> specialTypes = List.of(
                 EntityType.MOOSHROOM,
-                EntityType.SNOW_GOLEM,
-                EntityType.BOGGED,
-                EntityType.COPPER_GOLEM);
+                EntityType.SNOW_GOLEM);
         for (EntityType<?> type : specialTypes) {
             final ShearingRuleTrace trace = ShearingRuleResolver.trace(
                     config,
@@ -489,7 +446,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void resolverSpecialTagWinsAConflictingStandardTag(final GameTestHelper helper) {
         final SmartDropsConfig config = SmartDropsConfig.defaults();
         config.shearingEntityMultipliers.put("example:conflict", 64);
@@ -507,7 +464,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void resolverUnknownOverrideCannotBypassCertification(final GameTestHelper helper) {
         final SmartDropsConfig config = SmartDropsConfig.defaults();
         config.shearingEntityMultipliers.put("example:uncertified", 64);
@@ -524,7 +481,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void resolverSafeExactOverrideWinsTheShearingDefault(final GameTestHelper helper) {
         final SmartDropsConfig config = SmartDropsConfig.defaults();
         config.inheritDefaultShearingMultiplier = false;
@@ -543,7 +500,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void resolverManualAndAutomatedFlagsRemainIndependent(final GameTestHelper helper) {
         final SmartDropsConfig config = SmartDropsConfig.defaults();
         config.manualShearingDropsEnabled = false;
@@ -569,7 +526,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void resolverMasterGateAndInheritedGlobalRemainExplicit(final GameTestHelper helper) {
         final SmartDropsConfig config = SmartDropsConfig.defaults();
         config.globalMultiplier = 6;
@@ -599,7 +556,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void outputBudgetAllowsTheExactOneThousandTwentyFourItemBoundary(final GameTestHelper helper) {
         final ShearingOutputBudget.Result result = ShearingOutputBudget.plan(
                 List.of(List.of(new ItemStack(Items.DIAMOND, 16))),
@@ -607,12 +564,12 @@ public final class SmartResourceDropsShearingGameTests {
         helper.assertTrue(result.fits(), "Exact 1024-item output was rejected");
         helper.assertTrue(result.multipliedItems() == 1_024L,
                 "Exact item-boundary plan counted the wrong output");
-        helper.assertTrue(total(result.outputBatches().getFirst()) == 1_024,
+        helper.assertTrue(total(result.outputBatches().get(0)) == 1_024,
                 "Exact item-boundary plan materialized the wrong count");
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void outputBudgetRejectsItemOverflowAtomically(final GameTestHelper helper) {
         final ShearingOutputBudget.Result result = ShearingOutputBudget.plan(
                 List.of(List.of(new ItemStack(Items.DIAMOND, 17))),
@@ -625,7 +582,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void outputBudgetRejectsSourceStackOverflowAtomically(final GameTestHelper helper) {
         final List<ItemStack> source = new ArrayList<>();
         for (int index = 0; index < 257; index++) {
@@ -640,7 +597,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void outputBudgetRejectsMaterializedStackOverflowAtomically(final GameTestHelper helper) {
         final ShearingOutputBudget.Result result = ShearingOutputBudget.plan(
                 List.of(List.of(new ItemStack(Items.SHEARS, 129))),
@@ -654,7 +611,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void outputBufferPreservesEachVanillaConsumerBatch(final GameTestHelper helper) {
         final ShearingGameTestAccess.BufferRun run = ShearingGameTestAccess.complete(
                 3,
@@ -675,7 +632,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void outputBufferFallsBackTheWholeActionAcrossBatches(final GameTestHelper helper) {
         final ShearingGameTestAccess.BufferRun run = ShearingGameTestAccess.complete(
                 64,
@@ -690,7 +647,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void outputBufferAbortRestoresOriginalsAfterAnActionException(final GameTestHelper helper) {
         final ShearingGameTestAccess.BufferRun run = ShearingGameTestAccess.abort(
                 8,
@@ -705,7 +662,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void nestedShearingContextsRestoreTheOuterIdentity(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -739,7 +696,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void disabledSameTargetInnerSourceMasksAndRestoresEligibleOuter(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -794,7 +751,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void mismatchedEntityCannotCaptureAnotherShearingActionOutput(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -821,7 +778,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void shearingStatusCommandIsReadOnlyAndServerAuthoritative(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -848,7 +805,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void shearingAdminCommandsMutateOnlyAuthoritativeShearingFields(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -881,7 +838,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void shearingAdminRejectsSpecialAddsButAllowsTheirRemoval(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -913,7 +870,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void entityInspectionReportsShearingWithoutMutation(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -953,8 +910,8 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
-    public void dedicatedServerAuditsAllThreeShearingMixins(final GameTestHelper helper) {
+    @GameTest(template = "fabric-gametest-api-v1:empty")
+    public void dedicatedServerAuditsAllShearingMixins(final GameTestHelper helper) {
         final FabricLoader loader = FabricLoader.getInstance();
         helper.assertTrue(loader.getEnvironmentType() == EnvType.SERVER,
                 "Shearing GameTests must run on the dedicated-server environment");
@@ -962,7 +919,7 @@ public final class SmartResourceDropsShearingGameTests {
         for (String resource : List.of(
                 "com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.class",
                 "com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.class",
-                "com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.class")) {
+                "com/chedidandrew/smartresourcedrops/mixin/EntityShearingDropMixin.class")) {
             helper.assertTrue(classLoader.getResource(resource) != null,
                     "Dedicated server omitted required shearing mixin class " + resource);
         }
@@ -970,7 +927,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void resetDefaultsEnableOnlyManualShearingAndClearOverrides(final GameTestHelper helper) {
         final SmartDropsConfig defaults = SmartDropsConfig.defaults();
         helper.assertTrue(defaults.manualShearingDropsEnabled,
@@ -1052,11 +1009,14 @@ public final class SmartResourceDropsShearingGameTests {
         final DispenserBlockEntity blockEntity = (DispenserBlockEntity) helper.getLevel()
                 .getBlockEntity(dispenserPos);
         helper.assertTrue(blockEntity != null, "Could not create the real dispenser block entity");
-        final DispenseItemBehavior behavior = DispenserBlock.DISPENSER_REGISTRY.get(Items.SHEARS);
-        helper.assertTrue(behavior != null, "Vanilla shears dispenser behavior was not registered");
         final ItemStack shears = new ItemStack(Items.SHEARS);
-        behavior.dispense(new BlockSource(helper.getLevel(), dispenserPos, state, blockEntity), shears);
-        return shears;
+        blockEntity.setItem(0, shears);
+        ((DispenserBlock) Blocks.DISPENSER).tick(
+                state,
+                helper.getLevel(),
+                dispenserPos,
+                helper.getLevel().getRandom());
+        return blockEntity.getItem(0);
     }
 
     private static int executeCommand(
@@ -1078,7 +1038,7 @@ public final class SmartResourceDropsShearingGameTests {
         final double horizontal = Math.sqrt(xDelta * xDelta + zDelta * zDelta);
         final float yaw = (float) Math.toDegrees(Math.atan2(zDelta, xDelta)) - 90.0F;
         final float pitch = (float) -Math.toDegrees(Math.atan2(target.y - eye.y, horizontal));
-        player.absSnapRotationTo(yaw, pitch);
+        player.absMoveTo(player.getX(), player.getY(), player.getZ(), yaw, pitch);
     }
 
     private static void assertWoolMultiple(

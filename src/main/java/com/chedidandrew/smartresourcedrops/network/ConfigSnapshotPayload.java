@@ -1,9 +1,8 @@
 package com.chedidandrew.smartresourcedrops.network;
 
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
 public record ConfigSnapshotPayload(
         int requestId,
@@ -11,29 +10,38 @@ public record ConfigSnapshotPayload(
         String json,
         boolean editable,
         PatchResult patchResult
-) implements CustomPacketPayload {
+) implements ConfigPayload {
     public static final int MAX_JSON_LENGTH = 1_048_576;
 
-    public static final Type<ConfigSnapshotPayload> TYPE =
-            new Type<>(SmartResourceDrops.id("config_snapshot"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, ConfigSnapshotPayload> CODEC = StreamCodec.of(
-            (buffer, payload) -> {
-                buffer.writeVarInt(payload.requestId());
-                buffer.writeVarLong(payload.revision());
-                buffer.writeUtf(payload.json(), MAX_JSON_LENGTH);
-                buffer.writeBoolean(payload.editable());
-                buffer.writeVarInt(payload.patchResult().ordinal());
-            },
-            buffer -> new ConfigSnapshotPayload(
-                    buffer.readVarInt(),
-                    buffer.readVarLong(),
-                    buffer.readUtf(MAX_JSON_LENGTH),
-                    buffer.readBoolean(),
-                    PatchResult.fromOrdinal(buffer.readVarInt())));
+    public static final ResourceLocation TYPE = SmartResourceDrops.id("config_snapshot");
+
+    public ConfigSnapshotPayload {
+        if (requestId <= 0 || revision < 0L || json == null || patchResult == null) {
+            throw new IllegalArgumentException("Invalid logical config snapshot");
+        }
+    }
+
+    public static ConfigSnapshotPayload read(final FriendlyByteBuf buffer) {
+        return new ConfigSnapshotPayload(
+                buffer.readVarInt(),
+                buffer.readVarLong(),
+                buffer.readUtf(MAX_JSON_LENGTH),
+                buffer.readBoolean(),
+                PatchResult.fromOrdinal(buffer.readVarInt()));
+    }
 
     @Override
-    public Type<ConfigSnapshotPayload> type() {
+    public ResourceLocation id() {
         return TYPE;
+    }
+
+    @Override
+    public void write(final FriendlyByteBuf buffer) {
+        buffer.writeVarInt(requestId);
+        buffer.writeVarLong(revision);
+        buffer.writeUtf(json, MAX_JSON_LENGTH);
+        buffer.writeBoolean(editable);
+        buffer.writeVarInt(patchResult.ordinal());
     }
 
     public enum PatchResult {
@@ -47,7 +55,10 @@ public record ConfigSnapshotPayload(
 
         static PatchResult fromOrdinal(int ordinal) {
             PatchResult[] values = values();
-            return ordinal >= 0 && ordinal < values.length ? values[ordinal] : REJECTED;
+            if (ordinal < 0 || ordinal >= values.length) {
+                throw new IllegalArgumentException("Unknown config mutation result");
+            }
+            return values[ordinal];
         }
     }
 }

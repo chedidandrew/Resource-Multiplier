@@ -691,7 +691,7 @@ public final class ConfigValidator {
                     "The most recent load exceeded a rule-domain budget; a bounded candidate was prepared"
                             + backupSuffix(diagnostics) + "."));
         }
-        final int invalidEntries = diagnostics.invalidIdentifiersRemoved()
+        final int invalidEntries = diagnostics.invalidResourceLocationsRemoved()
                 + diagnostics.invalidCategoryNamesRemoved()
                 + diagnostics.invalidPlayerOverridesRemoved();
         if (invalidEntries > 0) {

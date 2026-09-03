@@ -3,7 +3,7 @@ package com.chedidandrew.smartresourcedrops.core.provenance;
 import java.util.Set;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.HoneycombItem;
 import net.minecraft.world.level.block.Block;
@@ -49,8 +49,8 @@ public final class ProvenanceTransitionPolicy {
         if (oldState.is(BlockTags.LOGS) && newState.is(BlockTags.LOGS)) {
             return true;
         }
-        final Identifier oldId = BuiltInRegistries.BLOCK.getKey(oldState.getBlock());
-        final Identifier newId = BuiltInRegistries.BLOCK.getKey(newState.getBlock());
+        final ResourceLocation oldId = BuiltInRegistries.BLOCK.getKey(oldState.getBlock());
+        final ResourceLocation newId = BuiltInRegistries.BLOCK.getKey(newState.getBlock());
         if (!oldId.getNamespace().equals(newId.getNamespace())) {
             return false;
         }
@@ -80,24 +80,24 @@ public final class ProvenanceTransitionPolicy {
     }
 
     private static boolean isConcreteTransition(final BlockState oldState, final BlockState newState) {
-        final Identifier oldId = BuiltInRegistries.BLOCK.getKey(oldState.getBlock());
-        final Identifier newId = BuiltInRegistries.BLOCK.getKey(newState.getBlock());
+        final ResourceLocation oldId = BuiltInRegistries.BLOCK.getKey(oldState.getBlock());
+        final ResourceLocation newId = BuiltInRegistries.BLOCK.getKey(newState.getBlock());
         return oldId.getNamespace().equals(newId.getNamespace())
             && oldId.getPath().endsWith("_concrete_powder")
             && oldId.getPath().replace("_concrete_powder", "_concrete").equals(newId.getPath());
     }
 
     private static boolean isCoralTransition(final Block oldBlock, final Block newBlock) {
-        final Identifier oldId = BuiltInRegistries.BLOCK.getKey(oldBlock);
-        final Identifier newId = BuiltInRegistries.BLOCK.getKey(newBlock);
+        final ResourceLocation oldId = BuiltInRegistries.BLOCK.getKey(oldBlock);
+        final ResourceLocation newId = BuiltInRegistries.BLOCK.getKey(newBlock);
         return oldId.getNamespace().equals(newId.getNamespace())
             && oldId.getPath().replace("dead_", "").equals(newId.getPath().replace("dead_", ""))
             && oldId.getPath().contains("coral");
     }
 
     private static boolean isCauldronTransition(final Block oldBlock, final Block newBlock) {
-        final Identifier oldId = BuiltInRegistries.BLOCK.getKey(oldBlock);
-        final Identifier newId = BuiltInRegistries.BLOCK.getKey(newBlock);
+        final ResourceLocation oldId = BuiltInRegistries.BLOCK.getKey(oldBlock);
+        final ResourceLocation newId = BuiltInRegistries.BLOCK.getKey(newBlock);
         return oldId.getNamespace().equals(newId.getNamespace())
             && oldId.getPath().endsWith("cauldron")
             && newId.getPath().endsWith("cauldron");

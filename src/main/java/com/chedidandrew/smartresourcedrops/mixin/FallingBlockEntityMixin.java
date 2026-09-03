@@ -5,12 +5,11 @@ import com.chedidandrew.smartresourcedrops.provenance.ProtectedFallingBlock;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -71,13 +70,13 @@ abstract class FallingBlockEntityMixin implements ProtectedFallingBlock {
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
-    private void smartResourceDrops$saveProtectedOrigin(ValueOutput output, CallbackInfo callback) {
-        output.putBoolean(SMART_RESOURCE_DROPS_PROTECTED, smartResourceDrops$protectedOrigin);
+    private void smartResourceDrops$saveProtectedOrigin(CompoundTag tag, CallbackInfo callback) {
+        tag.putBoolean(SMART_RESOURCE_DROPS_PROTECTED, smartResourceDrops$protectedOrigin);
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
-    private void smartResourceDrops$loadProtectedOrigin(ValueInput input, CallbackInfo callback) {
-        smartResourceDrops$protectedOrigin = input.getBooleanOr(SMART_RESOURCE_DROPS_PROTECTED, false);
+    private void smartResourceDrops$loadProtectedOrigin(CompoundTag tag, CallbackInfo callback) {
+        smartResourceDrops$protectedOrigin = tag.getBoolean(SMART_RESOURCE_DROPS_PROTECTED);
     }
 
     @Override

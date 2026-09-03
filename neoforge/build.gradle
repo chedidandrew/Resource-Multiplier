@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version "${moddev_version}"
+    id 'net.neoforged.moddev.legacyforge' version "${moddev_version}"
 }
 
 version = mod_version
@@ -28,7 +28,7 @@ def gameTestSourceSet = sourceSets.create('gametest')
 gameTestSourceSet.java {
     setSrcDirs(['../src/gametest/java', 'src/gametest/java'])
     exclude('**/SmartDropsClientGameTest.java')
-    exclude('**/mixin/client/**')
+    exclude('**/mixin/**')
     exclude('**/fixture/FabricGameTestEntityFixtures.java')
     exclude('**/fixture/FabricGameTestBlockLootFixtures.java')
 }
@@ -62,18 +62,15 @@ def optionalServerOnlyClientDirectory =
         layout.buildDirectory.dir('optional-channel-test/server-only/client')
 def oversizedWireServerDirectory = layout.buildDirectory.dir('oversized-wire-test/server')
 def oversizedWireClientDirectory = layout.buildDirectory.dir('oversized-wire-test/client')
-def migrationTestDirectory = layout.buildDirectory.dir('migration-server-test')
-def migrationFixtureRelativePath =
-        'src/test/resources/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64'
-def migrationFixtureSha256 =
-        'c390fc16519a7b9f9a1fc29feab66209bca96b5db8bff6e659b239d16d36a38d'
-def migrationWorldName = 'migration-smoke-world'
+def persistenceTestDirectory = layout.buildDirectory.dir('persistence-server-test')
 def prepareClientCategoryTest = tasks.register('prepareClientCategoryTest') {
     outputs.upToDateWhen { false }
     doLast {
         final File directory = clientCategoryTestDirectory.get().asFile
         project.delete(directory)
         directory.mkdirs()
+        new File(directory, 'options.txt').setText(
+                'onboardAccessibility:false\nguiScale:1\n', 'UTF-8')
     }
 }
 def prepareMultiplayerServerTest = tasks.register('prepareMultiplayerServerTest') {
@@ -194,88 +191,30 @@ def prepareOversizedWireClientTest = tasks.register('prepareOversizedWireClientT
         new File(directory, 'options.txt').setText('onboardAccessibility:false\n', 'UTF-8')
     }
 }
-def prepareMigrationServerTest = tasks.register('prepareMigrationServerTest') {
+def preparePersistenceServerTest = tasks.register('preparePersistenceServerTest') {
     outputs.upToDateWhen { false }
     doLast {
-        final java.nio.file.Path buildRoot = layout.buildDirectory.get().asFile
-                .toPath()
-                .toAbsolutePath()
-                .normalize()
-        final java.nio.file.Path testRoot = migrationTestDirectory.get().asFile
-                .toPath()
-                .toAbsolutePath()
-                .normalize()
-        if (testRoot == buildRoot || !testRoot.startsWith(buildRoot)) {
-            throw new GradleException("Refusing to recreate migration test directory outside ${buildRoot}: ${testRoot}")
-        }
-
-        project.delete(testRoot.toFile())
-        java.nio.file.Files.createDirectories(testRoot)
-        java.nio.file.Files.writeString(
-                testRoot.resolve('eula.txt'),
-                'eula=true\n',
-                java.nio.charset.StandardCharsets.UTF_8)
-        java.nio.file.Files.writeString(
-                testRoot.resolve('server.properties'),
-                '''\
+        final File directory = persistenceTestDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
+        new File(directory, 'server.properties').setText('''\
 online-mode=false
 server-port=0
-level-name=migration-smoke-world
+level-name=persistence-smoke-world
 gamemode=creative
 difficulty=peaceful
 spawn-protection=0
 view-distance=2
 simulation-distance=2
-motd=Smart Resource Multiplier migration restart smoke test
-''',
-                java.nio.charset.StandardCharsets.UTF_8)
-
-        final File fixture = layout.projectDirectory.file(migrationFixtureRelativePath).asFile
-        final byte[] fixtureBytes = java.util.Base64.getMimeDecoder().decode(
-                fixture.getText('UTF-8').getBytes(java.nio.charset.StandardCharsets.UTF_8))
-        final String actualSha256 = java.util.HexFormat.of().formatHex(
-                java.security.MessageDigest.getInstance('SHA-256').digest(fixtureBytes))
-        if (actualSha256 != migrationFixtureSha256) {
-            throw new GradleException(
-                    "Fabric migration fixture SHA-256 mismatch: expected ${migrationFixtureSha256}, got ${actualSha256}")
-        }
-
-        final ByteArrayOutputStream compressedBuffer = new ByteArrayOutputStream()
-        new java.util.zip.DeflaterOutputStream(compressedBuffer).withCloseable { stream ->
-            stream.write(fixtureBytes)
-        }
-        final byte[] compressed = compressedBuffer.toByteArray()
-        final int recordLength = 1 + compressed.length
-        final int sectorCount = Math.floorDiv(4 + recordLength + 4095, 4096)
-        if (sectorCount < 1 || sectorCount > 255) {
-            throw new GradleException("Fabric migration fixture needs unsupported MCA sector count ${sectorCount}")
-        }
-
-        final int chunkX = -554625
-        final int chunkZ = -233041
-        final int chunkSlot = (chunkX & 31) + ((chunkZ & 31) * 32)
-        final java.nio.ByteBuffer regionBytes = java.nio.ByteBuffer
-                .allocate(8192 + sectorCount * 4096)
-                .order(java.nio.ByteOrder.BIG_ENDIAN)
-        regionBytes.putInt(chunkSlot * 4, (2 << 8) | sectorCount)
-        regionBytes.putInt(4096 + chunkSlot * 4, 1788300953)
-        regionBytes.position(8192)
-        regionBytes.putInt(recordLength)
-        regionBytes.put((byte) 2)
-        regionBytes.put(compressed)
-
-        final java.nio.file.Path regionDirectory = testRoot
-                .resolve(migrationWorldName)
-                .resolve('region')
-        java.nio.file.Files.createDirectories(regionDirectory)
-        java.nio.file.Files.write(
-                regionDirectory.resolve('r.-17333.-7283.mca'),
-                regionBytes.array())
+motd=Smart Resource Multiplier native persistence smoke test
+''', 'UTF-8')
     }
 }
-
-neoForge {
-    version = neo_version
+legacyForge {
+    enable {
+        neoForgeVersion = neo_version
+    }
 
     mods {
         "${mod_id}" {
@@ -297,32 +236,33 @@ neoForge {
     runs {
         client {
             client()
-            loadedMods.set([neoForge.mods.getByName(mod_id)])
+            loadedMods.set([legacyForge.mods.getByName(mod_id)])
         }
         server {
             server()
-            loadedMods.set([neoForge.mods.getByName(mod_id)])
+            loadedMods.set([legacyForge.mods.getByName(mod_id)])
             programArgument '--nogui'
         }
         gameTestServer {
             type = 'gameTestServer'
             sourceSet = gameTestSourceSet
-            loadedMods.set([neoForge.mods.getByName('smartResourceDropsGameTest')])
-            programArgument '--tests'
-            programArgument 'smart_resource_drops_gametest:*'
+            loadedMods.set([legacyForge.mods.getByName('smartResourceDropsGameTest')])
+            systemProperty 'forge.enabledGameTestNamespaces', 'smart_resource_drops_gametest'
         }
         clientCategoryTest {
             client()
             sourceSet = clientTestSourceSet
-            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
+            loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
             gameDirectory = clientCategoryTestDirectory
             systemProperty 'smart_resource_drops.clientCategoryTest', 'true'
+            systemProperty 'smart_resource_drops.clientCategoryTestDirectory',
+                    clientCategoryTestDirectory.get().asFile.absolutePath
             taskBefore prepareClientCategoryTest
         }
         multiplayerServerTest {
             server()
             sourceSet = clientTestSourceSet
-            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
+            loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
             gameDirectory = multiplayerServerDirectory
             systemProperty 'smart_resource_drops.multiplayerTest', 'true'
             taskBefore prepareMultiplayerServerTest
@@ -331,7 +271,7 @@ neoForge {
         multiplayerClientTest {
             client()
             sourceSet = clientTestSourceSet
-            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
+            loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
             gameDirectory = multiplayerClientDirectory
             systemProperty 'smart_resource_drops.multiplayerTest', 'true'
             taskBefore prepareMultiplayerClientTest
@@ -341,7 +281,7 @@ neoForge {
         optionalClientOnlyServerTest {
             server()
             sourceSet = optionalChannelTestSourceSet
-            loadedMods.set([neoForge.mods.getByName('optionalChannelProbe')])
+            loadedMods.set([legacyForge.mods.getByName('optionalChannelProbe')])
             gameDirectory = optionalClientOnlyServerDirectory
             systemProperty 'smart_resource_drops.optionalChannelTest', 'clientOnly'
             taskBefore prepareOptionalClientOnlyServerTest
@@ -350,7 +290,7 @@ neoForge {
         optionalClientOnlyClientTest {
             client()
             sourceSet = clientTestSourceSet
-            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
+            loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
             gameDirectory = optionalClientOnlyClientDirectory
             systemProperty 'smart_resource_drops.optionalClientOnlyTest', 'true'
             taskBefore prepareOptionalClientOnlyClientTest
@@ -361,8 +301,8 @@ neoForge {
             server()
             sourceSet = optionalChannelTestSourceSet
             loadedMods.set([
-                    neoForge.mods.getByName(mod_id),
-                    neoForge.mods.getByName('optionalChannelProbe')])
+                    legacyForge.mods.getByName(mod_id),
+                    legacyForge.mods.getByName('optionalChannelProbe')])
             gameDirectory = optionalServerOnlyServerDirectory
             systemProperty 'smart_resource_drops.optionalChannelTest', 'serverOnly'
             taskBefore prepareOptionalServerOnlyServerTest
@@ -371,7 +311,7 @@ neoForge {
         optionalServerOnlyClientTest {
             client()
             sourceSet = optionalChannelTestSourceSet
-            loadedMods.set([neoForge.mods.getByName('optionalChannelProbe')])
+            loadedMods.set([legacyForge.mods.getByName('optionalChannelProbe')])
             gameDirectory = optionalServerOnlyClientDirectory
             systemProperty 'smart_resource_drops.optionalServerOnlyClientTest', 'true'
             taskBefore prepareOptionalServerOnlyClientTest
@@ -381,7 +321,7 @@ neoForge {
         oversizedWireServerTest {
             server()
             sourceSet = clientTestSourceSet
-            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
+            loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
             gameDirectory = oversizedWireServerDirectory
             systemProperty 'smart_resource_drops.oversizedWireTest', 'true'
             taskBefore prepareOversizedWireServerTest
@@ -390,32 +330,42 @@ neoForge {
         oversizedWireClientTest {
             client()
             sourceSet = clientTestSourceSet
-            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
+            loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
             gameDirectory = oversizedWireClientDirectory
             systemProperty 'smart_resource_drops.oversizedWireTest', 'true'
             taskBefore prepareOversizedWireClientTest
             programArgument '--quickPlayMultiplayer'
             programArgument '127.0.0.1:25579'
         }
-        migrationImportServerTest {
+        persistenceMarkServerTest {
             server()
             sourceSet = clientTestSourceSet
-            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
-            gameDirectory = migrationTestDirectory
-            systemProperty 'smart_resource_drops.migrationTestPhase', 'import'
-            systemProperty 'smart_resource_drops.migrationTestDirectory',
-                    migrationTestDirectory.get().asFile.absolutePath
-            taskBefore prepareMigrationServerTest
+            loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
+            gameDirectory = persistenceTestDirectory
+            systemProperty 'smart_resource_drops.persistenceTestPhase', 'mark'
+            systemProperty 'smart_resource_drops.persistenceTestDirectory',
+                    persistenceTestDirectory.get().asFile.absolutePath
+            taskBefore preparePersistenceServerTest
             programArgument '--nogui'
         }
-        migrationRestartServerTest {
+        persistenceRemoveServerTest {
             server()
             sourceSet = clientTestSourceSet
-            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
-            gameDirectory = migrationTestDirectory
-            systemProperty 'smart_resource_drops.migrationTestPhase', 'restart'
-            systemProperty 'smart_resource_drops.migrationTestDirectory',
-                    migrationTestDirectory.get().asFile.absolutePath
+            loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
+            gameDirectory = persistenceTestDirectory
+            systemProperty 'smart_resource_drops.persistenceTestPhase', 'remove'
+            systemProperty 'smart_resource_drops.persistenceTestDirectory',
+                    persistenceTestDirectory.get().asFile.absolutePath
+            programArgument '--nogui'
+        }
+        persistenceVerifyAbsentServerTest {
+            server()
+            sourceSet = clientTestSourceSet
+            loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
+            gameDirectory = persistenceTestDirectory
+            systemProperty 'smart_resource_drops.persistenceTestPhase', 'verify_absent'
+            systemProperty 'smart_resource_drops.persistenceTestDirectory',
+                    persistenceTestDirectory.get().asFile.absolutePath
             programArgument '--nogui'
         }
     }
@@ -423,36 +373,8 @@ neoForge {
     addModdingDependenciesTo(gameTestSourceSet)
     addModdingDependenciesTo(clientTestSourceSet)
     addModdingDependenciesTo(optionalChannelTestSourceSet)
+    addModdingDependenciesTo(sourceSets.test)
 
-    unitTest {
-        enable()
-        testedMod = mods."${mod_id}"
-        // Test fixtures are folded into testedMod by ModDevGradle. Loading every
-        // run-only model here repeats the same main output under multiple mod keys
-        // and makes the JUnit worker lose its test classes.
-        loadedMods.set([mods."${mod_id}"])
-    }
-}
-
-tasks.named('runMigrationImportServerTest') {
-    doLast {
-        final File marker = new File(migrationTestDirectory.get().asFile, 'migration-import.success')
-        if (!marker.isFile()) {
-            throw new GradleException("Migration import server exited without success marker ${marker}")
-        }
-    }
-}
-
-tasks.named('runMigrationRestartServerTest') {
-    dependsOn tasks.named('runMigrationImportServerTest')
-    doLast {
-        for (String markerName : ['migration-import.success', 'migration-restart.success']) {
-            final File marker = new File(migrationTestDirectory.get().asFile, markerName)
-            if (!marker.isFile()) {
-                throw new GradleException("Migration restart gate exited without success marker ${marker}")
-            }
-        }
-    }
 }
 
 // Compile the canonical gameplay/config/GUI sources and replace only the thin
@@ -489,9 +411,10 @@ var generateModMetadata = tasks.register('generateModMetadata', ProcessResources
 }
 
 sourceSets.main.resources.srcDir generateModMetadata
-neoForge.ideSyncTask generateModMetadata
+legacyForge.ideSyncTask generateModMetadata
 
 dependencies {
+    compileOnly 'org.jspecify:jspecify:1.0.0'
     gametestImplementation sourceSets.main.output
     // These are compile-only because the shared test bodies retain two Fabric-only
     // audit methods that the NeoForge registrar deliberately does not register.
@@ -499,8 +422,24 @@ dependencies {
     gametestCompileOnly "net.fabricmc.fabric-api:fabric-gametest-api-v1:${fabric_gametest_compile_version}"
     clienttestImplementation sourceSets.main.output
 
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    compileOnly(annotationProcessor('io.github.llamalad7:mixinextras-common:0.5.4'))
+    jarJar(implementation('io.github.llamalad7:mixinextras-forge:0.5.4')) {
+        version {
+            strictly '[0.5.4,)'
+            prefer '0.5.4'
+        }
+    }
+    // JarJar embeds MixinExtras in the production artifact, while source-set
+    // userdev launches need the mod on their runtime classpaths explicitly.
+    runtimeOnly 'io.github.llamalad7:mixinextras-forge:0.5.4'
+    gametestRuntimeOnly 'io.github.llamalad7:mixinextras-forge:0.5.4'
+    clienttestRuntimeOnly 'io.github.llamalad7:mixinextras-forge:0.5.4'
+    optionalchanneltestRuntimeOnly 'io.github.llamalad7:mixinextras-forge:0.5.4'
+
     testImplementation platform("org.junit:junit-bom:${junit_version}")
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.mockito:mockito-core:5.20.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -514,10 +453,137 @@ tasks.named('test', Test) {
     useJUnitPlatform()
 }
 
+tasks.named('runGameTestServer').configure {
+    doFirst {
+        final File runDirectory = layout.projectDirectory.dir('run').asFile
+        // Legacy GameTest reuses its world by default. A crashed run can leave item
+        // entities inside later test bounds and make otherwise-correct output look
+        // exactly doubled, so every evidence run must start from a fresh world.
+        project.delete(
+                new File(runDirectory, 'world'),
+                new File(runDirectory, 'config'),
+                new File(runDirectory, 'crash-reports'),
+                new File(runDirectory, 'logs'))
+        runDirectory.mkdirs()
+    }
+    doLast {
+        final File logFile = layout.projectDirectory.file('run/logs/latest.log').asFile
+        if (!logFile.isFile()) {
+            throw new GradleException("NeoForge GameTest log was not created: ${logFile}")
+        }
+        final String logText = logFile.getText('UTF-8')
+        final List<String> requiredMarkers = [
+                'Smart Resource Multiplier NeoForge GameTest discovery: 62 tests',
+                '62 tests are now running!',
+                '========= 62 GAME TESTS COMPLETE ======================',
+                'All 62 required tests passed :)',
+                'Game test server shutting down',
+        ]
+        final List<String> missingMarkers = requiredMarkers.findAll { !logText.contains(it) }
+        if (!missingMarkers.isEmpty()) {
+            throw new GradleException(
+                    "NeoForge GameTest execution evidence is incomplete; missing ${missingMarkers}")
+        }
+        if (logText.contains('required tests failed :(')
+                || logText.contains('Game test server crashed')
+                || logText.contains('Shearing output budget exceeded for minecraft:sheep')) {
+            throw new GradleException('NeoForge GameTest log reports a failure or crash')
+        }
+    }
+}
+
+tasks.named('runPersistenceMarkServerTest').configure {
+    doLast {
+        final File marker = new File(
+                persistenceTestDirectory.get().asFile, 'persistence-mark.success')
+        if (!marker.isFile()) {
+            throw new GradleException("Persistence mark server exited without ${marker}")
+        }
+    }
+}
+
+tasks.named('runClientCategoryTest').configure {
+    doLast {
+        final File directory = clientCategoryTestDirectory.get().asFile
+        final File marker = new File(directory, 'client-category.success')
+        if (!marker.isFile()) {
+            throw new GradleException("NeoForge category client exited without ${marker}")
+        }
+        final File logFile = new File(directory, 'logs/latest.log')
+        if (!logFile.isFile()) {
+            throw new GradleException("NeoForge category client produced no ${logFile}")
+        }
+        final String logText = logFile.getText('UTF-8')
+        final List<String> unexpectedErrors = logText.readLines().findAll { line ->
+            line.contains('/ERROR]')
+                    && !line.contains('Failed to verify authentication')
+                    && !line.contains('Error while loading the narrator')
+                    && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+        }
+        if (!unexpectedErrors.isEmpty()) {
+            throw new GradleException(
+                    "NeoForge category client log contains unexpected ERROR lines: ${unexpectedErrors}")
+        }
+        for (String forbidden : [
+                '/FATAL]', 'Game crashed!',
+                'MixinApplyError', 'InvalidInjectionException',
+                'ModLoadingException', 'Failed to load mods',
+                'NoClassDefFoundError', 'NoSuchMethodError', 'VerifyError']) {
+            if (logText.contains(forbidden)) {
+                throw new GradleException(
+                        "NeoForge category client log contains forbidden failure: ${forbidden}")
+            }
+        }
+    }
+}
+
+tasks.named('runPersistenceRemoveServerTest').configure {
+    dependsOn tasks.named('runPersistenceMarkServerTest')
+    doLast {
+        final File marker = new File(
+                persistenceTestDirectory.get().asFile, 'persistence-remove.success')
+        if (!marker.isFile()) {
+            throw new GradleException("Persistence remove server exited without ${marker}")
+        }
+    }
+}
+
+tasks.named('runPersistenceVerifyAbsentServerTest').configure {
+    dependsOn tasks.named('runPersistenceRemoveServerTest')
+    doLast {
+        final File logFile = new File(persistenceTestDirectory.get().asFile, 'logs/latest.log')
+        if (!logFile.isFile()) {
+            throw new GradleException("Persistence restart gate produced no ${logFile}")
+        }
+        final String logText = logFile.getText('UTF-8')
+        if (!logText.contains('NeoForge native placement removal persistence phase passed')) {
+            throw new GradleException('Third persistence JVM did not verify the removed mark stayed absent')
+        }
+        for (String markerName : [
+                'persistence-mark.success',
+                'persistence-remove.success',
+                'persistence-absent.success']) {
+            final File marker = new File(persistenceTestDirectory.get().asFile, markerName)
+            if (!marker.isFile()) {
+                throw new GradleException("Persistence restart gate exited without ${marker}")
+            }
+        }
+    }
+}
+
 jar {
     from('../LICENSE') {
         rename { "LICENSE_${archives_base_name}" }
     }
+    manifest {
+        attributes 'MixinConfigs': 'smart_resource_drops.mixins.json,smart_resource_drops.neoforge.mixins.json'
+    }
+}
+
+mixin {
+    add sourceSets.main, 'smart_resource_drops.refmap.json'
+    config 'smart_resource_drops.mixins.json'
+    config 'smart_resource_drops.neoforge.mixins.json'
 }
 
 publishing {

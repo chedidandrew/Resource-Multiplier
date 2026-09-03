@@ -13,20 +13,29 @@ import java.util.function.BooleanSupplier;
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
 import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.Permissions;
 
 public final class SmartDropsNetworking {
     private static final long REQUEST_COOLDOWN_TICKS = 40L;
     private static final long PATCH_COOLDOWN_TICKS = 20L;
+    private static final long PATCH_DECODE_COOLDOWN_TICKS = 20L;
     private static final long RESET_COOLDOWN_TICKS = 40L;
+    private static final long TRANSFER_TIMEOUT_TICKS = 400L;
+    private static final int MAX_ACTIVE_PATCH_TRANSFERS = 32;
+    private static final int MAX_BUFFERED_PATCH_BYTES = 16 * 1024 * 1024;
+    private static final int MAX_PENDING_PATCH_DECODES = 32;
     private static final Map<ServerPlayer, Long> LAST_REQUEST_TICK = new WeakHashMap<>();
     private static final Map<ServerPlayer, Long> LAST_PATCH_TICK = new WeakHashMap<>();
+    private static final Map<ServerPlayer, Long> LAST_PATCH_DECODE_TICK = new WeakHashMap<>();
     private static final Map<ServerPlayer, Long> LAST_RESET_TICK = new WeakHashMap<>();
     private static final Map<ServerPlayer, PendingRequest> PENDING_REQUESTS = new WeakHashMap<>();
     private static final Map<ServerPlayer, PendingPatch> PENDING_PATCHES = new WeakHashMap<>();
+    private static final Map<ServerPlayer, ConfigTransferAssembler<PatchMetadata>> PATCH_TRANSFERS =
+            new WeakHashMap<>();
+    private static final Map<ServerPlayer, PendingPatchDecode> PENDING_PATCH_DECODES =
+            new WeakHashMap<>();
     private static final ThreadLocal<UUID> PUBLICATION_ACKNOWLEDGED_PLAYER = new ThreadLocal<>();
     private static volatile MinecraftServer activeServer;
     private static volatile Transport transport;
@@ -54,6 +63,11 @@ public final class SmartDropsNetworking {
         synchronized (LAST_PATCH_TICK) {
             LAST_PATCH_TICK.clear();
             PENDING_PATCHES.clear();
+            PATCH_TRANSFERS.clear();
+        }
+        synchronized (LAST_PATCH_DECODE_TICK) {
+            LAST_PATCH_DECODE_TICK.clear();
+            PENDING_PATCH_DECODES.clear();
         }
         synchronized (LAST_RESET_TICK) {
             LAST_RESET_TICK.clear();
@@ -61,8 +75,178 @@ public final class SmartDropsNetworking {
     }
 
     public static void serverTick() {
+        expirePatchTransfers();
+        flushPendingPatchDecodes();
         flushPendingRequests();
         flushPendingPatches();
+    }
+
+    public static void handlePatchFragment(
+            final ConfigPatchFragmentPayload payload,
+            final ServerPlayer player
+    ) {
+        if (!canEditConfiguration(player)) {
+            sendMutationResult(
+                    player,
+                    payload.requestId(),
+                    ConfigSnapshotPayload.PatchResult.UNAUTHORIZED);
+            return;
+        }
+        final long now = player.level().getGameTime();
+        final ConfigTransferAssembler.Complete<PatchMetadata> complete;
+        synchronized (LAST_PATCH_TICK) {
+            ConfigTransferAssembler<PatchMetadata> assembler = PATCH_TRANSFERS.get(player);
+            if (assembler == null) {
+                if (PATCH_TRANSFERS.size() + pendingPatchDecodeCount()
+                        >= MAX_ACTIVE_PATCH_TRANSFERS) {
+                    return;
+                }
+                assembler = new ConfigTransferAssembler<>();
+                PATCH_TRANSFERS.put(player, assembler);
+            }
+            if (!assembler.hasChunk(payload.chunkIndex())
+                    && bufferedPatchBytes() + pendingPatchDecodeBytes()
+                    + payload.chunk().length > MAX_BUFFERED_PATCH_BYTES) {
+                PATCH_TRANSFERS.remove(player);
+                return;
+            }
+            try {
+                final Optional<ConfigTransferAssembler.Complete<PatchMetadata>> assembled = assembler.accept(
+                        new PatchMetadata(payload.requestId(), payload.expectedRevision()),
+                        payload.compression(),
+                        payload.rawBytes(),
+                        payload.encodedBytes(),
+                        payload.chunkIndex(),
+                        payload.chunkCount(),
+                        payload.chunk(),
+                        now);
+                if (assembled.isEmpty()) {
+                    return;
+                }
+                complete = assembled.get();
+                PATCH_TRANSFERS.remove(player);
+            } catch (IllegalArgumentException exception) {
+                PATCH_TRANSFERS.remove(player);
+                SmartResourceDrops.LOGGER.warn(
+                        "Rejected malformed config patch transfer from {}: {}",
+                        player.getScoreboardName(),
+                        exception.getMessage());
+                return;
+            }
+        }
+        final DecodeAdmission admission = admitCompletedPatchDecode(player, complete, now);
+        if (admission != DecodeAdmission.ADMIT) {
+            if (admission == DecodeAdmission.REJECT) {
+                sendMutationResult(
+                        player,
+                        payload.requestId(),
+                        ConfigSnapshotPayload.PatchResult.REJECTED);
+            }
+            return;
+        }
+        decodeAndHandlePatch(player, complete);
+    }
+
+    private static void decodeAndHandlePatch(
+            final ServerPlayer player,
+            final ConfigTransferAssembler.Complete<PatchMetadata> complete
+    ) {
+        if (!canEditConfiguration(player)) {
+            sendMutationResult(
+                    player,
+                    complete.metadata().requestId(),
+                    ConfigSnapshotPayload.PatchResult.UNAUTHORIZED);
+            return;
+        }
+        final String json;
+        try {
+            json = complete.decode();
+        } catch (IllegalArgumentException exception) {
+            SmartResourceDrops.LOGGER.warn(
+                    "Rejected malformed config patch body from {}: {}",
+                    player.getScoreboardName(),
+                    exception.getMessage());
+            return;
+        }
+        handlePatch(new ConfigPatchPayload(
+                complete.metadata().requestId(),
+                complete.metadata().expectedRevision(),
+                json), player);
+    }
+
+    /**
+     * Limits expensive UTF-8/inflate work without rate-limiting chunks. One
+     * newest complete transfer is deferred per peer so rapid GUI edits retain
+     * the existing coalescing behavior without creating an inflate loop.
+     */
+    private static DecodeAdmission admitCompletedPatchDecode(
+            final ServerPlayer player,
+            final ConfigTransferAssembler.Complete<PatchMetadata> complete,
+            final long now
+    ) {
+        synchronized (LAST_PATCH_DECODE_TICK) {
+            final Long previous = LAST_PATCH_DECODE_TICK.get(player);
+            if (previous != null && now >= previous && now - previous < PATCH_DECODE_COOLDOWN_TICKS) {
+                final PendingPatchDecode existing = PENDING_PATCH_DECODES.get(player);
+                final int retainedBytes = pendingPatchDecodeBytes()
+                        - (existing == null ? 0 : existing.complete().encodedBytes());
+                if ((existing == null
+                        && PATCH_TRANSFERS.size() + PENDING_PATCH_DECODES.size()
+                        >= MAX_PENDING_PATCH_DECODES)
+                        || retainedBytes + complete.encodedBytes() > MAX_BUFFERED_PATCH_BYTES) {
+                    return DecodeAdmission.REJECT;
+                }
+                PENDING_PATCH_DECODES.put(
+                        player,
+                        new PendingPatchDecode(
+                                complete,
+                                previous + PATCH_DECODE_COOLDOWN_TICKS));
+                return DecodeAdmission.QUEUED;
+            }
+            PENDING_PATCH_DECODES.remove(player);
+            LAST_PATCH_DECODE_TICK.put(player, now);
+            return DecodeAdmission.ADMIT;
+        }
+    }
+
+    private static void flushPendingPatchDecodes() {
+        final List<ReadyPatchDecode> ready = new ArrayList<>();
+        synchronized (LAST_PATCH_DECODE_TICK) {
+            final Iterator<Map.Entry<ServerPlayer, PendingPatchDecode>> iterator =
+                    PENDING_PATCH_DECODES.entrySet().iterator();
+            while (iterator.hasNext()) {
+                final Map.Entry<ServerPlayer, PendingPatchDecode> entry = iterator.next();
+                final ServerPlayer player = entry.getKey();
+                if (player == null || player.hasDisconnected() || player.isRemoved()) {
+                    LAST_PATCH_DECODE_TICK.remove(player);
+                    iterator.remove();
+                    continue;
+                }
+                final long now = player.level().getGameTime();
+                final PendingPatchDecode pending = entry.getValue();
+                if (now < pending.eligibleTick()) {
+                    continue;
+                }
+                LAST_PATCH_DECODE_TICK.put(player, now);
+                ready.add(new ReadyPatchDecode(player, pending.complete()));
+                iterator.remove();
+            }
+        }
+        ready.forEach(patch -> decodeAndHandlePatch(patch.player(), patch.complete()));
+    }
+
+    private static int pendingPatchDecodeBytes() {
+        int total = 0;
+        for (PendingPatchDecode pending : PENDING_PATCH_DECODES.values()) {
+            total = Math.addExact(total, pending.complete().encodedBytes());
+        }
+        return total;
+    }
+
+    private static int pendingPatchDecodeCount() {
+        synchronized (LAST_PATCH_DECODE_TICK) {
+            return PENDING_PATCH_DECODES.size();
+        }
     }
 
     public static void handleRequest(final ConfigRequestPayload payload, final ServerPlayer player) {
@@ -151,6 +335,33 @@ public final class SmartDropsNetworking {
             }
         }
         ready.forEach(request -> sendSnapshot(request.player(), request.requestId()));
+    }
+
+    private static void expirePatchTransfers() {
+        synchronized (LAST_PATCH_TICK) {
+            final Iterator<Map.Entry<ServerPlayer, ConfigTransferAssembler<PatchMetadata>>> iterator =
+                    PATCH_TRANSFERS.entrySet().iterator();
+            while (iterator.hasNext()) {
+                final Map.Entry<ServerPlayer, ConfigTransferAssembler<PatchMetadata>> entry = iterator.next();
+                final ServerPlayer player = entry.getKey();
+                if (player == null || player.hasDisconnected() || player.isRemoved()) {
+                    iterator.remove();
+                    continue;
+                }
+                entry.getValue().expire(player.level().getGameTime(), TRANSFER_TIMEOUT_TICKS);
+                if (!entry.getValue().active()) {
+                    iterator.remove();
+                }
+            }
+        }
+    }
+
+    private static int bufferedPatchBytes() {
+        int total = 0;
+        for (ConfigTransferAssembler<PatchMetadata> assembler : PATCH_TRANSFERS.values()) {
+            total = Math.addExact(total, assembler.bufferedBytes());
+        }
+        return total;
     }
 
     private static boolean acceptOrQueuePatch(
@@ -253,6 +464,10 @@ public final class SmartDropsNetworking {
     static void clearPendingPatches() {
         synchronized (LAST_PATCH_TICK) {
             PENDING_PATCHES.clear();
+            PATCH_TRANSFERS.clear();
+        }
+        synchronized (LAST_PATCH_DECODE_TICK) {
+            PENDING_PATCH_DECODES.clear();
         }
     }
 
@@ -351,28 +566,32 @@ public final class SmartDropsNetworking {
             final int requestId,
             final ConfigSnapshotPayload.PatchResult patchResult
     ) {
-        if (!transport().canSend(player, ConfigSnapshotPayload.TYPE)) {
+        if (!transport().canSend(player, ConfigSnapshotFragmentPayload.TYPE)) {
             return;
         }
 
         final ConfigManager.ClientSnapshot snapshot = ConfigManager.clientSnapshot();
         final String json = snapshot.json();
-        if (json.length() > ConfigSnapshotPayload.MAX_JSON_LENGTH) {
-            SmartResourceDrops.LOGGER.error(
-                "Refusing oversized Smart Resource Multiplier config snapshot for {} ({} characters; maximum {})",
-                player.getScoreboardName(),
-                json.length(),
-                ConfigSnapshotPayload.MAX_JSON_LENGTH);
-            return;
-        }
-
         final boolean editable = canEditConfiguration(player);
-        transport().send(player, new ConfigSnapshotPayload(
+        final ConfigSnapshotPayload snapshotPayload = new ConfigSnapshotPayload(
                 requestId,
                 snapshot.revision(),
                 json,
                 editable,
-                patchResult));
+                patchResult);
+        final List<ConfigSnapshotFragmentPayload> fragments;
+        try {
+            fragments = ConfigSnapshotFragmentPayload.encode(snapshotPayload);
+        } catch (IllegalArgumentException exception) {
+            SmartResourceDrops.LOGGER.error(
+                    "Refusing invalid Smart Resource Multiplier config snapshot for {}: {}",
+                    player.getScoreboardName(),
+                    exception.getMessage());
+            return;
+        }
+        for (ConfigSnapshotFragmentPayload fragment : fragments) {
+            transport().send(player, fragment);
+        }
         SmartResourceDrops.LOGGER.debug(
                 "Sent config snapshot #{} to {} (revision={}, editable={}, patchResult={}, chars={})",
                 requestId,
@@ -384,8 +603,8 @@ public final class SmartDropsNetworking {
     }
 
     static boolean canEditConfiguration(final ServerPlayer player) {
-        return player.level().getServer().isSingleplayerOwner(player.nameAndId())
-                || player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
+        return player.level().getServer().isSingleplayerOwner(player.getGameProfile())
+                || player.hasPermissions(2);
     }
 
     private static Transport transport() {
@@ -396,11 +615,27 @@ public final class SmartDropsNetworking {
         return current;
     }
 
+    /** Package-local bounded-state snapshot used by protocol admission tests. */
+    static TransferDiagnostics transferDiagnostics() {
+        synchronized (LAST_PATCH_TICK) {
+            synchronized (LAST_PATCH_DECODE_TICK) {
+                return new TransferDiagnostics(
+                        PATCH_TRANSFERS.size(),
+                        PENDING_PATCH_DECODES.size(),
+                        bufferedPatchBytes() + pendingPatchDecodeBytes(),
+                        PENDING_PATCH_DECODES.values().stream()
+                                .map(pending -> pending.complete().metadata().requestId())
+                                .sorted()
+                                .toList());
+            }
+        }
+    }
+
     /** Loader adapter for negotiated server-to-client play payloads. */
     public interface Transport {
-        boolean canSend(ServerPlayer player, CustomPacketPayload.Type<?> type);
+        boolean canSend(ServerPlayer player, ResourceLocation type);
 
-        void send(ServerPlayer player, CustomPacketPayload payload);
+        void send(ServerPlayer player, ConfigPayload payload);
     }
 
     private record PendingRequest(int requestId, long eligibleTick) {
@@ -413,5 +648,37 @@ public final class SmartDropsNetworking {
     }
 
     private record ReadyPatch(ServerPlayer player, ConfigPatchPayload payload) {
+    }
+
+    private record PendingPatchDecode(
+            ConfigTransferAssembler.Complete<PatchMetadata> complete,
+            long eligibleTick
+    ) {
+    }
+
+    private record ReadyPatchDecode(
+            ServerPlayer player,
+            ConfigTransferAssembler.Complete<PatchMetadata> complete
+    ) {
+    }
+
+    private enum DecodeAdmission {
+        ADMIT,
+        QUEUED,
+        REJECT
+    }
+
+    record TransferDiagnostics(
+            int activeTransfers,
+            int pendingDecodes,
+            int bufferedBytes,
+            List<Integer> pendingRequestIds
+    ) {
+        TransferDiagnostics {
+            pendingRequestIds = List.copyOf(pendingRequestIds);
+        }
+    }
+
+    private record PatchMetadata(int requestId, long expectedRevision) {
     }
 }

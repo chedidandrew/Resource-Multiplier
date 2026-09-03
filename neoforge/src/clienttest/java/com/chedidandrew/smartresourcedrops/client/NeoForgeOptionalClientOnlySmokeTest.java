@@ -1,21 +1,21 @@
 package com.chedidandrew.smartresourcedrops.client;
 
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
-import com.chedidandrew.smartresourcedrops.network.ConfigPatchPayload;
+import com.chedidandrew.smartresourcedrops.network.ConfigPatchFragmentPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigRequestPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigResetPayload;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.Minecraft;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.ModList;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.common.NeoForge;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.common.Mod;
 
 /** Production client joining a server that does not install the production mod. */
-@Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, value = Dist.CLIENT)
 public final class NeoForgeOptionalClientOnlySmokeTest {
-    private static final AtomicBoolean REGISTERED = new AtomicBoolean();
+    private static final NeoForgeOptionalClientOnlySmokeTest INSTANCE =
+            new NeoForgeOptionalClientOnlySmokeTest();
     private static final int OBSERVATION_TICKS = 60;
     private static final int TIMEOUT_TICKS = 3_000;
 
@@ -23,17 +23,21 @@ public final class NeoForgeOptionalClientOnlySmokeTest {
     private int connectedTicks;
     private boolean checkedConfigRoute;
 
-    public NeoForgeOptionalClientOnlySmokeTest() {
-        if (Boolean.getBoolean("smart_resource_drops.optionalClientOnlyTest")
-                && REGISTERED.compareAndSet(false, true)) {
+    private NeoForgeOptionalClientOnlySmokeTest() {
+    }
+
+    @SubscribeEvent
+    public static void tick(final TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END
+                && Boolean.getBoolean("smart_resource_drops.optionalClientOnlyTest")) {
             if (!ModList.get().isLoaded(SmartResourceDrops.MOD_ID)) {
                 throw new AssertionError("Client-only matrix client did not load the production mod");
             }
-            NeoForge.EVENT_BUS.addListener(ClientTickEvent.Post.class, this::onClientTick);
+            INSTANCE.onClientTick();
         }
     }
 
-    private void onClientTick(final ClientTickEvent.Post event) {
+    private void onClientTick() {
         final Minecraft minecraft = Minecraft.getInstance();
         if (++this.ticks > TIMEOUT_TICKS) {
             throw new AssertionError("Timed out while joining the client-only installation");
@@ -42,9 +46,9 @@ public final class NeoForgeOptionalClientOnlySmokeTest {
         if (connection == null || minecraft.player == null || minecraft.level == null) {
             return;
         }
-        requireUnavailable(connection.hasChannel(ConfigRequestPayload.TYPE), "config request");
-        requireUnavailable(connection.hasChannel(ConfigPatchPayload.TYPE), "config patch");
-        requireUnavailable(connection.hasChannel(ConfigResetPayload.TYPE), "config reset");
+        requireUnavailable(ClientNetworkBridge.canSend(ConfigRequestPayload.TYPE), "config request");
+        requireUnavailable(ClientNetworkBridge.canSend(ConfigPatchFragmentPayload.TYPE), "config patch");
+        requireUnavailable(ClientNetworkBridge.canSend(ConfigResetPayload.TYPE), "config reset");
 
         if (!this.checkedConfigRoute) {
             final ClientConfigState.RequestStart request = ClientConfigState.request(minecraft);

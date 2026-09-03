@@ -9,6 +9,7 @@ import com.chedidandrew.smartresourcedrops.config.ConfigRequestLifecycle;
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
 import com.chedidandrew.smartresourcedrops.core.client.util.ClientCommandQueue;
 import com.chedidandrew.smartresourcedrops.network.ConfigPatchPayload;
+import com.chedidandrew.smartresourcedrops.network.ConfigTransferCodec;
 import com.chedidandrew.smartresourcedrops.network.ConfigRequestPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigResetPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigSnapshotPayload;
@@ -43,6 +44,7 @@ public final class ClientConfigState {
         }
 
         final int requestId = REQUESTS.begin(connection);
+        ClientConfigTransferState.begin(requestId, connection);
         final boolean queued = ClientCommandQueue.runCoalesced(CONFIG_REQUEST_QUEUE_KEY, () -> {
             if (!REQUESTS.isCurrent(requestId, connectionIdentity(minecraft))) {
                 SmartResourceDrops.LOGGER.debug("Skipped stale queued config request #{}", requestId);
@@ -87,11 +89,14 @@ public final class ClientConfigState {
         } catch (IllegalArgumentException exception) {
             return RequestStart.failed(StartFailure.INVALID_PATCH);
         }
-        if (json.length() > ConfigPatchPayload.MAX_JSON_LENGTH) {
+        try {
+            ConfigTransferCodec.encode(json);
+        } catch (IllegalArgumentException exception) {
             return RequestStart.failed(StartFailure.INVALID_PATCH);
         }
 
         final int requestId = REQUESTS.begin(connection);
+        ClientConfigTransferState.begin(requestId, connection);
         try {
             ClientCommandQueue.cancelCoalesced(CONFIG_REQUEST_QUEUE_KEY);
             ClientNetworkBridge.send(new ConfigPatchPayload(requestId, expectedRevision, json));
@@ -117,6 +122,7 @@ public final class ClientConfigState {
 
         // A reset supersedes the old snapshot generation and any delayed config request.
         final int requestId = REQUESTS.begin(connection);
+        ClientConfigTransferState.begin(requestId, connection);
         ClientCommandQueue.cancelCoalesced(CONFIG_REQUEST_QUEUE_KEY);
         invalidateCachedSnapshot();
         try {
@@ -311,12 +317,14 @@ public final class ClientConfigState {
             REQUESTS.cancel(requestId);
         }
         ClientCommandQueue.clear();
+        ClientConfigTransferState.clear();
         pendingCompactResult = ConfigSnapshotPayload.PatchResult.NONE;
         invalidateCachedSnapshot();
     }
 
     public static void cancelRequest(final int requestId) {
         if (REQUESTS.cancel(requestId)) {
+            ClientConfigTransferState.clear();
             ClientCommandQueue.cancelCoalesced(CONFIG_REQUEST_QUEUE_KEY);
             pendingCompactResult = ConfigSnapshotPayload.PatchResult.NONE;
             SmartResourceDrops.LOGGER.debug("Cancelled config request #{}", requestId);
@@ -332,6 +340,7 @@ public final class ClientConfigState {
             return;
         }
         ClientCommandQueue.cancelCoalesced(CONFIG_REQUEST_QUEUE_KEY);
+        ClientConfigTransferState.clear();
         final Screen current = minecraft.screen;
         if (current instanceof SmartDropsConfigLoadingScreen loading
                 && loading.acceptsRequest(requestId)) {
@@ -347,6 +356,7 @@ public final class ClientConfigState {
         final int requestId = REQUESTS.currentRequestId();
         final boolean wasLoading = REQUESTS.disconnect(disconnectedConnection);
         ClientCommandQueue.clear();
+        ClientConfigTransferState.clear();
         pendingCompactResult = ConfigSnapshotPayload.PatchResult.NONE;
         invalidateCachedSnapshot();
         if (wasLoading) {

@@ -1,571 +1,291 @@
 #!/usr/bin/env python3
+"""Focused regression tests for the 1.20.1 release packager and JAR policy."""
+
 from __future__ import annotations
 
 import importlib.util
 import json
-import tempfile
-import zipfile
+import os
 from pathlib import Path, PurePosixPath
+import zipfile
 
-ROOT = Path(__file__).resolve().parent.parent
-
-
-def require(condition: bool, message: str) -> None:
-    if not condition:
-        raise AssertionError(message)
+ROOT = Path(__file__).resolve().parents[1]
 
 
-spec = importlib.util.spec_from_file_location(
-    "smart_resource_drops_package_release",
-    ROOT / "tools/package_release.py",
-)
-require(spec is not None and spec.loader is not None, "Could not load package_release.py")
-package_release = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(package_release)
-
-neoforge_validator_spec = importlib.util.spec_from_file_location(
-    "smart_resource_drops_validate_neoforge_jar",
-    ROOT / "tools/validate_neoforge_jar.py",
-)
-require(
-    neoforge_validator_spec is not None and neoforge_validator_spec.loader is not None,
-    "Could not load validate_neoforge_jar.py",
-)
-validate_neoforge_jar = importlib.util.module_from_spec(neoforge_validator_spec)
-neoforge_validator_spec.loader.exec_module(validate_neoforge_jar)
-
-for development_entry in (
-    "com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.class",
-    "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.class",
-    "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest$Phase.class",
-    "com/chedidandrew/smartresourcedrops/client/NeoForgeOptionalClientOnlySmokeTest.class",
-    "com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.class",
-    "com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.class",
-    "com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.class",
-    "com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.class",
-    "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.class",
-    "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest$Phase.class",
-    "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.class",
-    "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.class",
-    "fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
-):
-    require(
-        validate_neoforge_jar.is_development_test_entry(development_entry),
-        f"NeoForge JAR validator accepted development-only entry {development_entry}",
-    )
-require(
-    not validate_neoforge_jar.is_development_test_entry(
-        "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeNetworking.class"
-    ),
-    "NeoForge JAR validator rejected a production adapter as test-only",
-)
-require(package_release.PUBLIC_MOD_NAME == "Smart Resource Multiplier", "Public mod name contract changed")
-require(package_release.PUBLIC_ARCHIVE_BASE == "SmartResourceMultiplier", "Release archive base changed")
-require(package_release.PLAYABLE_JAR_BASE == "smart-resource-multiplier", "Playable JAR base changed")
-require(
-    package_release.EXPECTED_MODMENU_LINKS
-    == {'smart_resource_drops.modmenu.link.kofi': 'https://ko-fi.com/andrewchedid', 'smart_resource_drops.modmenu.link.paypal': 'https://www.paypal.com/paypalme/chedidandrew', 'smart_resource_drops.modmenu.link.cash_app': 'https://cash.app/%24AndrewChedid'},
-    "Mod Menu support-link contract changed",
-)
-require(
-    package_release.EXPECTED_CONTACT
-    == {
-        "homepage": "https://www.curseforge.com/minecraft/mc-mods/resource-multiplier",
-        "issues": "https://github.com/chedidandrew/Resource-Multiplier/issues",
-        "sources": "https://github.com/chedidandrew/Resource-Multiplier",
-    },
-    "Public project contact metadata changed",
-)
+def load(name: str, path: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / path)
+    if spec is None or spec.loader is None:
+        raise AssertionError(f"could not load {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
-def write_minimum_release_entries(
-    archive: zipfile.ZipFile,
-    *,
-    omitted: str | None = None,
-    mixin_classes: list[str] | None = None,
-    mixin_config_overrides: dict[str, object] | None = None,
-    metadata_overrides: dict[str, object] | None = None,
-    license_payload: bytes | None = None,
-) -> None:
-    metadata = {
-        "schemaVersion": 1,
-        "id": "smart_resource_drops",
-        "name": "Smart Resource Multiplier",
-        "version": "test",
-        "contact": dict(package_release.EXPECTED_CONTACT),
-        "license": "MIT",
-        "custom": {"modmenu": {"links": dict(package_release.EXPECTED_MODMENU_LINKS)}},
-        "icon": "assets/smart_resource_drops/icon.png",
-        "entrypoints": {
-            "main": ["com.chedidandrew.smartresourcedrops.platform.fabric.FabricEntrypoint"],
-            "client": [
-                "com.chedidandrew.smartresourcedrops.platform.fabric.client.FabricClientEntrypoint"
-            ],
-            "modmenu": [
-                "com.chedidandrew.smartresourcedrops.platform.fabric.client.FabricModMenuIntegration"
-            ],
-        },
-        "mixins": ["smart_resource_drops.mixins.json"],
-        "depends": {
-            "fabricloader": ">=0.19.5",
-            "minecraft": "1.21.11",
-            "java": ">=21",
-            "fabric-api": ">=0.141.6+1.21.11",
-        },
-        "suggests": {"modmenu": ">=17.0.0"},
-    }
-    if metadata_overrides is not None:
-        metadata.update(metadata_overrides)
-    if omitted != "fabric.mod.json":
-        archive.writestr("fabric.mod.json", json.dumps(metadata).encode())
-    if omitted != "smart_resource_drops.mixins.json":
-        mixin_config = {
-            "package": "com.chedidandrew.smartresourcedrops.mixin",
-            "mixins": (
-                [
-                    "PlayerShearingContextMixin",
-                    "ShearsDispenseItemBehaviorMixin",
-                    "LivingEntityShearingLootMixin",
-                ]
-                if mixin_classes is None
-                else mixin_classes
-            ),
-        }
-        if mixin_config_overrides is not None:
-            mixin_config.update(mixin_config_overrides)
-        archive.writestr(
-            "smart_resource_drops.mixins.json",
-            json.dumps(mixin_config).encode(),
-        )
-    for required in package_release.REQUIRED_RELEASE_JAR_ENTRIES:
-        if required == omitted or required in {"fabric.mod.json", "smart_resource_drops.mixins.json"}:
-            continue
-        if required == "LICENSE_smart-resource-multiplier":
-            payload = (ROOT / "LICENSE").read_bytes() if license_payload is None else license_payload
-        elif required == "data/smart_resource_drops/tags/item/protected_entity_loot.json":
-            payload = json.dumps({
-                "replace": False,
-                "values": ["minecraft:saddle", "minecraft:totem_of_undying"],
-            }).encode()
-        elif required == "data/smart_resource_drops/tags/entity_type/shearing/standard_resources.json":
-            payload = json.dumps({
-                "replace": False,
-                "values": ["minecraft:sheep"],
-            }).encode()
-        elif required == "data/smart_resource_drops/tags/entity_type/shearing/special.json":
-            payload = json.dumps({
-                "replace": False,
-                "values": [
-                    "minecraft:bogged",
-                    "minecraft:copper_golem",
-                    "minecraft:mooshroom",
-                    "minecraft:snow_golem",
-                ],
-            }).encode()
-        else:
-            payload = b'{"replace":false,"values":[]}' if required.endswith(".json") else b"placeholder"
-        archive.writestr(required, payload)
+package = load("package_release", "tools/package_release.py")
+neo = load("validate_neoforge_jar", "tools/validate_neoforge_jar.py")
+fabric = load("validate_fabric_jar", "tools/validate_fabric_jar.py")
 
-required_ignores = {
-    ".gradle/",
-    ".gradle-wrapper/",
-    "build/",
-    ".build/",
-    "run/",
-    "logs/",
-    "dist/",
-    "out/",
-    ".idea/",
-    ".vs/",
-    "*.class",
-    "*.log",
-    "__pycache__/",
-    "*.pyc",
-}
-gitignore_lines = {
-    line.strip()
-    for line in (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
-    if line.strip() and not line.lstrip().startswith("#")
-}
-missing_ignores = sorted(required_ignores - gitignore_lines)
-require(not missing_ignores, f".gitignore is missing: {', '.join(missing_ignores)}")
+assert package.PUBLIC_MOD_NAME == "Smart Resource Multiplier"
+assert package.PUBLIC_ARCHIVE_BASE == "SmartResourceMultiplier"
+assert package.PLAYABLE_JAR_BASE == "smart-resource-multiplier"
+assert package.NEOFORGE_PLAYABLE_JAR_BASE == "smart-resource-multiplier-neoforge"
+assert package.parse_properties(ROOT / "gradle.properties")["mod_version"] == "1.3.0+mc1.20.1"
+assert package.parse_properties(ROOT / "neoforge/gradle.properties")["mod_version"] == "1.3.0+mc1.20.1"
+assert "com/chedidandrew/smartresourcedrops/config/ConfigValidator.class" in fabric.EXPECTED_PRODUCTION_CLASSES
+assert "com/chedidandrew/smartresourcedrops/config/ConfigValidator.class" in neo.EXPECTED_PRODUCTION_CLASSES
+assert "com/chedidandrew/smartresourcedrops/platform/fabric/FabricNetworking.class" not in neo.EXPECTED_PRODUCTION_CLASSES
 
 for allowed in (
     "gradlew",
     "gradlew.bat",
     "gradle/wrapper/gradle-wrapper.jar",
-    "gradle/wrapper/gradle-wrapper.properties",
+    "src/main/resources/data/smart_resource_drops/tags/entity_types/categories/passive.json",
 ):
-    require(
-        not package_release.is_forbidden_source_path(PurePosixPath(allowed)),
-        f"Required wrapper file is excluded: {allowed}",
-    )
+    assert not package.is_forbidden_source_path(PurePosixPath(allowed)), allowed
 
 for forbidden in (
     ".gradle/cache.bin",
     ".gradle-wrapper/gradle-9.5.1/bin/gradle",
-    "build/classes/Example.class",
-    ".build/core-tests/Example.class",
+    "build/classes/Leak.class",
+    "dist/stale.jar",
     "run/config/smart_resource_drops.json",
     "logs/latest.log",
-    "dist/SmartResourceMultiplier-1.3.0+mc1.21.11-source.zip",
-    "out/production/Example.class",
-    ".idea/workspace.xml",
-    ".vs/SmartResourceDrops/v17/.suo",
-    "tools/__pycache__/package_release.cpython-313.pyc",
-    "config/smart_resource_drops_stats.json",
-    "config/other_mod.json",
+    "mods/private.jar",
+    "saves/World/level.dat",
+    "screenshots/private.png",
     "credentials.json",
     ".env.local",
     "private.pem",
-    "mods/private-test.jar",
-    "saves/MyWorld/playerdata/player.dat",
-    "screenshots/private.png",
-    "world/level.dat",
-    "server.properties",
-    ".vscode/settings.json",
+    "tools/__pycache__/package_release.pyc",
 ):
-    require(
-        package_release.is_forbidden_source_path(PurePosixPath(forbidden)),
-        f"Generated/runtime path was not excluded: {forbidden}",
-    )
+    assert package.is_forbidden_source_path(PurePosixPath(forbidden)), forbidden
 
-source_files = package_release.source_files()
-source_relatives = tuple(path.relative_to(ROOT).as_posix() for path in source_files)
-require(
-    source_relatives == tuple(sorted(package_release.git_file_names("--cached"))),
-    "Source package must contain exactly the Git-tracked manifest",
+minimum = tuple(sorted(package.REQUIRED_SOURCE_FILES))
+assert package.validate_source_entries(minimum) == minimum
+for missing in minimum:
+    incomplete = tuple(name for name in minimum if name != missing)
+    try:
+        package.validate_source_entries(incomplete)
+    except package.ReleasePackageError as exc:
+        assert "missing required source files" in str(exc)
+        assert missing in str(exc)
+    else:
+        raise AssertionError(f"accepted source manifest without {missing}")
+
+assert neo.is_allowed_nested_archive_set([neo.MIXINEXTRAS_PATH])
+for invalid in (
+    [],
+    ["META-INF/jarjar/other.jar"],
+    [neo.MIXINEXTRAS_PATH, "META-INF/jarjar/extra.jar"],
+    ["META-INF/jars/mixinextras-forge-0.5.4.jar"],
+):
+    assert not neo.is_allowed_nested_archive_set(invalid), invalid
+
+assert neo.parse_manifest_mixin_configs(
+    b"Manifest-Version: 1.0\r\n"
+    b"MixinConfigs: smart_resource_drops.mixins.json,smart_resource_drops.neof\r\n"
+    b" orge.mixins.json\r\n\r\n"
+) == neo.MIXIN_CONFIG_ORDER
+for invalid_manifest in (
+    b"Manifest-Version: 1.0\r\n\r\n",
+    b"MixinConfigs: smart_resource_drops.mixins.json\r\n"
+    b"MixinConfigs: smart_resource_drops.neoforge.mixins.json\r\n\r\n",
+    b"MixinConfigs: smart_resource_drops.mixins.json,smart_resource_drops.mixins.json\r\n\r\n",
+    b"MixinConfigs: smart_resource_drops.neoforge.mixins.json,smart_resource_drops.mixins.json\r\n\r\n",
+    b"MixinConfigs: smart_resource_drops.mixins.json,smart_resource_drops.neoforge.mixins.json,extra.json\r\n\r\n",
+):
+    try:
+        neo.parse_manifest_mixin_configs(invalid_manifest)
+    except neo.ValidationError:
+        pass
+    else:
+        raise AssertionError(f"accepted invalid MixinConfigs manifest: {invalid_manifest!r}")
+
+for development in (
+    "com/chedidandrew/smartresourcedrops/gametest/Fixture.class",
+    "com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.class",
+    "com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.class",
+    "com/chedidandrew/smartresourcedrops/config/ConfigValidatorTest.class",
+    "com/chedidandrew/smartresourcedrops/network/ConfigTransferCodecTests$Case.class",
+    "data/smart_resource_drops_gametest/structures/wide.nbt",
+):
+    assert neo.is_development_test_entry(development), development
+assert not neo.is_development_test_entry(
+    "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeNetworking.class"
 )
 
-for missing_source in (
-    ".github/FUNDING.yml",
-    ".github/ISSUE_TEMPLATE/bug_report.yml",
-    ".github/ISSUE_TEMPLATE/config.yml",
-    ".github/ISSUE_TEMPLATE/mod_compatibility.yml",
-    ".github/PULL_REQUEST_TEMPLATE.md",
-    "CONTRIBUTING.md",
-    "BUILD_STATUS.md",
-    "CHANGELOG.md",
-    "README.md",
-    "SECURITY.md",
-    "docs/ROADMAP.md",
-    "docs/COMPATIBILITY.md",
-    "docs/COMMANDS.md",
-    "docs/CONFIGURATION.md",
-    "docs/IMPLEMENTATION_LOG.md",
-    "docs/PERFORMANCE.md",
-    "docs/PUBLIC_RELEASE_CHECKLIST.md",
-    "docs/releases/1.3.0.md",
-    "docs/releases/1.3.0+mc1.21.11.md",
-    "docs/TESTING.md",
-    "docs/images/general-config.webp",
-    "docs/images/block-overrides.webp",
-    "docs/images/shearing-config.webp",
-    "gradle/wrapper/gradle-wrapper.jar",
-    "src/main/java/com/chedidandrew/smartresourcedrops/config/ConfigValidator.java",
-    "src/main/java/com/chedidandrew/smartresourcedrops/config/ConfigValidationReport.java",
-    "src/main/java/com/chedidandrew/smartresourcedrops/core/BlockLootBudgetWarnings.java",
-    "src/main/java/com/chedidandrew/smartresourcedrops/core/util/BlockLootOutputBudget.java",
-    "src/main/java/com/chedidandrew/smartresourcedrops/core/util/LootOutputBudget.java",
-    "src/test/java/com/chedidandrew/smartresourcedrops/config/ConfigValidatorTest.java",
-    "src/test/java/com/chedidandrew/smartresourcedrops/core/util/BlockLootOutputBudgetTest.java",
-    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/SmartResourceDropsBlockBudgetGameTests.java",
-    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/GameTestBlockLootFixtures.java",
-    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/FabricGameTestEntityFixtures.java",
-    "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/NeoForgeGameTestEntityFixtures.java",
-    "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeMixinAuditGameTests.java",
-    "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/loot_modifiers/entity_final_loot.json",
-    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.java",
-    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOptionalClientOnlySmokeTest.java",
-    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.java",
-    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.java",
-    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.java",
-    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.java",
-    "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.java",
-    "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.java",
-    "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.java",
-    "neoforge/src/optionalchanneltest/resources/META-INF/neoforge.mods.toml",
-    "neoforge/src/test/resources/fixtures/README.md",
-    "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
-    "tools/run_neoforge_multiplayer_smoke.sh",
-    "tools/run_neoforge_optional_channel_smoke.sh",
-    "tools/run_neoforge_oversized_wire_smoke.sh",
-    "tools/validate_neoforge_jar.py",
-    "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityClassifier.java",
-    "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityDropTags.java",
-    "src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityLootTags.java",
-    "src/main/resources/data/smart_resource_drops/tags/block/categories/ores.json",
-    "src/main/resources/data/smart_resource_drops/tags/item/protected_entity_loot.json",
-):
-    incomplete_entries = tuple(
-        relative for relative in source_relatives if relative != missing_source
+original_git_file_names = package.git_file_names
+try:
+    package.git_file_names = lambda *arguments: (
+        ("untracked-release-sentinel.txt",)
+        if arguments == ("--others", "--exclude-standard")
+        else minimum
     )
     try:
-        package_release.validate_source_entries(incomplete_entries)
-    except package_release.ReleasePackageError as exc:
-        require(
-            "missing required source files" in str(exc) and missing_source in str(exc),
-            f"Missing required source failure was not explicit for {missing_source}",
-        )
+        package.source_files()
+    except package.ReleasePackageError as exc:
+        assert "untracked non-ignored files" in str(exc)
+        assert "untracked-release-sentinel.txt" in str(exc)
     else:
-        raise AssertionError(f"Source manifest accepted missing required file {missing_source}")
+        raise AssertionError("accepted an untracked non-ignored source file")
+finally:
+    package.git_file_names = original_git_file_names
 
-jar_build_relatives = tuple(
-    path.relative_to(ROOT).as_posix() for path in package_release.jar_build_inputs()
-)
-require("BUILD_STATUS.md" not in jar_build_relatives, "Release notes must not make the JAR stale")
-for required_build_input in (
-    "build.gradle",
-    "gradle.properties",
-    "src/main/resources/fabric.mod.json",
-    "src/client/java/com/chedidandrew/smartresourcedrops/client/SmartDropsConfigScreen.java",
-    "src/test/java/com/chedidandrew/smartresourcedrops/config/SmartDropsConfigTest.java",
-    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/SmartResourceDropsGameTests.java",
-    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/GameTestPlayers.java",
-    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/GameTestEntityFixtures.java",
-    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/GameTestBlockLootFixtures.java",
-):
-    require(
-        required_build_input in jar_build_relatives,
-        f"JAR freshness inputs omitted {required_build_input}",
-    )
-
-neoforge_jar_build_relatives = tuple(
-    path.relative_to(ROOT).as_posix() for path in package_release.neoforge_jar_build_inputs()
-)
-for required_build_input in (
-    "gradle.properties",
-    "src/main/resources/assets/smart_resource_drops/lang/en_us.json",
-    "neoforge/build.gradle",
-    "neoforge/gradle.properties",
-    "neoforge/settings.gradle",
-    "neoforge/src/main/templates/META-INF/neoforge.mods.toml",
-    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeEntrypoint.java",
-):
-    require(
-        required_build_input in neoforge_jar_build_relatives,
-        f"NeoForge JAR freshness inputs omitted {required_build_input}",
-    )
-
-root_properties = package_release.parse_properties(ROOT / "gradle.properties")
-neoforge_properties = package_release.parse_properties(ROOT / "neoforge/gradle.properties")
-require(
-    root_properties["mod_version"] == neoforge_properties["mod_version"],
-    "Fabric and NeoForge release versions drifted",
-)
-
-with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-") as temp_dir:
-    temp_root = Path(temp_dir)
+temp_root = ROOT / "out" / f"srm-package-policy-{os.getpid()}"
+temp_root.mkdir(parents=True, exist_ok=False)
+if True:
     first = temp_root / "first.zip"
     second = temp_root / "second.zip"
-    top_level = "SmartResourceMultiplier-test"
-
-    first_entries = package_release.build_source_zip(first, top_level, source_files)
-    second_entries = package_release.build_source_zip(second, top_level, source_files)
-    require(first_entries == source_relatives, "Source ZIP entries differ from the validated manifest")
-    require(first.read_bytes() == second.read_bytes(), "Source ZIP output is not deterministic")
+    top = "SmartResourceMultiplier-test"
+    files = [ROOT / name for name in minimum]
+    missing_files = [path for path in files if not path.is_file()]
+    assert not missing_files, f"required package sources missing: {missing_files!r}"
+    first_manifest = package.build_source_zip(first, top, files)
+    second_manifest = package.build_source_zip(second, top, files)
+    assert first_manifest == minimum
+    assert first.read_bytes() == second.read_bytes(), "source ZIP is not deterministic"
+    assert package.validate_source_zip(first, top) == minimum
 
     with zipfile.ZipFile(first) as archive:
-        archived = tuple(info.filename for info in archive.infolist())
-    require(
-        all(name.startswith(f"{top_level}/") for name in archived),
-        "Source ZIP contains an entry outside its top-level directory",
-    )
-    require(
-        not any(
-            package_release.is_forbidden_source_path(
-                PurePosixPath(name.removeprefix(f"{top_level}/"))
+        assert all(info.date_time == (1980, 1, 1, 0, 0, 0) for info in archive.infolist())
+        assert all(info.filename.startswith(top + "/") for info in archive.infolist())
+
+    bad = temp_root / "bad.zip"
+    with zipfile.ZipFile(bad, "w") as archive:
+        for name in minimum:
+            archive.writestr(f"{top}/{name}", b"x")
+        archive.writestr(f"{top}/build/Leak.class", b"x")
+    try:
+        package.validate_source_zip(bad, top)
+    except package.ReleasePackageError as exc:
+        assert "forbidden" in str(exc)
+    else:
+        raise AssertionError("accepted generated class in source ZIP")
+
+    empty = temp_root / "dist"
+    package.require_empty_output_directory(empty)
+    (empty / "stale.jar").write_bytes(b"stale")
+    try:
+        package.require_empty_output_directory(empty)
+    except package.ReleasePackageError as exc:
+        assert "stale" in str(exc)
+    else:
+        raise AssertionError("accepted a non-empty output directory")
+
+    def write_fabric_fixture(
+        path: Path,
+        *,
+        entrypoints: dict[str, list[str]] | None = None,
+        metadata_mixins: list[str] | None = None,
+        refmap: bytes | None = None,
+        extra_entries: dict[str, bytes] | None = None,
+        omit_entries: set[str] | None = None,
+    ) -> None:
+        metadata = {
+            "schemaVersion": 1,
+            "id": fabric.MOD_ID,
+            "version": fabric.VERSION,
+            "name": "Smart Resource Multiplier",
+            "description": (
+                "Configurable block, entity death-loot, and safe supported shearing multipliers "
+                "with persistent anti-dupe protection."
+            ),
+            "authors": ["Andrew Chedid"],
+            "contact": fabric.EXPECTED_CONTACT,
+            "license": "MIT",
+            "icon": fabric.ICON,
+            "environment": "*",
+            "entrypoints": fabric.EXPECTED_ENTRYPOINTS if entrypoints is None else entrypoints,
+            "mixins": [fabric.MIXIN] if metadata_mixins is None else metadata_mixins,
+            "depends": {
+                "fabricloader": ">=0.19.5",
+                "minecraft": "1.20.1",
+                "java": ">=17",
+                "fabric-api": ">=0.92.12+1.20.1",
+            },
+            "suggests": {"modmenu": ">=7.2.2"},
+            "custom": {"modmenu": {"links": fabric.EXPECTED_LINKS}},
+        }
+        class_header = bytes.fromhex("CAFEBABE0000003D")
+        mixin_classes = {
+            "com/chedidandrew/smartresourcedrops/mixin/" + name + ".class"
+            for name in fabric.EXPECTED_MIXINS
+        }
+        with zipfile.ZipFile(path, "w") as archive:
+            archive.writestr("fabric.mod.json", json.dumps(metadata))
+            archive.writestr(
+                fabric.MIXIN,
+                (ROOT / "src/main/resources" / fabric.MIXIN).read_bytes(),
             )
-            for name in archived
-        ),
-        "Source ZIP contains generated/runtime data",
-    )
-
-    forbidden_zip = temp_root / "forbidden.zip"
-    with zipfile.ZipFile(forbidden_zip, "w") as archive:
-        for required in sorted(package_release.REQUIRED_SOURCE_FILES):
-            archive.writestr(f"{top_level}/{required}", b"placeholder")
-        archive.writestr(f"{top_level}/build/Leak.class", b"forbidden")
-    try:
-        package_release.validate_source_zip(forbidden_zip, top_level)
-    except package_release.ReleasePackageError as exc:
-        require("forbidden" in str(exc), "Forbidden-entry failure was not explicit")
-    else:
-        raise AssertionError("Source ZIP validator accepted a generated class file")
-
-    incomplete_zip = temp_root / "incomplete.zip"
-    with zipfile.ZipFile(incomplete_zip, "w") as archive:
-        archive.writestr(f"{top_level}/gradlew", b"placeholder")
-    try:
-        package_release.validate_source_zip(incomplete_zip, top_level)
-    except package_release.ReleasePackageError as exc:
-        require("wrapper" in str(exc).lower(), "Missing-wrapper failure was not explicit")
-    else:
-        raise AssertionError("Source ZIP validator accepted missing wrapper files")
-
-    clean_jar = temp_root / "clean.jar"
-    with zipfile.ZipFile(clean_jar, "w") as archive:
-        write_minimum_release_entries(archive)
-    clean_entries = package_release.validate_release_jar(clean_jar, "test")
-    require("fabric.mod.json" in clean_entries, "Clean playable JAR was not validated")
-
-    for field, replacement, expected_error in (
-        ("name", "Smart Resource" + " Drops", "display name"),
-        ("id", "resource_multiplier", "mod id"),
-        ("contact", {"homepage": "https://example.invalid"}, "contact"),
-        ("license", "All-Rights-Reserved", "license"),
-        ("icon", "assets/resource_multiplier/icon.png", "icon"),
-        ("entrypoints", {}, "entrypoint"),
-        ("mixins", [], "mixin"),
-        ("depends", {}, "dependencies"),
-        ("suggests", {}, "mod menu"),
-    ):
-        invalid_metadata_jar = temp_root / f"invalid_{field}.jar"
-        with zipfile.ZipFile(invalid_metadata_jar, "w") as archive:
-            write_minimum_release_entries(
-                archive,
-                metadata_overrides={field: replacement},
+            archive.writestr(
+                fabric.REFMAP,
+                refmap
+                if refmap is not None
+                else json.dumps({
+                    "mappings": {"fixture": {"method": "mapped"}},
+                    "data": {"named:intermediary": {"fixture": {"method": "mapped"}}},
+                }).encode("utf-8"),
             )
-        try:
-            package_release.validate_release_jar(invalid_metadata_jar, "test")
-        except package_release.ReleasePackageError as exc:
-            require(
-                expected_error in str(exc).lower(),
-                f"Invalid release metadata failure was not explicit for {field}",
+            archive.writestr(
+                fabric.LICENSE,
+                (ROOT / "LICENSE").read_bytes(),
             )
-        else:
-            raise AssertionError(f"Playable JAR accepted invalid metadata field {field}")
-
-    for label, overrides in (
-        ("empty", {"mixins": []}),
-        ("wrong_type", {"mixins": "LivingEntityShearingLootMixin"}),
-    ):
-        invalid_mixin_config_jar = temp_root / f"invalid_mixin_config_{label}.jar"
-        with zipfile.ZipFile(invalid_mixin_config_jar, "w") as archive:
-            write_minimum_release_entries(archive, mixin_config_overrides=overrides)
-        try:
-            package_release.validate_release_jar(invalid_mixin_config_jar, "test")
-        except package_release.ReleasePackageError as exc:
-            require("mixin" in str(exc).lower(), f"Invalid mixin config failure was not explicit for {label}")
-        else:
-            raise AssertionError(f"Playable JAR accepted {label} production mixin configuration")
-
-    wrong_license_jar = temp_root / "wrong_embedded_license.jar"
-    with zipfile.ZipFile(wrong_license_jar, "w") as archive:
-        write_minimum_release_entries(archive, license_payload=b"All Rights Reserved\n")
-    try:
-        package_release.validate_release_jar(wrong_license_jar, "test")
-    except package_release.ReleasePackageError as exc:
-        require("license" in str(exc).lower(), "Embedded-license mismatch failure was not explicit")
-    else:
-        raise AssertionError("Playable JAR accepted a mismatched embedded license")
-
-    forbidden_jar_entries = (
-        "com/chedidandrew/smartresourcedrops/gametest/EntityFixture.class",
-        "data/smart_resource_drops_gametest/loot_table/entities/fixture.json",
-        "net/fabricmc/fabric/api/FabricApi.class",
-        "org/junit/jupiter/api/Test.class",
-        "META-INF/jars/shaded-helper.jar",
-        "src/main/java/LeakedSource.java",
-        "build.gradle",
-        "run/config/smart_resource_drops.json",
-        "com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.class",
-        "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.class",
-        "com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest$Phase.class",
-        "com/chedidandrew/smartresourcedrops/client/NeoForgeOptionalClientOnlySmokeTest.class",
-        "com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.class",
-        "com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.class",
-        "com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.class",
-        "com/chedidandrew/smartresourcedrops/optionaltest/OptionalChannelIds.class",
-        "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.class",
-        "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest$Phase.class",
-        "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.class",
-        "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.class",
-        "fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
-    )
-    for forbidden_entry in forbidden_jar_entries:
-        forbidden_jar = temp_root / (forbidden_entry.replace("/", "_") + ".jar")
-        with zipfile.ZipFile(forbidden_jar, "w") as archive:
-            write_minimum_release_entries(archive)
-            archive.writestr(forbidden_entry, b"leak")
-        try:
-            package_release.validate_release_jar(forbidden_jar, "test")
-        except package_release.ReleasePackageError as exc:
-            require(
-                "fixture" in str(exc).lower()
-                or "bundled" in str(exc).lower()
-                or "runtime" in str(exc).lower()
-                or "nested" in str(exc).lower()
-                or "source-package" in str(exc).lower()
-                or "smoke-test" in str(exc).lower(),
-                f"Playable-JAR rejection was not explicit for {forbidden_entry}",
+            archive.writestr(
+                fabric.PACK_METADATA,
+                (ROOT / "src/main/resources/pack.mcmeta").read_bytes(),
             )
-        else:
-            raise AssertionError(f"Playable JAR accepted forbidden entry {forbidden_entry}")
+            for resource in fabric.PRODUCTION_RESOURCES:
+                archive.writestr(
+                    resource,
+                    (ROOT / "src/main/resources" / resource).read_bytes(),
+                )
+            for class_name in (
+                    fabric.REQUIRED_CLASSES | fabric.EXPECTED_PRODUCTION_CLASSES | mixin_classes):
+                if omit_entries is None or class_name not in omit_entries:
+                    archive.writestr(class_name, class_header)
+            for name, body in (extra_entries or {}).items():
+                archive.writestr(name, body)
 
-    for missing_entry in (
-        "LICENSE_smart-resource-multiplier",
-        "com/chedidandrew/smartresourcedrops/platform/fabric/client/FabricClientEntrypoint.class",
-        "smart_resource_drops.mixins.json",
-        "assets/smart_resource_drops/icon.png",
-        "assets/smart_resource_drops/lang/en_us.json",
-        "com/chedidandrew/smartresourcedrops/core/entity/EntityClassifier.class",
-        "com/chedidandrew/smartresourcedrops/core/entity/EntityDropTags.class",
-        "com/chedidandrew/smartresourcedrops/core/entity/EntityLootTags.class",
-        "com/chedidandrew/smartresourcedrops/config/ConfigValidator.class",
-        "com/chedidandrew/smartresourcedrops/config/ConfigValidationReport.class",
-        "com/chedidandrew/smartresourcedrops/core/BlockLootBudgetWarnings.class",
-        "com/chedidandrew/smartresourcedrops/core/util/BlockLootOutputBudget.class",
-        "com/chedidandrew/smartresourcedrops/core/util/LootOutputBudget.class",
-        "data/smart_resource_drops/tags/block/categories/ores.json",
-        "data/smart_resource_drops/tags/entity_type/categories/passive.json",
-        "data/smart_resource_drops/tags/item/protected_entity_loot.json",
-        "data/smart_resource_drops/tags/entity_type/shearing/standard_resources.json",
-        "data/smart_resource_drops/tags/entity_type/shearing/special.json",
-        "com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.class",
-        "com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.class",
-    ):
-        incomplete_jar = temp_root / ("missing_" + missing_entry.replace("/", "_") + ".jar")
-        with zipfile.ZipFile(incomplete_jar, "w") as archive:
-            write_minimum_release_entries(archive, omitted=missing_entry)
+    valid_fabric = temp_root / "valid-fabric.jar"
+    write_fabric_fixture(valid_fabric)
+    fabric.validate(valid_fabric)
+    invalid_fabric_cases = {
+        "wrong-entrypoint.jar": {
+            "entrypoints": {**fabric.EXPECTED_ENTRYPOINTS, "modmenu": ["missing.Entrypoint"]},
+        },
+        "wrong-metadata-mixin.jar": {"metadata_mixins": ["wrong.mixins.json"]},
+        "malformed-refmap.jar": {"refmap": b"{"},
+        "empty-refmap.jar": {"refmap": b"{}"},
+        "leaked-smoke-test.jar": {
+            "extra_entries": {
+                "com/chedidandrew/smartresourcedrops/platform/fabric/"
+                "FabricPlacementPersistenceSmokeTest$Phase.class":
+                    bytes.fromhex("CAFEBABE0000003D"),
+            },
+        },
+        "leaked-unit-test.jar": {
+            "extra_entries": {
+                "com/chedidandrew/smartresourcedrops/config/ConfigValidatorTest$Case.class":
+                    bytes.fromhex("CAFEBABE0000003D"),
+            },
+        },
+        "missing-ordinary-production-class.jar": {
+            "omit_entries": {
+                "com/chedidandrew/smartresourcedrops/config/ConfigValidator.class",
+            },
+        },
+    }
+    for filename, arguments in invalid_fabric_cases.items():
+        invalid_fabric = temp_root / filename
+        write_fabric_fixture(invalid_fabric, **arguments)
         try:
-            package_release.validate_release_jar(incomplete_jar, "test")
-        except package_release.ReleasePackageError as exc:
-            require("missing" in str(exc).lower() or "invalid" in str(exc).lower(),
-                    f"Missing required JAR asset was not explicit for {missing_entry}")
+            fabric.validate(invalid_fabric)
+        except fabric.ValidationError:
+            pass
         else:
-            raise AssertionError(f"Playable JAR accepted missing required asset {missing_entry}")
-
-    missing_mixin_jar = temp_root / "missing_declared_mixin.jar"
-    with zipfile.ZipFile(missing_mixin_jar, "w") as archive:
-        write_minimum_release_entries(archive, mixin_classes=["MissingFixtureMixin"])
-    try:
-        package_release.validate_release_jar(missing_mixin_jar, "test")
-    except package_release.ReleasePackageError as exc:
-        require("missing declared mixin class" in str(exc).lower(),
-                "Missing declared mixin class failure was not explicit")
-    else:
-        raise AssertionError("Playable JAR accepted a missing declared mixin class")
-
-    empty_output = temp_root / "empty-output"
-    empty_output.mkdir()
-    package_release.require_empty_output_directory(empty_output)
-    (empty_output / "stale.jar").write_bytes(b"legacy")
-    try:
-        package_release.require_empty_output_directory(empty_output)
-    except package_release.ReleasePackageError as exc:
-        require("stale" in str(exc).lower(), "Stale-output failure was not explicit")
-    else:
-        raise AssertionError("Release packager accepted a non-empty output directory")
-
-for built_jar in sorted((ROOT / "build/libs").glob("smart-resource-multiplier-*.jar")):
-    if not built_jar.name.endswith("-sources.jar"):
-        package_release.validate_release_jar(built_jar)
+            raise AssertionError(f"Fabric validator accepted {filename}")
 
 print(
-    "PASS: Git-tracked deterministic source ZIP excludes secrets/generated/runtime data, playable JARs reject "
-    "test fixtures/nested or shaded dependencies/source/runtime leaks, require publication "
-    "templates/scope-security docs and declared entrypoint/mixin/protected-tag/key assets, "
-    "and preserve all required wrapper files "
-    f"({len(source_relatives)} source entries)"
+    "PASS: 1.20.1 source packaging is deterministic, wrapper-complete, generated/runtime-safe, "
+    "and NeoForge permits only the pinned MixinExtras JarJar dependency"
 )

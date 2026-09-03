@@ -1,0 +1,25 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="smart_resource_drops_optional_channel_probe"
+version="1.0.0"
+displayName="Smart Resource Multiplier Optional-Channel Probe"
+description='''
+Test-only installation-matrix observer. This mod is never packaged for release.
+'''
+
+[[dependencies.smart_resource_drops_optional_channel_probe]]
+modId="forge"
+mandatory=true
+versionRange="[47.1.106,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.smart_resource_drops_optional_channel_probe]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1]"
+ordering="NONE"
+side="BOTH"

@@ -171,7 +171,7 @@ final class ConfigValidatorTest {
         ConfigValidationReport report = validate(config);
 
         assertEquals(ConfigValidator.MAX_RETAINED_ISSUES, report.issues().size());
-        assertEquals(ValidationSeverity.ERROR, report.issues().getFirst().severity());
+        assertEquals(ValidationSeverity.ERROR, report.issues().get(0).severity());
         assertCode(report, ValidationCode.INVALID_ENTITY_TARGET, ValidationSeverity.ERROR);
         assertTrue(report.omittedIssueCount() > 0);
     }
@@ -260,7 +260,7 @@ final class ConfigValidatorTest {
     }
 
     @Test
-    void validationDoesNotMutateCollectionsRevisionOrPlayerIdentifiers() {
+    void validationDoesNotMutateCollectionsRevisionOrPlayerResourceLocations() {
         SmartDropsConfig config = SmartDropsConfig.defaults();
         String playerId = "00000000-0000-0000-0000-000000000123";
         config.allowPlayerOverrides = true;
@@ -296,7 +296,7 @@ final class ConfigValidatorTest {
         config.sanitize(diagnostics);
         ConfigLoadDiagnostics result = diagnostics.build();
 
-        assertTrue(result.invalidIdentifiersRemoved() >= 1);
+        assertTrue(result.invalidResourceLocationsRemoved() >= 1);
         assertTrue(result.invalidCategoryNamesRemoved() >= 1);
         assertEquals(1, result.invalidPlayerOverridesRemoved());
         assertTrue(result.valuesAdjusted() >= 1);

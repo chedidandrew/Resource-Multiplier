@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CLIENT = ROOT / "src/client/java/com/chedidandrew/smartresourcedrops/client"
 FABRIC_CLIENT = ROOT / "src/client/java/com/chedidandrew/smartresourcedrops/platform/fabric/client"
+NEOFORGE_CLIENT = ROOT / "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge"
 
 
 def require(condition: bool, message: str) -> None:
@@ -55,6 +56,7 @@ legacy_public_name = "Smart Resource" + " Drops"
 integration = read(FABRIC_CLIENT / "FabricModMenuIntegration.java")
 routes = read(CLIENT / "SmartDropsConfigScreens.java")
 client = read(FABRIC_CLIENT / "FabricClientEntrypoint.java")
+neoforge_client = read(NEOFORGE_CLIENT / "NeoForgeClientEntrypoint.java")
 client_bridge = read(CLIENT / "ClientNetworkBridge.java")
 queue = read(CLIENT / "../core/client/util/ClientCommandQueue.java")
 loading = read(CLIENT / "SmartDropsConfigLoadingScreen.java")
@@ -64,6 +66,7 @@ reset_confirmation = read(CLIENT / "ResetAllSettingsConfirmScreen.java")
 session = read(CLIENT / "ConfigEditorSession.java")
 category_tag_index = read(CLIENT / "ClientCategoryTagIndex.java")
 entity_category_tag_index = read(CLIENT / "ClientEntityCategoryTagIndex.java")
+shearing_tag_index = read(CLIENT / "ClientShearingTagIndex.java")
 entity_overrides = read(CLIENT / "EntityOverridesScreen.java")
 entity_rule_edit = read(CLIENT / "EntityRuleEditScreen.java")
 entity_filter = read(CLIENT / "EntityFilterScreen.java")
@@ -183,7 +186,7 @@ require(
 )
 require("modCompileOnly \"com.terraformersmc:modmenu:${modMenuVersionValue}\"" in build, "Mod Menu must be compile-only")
 require("https://maven.terraformersmc.com/" in build, "Terraformers release repository is missing")
-require(re.search(r"^modmenu_version=17\.0\.0$", props, re.MULTILINE) is not None, "Expected Mod Menu 17.0.0 pin")
+require(re.search(r"^modmenu_version=7\.2\.2$", props, re.MULTILINE) is not None, "Expected Mod Menu 7.2.2 pin")
 require("implements ModMenuApi" in integration, "Integration must implement ModMenuApi")
 require("SmartDropsConfigScreens::create" in integration, "Mod Menu must use the shared config-screen route")
 require("SmartDropsConfigScreens.create" in client, "/smartdropsgui must use the same config-screen route")
@@ -215,9 +218,12 @@ require(
     "Reset must send one dedicated request instead of expanding defaults into patches",
 )
 require("ClientNetworkBridge.install" in client, "Fabric must install the loader-neutral client transport")
-require("ClientPlayNetworking.send(payload)" in client, "Fabric transport must send through Fabric networking")
+require("ClientPlayNetworking.send(payload.id(), buffer)" in client, "Fabric 1.20.1 transport must send the encoded payload through legacy Fabric networking")
 require("interface Transport" in client_bridge, "The shared client transport contract is missing")
-require("context.client().execute" in client, "Snapshot handling must cross an explicit client-thread boundary")
+require(
+    client.count("client.execute(") >= 3,
+    "All three Fabric 1.20.1 client receivers must cross an explicit client-thread boundary",
+)
 require(
     "ClientPlayConnectionEvents.DISCONNECT.register" in client and "ClientCommandQueue.clear();" in client,
     "Disconnect must immediately discard queued client-side work",
@@ -535,14 +541,33 @@ require(
     "ClientCategoryTagIndex must use the loader-neutral installed-resource locator",
 )
 require(
-    '"data/%s/tags/block/%s.json"' in category_tag_index,
+    '"data/%s/tags/blocks/%s.json"' in category_tag_index,
     "ClientCategoryTagIndex must resolve the installed block-tag JSON layout",
+)
+require(
+    '"data/%s/tags/entity_types/%s.json"' in entity_category_tag_index,
+    "ClientEntityCategoryTagIndex must resolve the Minecraft 1.20.1 entity-tag JSON layout",
+)
+require(
+    '"data/%s/tags/entity_types/%s.json"' in shearing_tag_index,
+    "ClientShearingTagIndex must resolve the Minecraft 1.20.1 entity-tag JSON layout",
 )
 require(
     re.search(r"\bFabricLoader\s*\.\s*getInstance\s*\(\s*\)\s*\.\s*getAllMods\s*\(\s*\)", client)
     is not None
     and re.search(r"\bmod\s*\.\s*findPath\s*\(", method_body(client, "findResources")) is not None,
     "Fabric must expose installed-mod resources through the loader-neutral locator",
+)
+neoforge_resource_lookup = method_body(neoforge_client, "findResources")
+require(
+    "Files.isRegularFile(path)" in neoforge_resource_lookup
+    and "Files.isRegularFile(resourcePath)" in neoforge_resource_lookup
+    and "Files.newInputStream(resourcePath)" in neoforge_resource_lookup,
+    "NeoForge must read installed resources through jar-filesystem-safe Path APIs",
+)
+require(
+    ".toFile()" not in neoforge_resource_lookup,
+    "NeoForge installed-resource discovery must not convert jar-backed paths to File",
 )
 tag_read_body = method_body(category_tag_index, "readValues")
 for contract in (
@@ -671,13 +696,17 @@ require(
     re.search(r"extends\s+ObjectSelectionList\s*<", structured_list) is not None,
     "StructuredConfigList must extend ObjectSelectionList",
 )
-require(re.search(r"\brenderContent\s*\(", structured_list) is not None, "Structured list rows must render through list-entry content rendering")
+require(
+    re.search(r"class\s+Entry\s+extends\s+ObjectSelectionList\.Entry", structured_list) is not None
+    and re.search(r"@Override\s+public\s+void\s+render\s*\(", structured_list) is not None,
+    "Structured list rows must render through the 1.20.1 list-entry render callback",
+)
 require(re.search(r"\bmouseClicked\s*\(", structured_list) is not None, "Structured list rows must handle selection without child Buttons")
 for forbidden in ("import net.minecraft.client.gui.components.Button", "Button.builder(", "new Button("):
     require(forbidden not in structured_list, f"StructuredConfigList must not allocate a Button per row: {forbidden}")
 require(
-    "Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip)" in structured_list,
-    "Structured list tooltips must use Minecraft's standard wrapped multi-line tooltip path",
+    "font.split(" in structured_list and "graphics.renderTooltip(" in structured_list,
+    "Structured list tooltips must use Minecraft 1.20.1's wrapped multi-line tooltip path",
 )
 require(
     "setTooltipForNextFrame(tooltip, mouseX, mouseY)" not in structured_list,
@@ -706,7 +735,14 @@ require(
     re.search(r"\bConfigManager\s*\.\s*applyLocalPatch\s*\(", root_screen) is not None,
     "Local/default Apply must use atomic patch persistence",
 )
-require("AtomicConfigWriter.write" in manager, "ConfigManager must persist accepted patches through the atomic writer")
+require(
+    manager.count("persistenceWriter = AtomicConfigWriter::write") == 2,
+    "ConfigManager must default and reset its injectable persistence seam to the atomic writer",
+)
+require(
+    manager.count("persistenceWriter.write") == 5,
+    "Every ConfigManager persistence transaction must pass through the tested writer seam",
+)
 require("StandardCopyOption.ATOMIC_MOVE" in atomic_writer, "Local/default saves must retain atomic replacement semantics")
 require(
     re.search(r"\bnew\s+SmartDropsConfigLoadingScreen\s*\(", root_screen) is not None,
@@ -722,7 +758,10 @@ require(
     is not None,
     "Reset must use a small dedicated request carrying the authoritative base revision",
 )
-require("writeVarLong(payload.expectedRevision())" in reset_payload, "Reset revision must be encoded on the wire")
+require(
+    "buffer.writeVarLong(expectedRevision)" in reset_payload,
+    "Reset revision must be encoded on the 1.20.1 wire",
+)
 require(
     "registerGlobalReceiver(ConfigResetPayload.TYPE" in fabric_networking
     and "SmartDropsNetworking.handleReset" in fabric_networking,
@@ -845,12 +884,12 @@ reset_path_match = re.search(
 require(reset_path_match is not None, "Could not isolate the atomic ConfigManager.reset(Path) transaction")
 reset_path_body = reset_path_match.group("body")
 require(
-    reset_path_body.count("AtomicConfigWriter.write") == 1,
-    "A full reset must persist exactly once through the atomic writer",
+    reset_path_body.count("persistenceWriter.write") == 1,
+    "A full reset must persist exactly once through the atomic-writer seam",
 )
 require_before(
     reset_path_body,
-    "AtomicConfigWriter.write",
+    "persistenceWriter.write",
     "publishConfig(defaults, PublicationKind.RESET)",
     "Reset must persist successfully before publishing defaults in memory",
 )
@@ -938,7 +977,7 @@ require(
     "A rate-limited tiny patch must not amplify into a full config snapshot response",
 )
 
-# Minecraft 1.21.11 interprets six-digit RGB literals as alpha=0. Check every editor
+# Minecraft 1.20.1 interprets six-digit RGB literals as alpha=0. Check every editor
 # rendering source so newly added child screens cannot silently reintroduce invisible text.
 render_sources = {
     "loading screen": loading,
@@ -1136,6 +1175,6 @@ all_resources = "\n".join(
     for path in (ROOT / "src/main/resources").rglob("*")
     if path.is_file() and path.suffix in {".json", ".mcmeta", ".txt"}
 )
-require("#minecraft:tall_flowers" not in all_resources, "Invalid Minecraft 1.21.11 tall_flower tag was reintroduced")
+require("#minecraft:tall_flowers" not in all_resources, "Invalid Minecraft 1.20.1 tall_flower tag was reintroduced")
 
 print("Hierarchical Mod Menu integration checks: PASS")

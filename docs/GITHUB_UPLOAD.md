@@ -1,59 +1,39 @@
-# GitHub publication guide
+# GitHub publication guide — Minecraft 1.20.1
 
-The canonical public source repository is [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier). User downloads are published on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier), and ordinary bug or compatibility reports are handled through [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues). Minecraft 26.2 remains the newest/default line on `main`; the maintained `backport/1.21.11` branch provides separate Fabric and NeoForge `1.3.0+mc1.21.11` files.
+The canonical repository is [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier). Minecraft 26.2 remains the newest/default line on `main`. Minecraft 1.20.1 is maintained on `backport/1.20.1` and is published as a stable, non-latest dual-loader release.
 
-## Clone and contribute
+## Ordinary development
 
-```bash
-git clone https://github.com/chedidandrew/Resource-Multiplier.git
-cd Resource-Multiplier
-git switch -c your-change
-git add .
-git commit -m "Describe the change"
-git push -u origin your-change
-```
+Work on `backport/1.20.1`, keep `release_ready=false`, and push or open a pull request normally. The build workflow uses Java 17 and checks both loaders. It does not publish a release.
 
-## CI
+Expected artifacts:
 
-`.github/workflows/build.yml` runs on branch pushes, pull requests, and manual dispatch. This backport uses Java 21 to validate both loader builds, run the shared and loader-specific JUnit/GameTest suites, exercise real client GUI and multiplayer authority paths under Xvfb, audit both playable JARs, and verify the one-way Fabric-to-NeoForge provenance migration. Build artifacts remain loader-labelled. Tag pushes are handled only by the guarded release workflow.
+- `build/libs/smart-resource-multiplier-1.3.0+mc1.20.1.jar` — Fabric
+- `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar` — NeoForge 47
 
-## Release
+Do not commit generated build directories or rename both files to the same filename.
 
-Always rebuild both versioned JARs from source. Renaming an older JAR does not update embedded loader metadata, manifests, package records, or checksums.
+## Final candidate
 
-A stable source commit must set the same `mod_version` in both Gradle property files and set `release_ready=true`. The 1.21.11 source remains on `backport/1.21.11`; it is never merged into `main`. Tag `v1.3.0+mc1.21.11` invokes the guarded release workflow, which verifies the latch, version equality, backport-branch ancestry, full dual-loader test chain, and deterministic package before publishing. The workflow explicitly uses `make_latest: false`, so the Minecraft 26.2 `v1.3.0` release remains GitHub's **Latest** release.
+Before authorizing publication:
 
-## Public links
+1. Complete every automated and manual item in [TESTING.md](TESTING.md) and [PUBLIC_RELEASE_CHECKLIST.md](PUBLIC_RELEASE_CHECKLIST.md).
+2. Rebuild from a clean checkout of the exact candidate commit using Java 17.
+3. Validate both final, playable JARs; do not use a NeoForge `devlibs` artifact.
+4. Record final SHA-256 hashes and sizes.
+5. Confirm `mod_version=1.3.0+mc1.20.1` in both Gradle property files.
+6. Change `release_ready` to `true` only in the exact fully verified commit.
+7. Push that commit to `backport/1.20.1`, then create and push tag `v1.3.0+mc1.20.1` at that commit.
 
-- Website and primary download page: [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier)
-- Source repository: [GitHub](https://github.com/chedidandrew/Resource-Multiplier)
-- Bug and compatibility reports: [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues)
-- Optional support: [Ko-fi](https://ko-fi.com/andrewchedid), [PayPal](https://www.paypal.com/paypalme/chedidandrew), and [Cash App](https://cash.app/%24AndrewChedid)
+The guarded release workflow rejects branch/manual publication, a mismatched tag or loader version, a tag outside `origin/backport/1.20.1`, a false publication latch, or any failing release gate. It uploads exactly the two loader-labelled JARs and uses `make_latest: false`, preserving the Minecraft 26.2 release as GitHub's **Latest** entry.
 
-The same destinations are locked by package validation and exposed through loader metadata and optional Mod Menu integration. `.github/FUNDING.yml` supplies GitHub's sponsor button.
+## CurseForge
 
-## Repository presentation and settings checklist
+Upload the two JARs as separate files under the same project:
 
-- Use this concise repository description: **Configurable multipliers for block drops, mob loot, and supported shearing, with persistent anti-duplication protection.**
-- Set the repository homepage to the official CurseForge project page.
-- Keep Issues enabled and Discussions disabled for the current support model.
-- Disable the Wiki while `docs/` remains canonical.
-- Review Projects and disable it if no board is actively maintained.
-- Enable automatic deletion of head branches after pull requests merge.
-- Protect `main`, require pull requests for gameplay changes, and require the `Build and verify` check before merge.
-- Keep `CHANGELOG.md` and `docs/IMPLEMENTATION_LOG.md` current, and do not commit generated `.gradle`, `build`, `run`, or IDE directories.
+- mark the Fabric JAR as Minecraft 1.20.1 / Fabric and require Fabric API;
+- mark the NeoForge JAR as Minecraft 1.20.1 / NeoForge;
+- use the casual-player changelog in `docs/releases/1.3.0+mc1.20.1.md`;
+- never mark either file compatible with both loaders.
 
-## Recommended topics
-
-```text
-minecraft
-minecraft-mod
-fabric
-fabricmc
-neoforge
-java
-loot
-server-side
-anti-dupe
-smart-resource-multiplier
-```
+Players should remove older copies and install only one Smart Resource Multiplier JAR. This backport does not claim tested Fabric-to-NeoForge world conversion.

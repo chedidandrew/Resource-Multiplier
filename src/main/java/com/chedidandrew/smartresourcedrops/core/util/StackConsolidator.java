@@ -142,7 +142,7 @@ public final class StackConsolidator {
 
         private StackKey(final ItemStack prototype, final boolean retain) {
             this.prototype = retain ? prototype.copyWithCount(1) : prototype;
-            this.hash = ItemStack.hashItemAndComponents(this.prototype);
+            this.hash = Objects.hash(this.prototype.getItem(), this.prototype.getTag());
         }
 
         private static StackKey lookup(final ItemStack stack) {
@@ -157,7 +157,7 @@ public final class StackConsolidator {
         public boolean equals(final Object other) {
             return this == other
                     || other instanceof StackKey key
-                    && ItemStack.isSameItemSameComponents(prototype, key.prototype);
+                    && ItemStack.isSameItemSameTags(prototype, key.prototype);
         }
 
         @Override

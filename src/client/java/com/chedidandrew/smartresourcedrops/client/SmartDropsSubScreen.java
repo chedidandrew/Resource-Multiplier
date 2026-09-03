@@ -152,6 +152,12 @@ public abstract class SmartDropsSubScreen extends Screen {
                     layout.y(),
                     0xFFD6B85C);
         }
+        // Tooltips must be last: later rows, scrollbars, and footer buttons would
+        // otherwise paint over a tooltip emitted from an entry render callback.
+        this.children().stream()
+                .filter(StructuredConfigList.class::isInstance)
+                .map(StructuredConfigList.class::cast)
+                .forEach(list -> list.renderDeferredTooltip(graphics));
     }
 
     @Override
@@ -164,7 +170,6 @@ public abstract class SmartDropsSubScreen extends Screen {
         return false;
     }
 
-    @Override
     public boolean isInGameUi() {
         return this.minecraft != null && this.minecraft.level != null;
     }

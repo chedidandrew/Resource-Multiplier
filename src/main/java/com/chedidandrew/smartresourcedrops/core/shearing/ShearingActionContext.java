@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Shearable;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -21,6 +22,7 @@ import java.util.Deque;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 
 /**
  * Nested server-thread state for a supported shearing action.
@@ -89,6 +91,22 @@ public final class ShearingActionContext {
         return session != null && session.target == target ? session.trace : null;
     }
 
+    /** Captures a classic direct-spawn shearing drop until the action succeeds. */
+    public static boolean captureSpawn(
+            LivingEntity target,
+            ServerLevel level,
+            ItemEntity entity,
+            BooleanSupplier vanillaSpawner
+    ) {
+        Objects.requireNonNull(vanillaSpawner, "vanillaSpawner");
+        Session session = activeSession(target, level);
+        if (session == null || session.spawnOutput == null
+                || !session.spawnOutput.capture(entity)) {
+            return vanillaSpawner.getAsBoolean();
+        }
+        return true;
+    }
+
     private static Scope begin(
             LivingEntity target,
             ServerLevel level,
@@ -150,20 +168,34 @@ public final class ShearingActionContext {
                 return;
             }
             if (session.output == null) {
+                if (session.spawnOutput != null) {
+                    session.spawnOutput.complete();
+                }
                 return;
             }
             if (!isTop(session)) {
                 session.output.abort();
+                if (session.spawnOutput != null) {
+                    session.spawnOutput.abort();
+                }
                 return;
             }
             session.output.complete();
+            if (session.spawnOutput != null) {
+                session.spawnOutput.complete();
+            }
         }
 
         public void abort() {
-            if (closed || session == null || session.output == null) {
+            if (closed || session == null) {
                 return;
             }
-            session.output.abort();
+            if (session.output != null) {
+                session.output.abort();
+            }
+            if (session.spawnOutput != null) {
+                session.spawnOutput.abort();
+            }
         }
 
         @Override
@@ -174,6 +206,9 @@ public final class ShearingActionContext {
             closed = true;
             if (session.output != null && !session.output.finished()) {
                 session.output.abort();
+            }
+            if (session.spawnOutput != null && !session.spawnOutput.finished()) {
+                session.spawnOutput.abort();
             }
 
             Deque<Session> stack = SESSIONS.get();
@@ -209,6 +244,7 @@ public final class ShearingActionContext {
         private final @Nullable UUID responsiblePlayer;
         private final ShearingRuleTrace trace;
         private final @Nullable ShearingOutputBuffer<ServerLevel> output;
+        private final @Nullable ShearingSpawnOutputBuffer spawnOutput;
 
         private Session(
                 LivingEntity target,
@@ -233,6 +269,13 @@ public final class ShearingActionContext {
                             this::warnBudgetFallback,
                             this::warnRollbackFailure)
                     : null;
+            this.spawnOutput = captureOutput
+                    ? new ShearingSpawnOutputBuffer(
+                            level,
+                            trace.appliedMultiplier(),
+                            this::warnBudgetFallback,
+                            this::warnRollbackFailure)
+                    : null;
         }
 
         private void warnBudgetFallback(ShearingOutputBudget.Result result) {
@@ -248,7 +291,7 @@ public final class ShearingActionContext {
                     entityId,
                     targetUuid,
                     position,
-                    dimension.identifier(),
+                    dimension.location(),
                     source,
                     result.limitExceeded(),
                     result.originalItems(),
@@ -270,7 +313,7 @@ public final class ShearingActionContext {
                     entityId,
                     targetUuid,
                     position,
-                    dimension.identifier(),
+                    dimension.location(),
                     source,
                     failure);
         }

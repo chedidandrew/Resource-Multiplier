@@ -21,11 +21,109 @@ base {
 }
 
 def gameTestSourceSet = sourceSets.create('gametest')
+gameTestSourceSet.java.exclude(
+        '**/SmartDropsClientGameTest.java')
 gameTestSourceSet.compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
 gameTestSourceSet.runtimeClasspath += sourceSets.main.runtimeClasspath
 
 loom {
     splitEnvironmentSourceSets()
+    mixin {
+        useLegacyMixinAp = true
+        defaultRefmapName = 'smart_resource_drops.refmap.json'
+    }
+}
+
+// Fabric API 0.92.x predates the client GameTest API. Keep the physical GUI
+// and separate-process authority harness in a run-only source set so none of
+// its entrypoints or marker logic can enter the production JAR.
+def clientTestSourceSet = sourceSets.create('clienttest')
+clientTestSourceSet.java.setSrcDirs(['src/clienttest/java'])
+clientTestSourceSet.resources.setSrcDirs(['src/clienttest/resources'])
+clientTestSourceSet.compileClasspath += (sourceSets.main.output
+        + sourceSets.client.output
+        + sourceSets.client.compileClasspath)
+clientTestSourceSet.runtimeClasspath += (sourceSets.main.runtimeClasspath
+        + sourceSets.client.runtimeClasspath)
+
+def clientSmokeDirectory = layout.buildDirectory.dir('fabric-client-smoke')
+def multiplayerServerDirectory = layout.buildDirectory.dir('fabric-multiplayer-smoke/server')
+def multiplayerClientDirectory = layout.buildDirectory.dir('fabric-multiplayer-smoke/client')
+def persistenceTestDirectory = layout.buildDirectory.dir('fabric-persistence-server-test')
+def prepareClientSmoke = tasks.register('prepareClientSmoke') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = clientSmokeDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'options.txt').setText('''\
+onboardAccessibility:false
+guiScale:1
+maxFps:20
+enableVsync:false
+renderDistance:2
+simulationDistance:5
+''', 'UTF-8')
+    }
+}
+def prepareMultiplayerServerSmoke = tasks.register('prepareMultiplayerServerSmoke') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = multiplayerServerDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
+        new File(directory, 'server.properties').setText('''\
+online-mode=false
+server-port=25577
+level-name=fabric-authority-smoke-world
+gamemode=creative
+difficulty=peaceful
+spawn-protection=0
+view-distance=3
+simulation-distance=3
+motd=Smart Resource Multiplier Fabric authority smoke
+''', 'UTF-8')
+    }
+}
+def prepareMultiplayerClientSmoke = tasks.register('prepareMultiplayerClientSmoke') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = multiplayerClientDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'options.txt').setText('''\
+onboardAccessibility:false
+guiScale:1
+maxFps:20
+enableVsync:false
+renderDistance:2
+simulationDistance:5
+''', 'UTF-8')
+    }
+}
+def preparePersistenceServerTest = tasks.register('preparePersistenceServerTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = persistenceTestDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+        new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
+        new File(directory, 'server.properties').setText('''\
+online-mode=false
+server-port=0
+level-name=persistence-smoke-world
+gamemode=creative
+difficulty=peaceful
+spawn-protection=0
+view-distance=2
+simulation-distance=2
+motd=Smart Resource Multiplier Fabric native persistence smoke test
+''', 'UTF-8')
+    }
+}
+
+loom {
 
     mods {
         smart_resource_drops {
@@ -34,6 +132,76 @@ loom {
         }
         smart_resource_drops_gametest {
             sourceSet gameTestSourceSet
+        }
+        smart_resource_drops_clienttest {
+            sourceSet clientTestSourceSet
+        }
+    }
+
+    runs {
+        clientSmoke {
+            client()
+            name = 'Fabric 1.20.1 client GUI smoke'
+            source clientTestSourceSet
+            runDir 'build/fabric-client-smoke'
+            programArg '--width'
+            programArg '320'
+            programArg '--height'
+            programArg '180'
+            property 'smart_resource_drops.fabricClientSmoke', 'true'
+            property 'smart_resource_drops.fabricClientSmokeMarker',
+                    file('build/fabric-client-smoke/client-smoke.success').absolutePath
+        }
+        multiplayerServerSmoke {
+            server()
+            name = 'Fabric 1.20.1 multiplayer authority server smoke'
+            source clientTestSourceSet
+            runDir 'build/fabric-multiplayer-smoke/server'
+            property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
+            programArg '--nogui'
+        }
+        multiplayerClientSmoke {
+            client()
+            name = 'Fabric 1.20.1 multiplayer authority client smoke'
+            source clientTestSourceSet
+            runDir 'build/fabric-multiplayer-smoke/client'
+            programArg '--width'
+            programArg '320'
+            programArg '--height'
+            programArg '180'
+            property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
+            programArg '--quickPlayMultiplayer'
+            programArg '127.0.0.1:25577'
+        }
+        persistenceMarkServerTest {
+            server()
+            name = 'Fabric 1.20.1 native persistence mark server'
+            source clientTestSourceSet
+            runDir 'build/fabric-persistence-server-test'
+            property 'smart_resource_drops.persistenceTestPhase', 'mark'
+            property 'smart_resource_drops.persistenceTestDirectory',
+                    persistenceTestDirectory.get().asFile.absolutePath
+            programArg '--nogui'
+        }
+        persistenceRemoveServerTest {
+            server()
+            name = 'Fabric 1.20.1 native persistence remove server'
+            source clientTestSourceSet
+            runDir 'build/fabric-persistence-server-test'
+            property 'smart_resource_drops.persistenceTestPhase', 'remove'
+            property 'smart_resource_drops.persistenceTestDirectory',
+                    persistenceTestDirectory.get().asFile.absolutePath
+            programArg '--nogui'
+        }
+        persistenceVerifyAbsentServerTest {
+            server()
+            name = 'Fabric 1.20.1 native persistence absent server'
+            source clientTestSourceSet
+            runDir 'build/fabric-persistence-server-test'
+            property 'smart_resource_drops.persistenceTestPhase', 'verify_absent'
+            property 'smart_resource_drops.persistenceTestDirectory',
+                    persistenceTestDirectory.get().asFile.absolutePath
+            programArg '--nogui'
         }
     }
 }
@@ -44,7 +212,6 @@ fabricApi {
     configureTests {
         createSourceSet = false
         enableGameTests = true
-        enableClientGameTests = true
         eula = true
     }
 }
@@ -53,13 +220,41 @@ loom.runs.named('gameTest') {
     source gameTestSourceSet
 }
 
-loom.runs.named('clientGameTest') {
-    source gameTestSourceSet
-}
-
-// Keep client classes out of the dedicated GameTest runtime while exposing them to the client-only runner.
-tasks.named('runClientGameTest') {
-    classpath += sourceSets.client.runtimeClasspath
+tasks.named('runGameTest').configure {
+    doFirst {
+        final File runDirectory = file('build/run/gameTest')
+        // A crashed legacy GameTest run can persist fixture entities into the
+        // reused world and contaminate the next output-count assertion.
+        project.delete(
+                new File(runDirectory, 'world'),
+                new File(runDirectory, 'config'),
+                new File(runDirectory, 'crash-reports'),
+                new File(runDirectory, 'logs'))
+        runDirectory.mkdirs()
+    }
+    doLast {
+        final File logFile = file('build/run/gameTest/logs/latest.log')
+        if (!logFile.isFile()) {
+            throw new GradleException("Fabric GameTest log was not created: ${logFile}")
+        }
+        final String logText = logFile.getText('UTF-8')
+        final List<String> requiredMarkers = [
+                'Smart Resource Multiplier Fabric GameTest discovery: 62 tests',
+                '62 tests are now running!',
+                '========= 62 GAME TESTS COMPLETE ======================',
+                'All 62 required tests passed :)',
+                'Game test server shutting down',
+        ]
+        final List<String> missingMarkers = requiredMarkers.findAll { !logText.contains(it) }
+        if (!missingMarkers.isEmpty()) {
+            throw new GradleException(
+                    "Fabric GameTest execution evidence is incomplete; missing ${missingMarkers}")
+        }
+        if (logText.contains('required tests failed :(')
+                || logText.contains('Game test server crashed')) {
+            throw new GradleException('Fabric GameTest log reports a failure or crash')
+        }
+    }
 }
 
 repositories {
@@ -78,6 +273,9 @@ dependencies {
 
     // Compile-only keeps optional client integration off dedicated-server tests and published POMs.
     modCompileOnly "com.terraformersmc:modmenu:${modMenuVersionValue}"
+    compileOnly 'org.jspecify:jspecify:1.0.0'
+    clientCompileOnly 'org.jspecify:jspecify:1.0.0'
+    gametestCompileOnly 'org.jspecify:jspecify:1.0.0'
 
     // Opt-in only for the real client smoke test; omitted from normal builds and dedicated-server runs.
     if (providers.gradleProperty('include_modmenu_runtime').map { it.toBoolean() }.getOrElse(false)) {
@@ -86,6 +284,7 @@ dependencies {
 
     testImplementation platform("org.junit:junit-bom:${junitVersionValue}")
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.mockito:mockito-core:5.20.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -95,6 +294,7 @@ processResources {
     inputs.property 'loader_version', loaderVersionValue
     inputs.property 'fabric_version', fabricVersionValue
     inputs.property 'modmenu_version', modMenuVersionValue
+    inputs.property 'java_version', javaVersionValue
 
     filesMatching('fabric.mod.json') {
         expand(
@@ -102,7 +302,8 @@ processResources {
             minecraft_version: minecraftVersionValue,
             loader_version: loaderVersionValue,
             fabric_version: fabricVersionValue,
-            modmenu_version: modMenuVersionValue
+            modmenu_version: modMenuVersionValue,
+            java_version: javaVersionValue
         )
     }
 }
@@ -116,11 +317,107 @@ tasks.named('processGametestResources') {
     }
 }
 
+tasks.named('processClienttestResources') {
+    inputs.property 'version', modVersionValue
+    filesMatching('fabric.mod.json') {
+        expand(version: modVersionValue)
+    }
+}
+
+tasks.named('runClientSmoke') {
+    dependsOn prepareClientSmoke
+    doLast {
+        final File directory = file('build/fabric-client-smoke')
+        final File marker = new File(directory, 'client-smoke.success')
+        if (!marker.isFile()) {
+            throw new GradleException(
+                    "Fabric client smoke exited without success marker ${marker}")
+        }
+        final File logFile = new File(directory, 'logs/latest.log')
+        if (!logFile.isFile()) {
+            throw new GradleException("Fabric client smoke produced no ${logFile}")
+        }
+        final String logText = logFile.getText('UTF-8')
+        final List<String> unexpectedErrors = logText.readLines().findAll { line ->
+            line.contains('/ERROR]')
+                    && !line.contains('Failed to verify authentication')
+                    && !line.contains('Error while loading the narrator')
+                    && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+        }
+        if (!unexpectedErrors.isEmpty()) {
+            throw new GradleException(
+                    "Fabric client smoke log contains unexpected ERROR lines: ${unexpectedErrors}")
+        }
+        for (String forbidden : [
+                '/FATAL]', 'Game crashed!',
+                'MixinApplyError', 'InvalidInjectionException',
+                'ModResolutionException', 'NoClassDefFoundError',
+                'NoSuchMethodError', 'VerifyError']) {
+            if (logText.contains(forbidden)) {
+                throw new GradleException(
+                        "Fabric client smoke log contains forbidden failure: ${forbidden}")
+            }
+        }
+    }
+}
+
+tasks.named('runMultiplayerServerSmoke') {
+    dependsOn prepareMultiplayerServerSmoke
+}
+
+tasks.named('runMultiplayerClientSmoke') {
+    dependsOn prepareMultiplayerClientSmoke
+}
+
+tasks.named('runPersistenceMarkServerTest') {
+    dependsOn preparePersistenceServerTest
+    doLast {
+        final File marker = file('build/fabric-persistence-server-test/persistence-mark.success')
+        if (!marker.isFile()) {
+            throw new GradleException("Fabric persistence mark server exited without ${marker}")
+        }
+    }
+}
+
+tasks.named('runPersistenceRemoveServerTest') {
+    dependsOn tasks.named('runPersistenceMarkServerTest')
+    doLast {
+        final File marker = file('build/fabric-persistence-server-test/persistence-remove.success')
+        if (!marker.isFile()) {
+            throw new GradleException("Fabric persistence remove server exited without ${marker}")
+        }
+    }
+}
+
+tasks.named('runPersistenceVerifyAbsentServerTest') {
+    dependsOn tasks.named('runPersistenceRemoveServerTest')
+    doLast {
+        final File logFile = file('build/fabric-persistence-server-test/logs/latest.log')
+        if (!logFile.isFile()) {
+            throw new GradleException("Fabric persistence restart gate produced no ${logFile}")
+        }
+        final String logText = logFile.getText('UTF-8')
+        if (!logText.contains('Fabric native placement removal persistence phase passed')) {
+            throw new GradleException('Third Fabric persistence JVM did not keep the mark absent')
+        }
+        for (String markerName : [
+                'persistence-mark.success',
+                'persistence-remove.success',
+                'persistence-absent.success']) {
+            final File marker = file("build/fabric-persistence-server-test/${markerName}")
+            if (!marker.isFile()) {
+                throw new GradleException("Fabric persistence restart gate exited without ${marker}")
+            }
+        }
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.release = javaVersionValue
     options.encoding = 'UTF-8'
     // Report deprecated APIs used by this project's compiled source without making warnings fatal.
     options.compilerArgs.add('-Xlint:deprecation')
+    options.compilerArgs.addAll(['-Xmaxerrs', '1000'])
 }
 
 tasks.named('test', Test) {

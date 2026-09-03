@@ -1,22 +1,22 @@
 # Smart Resource Multiplier compatibility notes
 
-Smart Resource Multiplier `1.3.0+mc1.21.11` supports Fabric and NeoForge on Minecraft 1.21.11 within the same documented gameplay boundaries. Both builds share the rule resolvers, safety budgets, schema 3 configuration, commands, and GUI; loader-specific adapters handle lifecycle, networking, and placed-block storage. The backport passes shared and loader-specific unit, dedicated/client GameTest, physical multiplayer, package-validator, and playable-JAR gates. Minecraft 26.2 remains the newest/default release on `main`. All named third-party cases remain version- and loader-specific; this document is not a claim that every mod, datapack, or server stack is compatible.
+Smart Resource Multiplier `1.3.0+mc1.20.1` supports Fabric and NeoForge on Minecraft 1.20.1 within the same documented gameplay boundaries. Both builds share the rule resolvers, safety budgets, schema 3 configuration, commands, and GUI; loader-specific adapters handle lifecycle, networking, and placed-block storage. The backport passes shared and loader-specific unit, dedicated/client GameTest, physical multiplayer, package-validator, and playable-JAR gates. Minecraft 26.2 remains the newest/default release on `main`. All named third-party cases remain version- and loader-specific; this document is not a claim that every mod, datapack, or server stack is compatible.
 
-## Smart Resource Multiplier 1.3.0+mc1.21.11 supported shearing boundary
+## Smart Resource Multiplier 1.3.0+mc1.20.1 supported shearing boundary
 
-The `1.3.0+mc1.21.11` implementation recognizes two sources only: a real server player inside `Player.interactOn`, and the exact vanilla dispenser entity call inside `ShearsDispenseItemBehavior.tryShearEntity`. The outer player scope deliberately does not require `Items.SHEARS`, so a compatible custom tool can work if it follows the standard entity interaction and final shearing-helper path. Loader-recognized fake players, direct `Shearable.shear` calls, custom machine output, and inference from `SoundSource.BLOCKS` remain unsupported vanilla `1x`.
+The `1.3.0+mc1.20.1` implementation recognizes two sources only: a real server player inside `Player.interactOn`, and the exact vanilla dispenser entity call inside `ShearsDispenseItemBehavior.tryShearLivingEntity`. The outer player scope deliberately does not require `Items.SHEARS`, so a compatible custom tool can work if it follows the standard entity interaction path. Loader-recognized fake players, unscoped direct `Shearable.shear` calls, custom machine output, and inference from `SoundSource.BLOCKS` remain unsupported vanilla `1x`.
 
-Eligible output must pass through `LivingEntity.dropFromShearingLootTable`. That helper runs once and its final stacks are buffered; Smart Resource Multiplier never reruns the table or repeats the state transition. Per-call consumers are retained, preserving sheep velocity, entity-specific positions, and compatible mod placement behavior. Direct `spawnAtLocation`, `ItemEntity`, inventory, and equipment ejection are not intercepted.
+Minecraft 1.20.1 Sheep spawns its wool directly while `Shearable.shear` runs. Smart Resource Multiplier captures only those `ItemEntity` spawns inside an eligible player/dispenser scope, applies one bounded transformation after the action, and preserves the original position and motion. Unrelated direct item spawns, inventory insertion, equipment ejection, and output outside that exact scope are not intercepted. On Forge 47, an `IForgeShearable`-only entity's manual `onSheared` result list is transformed once before Forge spawns it; a target that also implements vanilla `Shearable` is deliberately excluded from this Forge-only path so Sheep cannot be multiplied twice.
 
-Production certification includes sheep only. Mooshroom, Snow Golem, Bogged, and Copper Golem are special and fixed at vanilla `1x`; the hardcoded audited safety set prevents a datapack `replace` or conflicting standard tag from bypassing that rule. Unknown modded shearables fail closed until a pack deliberately adds the type to `#smart_resource_drops:shearing/standard_resources`. Certification means only that standard-helper output is eligible—it does not promise that a modded entity actually calls the helper.
+Production certification includes Sheep only. Mooshroom and Snow Golem are special and fixed at vanilla `1x`; the hardcoded audited safety set prevents a datapack `replace` or conflicting standard tag from bypassing that rule. Unknown modded shearables fail closed until a pack deliberately adds the type to `#smart_resource_drops:shearing/standard_resources`. Certification means only that output through one of the supported 1.20.1 paths is eligible—it does not promise that an arbitrary modded entity uses such a path.
 
 Vanilla dispenser beehive honeycomb and leash removal occur outside the wrapped entity call. Leaves, vines, cobwebs, and other blocks remain governed only by block-drop rules. A custom machine that delegates to the vanilla dispenser behavior may work; a machine that bypasses it remains `1x` until a concrete compatibility integration is designed.
 
 ### Certifying a compatible modded shearable
 
-First verify that the modded entity implements the normal shearing interaction and sends its final stacks through `LivingEntity.dropFromShearingLootTable`. Certification cannot adapt an entity that spawns items directly, inserts them into an inventory, or bypasses the supported player/vanilla-dispenser source scopes.
+First verify that the modded entity implements the normal 1.20.1 shearing interaction: vanilla `Shearable` output must spawn inside the supported player/dispenser scope, while a Forge-only manual entity may return its final stacks from `IForgeShearable.onSheared`. Certification cannot adapt an entity that inserts output into an inventory or bypasses the supported source scopes.
 
-In a datapack, create `data/smart_resource_drops/tags/entity_type/shearing/standard_resources.json` with the entity types that have been audited. For example:
+In a datapack, create `data/smart_resource_drops/tags/entity_types/shearing/standard_resources.json` with the entity types that have been audited. For example:
 
 ```json
 {
@@ -40,7 +40,7 @@ For entity death loot, compatibility means final **standard death-table** output
 - Supported: non-player `LivingEntity` standard death-table stacks emitted by Minecraft's death-specific loot consumer.
 - Always outside the multiplier: players, armor stands, equipment, held/picked-up items, entity inventories/cargo, custom death output, direct item spawns, gifts, shearing, fishing, breeding, trading, commands, advancement/score/stat rewards, and unrelated XP.
 - `doMobLoot=false`, an empty table, a baby/no-drop condition, cancellation, and another mod's final zero-result remain authoritative. Smart Resource Multiplier does not recreate output.
-- Ravager's Minecraft 1.21.11 standard table contains a saddle and Evoker's contains a Totem of Undying. Both items are protected at final-output time and remain single even when boss item multiplication is deliberately enabled. Datapacks may protect additional progression output through `#smart_resource_drops:protected_entity_loot`; the shipped tag uses `replace: false`.
+- Ravager's Minecraft 1.20.1 standard table contains a saddle and Evoker's contains a Totem of Undying. Both items are protected at final-output time and remain single even when boss item multiplication is deliberately enabled. Datapacks may protect additional progression output through `#smart_resource_drops:protected_entity_loot`; the shipped tag uses `replace: false`.
 - Wither/Dragon and other special drops must be tested individually. Output produced through subclass custom-death code remains outside the standard-table hook by design.
 - A mod that replaces `dropAllDeathLoot`, bypasses the supported death-table call, consumes loot into an inventory, or creates items later receives vanilla behavior unless it offers a targeted compatibility contract. This fail-closed result is preferred to multiplying ambiguous inventory/equipment output.
 
@@ -50,7 +50,7 @@ Mods and datapacks may add entity types to `#smart_resource_drops:categories/bos
 
 Category tags are server datapack state and reload with server resources. A real `/reload` test that changes a custom category assignment is required before claiming compatibility for a specific mod or datapack pairing. Servers should prefer explicit project tags for entities whose inheritance or `MobCategory` does not express gameplay intent, especially modded bosses or multi-role entities.
 
-The loader-specific development test fixtures have dedicated untagged `Animal`, `Monster`, `NeutralMob`, and `WaterAnimal` probes so class fallback is not accidentally masked by project tags. They also cover project-tag override, multi-category priority, unknown fallback, boss safety, loader-native final-loot modification, mapped Looting, nested callbacks, real mob pickup, and equipment/inventory exclusion. The `1.3.0+mc1.21.11` backport passes all 65 Fabric and 64 NeoForge dedicated-server GameTests, but none of this proves compatibility with every third-party mod. Compatibility evidence must name the exact mod, mod loader, and version used for wildlife, hostile, boss, and equipment/inventory cases.
+The loader-specific development fixtures include untagged `Animal`, `Monster`, `NeutralMob`, and `WaterAnimal` probes so class fallback is not accidentally masked by project tags. They also cover project-tag override, multi-category priority, unknown fallback, boss safety, loader-native final-loot modification, Looting, nested callbacks, real mob pickup, and equipment/inventory exclusion. Final test counts are recorded only after the exact release candidate passes; none of these fixtures proves compatibility with every third-party mod. Compatibility evidence must name the exact mod, loader, and version used.
 
 ## Configuration diagnostics
 
@@ -87,17 +87,17 @@ Every manual compatibility result must record the mod/project name, exact tested
 
 | Category | Mod/project | Exact version | Test date | Smart Resource Multiplier version | Result | Known limitation |
 | --- | --- | --- | --- | --- | --- | --- |
-| Biome/wildlife or passive | Pending selection | Not tested | Not tested | 1.3.0+mc1.21.11 | Pending | Named third-party case not performed |
-| Hostile entity | Pending selection | Not tested | Not tested | 1.3.0+mc1.21.11 | Pending | Named third-party case not performed |
-| Boss | Pending selection | Not tested | Not tested | 1.3.0+mc1.21.11 | Pending | Named third-party case not performed |
-| Equipment/inventory | Pending selection | Not tested | Not tested | 1.3.0+mc1.21.11 | Pending | Named third-party case not performed |
-| Custom shearable | Pending selection | Not tested | Not tested | 1.3.0+mc1.21.11 | Pending | Named third-party case not performed |
-| Automated miner | Pending selection | Not tested | Not tested | 1.3.0+mc1.21.11 | Pending | Named third-party case not performed |
-| Custom placement/drop | Pending selection | Not tested | Not tested | 1.3.0+mc1.21.11 | Pending | Named third-party case not performed |
+| Biome/wildlife or passive | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
+| Hostile entity | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
+| Boss | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
+| Equipment/inventory | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
+| Custom shearable | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
+| Automated miner | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
+| Custom placement/drop | Pending selection | Not tested | Not tested | 1.3.0+mc1.20.1 | Pending | Named third-party case not performed |
 
 ## Integration API stance
 
-Smart Resource Multiplier `1.3.0+mc1.21.11` does not expose a supported public Java API. Other mods and packs should use documented configuration and commands, project-owned category tags, `#smart_resource_drops:protected_entity_loot`, and the audited `#smart_resource_drops:shearing/standard_resources` certification surface rather than bind to public-looking implementation classes. A formal API is deferred until a concrete reproducible third-party case cannot be solved safely through those surfaces and supplies lifecycle, failure, versioning, documentation, and cross-mod test requirements.
+Smart Resource Multiplier `1.3.0+mc1.20.1` does not expose a supported public Java API. Other mods and packs should use documented configuration and commands, project-owned category tags, `#smart_resource_drops:protected_entity_loot`, and the audited `#smart_resource_drops:shearing/standard_resources` certification surface rather than bind to public-looking implementation classes. A formal API is deferred until a concrete reproducible third-party case cannot be solved safely through those surfaces and supplies lifecycle, failure, versioning, documentation, and cross-mod test requirements.
 
 ## Safe defaults
 
@@ -111,4 +111,4 @@ With Mod Menu installed, the Mods screen exposes a `Configure` button for Smart 
 
 If a connected server does not support Smart Resource Multiplier config sync, the loading screen reports that state and allows the player to return safely. Regular players receive the full connected interface read-only; operators and the integrated-server owner can apply validated changes.
 
-The 1.21.11 hardening pass reconfirms compile-only dependency and dedicated-server classpath isolation; the Fabric client GameTest covers the shared title/local, cached connected, integrated-server, dedicated non-operator, and dedicated operator routes. A historical Minecraft 26.2 and Mod Menu 20.0.0 run visibly completed the title-screen Mods-list Configure route and every major child dirty-state view, but it remains historical evidence rather than proof for Mod Menu 17 on this backport. The separate-process NeoForge gate covers the shared connected screens through the production `/smartdropsgui` route, including non-operator and operator authority, child-screen Apply behavior, confirmed Reset, disconnect cleanup, and reconnect. A separately installed Fabric client/server pass entering through Mod Menu is not part of the recorded `1.3.0+mc1.21.11` evidence.
+The 1.20.1 release gates use physical Fabric and NeoForge clients for the shared screens, including a 320x180 layout, title/local state, connected non-operator and operator authority, child navigation, Apply, confirmed Reset, disconnect cleanup, and reconnect. Mod Menu is optional on Fabric and absent from dedicated-server classpaths. A test of the built-in screen factory does not by itself prove every third-party Mod Menu release or every GUI scale.

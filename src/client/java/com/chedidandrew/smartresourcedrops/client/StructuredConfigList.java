@@ -4,9 +4,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
-import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
@@ -36,6 +33,9 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
     private int preferredRowWidth;
     private List<Row> rows = List.of();
+    private Component deferredTooltip;
+    private int deferredTooltipX;
+    private int deferredTooltipY;
 
     /**
      * @param screenWidth the full screen width; the list centers itself within it
@@ -60,7 +60,7 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
             final int y,
             final int preferredRowWidth
     ) {
-        super(minecraft, screenWidth, height, y, DEFAULT_ROW_HEIGHT);
+        super(minecraft, screenWidth, height, y, y + height, DEFAULT_ROW_HEIGHT);
         this.preferredRowWidth = Math.max(1, preferredRowWidth);
         updateResponsiveBounds(screenWidth, height, y);
     }
@@ -71,7 +71,7 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         this.rows = List.copyOf(newRows);
         replaceEntries(rows.stream().map(row -> new Entry(row)).toList());
         setScrollAmount(0.0);
-        refreshScrollAmount();
+        setScrollAmount(0.0);
     }
 
     public List<Row> rows() {
@@ -84,11 +84,37 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
     public void setPreferredRowWidth(final int preferredRowWidth) {
         this.preferredRowWidth = Math.max(1, preferredRowWidth);
-        updateSizeAndPosition(getWidth(), getHeight(), getX(), getY());
+        updateResponsiveBounds(this.width, this.y1 - this.y0, this.y0);
     }
 
     public int getPreferredRowWidth() {
         return preferredRowWidth;
+    }
+
+    @Override
+    public void render(
+            final GuiGraphics graphics,
+            final int mouseX,
+            final int mouseY,
+            final float partialTick
+    ) {
+        deferredTooltip = null;
+        super.render(graphics, mouseX, mouseY, partialTick);
+    }
+
+    /** Draws the hovered row tooltip after every screen widget has rendered. */
+    public void renderDeferredTooltip(final GuiGraphics graphics) {
+        if (deferredTooltip == null) {
+            return;
+        }
+        final Font font = this.minecraft.font;
+        graphics.renderTooltip(
+                font,
+                font.split(
+                        deferredTooltip,
+                        Math.max(1, Math.min(320, this.width - 16))),
+                deferredTooltipX,
+                deferredTooltipY);
     }
 
     /**
@@ -99,12 +125,18 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         int availableWidth = Math.max(1, screenWidth - LIST_SIDE_MARGIN * 2);
         int listWidth = Math.min(availableWidth, preferredRowWidth + 24);
         int x = (screenWidth - listWidth) / 2;
-        updateSizeAndPosition(listWidth, height, x, y);
+        updateSize(listWidth, height, y, y + height);
+        setLeftPos(x);
+    }
+
+    /** Compatibility name retained for the screens shared with newer Minecraft versions. */
+    public double scrollAmount() {
+        return getScrollAmount();
     }
 
     @Override
     public int getRowWidth() {
-        return Math.max(1, Math.min(preferredRowWidth, getWidth() - 24));
+        return Math.max(1, Math.min(preferredRowWidth, width - 24));
     }
 
     /**
@@ -151,8 +183,13 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         }
 
         @Override
-        public void renderContent(
+        public void render(
                 final GuiGraphics graphics,
+                final int index,
+                final int rowTop,
+                final int rowLeft,
+                final int rowWidth,
+                final int rowHeight,
                 final int mouseX,
                 final int mouseY,
                 final boolean hovered,
@@ -160,24 +197,24 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         ) {
             if (hovered) {
                 graphics.fill(
-                        getX() + 1,
-                        getY() + 1,
-                        getX() + getWidth() - 1,
-                        getY() + getHeight() - 1,
+                        rowLeft + 1,
+                        rowTop + 1,
+                        rowLeft + rowWidth - 1,
+                        rowTop + rowHeight - 1,
                         HOVER_BACKGROUND);
             }
             graphics.fill(
-                    getX() + 1,
-                    getY() + getHeight() - 1,
-                    getX() + getWidth() - 1,
-                    getY() + getHeight(),
+                    rowLeft + 1,
+                    rowTop + rowHeight - 1,
+                    rowLeft + rowWidth - 1,
+                    rowTop + rowHeight,
                     ROW_SEPARATOR);
 
             Font font = StructuredConfigList.this.minecraft.font;
-            int left = getContentX() + ROW_HORIZONTAL_PADDING;
-            int right = getContentRight() - ROW_HORIZONTAL_PADDING;
+            int left = rowLeft + ROW_HORIZONTAL_PADDING;
+            int right = rowLeft + rowWidth - ROW_HORIZONTAL_PADDING;
             int availableWidth = Math.max(0, right - left);
-            int lineY = getContentY();
+            int lineY = rowTop + 2;
 
             ClippedText primary = clip(font, row.primary(), availableWidth);
             ClippedText secondary = clip(font, row.secondary(), availableWidth);
@@ -199,17 +236,15 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
                     || leftDetail.truncated()
                     || rightDetail.truncated();
             if (hovered && (!row.tooltip().getString().isEmpty() || truncated)) {
-                Component tooltip = hoverText(truncated);
-                graphics.setTooltipForNextFrame(
-                        Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip),
-                        mouseX,
-                        mouseY);
+                StructuredConfigList.this.deferredTooltip = hoverText(truncated);
+                StructuredConfigList.this.deferredTooltipX = mouseX;
+                StructuredConfigList.this.deferredTooltipY = mouseY;
             }
         }
 
         @Override
-        public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
-            if (event.button() != 0) {
+        public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
+            if (button != 0) {
                 return false;
             }
             activate();
@@ -217,12 +252,12 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         }
 
         @Override
-        public boolean keyPressed(final KeyEvent event) {
-            if (event.isSelection()) {
+        public boolean keyPressed(final int keyCode, final int scanCode, final int modifiers) {
+            if (keyCode == 257 || keyCode == 335 || keyCode == 32) {
                 activate();
                 return true;
             }
-            return super.keyPressed(event);
+            return super.keyPressed(keyCode, scanCode, modifiers);
         }
 
         @Override

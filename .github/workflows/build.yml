@@ -1,4 +1,4 @@
-name: Build and verify
+name: Build and verify Minecraft 1.20.1
 
 on:
   push:
@@ -10,25 +10,25 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  fabric:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 150
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
 
-      - name: Set up Java 21
+      - name: Set up Java 17
         uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
 
       - name: Cache Gradle data
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
 
-      - name: Validate package metadata and policy logic
+      - name: Validate package and policy contracts
         run: |
           python3 tools/validate_package.py
           python3 scripts/test_release_packaging.py
@@ -38,142 +38,118 @@ jobs:
           python3 scripts/polish_regression_tests.py
           bash tools/run_core_tests.sh
 
-      - name: Run Java and dedicated-server tests, then build
+      - name: Test and build Fabric
         run: |
           chmod +x ./gradlew
           ./gradlew --no-daemon clean test runGameTest build
+          python3 tools/validate_fabric_jar.py
 
-      - name: Run client GUI and authority tests
-        run: xvfb-run -a ./gradlew --no-daemon runClientGameTest
+      - name: Run real Fabric 320x180 GUI smoke
+        run: xvfb-run -a ./gradlew --no-daemon runClientSmoke
 
-      - name: Create source snapshot
-        run: git archive --format=zip --output=build/source-snapshot.zip HEAD
+      - name: Run real Fabric multiplayer authority and fragmented-wire smoke
+        timeout-minutes: 12
+        run: bash tools/run_fabric_multiplayer_smoke.sh
 
-      - name: Upload build artifacts
+      - name: Run Fabric native placement persistence restart gate
+        run: ./gradlew --no-daemon runPersistenceVerifyAbsentServerTest
+
+      - name: Upload Fabric smoke logs
+        if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: SmartResourceMultiplier-${{ github.sha }}
+          name: SmartResourceMultiplier-Fabric-smoke-logs-${{ github.sha }}
           path: |
-            build/libs/*.jar
-            build/source-snapshot.zip
+            build/fabric-client-smoke/logs/
+            build/fabric-client-smoke/crash-reports/
+            build/fabric-multiplayer-smoke-logs/
+            build/fabric-multiplayer-smoke/server/logs/
+            build/fabric-multiplayer-smoke/server/crash-reports/
+            build/fabric-multiplayer-smoke/client/logs/
+            build/fabric-multiplayer-smoke/client/crash-reports/
+            build/fabric-persistence-server-test/logs/
+            build/fabric-persistence-server-test/crash-reports/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload Fabric playable JAR
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: SmartResourceMultiplier-Fabric-1.20.1-${{ github.sha }}
+          path: build/libs/smart-resource-multiplier-1.3.0+mc1.20.1.jar
           if-no-files-found: error
 
   neoforge:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 210
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
 
-      - name: Set up Java 21
+      - name: Set up Java 17
         uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
 
       - name: Cache Gradle data
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
 
-      - name: Build and run NeoForge gameplay tests
+      - name: Test and build legacy NeoForge 47
         run: |
           chmod +x ./gradlew
-          ./gradlew -p neoforge --no-daemon clean build runGameTestServer
+          ./gradlew -p neoforge --no-daemon clean test build runGameTestServer
+          python3 tools/validate_neoforge_jar.py
 
-      - name: Validate NeoForge playable JAR
-        run: python3 tools/validate_neoforge_jar.py
-
-      - name: Run NeoForge Fabric migration restart gate
-        timeout-minutes: 10
-        run: |
-          set -o pipefail
-          mkdir -p neoforge/build/migration-server-smoke-logs
-          ./gradlew -p neoforge --no-daemon --console=plain runMigrationRestartServerTest \
-            2>&1 | tee neoforge/build/migration-server-smoke-logs/gradle-console.log
-
-      - name: Upload NeoForge migration restart logs
-        if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: SmartResourceMultiplier-NeoForge-migration-logs-${{ github.sha }}
-          path: |
-            neoforge/build/migration-server-smoke-logs/
-            neoforge/build/migration-server-test/logs/
-            neoforge/build/migration-server-test/crash-reports/
-            neoforge/build/migration-server-test/hs_err_pid*.log
-            neoforge/build/migration-server-test/replay_pid*.log
-            neoforge/build/migration-server-test/migration-import.success
-            neoforge/build/migration-server-test/migration-restart.success
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run NeoForge client category smoke test
+      - name: Run real NeoForge 320x180 GUI smoke
         run: xvfb-run -a ./gradlew -p neoforge --no-daemon runClientCategoryTest
 
-      - name: Run NeoForge multiplayer authority smoke test
-        timeout-minutes: 12
+      - name: Run NeoForge multiplayer authority and fragmented-wire smoke
+        timeout-minutes: 15
         run: bash tools/run_neoforge_multiplayer_smoke.sh
-
-      - name: Upload NeoForge multiplayer smoke logs
-        if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: SmartResourceMultiplier-NeoForge-multiplayer-logs-${{ github.sha }}
-          path: |
-            neoforge/build/multiplayer-smoke-logs/
-            neoforge/build/multiplayer-test/server/logs/
-            neoforge/build/multiplayer-test/server/crash-reports/
-            neoforge/build/multiplayer-test/client/logs/
-            neoforge/build/multiplayer-test/client/crash-reports/
-          if-no-files-found: warn
-          retention-days: 7
 
       - name: Run NeoForge optional-channel installation matrix
         timeout-minutes: 15
         run: bash tools/run_neoforge_optional_channel_smoke.sh
 
-      - name: Upload NeoForge optional-channel smoke logs
-        if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: SmartResourceMultiplier-NeoForge-optional-channel-logs-${{ github.sha }}
-          path: |
-            neoforge/build/optional-channel-smoke-logs/
-            neoforge/build/optional-channel-test/client-only/server/logs/
-            neoforge/build/optional-channel-test/client-only/server/crash-reports/
-            neoforge/build/optional-channel-test/client-only/client/logs/
-            neoforge/build/optional-channel-test/client-only/client/crash-reports/
-            neoforge/build/optional-channel-test/server-only/server/logs/
-            neoforge/build/optional-channel-test/server-only/server/crash-reports/
-            neoforge/build/optional-channel-test/server-only/client/logs/
-            neoforge/build/optional-channel-test/server-only/client/crash-reports/
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Run NeoForge malicious oversized-wire smoke test
+      - name: Run NeoForge malicious fragmented-wire gate
         timeout-minutes: 12
         run: bash tools/run_neoforge_oversized_wire_smoke.sh
 
-      - name: Upload NeoForge oversized-wire smoke logs
+      - name: Run NeoForge native capability persistence restart gate
+        run: ./gradlew -p neoforge --no-daemon runPersistenceVerifyAbsentServerTest
+
+      - name: Run final JAR on an official production Forge 47 server
+        timeout-minutes: 45
+        run: bash tools/run_neoforge_production_server_smoke.sh
+
+      - name: Upload NeoForge smoke logs
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: SmartResourceMultiplier-NeoForge-oversized-wire-logs-${{ github.sha }}
+          name: SmartResourceMultiplier-NeoForge-smoke-logs-${{ github.sha }}
           path: |
+            neoforge/build/client-category-test/logs/
+            neoforge/build/client-category-test/crash-reports/
+            neoforge/build/multiplayer-smoke-logs/
+            neoforge/build/multiplayer-test/server/logs/
+            neoforge/build/multiplayer-test/client/logs/
+            neoforge/build/optional-channel-smoke-logs/
             neoforge/build/oversized-wire-smoke-logs/
-            neoforge/build/oversized-wire-test/server/logs/
-            neoforge/build/oversized-wire-test/server/crash-reports/
-            neoforge/build/oversized-wire-test/client/logs/
-            neoforge/build/oversized-wire-test/client/crash-reports/
+            neoforge/build/persistence-server-test/logs/
+            neoforge/build/persistence-server-test/crash-reports/
+            neoforge/build/production-server-smoke/logs/
+            neoforge/build/production-server-smoke/crash-reports/
+            neoforge/build/production-server-smoke/production-server-console.log
+            neoforge/build/production-server-smoke/forge-*.log
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Upload NeoForge playable artifact
+      - name: Upload NeoForge playable JAR
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: SmartResourceMultiplier-NeoForge-${{ github.sha }}
-          path: |
-            neoforge/build/libs/smart-resource-multiplier-neoforge-*.jar
-            !neoforge/build/libs/*-sources.jar
+          name: SmartResourceMultiplier-NeoForge-1.20.1-${{ github.sha }}
+          path: neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar
           if-no-files-found: error

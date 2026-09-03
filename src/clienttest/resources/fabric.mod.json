@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "smart_resource_drops_clienttest",
+  "version": "${version}",
+  "name": "Smart Resource Multiplier Fabric Client Smoke",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.chedidandrew.smartresourcedrops.platform.fabric.FabricMultiplayerServerSmokeTest",
+      "com.chedidandrew.smartresourcedrops.platform.fabric.FabricPlacementPersistenceSmokeTest"
+    ],
+    "client": [
+      "com.chedidandrew.smartresourcedrops.client.FabricClientSmokeTest",
+      "com.chedidandrew.smartresourcedrops.client.FabricMultiplayerClientSmokeTest"
+    ]
+  },
+  "depends": {
+    "fabricloader": "*",
+    "minecraft": "1.20.1",
+    "fabric-lifecycle-events-v1": "*",
+    "smart_resource_drops": "*"
+  }
+}

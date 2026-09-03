@@ -55,7 +55,7 @@ public final class MultiplierResolver {
     ) {
         SmartDropsConfig config = ConfigManager.get();
         String blockId = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
-        String dimensionId = level.dimension().identifier().toString();
+        String dimensionId = level.dimension().location().toString();
         LinkedHashSet<Category> categories = SmartDropTags.categoriesFor(state);
         boolean playerPlaced = readOnly
                 ? PlacementTracker.peekPlaced(level, pos)

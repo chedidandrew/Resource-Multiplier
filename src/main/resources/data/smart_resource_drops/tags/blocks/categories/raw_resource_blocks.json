@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:raw_iron_block",
+    "minecraft:raw_copper_block",
+    "minecraft:raw_gold_block",
+    { "id": "#c:storage_blocks/raw_iron", "required": false },
+    { "id": "#c:storage_blocks/raw_copper", "required": false },
+    { "id": "#c:storage_blocks/raw_gold", "required": false },
+    { "id": "#forge:storage_blocks/raw_iron", "required": false },
+    { "id": "#forge:storage_blocks/raw_copper", "required": false },
+    { "id": "#forge:storage_blocks/raw_gold", "required": false }
+  ]
+}

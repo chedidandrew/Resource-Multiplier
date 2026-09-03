@@ -77,7 +77,7 @@ def source_tests() -> None:
     assert "ShearingActionContext" in all_text
     assert "PlayerShearingContextMixin" in all_text
     assert "ShearsDispenseItemBehaviorMixin" in all_text
-    assert "LivingEntityShearingLootMixin" in all_text
+    assert "EntityShearingDropMixin" in all_text
 
     identifier_lines = "\n".join(
         line
@@ -96,7 +96,7 @@ def source_tests() -> None:
             if "ShearingActionContext" in all_text:
                 assert "PlayerShearingContextMixin" in joined
                 assert "ShearsDispenseItemBehaviorMixin" in joined
-                assert "LivingEntityShearingLootMixin" in joined
+                assert "EntityShearingDropMixin" in joined
 
     neoforge_mixins = json.loads((
         ROOT / "neoforge/src/main/resources/smart_resource_drops.neoforge.mixins.json"
@@ -105,20 +105,17 @@ def source_tests() -> None:
     assert {
         "CommonHooksPlacementMixin",
         "NeoForgeShearsDispenseItemBehaviorMixin",
-        "SerializableChunkDataLegacyProvenanceMixin",
         "ServerPlayerGameModeMixin",
     }.issubset(neoforge_mixins.get("mixins", []))
 
     standard_shearing = json.loads((
-        ROOT / "src/main/resources/data/smart_resource_drops/tags/entity_type/shearing/standard_resources.json"
+        ROOT / "src/main/resources/data/smart_resource_drops/tags/entity_types/shearing/standard_resources.json"
     ).read_text(encoding="utf-8"))
     special_shearing = json.loads((
-        ROOT / "src/main/resources/data/smart_resource_drops/tags/entity_type/shearing/special.json"
+        ROOT / "src/main/resources/data/smart_resource_drops/tags/entity_types/shearing/special.json"
     ).read_text(encoding="utf-8"))
     assert standard_shearing == {"replace": False, "values": ["minecraft:sheep"]}
     assert set(special_shearing.get("values", [])) == {
-        "minecraft:bogged",
-        "minecraft:copper_golem",
         "minecraft:mooshroom",
         "minecraft:snow_golem",
     }

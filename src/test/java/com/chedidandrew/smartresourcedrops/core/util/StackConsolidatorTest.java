@@ -10,13 +10,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import net.minecraft.SharedConstants;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.CustomData;
 
 final class StackConsolidatorTest {
     @BeforeAll
@@ -27,12 +25,11 @@ final class StackConsolidatorTest {
 
     @Test
     void preservesComponentsAndUsesLegalStackSizes() {
-        final ItemStack source = stack(Items.DIAMOND, 3);
+        final ItemStack source = stack(Items.SNOWBALL, 3);
         final CompoundTag tag = new CompoundTag();
         tag.putString("marker", "preserve-me");
-        source.set(DataComponents.CUSTOM_NAME, Component.literal("preserve-me"));
-        source.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-        source.set(DataComponents.MAX_STACK_SIZE, 16);
+        source.setTag(tag);
+        source.setHoverName(Component.literal("preserve-me"));
 
         final List<ItemStack> result = StackConsolidator.multiply(List.of(source), 10);
 
@@ -41,18 +38,16 @@ final class StackConsolidatorTest {
         for (ItemStack output : result) {
             assertNotSame(source, output);
             assertTrue(output.getCount() <= output.getMaxStackSize());
-            assertTrue(ItemStack.isSameItemSameComponents(source, output));
+            assertTrue(ItemStack.isSameItemSameTags(source, output));
         }
-        result.getFirst().set(DataComponents.CUSTOM_NAME, Component.literal("changed"));
-        assertEquals(Component.literal("preserve-me"), source.get(DataComponents.CUSTOM_NAME));
+        result.get(0).setHoverName(Component.literal("changed"));
+        assertEquals(Component.literal("preserve-me"), source.getHoverName());
     }
 
     @Test
     void mergesIdenticalPartialLootEntriesBeforeSplitting() {
         final ItemStack first = stack(Items.EMERALD, 40);
         final ItemStack second = stack(Items.EMERALD, 30);
-        first.set(DataComponents.MAX_STACK_SIZE, 64);
-        second.set(DataComponents.MAX_STACK_SIZE, 64);
 
         final List<ItemStack> result = StackConsolidator.multiply(List.of(first, second), 2);
 

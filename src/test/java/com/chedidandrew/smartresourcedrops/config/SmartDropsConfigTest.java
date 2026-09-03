@@ -422,7 +422,7 @@ final class SmartDropsConfigTest {
                 """.formatted(privatePlayerValue));
 
         ConfigLoadDiagnostics diagnostics = parsed.diagnostics();
-        assertTrue(diagnostics.invalidIdentifiersRemoved() >= 3);
+        assertTrue(diagnostics.invalidResourceLocationsRemoved() >= 3);
         assertTrue(diagnostics.invalidCategoryNamesRemoved() >= 1);
         assertEquals(1, diagnostics.invalidPlayerOverridesRemoved());
         assertTrue(diagnostics.valuesAdjusted() >= 2);
@@ -527,13 +527,18 @@ final class SmartDropsConfigTest {
                 }
                 """;
         Files.writeString(migrationPath, legacy);
-        Files.createDirectory(migrationPath.resolveSibling(migrationPath.getFileName() + ".tmp"));
+        try {
+            ConfigManager.setPersistenceWriterForTests((path, content) -> {
+                throw new IOException("forced migration persistence failure");
+            });
+            assertFalse(ConfigManager.load(migrationPath));
 
-        assertFalse(ConfigManager.load(migrationPath));
-
-        assertTrue(ConfigManager.configurationsEqual(activeBefore, ConfigManager.get()));
-        assertEquals(revisionBefore, ConfigManager.revision());
-        assertEquals(legacy, Files.readString(migrationPath));
+            assertTrue(ConfigManager.configurationsEqual(activeBefore, ConfigManager.get()));
+            assertEquals(revisionBefore, ConfigManager.revision());
+            assertEquals(legacy, Files.readString(migrationPath));
+        } finally {
+            ConfigManager.resetPersistenceWriterForTests();
+        }
 
         // Clear the intentional write-suppression state for later tests in this JVM.
         assertTrue(ConfigManager.load(directory.resolve("restored-after-failure.json")));
@@ -568,7 +573,7 @@ final class SmartDropsConfigTest {
         ConfigLoadDiagnostics malformedDiagnostics = ConfigManager.validationSnapshot().loadDiagnostics();
         assertTrue(malformedDiagnostics.malformedFileRecovered());
         assertEquals(1, malformedDiagnostics.backupFileNames().size());
-        assertFalse(malformedDiagnostics.backupFileNames().getFirst().contains(directory.toString()));
+        assertFalse(malformedDiagnostics.backupFileNames().get(0).contains(directory.toString()));
         try (var files = Files.list(directory)) {
             Path backup = files
                     .filter(candidate -> candidate.getFileName().toString().startsWith("smart_resource_drops.broken-"))

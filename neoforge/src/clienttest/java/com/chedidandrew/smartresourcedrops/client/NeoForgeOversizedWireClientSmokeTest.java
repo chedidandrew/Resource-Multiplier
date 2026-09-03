@@ -1,156 +1,167 @@
 package com.chedidandrew.smartresourcedrops.client;
 
-import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
-import com.chedidandrew.smartresourcedrops.config.ConfigPatch;
-import com.chedidandrew.smartresourcedrops.network.ConfigPatchPayload;
-import com.chedidandrew.smartresourcedrops.network.ConfigRequestPayload;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import java.util.concurrent.atomic.AtomicBoolean;
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.Connection;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.PacketEncoder;
-import net.minecraft.network.VarInt;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.common.NeoForge;
+import java.util.List;
+import java.util.Random;
 
-/** Sends a deliberately malformed play payload below the normal typed encoder. */
-@Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.CLIENT)
+import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
+import com.chedidandrew.smartresourcedrops.network.ConfigPatchFragmentPayload;
+import com.chedidandrew.smartresourcedrops.network.ConfigPatchPayload;
+import com.chedidandrew.smartresourcedrops.network.ConfigTransferCodec;
+
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+
+/** Sends individually valid but malicious fragment sequences through Forge's real channel. */
+@Mod.EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, value = Dist.CLIENT)
 public final class NeoForgeOversizedWireClientSmokeTest {
     private static final int TIMEOUT_TICKS = 6_000;
-    private static final int SETTLE_TICKS = 40;
-    private static final int ATTACK_REQUEST_ID = 0x53524D;
-    private static final int OVERSIZED_JSON_LENGTH = ConfigPatch.MAX_JSON_LENGTH + 1;
-    private static final AtomicBoolean REGISTERED = new AtomicBoolean();
+    private static final int OP_WAIT_TICKS = 180;
+    private static final int TRANSFER_EXPIRY_WAIT_TICKS = 430;
+    private static final NeoForgeOversizedWireClientSmokeTest INSTANCE =
+            new NeoForgeOversizedWireClientSmokeTest();
 
     private int ticks;
     private int connectedTicks;
-    private volatile boolean wireWriteCompleted;
-    private volatile Throwable wireWriteFailure;
-    private Connection attackedConnection;
-    private boolean attackScheduled;
+    private int attackTicks;
+    private Phase phase = Phase.WAIT_CONNECTION;
 
-    public NeoForgeOversizedWireClientSmokeTest() {
-        if (Boolean.getBoolean("smart_resource_drops.oversizedWireTest")
-                && REGISTERED.compareAndSet(false, true)) {
-            NeoForge.EVENT_BUS.addListener(ClientTickEvent.Post.class, this::onClientTick);
+    private NeoForgeOversizedWireClientSmokeTest() {
+    }
+
+    @SubscribeEvent
+    public static void tick(final TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END
+                && Boolean.getBoolean("smart_resource_drops.oversizedWireTest")) {
+            INSTANCE.onClientTick();
         }
     }
 
-    private void onClientTick(final ClientTickEvent.Post event) {
+    private void onClientTick() {
         final Minecraft minecraft = Minecraft.getInstance();
         try {
-            if (++this.ticks > TIMEOUT_TICKS) {
-                throw new AssertionError("Timed out waiting for oversized wire-payload rejection");
+            if (++ticks > TIMEOUT_TICKS) {
+                throw new AssertionError("Timed out during malformed-fragment gate at " + phase);
             }
-            if (this.wireWriteFailure != null) {
-                throw new AssertionError("Could not write hostile wire payload", this.wireWriteFailure);
-            }
-
-            if (!this.attackScheduled) {
-                scheduleAttackWhenReady(minecraft);
-                return;
-            }
-
-            if (this.wireWriteCompleted
-                    && this.attackedConnection != null
-                    && !this.attackedConnection.isConnected()) {
-                SmartResourceDrops.LOGGER.info(
-                        "NeoForge oversized-wire client smoke passed: {}-character patch reached the wire and the offending connection was rejected",
-                        OVERSIZED_JSON_LENGTH);
-                minecraft.stop();
+            switch (phase) {
+                case WAIT_CONNECTION -> waitForConnection(minecraft);
+                case WAIT_EXPIRY -> waitForExpiry(minecraft);
+                case WAIT_HEALTHY_SNAPSHOT -> waitForHealthySnapshot(minecraft);
+                case COMPLETE -> {
+                    // Minecraft is stopping.
+                }
             }
         } catch (Throwable failure) {
-            SmartResourceDrops.LOGGER.error("NeoForge oversized-wire client smoke test failed", failure);
+            SmartResourceDrops.LOGGER.error("NeoForge malformed-fragment client smoke failed", failure);
             throw failure instanceof Error error
                     ? error
-                    : new AssertionError("NeoForge oversized-wire client smoke test failed", failure);
+                    : new AssertionError("NeoForge malformed-fragment client smoke failed", failure);
         }
     }
 
-    private void scheduleAttackWhenReady(final Minecraft minecraft) {
-        final var listener = minecraft.getConnection();
-        if (listener == null || minecraft.player == null || minecraft.level == null) {
-            this.connectedTicks = 0;
+    private void waitForConnection(final Minecraft minecraft) {
+        if (minecraft.getConnection() == null || minecraft.player == null || minecraft.level == null) {
+            connectedTicks = 0;
             return;
         }
-        if (!listener.hasChannel(ConfigPatchPayload.TYPE)) {
-            throw new AssertionError("NeoForge config-patch channel was not negotiated");
+        if (!ClientNetworkBridge.canSend(ConfigPatchFragmentPayload.TYPE)) {
+            throw new AssertionError("Forge config fragment channel was not negotiated");
         }
-        if (++this.connectedTicks < SETTLE_TICKS) {
+        if (++connectedTicks < OP_WAIT_TICKS) {
             return;
         }
 
-        this.attackedConnection = listener.getConnection();
-        this.attackScheduled = true;
-        writeHostilePayload(this.attackedConnection);
+        final List<ConfigPatchFragmentPayload> duplicateFrames = ConfigPatchFragmentPayload.encode(
+                new ConfigPatchPayload(0x535240, 0L, pseudoRandomAscii(90_000)));
+        if (duplicateFrames.size() < 2) {
+            throw new AssertionError("Malicious duplicate fixture did not create multiple fragments");
+        }
+        ClientNetworkBridge.send(duplicateFrames.get(0));
+        ClientNetworkBridge.send(duplicateFrames.get(0));
+
+        final List<ConfigPatchFragmentPayload> mixedFrames = ConfigPatchFragmentPayload.encode(
+                new ConfigPatchPayload(0x535241, 0L, pseudoRandomAscii(90_000)));
+        ClientNetworkBridge.send(mixedFrames.get(0));
+        final ConfigPatchFragmentPayload second = mixedFrames.get(1);
+        ClientNetworkBridge.send(new ConfigPatchFragmentPayload(
+                second.format(),
+                second.requestId(),
+                second.expectedRevision() + 1L,
+                second.compression(),
+                second.rawBytes(),
+                second.encodedBytes(),
+                second.chunkIndex(),
+                second.chunkCount(),
+                second.chunk()));
+
+        for (int attempt = 0; attempt < 8; attempt++) {
+            ClientNetworkBridge.send(new ConfigPatchFragmentPayload(
+                    ConfigTransferCodec.FORMAT,
+                    0x535242 + attempt,
+                    0L,
+                    ConfigTransferCodec.Compression.ZLIB,
+                    ConfigTransferCodec.RAW_UTF8_MAX,
+                    2,
+                    0,
+                    1,
+                    new byte[] {0, 0}));
+        }
+
+        final List<ConfigPatchFragmentPayload> incomplete = ConfigPatchFragmentPayload.encode(
+                new ConfigPatchPayload(0x535243, 0L, pseudoRandomAscii(90_000)));
+        ClientNetworkBridge.send(incomplete.get(0));
+        SmartResourceDrops.LOGGER.info(
+                "Sent duplicate, mixed-metadata, repeated max-inflate, and incomplete Forge fragment attacks");
+        phase = Phase.WAIT_EXPIRY;
+        attackTicks = 0;
     }
 
-    private void writeHostilePayload(final Connection connection) {
-        final Channel channel = connection.channel();
-        channel.eventLoop().execute(() -> {
-            ByteBuf encodedProbe = null;
-            ByteBuf hostilePacket = null;
-            try {
-                final ChannelHandlerContext encoderContext = channel.pipeline().context("encoder");
-                if (encoderContext == null || !(encoderContext.handler() instanceof PacketEncoder<?> packetEncoder)) {
-                    throw new IllegalStateException("Active play packet encoder was not available");
-                }
-
-                // Ask the active protocol codec for the negotiated custom-payload packet ID,
-                // then deliberately bypass the typed ConfigPatchPayload encoder. This keeps
-                // the test resilient to Minecraft packet-ID changes while proving the server's
-                // decoder, rather than the ordinary client guard, enforces the size boundary.
-                encodedProbe = channel.alloc().buffer();
-                encodeProbe(packetEncoder, encodedProbe);
-                final int customPayloadPacketId = VarInt.read(encodedProbe);
-
-                hostilePacket = channel.alloc().buffer(OVERSIZED_JSON_LENGTH + 128);
-                VarInt.write(hostilePacket, customPayloadPacketId);
-                final FriendlyByteBuf payload = new FriendlyByteBuf(hostilePacket);
-                payload.writeIdentifier(ConfigPatchPayload.TYPE.id());
-                payload.writeVarInt(ATTACK_REQUEST_ID);
-                payload.writeVarLong(0L);
-                payload.writeVarInt(OVERSIZED_JSON_LENGTH);
-                hostilePacket.writeZero(OVERSIZED_JSON_LENGTH);
-
-                final ByteBuf submittedPacket = hostilePacket;
-                hostilePacket = null;
-                SmartResourceDrops.LOGGER.info(
-                        "Sending hostile NeoForge config patch below the typed encoder ({} characters; maximum {})",
-                        OVERSIZED_JSON_LENGTH,
-                        ConfigPatchPayload.MAX_JSON_LENGTH);
-                encoderContext.writeAndFlush(submittedPacket).addListener(future -> {
-                    if (future.isSuccess()) {
-                        this.wireWriteCompleted = true;
-                    } else {
-                        this.wireWriteFailure = future.cause();
-                    }
-                });
-            } catch (Throwable failure) {
-                if (hostilePacket != null) {
-                    hostilePacket.release();
-                }
-                this.wireWriteFailure = failure;
-            } finally {
-                if (encodedProbe != null) {
-                    encodedProbe.release();
-                }
-            }
-        });
+    private void waitForExpiry(final Minecraft minecraft) {
+        if (minecraft.getConnection() == null || minecraft.player == null) {
+            throw new AssertionError("Malformed fragments disconnected the Forge client");
+        }
+        if (++attackTicks < TRANSFER_EXPIRY_WAIT_TICKS) {
+            return;
+        }
+        final ClientConfigState.RequestStart request = ClientConfigState.request(minecraft);
+        if (!request.started()) {
+            throw new AssertionError("Healthy request could not start after fragment attacks: " + request.failure());
+        }
+        phase = Phase.WAIT_HEALTHY_SNAPSHOT;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static void encodeProbe(final PacketEncoder<?> packetEncoder, final ByteBuf output) {
-        final StreamCodec codec = packetEncoder.getProtocolInfo().codec();
-        codec.encode(
-                output,
-                new ServerboundCustomPayloadPacket(new ConfigRequestPayload(ATTACK_REQUEST_ID)));
+    private void waitForHealthySnapshot(final Minecraft minecraft) {
+        if (minecraft.screen instanceof SmartDropsConfigLoadingScreen) {
+            return;
+        }
+        if (!(minecraft.screen instanceof SmartDropsConfigScreen)) {
+            return;
+        }
+        if (ClientConfigState.cachedSnapshot(minecraft).isEmpty()) {
+            throw new AssertionError("Healthy snapshot was not accepted after fragment attacks");
+        }
+        SmartResourceDrops.LOGGER.info(
+                "NeoForge oversized-wire client smoke passed: malformed fragments failed closed and a later fragmented snapshot succeeded");
+        phase = Phase.COMPLETE;
+        minecraft.stop();
+    }
+
+    private static String pseudoRandomAscii(final int length) {
+        final Random random = new Random(0x5a17c0deL);
+        final String alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_";
+        final StringBuilder value = new StringBuilder(length);
+        while (value.length() < length) {
+            value.append(alphabet.charAt(random.nextInt(alphabet.length())));
+        }
+        return value.toString();
+    }
+
+    private enum Phase {
+        WAIT_CONNECTION,
+        WAIT_EXPIRY,
+        WAIT_HEALTHY_SNAPSHOT,
+        COMPLETE
     }
 }

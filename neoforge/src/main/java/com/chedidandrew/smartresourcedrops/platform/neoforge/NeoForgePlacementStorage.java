@@ -1,60 +1,44 @@
 package com.chedidandrew.smartresourcedrops.platform.neoforge;
 
-import java.util.function.Supplier;
-
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
 import com.chedidandrew.smartresourcedrops.provenance.PlacedBlockData;
 import com.chedidandrew.smartresourcedrops.provenance.PlacementTracker;
+import com.mojang.serialization.DataResult;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.attachment.AttachmentType;
-import net.neoforged.neoforge.event.level.ChunkDataEvent;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.capabilities.CapabilityToken;
+import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 
-/** NeoForge persistent chunk data attachment for placed-block provenance. */
+/** Persistent LevelChunk capability for placed-block provenance on legacy Forge. */
 final class NeoForgePlacementStorage implements PlacementTracker.Storage {
-    private static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
-            DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, SmartResourceDrops.MOD_ID);
-    private static final Supplier<AttachmentType<PlacedBlockData>> PLACED_BLOCKS = ATTACHMENTS.register(
-            "placed_blocks",
-            () -> AttachmentType.builder(PlacedBlockData::new)
-                    .serialize(PlacedBlockData.MAP_CODEC, data -> !data.isEmpty())
-                    .build());
+    private static final Capability<PlacedBlockData> PLACED_BLOCKS = CapabilityManager.get(
+            new CapabilityToken<>() {
+            });
 
     static void register(final IEventBus modBus) {
-        ATTACHMENTS.register(modBus);
-        NeoForge.EVENT_BUS.addListener(
-                EventPriority.HIGHEST,
-                ChunkDataEvent.Load.class,
-                NeoForgePlacementStorage::onChunkDataLoad);
+        modBus.addListener((RegisterCapabilitiesEvent event) ->
+                event.register(PlacedBlockData.class));
+        MinecraftForge.EVENT_BUS.addGenericListener(
+                LevelChunk.class,
+                NeoForgePlacementStorage::attachCapability);
     }
 
-    private static void onChunkDataLoad(final ChunkDataEvent.Load event) {
-        final Object serializedData = event.getData();
-        if (!(serializedData instanceof LegacyFabricProvenanceMigration.Carrier carrier)) {
-            return;
-        }
-        final PlacedBlockData legacyData = carrier.smart_resource_drops$getLegacyFabricProvenance();
-        if (legacyData == null || legacyData.isEmpty()) {
-            return;
-        }
-
-        final AttachmentType<PlacedBlockData> attachmentType = PLACED_BLOCKS.get();
-        if (event.getChunk().hasData(attachmentType)) {
-            return;
-        }
-
-        event.getChunk().setData(attachmentType, legacyData);
-        event.getChunk().markUnsaved();
-        SmartResourceDrops.LOGGER.debug(
-                "Imported Fabric placement provenance for chunk {}",
-                event.getChunk().getPos());
+    private static void attachCapability(final AttachCapabilitiesEvent<LevelChunk> event) {
+        final Provider provider = new Provider();
+        event.addCapability(SmartResourceDrops.id("placed_blocks"), provider);
+        event.addListener(provider::invalidate);
     }
 
     @Override
@@ -63,31 +47,61 @@ final class NeoForgePlacementStorage implements PlacementTracker.Storage {
             final BlockPos pos,
             final int packedPosition
     ) {
-        final LevelChunk chunk = level.getChunkAt(pos);
-        final PlacedBlockData data = chunk.getExistingDataOrNull(PLACED_BLOCKS);
-        return data != null && data.contains(packedPosition);
+        return data(level.getChunkAt(pos)).contains(packedPosition);
     }
 
     @Override
     public void mark(final ServerLevel level, final BlockPos pos, final int packedPosition) {
         final LevelChunk chunk = level.getChunkAt(pos);
-        final PlacedBlockData data = chunk.getData(PLACED_BLOCKS);
-        if (data.add(packedPosition)) {
-            chunk.markUnsaved();
+        if (data(chunk).add(packedPosition)) {
+            chunk.setUnsaved(true);
         }
     }
 
     @Override
     public boolean remove(final ServerLevel level, final BlockPos pos, final int packedPosition) {
         final LevelChunk chunk = level.getChunkAt(pos);
-        final PlacedBlockData data = chunk.getExistingDataOrNull(PLACED_BLOCKS);
-        if (data == null || !data.remove(packedPosition)) {
+        if (!data(chunk).remove(packedPosition)) {
             return false;
         }
-        if (data.isEmpty()) {
-            chunk.removeData(PLACED_BLOCKS);
-        }
-        chunk.markUnsaved();
+        chunk.setUnsaved(true);
         return true;
+    }
+
+    private static PlacedBlockData data(final LevelChunk chunk) {
+        return chunk.getCapability(PLACED_BLOCKS).orElseThrow(() ->
+                new IllegalStateException("Placed-block capability missing from chunk " + chunk.getPos()));
+    }
+
+    private static final class Provider implements ICapabilitySerializable<CompoundTag> {
+        private final PlacedBlockData data = new PlacedBlockData();
+        private final LazyOptional<PlacedBlockData> optional = LazyOptional.of(() -> data);
+
+        @Override
+        public <T> LazyOptional<T> getCapability(
+                final Capability<T> capability,
+                final Direction side
+        ) {
+            return capability == PLACED_BLOCKS ? optional.cast() : LazyOptional.empty();
+        }
+
+        @Override
+        public CompoundTag serializeNBT() {
+            final DataResult<net.minecraft.nbt.Tag> encoded = PlacedBlockData.MAP_CODEC
+                    .codec()
+                    .encodeStart(NbtOps.INSTANCE, data);
+            final net.minecraft.nbt.Tag tag = encoded.result().orElseGet(CompoundTag::new);
+            return tag instanceof CompoundTag compound ? compound : new CompoundTag();
+        }
+
+        @Override
+        public void deserializeNBT(final CompoundTag tag) {
+            PlacedBlockData.MAP_CODEC.codec().parse(NbtOps.INSTANCE, tag).result()
+                    .ifPresent(data::replaceWith);
+        }
+
+        private void invalidate() {
+            optional.invalidate();
+        }
     }
 }

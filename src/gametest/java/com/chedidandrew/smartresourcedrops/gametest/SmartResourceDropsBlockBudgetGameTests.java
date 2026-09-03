@@ -4,14 +4,12 @@ import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
 import com.chedidandrew.smartresourcedrops.core.SmartDropsStats;
 import com.chedidandrew.smartresourcedrops.gametest.fixture.GameTestBlockLootFixtures;
-import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -22,9 +20,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /** Real server-pipeline checks for block output-budget fallback and context recovery. */
@@ -32,7 +28,7 @@ public final class SmartResourceDropsBlockBudgetGameTests {
     private static final int ORIGINAL_DIAMONDS = GameTestBlockLootFixtures.PATHOLOGICAL_STACKS
             * GameTestBlockLootFixtures.ITEMS_PER_STACK;
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void pathologicalFinalLootFallsBackForEveryBlockSourceAndRecovers(
             final GameTestHelper helper
     ) {
@@ -68,13 +64,9 @@ public final class SmartResourceDropsBlockBudgetGameTests {
             final BlockState explosionState = Blocks.DIRT.defaultBlockState();
             helper.getLevel().setBlock(explosionPos, explosionState, Block.UPDATE_ALL);
             GameTestBlockLootFixtures.arm();
-            final List<ItemStack> explosionDrops = new ArrayList<>();
-            explosionState.onExplosionHit(
-                    helper.getLevel(),
-                    explosionPos,
-                    explosion(helper.getLevel(), explosionPos),
-                    (stack, pos) -> explosionDrops.add(stack.copy()));
-            assertListDrops(helper, explosionDrops, 1, ORIGINAL_DIAMONDS, "explosion fallback");
+            explosion(helper.getLevel(), explosionPos).finalizeExplosion(true);
+            assertWorldDrops(helper, explosionPos, 1, ORIGINAL_DIAMONDS, "explosion fallback");
+            removeDrops(helper, explosionPos);
 
             SmartDropsStats.Snapshot fallbackStats = SmartDropsStats.snapshot();
             helper.assertTrue(fallbackStats.blocksEvaluated() == 3L,
@@ -144,48 +136,16 @@ public final class SmartResourceDropsBlockBudgetGameTests {
     }
 
     private static Explosion explosion(final ServerLevel level, final BlockPos pos) {
-        final Vec3 center = Vec3.atCenterOf(pos);
-        return new Explosion() {
-            @Override
-            public ServerLevel level() {
-                return level;
-            }
-
-            @Override
-            public BlockInteraction getBlockInteraction() {
-                return BlockInteraction.DESTROY;
-            }
-
-            @Override
-            public LivingEntity getIndirectSourceEntity() {
-                return null;
-            }
-
-            @Override
-            public Entity getDirectSourceEntity() {
-                return null;
-            }
-
-            @Override
-            public float radius() {
-                return 4.0F;
-            }
-
-            @Override
-            public Vec3 center() {
-                return center;
-            }
-
-            @Override
-            public boolean canTriggerBlocks() {
-                return false;
-            }
-
-            @Override
-            public boolean shouldAffectBlocklikeEntities() {
-                return true;
-            }
-        };
+        return new Explosion(
+                level,
+                null,
+                pos.getX() + 0.5D,
+                pos.getY() + 0.5D,
+                pos.getZ() + 0.5D,
+                4.0F,
+                false,
+                Explosion.BlockInteraction.DESTROY,
+                List.of(pos));
     }
 
     private static void assertWorldDrops(
@@ -210,10 +170,12 @@ public final class SmartResourceDropsBlockBudgetGameTests {
             final int expectedDiamonds,
             final String scenario
     ) {
-        helper.assertTrue(total(drops, Items.DIRT) == expectedDirt,
-                scenario + " produced the wrong dirt count");
-        helper.assertTrue(total(drops, Items.DIAMOND) == expectedDiamonds,
-                scenario + " produced the wrong diamond count");
+        final int actualDirt = total(drops, Items.DIRT);
+        final int actualDiamonds = total(drops, Items.DIAMOND);
+        helper.assertTrue(actualDirt == expectedDirt,
+                scenario + " produced " + actualDirt + " dirt instead of " + expectedDirt);
+        helper.assertTrue(actualDiamonds == expectedDiamonds,
+                scenario + " produced " + actualDiamonds + " diamonds instead of " + expectedDiamonds);
     }
 
     private static int total(final List<ItemStack> drops, final Item item) {
@@ -231,6 +193,6 @@ public final class SmartResourceDropsBlockBudgetGameTests {
     }
 
     private static void removeDrops(final GameTestHelper helper, final BlockPos pos) {
-        dropsNear(helper, pos).forEach(entity -> entity.kill(helper.getLevel()));
+        dropsNear(helper, pos).forEach(ItemEntity::kill);
     }
 }

@@ -5,33 +5,34 @@ import com.chedidandrew.smartresourcedrops.config.ConfigPatch;
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
 import com.chedidandrew.smartresourcedrops.network.ConfigInvalidationPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigMutationResultPayload;
+import com.chedidandrew.smartresourcedrops.network.ConfigPatchFragmentPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigPatchPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigRequestPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigResetPayload;
+import com.chedidandrew.smartresourcedrops.network.ConfigSnapshotFragmentPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigSnapshotPayload;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.ClientCommandHandler;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.common.NeoForge;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.ClientCommandHandler;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
 /** Separate-process client/server authority and payload-boundary smoke test. */
-@Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, value = Dist.CLIENT)
 public final class NeoForgeMultiplayerClientSmokeTest {
     private static final int TIMEOUT_TICKS = 6_000;
     private static final int PROMOTION_WAIT_TICKS = 180;
-    private static final AtomicBoolean REGISTERED = new AtomicBoolean();
+    private static final NeoForgeMultiplayerClientSmokeTest INSTANCE =
+            new NeoForgeMultiplayerClientSmokeTest();
 
     private Phase phase = Phase.WAIT_CONNECTION;
     private int ticks;
@@ -39,14 +40,18 @@ public final class NeoForgeMultiplayerClientSmokeTest {
     private int expectedNearLimitBlockMultipliers;
     private Object firstConnectionIdentity;
 
-    public NeoForgeMultiplayerClientSmokeTest() {
-        if (Boolean.getBoolean("smart_resource_drops.multiplayerTest")
-                && REGISTERED.compareAndSet(false, true)) {
-            NeoForge.EVENT_BUS.addListener(ClientTickEvent.Post.class, this::onClientTick);
+    private NeoForgeMultiplayerClientSmokeTest() {
+    }
+
+    @SubscribeEvent
+    public static void tick(final TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END
+                && Boolean.getBoolean("smart_resource_drops.multiplayerTest")) {
+            INSTANCE.onClientTick();
         }
     }
 
-    private void onClientTick(final ClientTickEvent.Post event) {
+    private void onClientTick() {
         final Minecraft minecraft = Minecraft.getInstance();
         try {
             if (minecraft.getOverlay() != null) {
@@ -84,12 +89,9 @@ public final class NeoForgeMultiplayerClientSmokeTest {
         if (connection == null || minecraft.player == null || minecraft.level == null) {
             return;
         }
-        requireChannel(connection.hasChannel(ConfigRequestPayload.TYPE), "config request");
-        requireChannel(connection.hasChannel(ConfigPatchPayload.TYPE), "config patch");
-        requireChannel(connection.hasChannel(ConfigResetPayload.TYPE), "config reset");
-        requireChannel(connection.hasChannel(ConfigSnapshotPayload.TYPE), "config snapshot");
-        requireChannel(connection.hasChannel(ConfigInvalidationPayload.TYPE), "config invalidation");
-        requireChannel(connection.hasChannel(ConfigMutationResultPayload.TYPE), "mutation result");
+        requireChannel(ClientNetworkBridge.canSend(ConfigRequestPayload.TYPE), "config request");
+        requireChannel(ClientNetworkBridge.canSend(ConfigPatchFragmentPayload.TYPE), "config patch fragments");
+        requireChannel(ClientNetworkBridge.canSend(ConfigResetPayload.TYPE), "config reset");
 
         requireClientCommandRoute();
         transition(Phase.WAIT_READ_ONLY);
@@ -256,7 +258,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
         // The NeoForge LoggingOut adapter must invalidate both the request generation
         // and cached authority state before a new connection is allowed to reuse them.
         minecraft.setScreen(new SmartDropsConfigLoadingScreen(root));
-        minecraft.disconnect(new TitleScreen(), false);
+        minecraft.clearLevel(new TitleScreen());
         transition(Phase.WAIT_DISCONNECT);
     }
 
@@ -276,9 +278,8 @@ public final class NeoForgeMultiplayerClientSmokeTest {
                 new TitleScreen(),
                 minecraft,
                 ServerAddress.parseString(address),
-                new ServerData("Smart Resource Multiplier reconnect smoke", address, ServerData.Type.OTHER),
-                false,
-                null);
+                new ServerData("Smart Resource Multiplier reconnect smoke", address, false),
+                false);
         transition(Phase.WAIT_RECONNECT);
     }
 
@@ -451,7 +452,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
                     "Expected one structured list on " + screen.getClass().getSimpleName()
                             + ", found " + lists.size());
         }
-        return lists.getFirst();
+        return lists.get(0);
     }
 
     private static EditBox onlySearchBox(final Screen screen) {
@@ -464,7 +465,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
                     "Expected one search box on " + screen.getClass().getSimpleName()
                             + ", found " + searches.size());
         }
-        return searches.getFirst();
+        return searches.get(0);
     }
 
     private static StructuredConfigList.Row rowWithPrimary(
@@ -498,7 +499,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
     }
 
     private static void press(final Button button) {
-        button.onPress(new KeyEvent(257, 0, 0));
+        button.onPress();
     }
 
     private static <T extends Screen> T requireScreen(
@@ -527,12 +528,9 @@ public final class NeoForgeMultiplayerClientSmokeTest {
     }
 
     private static void requireAllChannels(final net.minecraft.client.multiplayer.ClientPacketListener connection) {
-        requireChannel(connection.hasChannel(ConfigRequestPayload.TYPE), "config request");
-        requireChannel(connection.hasChannel(ConfigPatchPayload.TYPE), "config patch");
-        requireChannel(connection.hasChannel(ConfigResetPayload.TYPE), "config reset");
-        requireChannel(connection.hasChannel(ConfigSnapshotPayload.TYPE), "config snapshot");
-        requireChannel(connection.hasChannel(ConfigInvalidationPayload.TYPE), "config invalidation");
-        requireChannel(connection.hasChannel(ConfigMutationResultPayload.TYPE), "mutation result");
+        requireChannel(ClientNetworkBridge.canSend(ConfigRequestPayload.TYPE), "config request");
+        requireChannel(ClientNetworkBridge.canSend(ConfigPatchFragmentPayload.TYPE), "config patch fragments");
+        requireChannel(ClientNetworkBridge.canSend(ConfigResetPayload.TYPE), "config reset");
     }
 
     private enum Phase {

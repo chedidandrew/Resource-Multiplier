@@ -124,7 +124,7 @@ final class ConfigValidationFormatterTest {
 
     private static TextColor severityColor(final List<Component> lines, final String label) {
         Component line = lines.stream().filter(component -> component.getString().contains(label)).findFirst().orElseThrow();
-        return line.getSiblings().getFirst().getStyle().getColor();
+        return line.getSiblings().get(0).getStyle().getColor();
     }
 
     private static String rendered(final List<Component> lines) {

@@ -1,51 +1,48 @@
 # Build status
 
-## Smart Resource Multiplier 1.3.0+mc1.21.11 dual-loader backport
+## Minecraft 1.20.1 dual-loader backport
 
-Smart Resource Multiplier `1.3.0+mc1.21.11` is the maintained Minecraft Java Edition 1.21.11 backport for both Fabric and NeoForge. Both builds use Java 21, share the same gameplay, configuration, commands, and GUI implementation, and keep small loader-specific adapters for lifecycle, networking, and placed-block provenance. Minecraft 26.2 remains the newest/default release on `main` and GitHub tag `v1.3.0` remains **Latest**.
+Smart Resource Multiplier `1.3.0+mc1.20.1` is the maintained Minecraft Java Edition 1.20.1 backport for Fabric and legacy NeoForge/Forge 47. Minecraft 26.2 remains the newest/default line on `main`; this branch is intentionally released separately and must not replace GitHub's **Latest** release.
 
-- Version: `1.3.0+mc1.21.11`
-- Publication latch: `release_ready=true`
-- Release branch: `backport/1.21.11`
-- Release tag: `v1.3.0+mc1.21.11`
-- Fabric: Loader `0.19.5`, Fabric API `0.141.6+1.21.11`, optional Mod Menu `17.0.0`
-- NeoForge: `21.11.45`, ModDevGradle `2.0.146`
-- Java: `21`
-- Fabric JAR: `smart-resource-multiplier-1.3.0+mc1.21.11.jar`
-- NeoForge JAR: `smart-resource-multiplier-neoforge-1.3.0+mc1.21.11.jar`
-- Website: `https://www.curseforge.com/minecraft/mc-mods/resource-multiplier`
-- Issues: `https://github.com/chedidandrew/Resource-Multiplier/issues`
-- Sources: `https://github.com/chedidandrew/Resource-Multiplier`
-- Mod ID and datapack/network namespace: `smart_resource_drops`
-- Config path and schema: `config/smart_resource_drops.json`, schema 3
-- Commands: `/smartdrops` and `/smartdropsgui`
-- Production icon: approved **SMART RESOURCE MULTIPLIER** diamond-mining artwork, `512x512` PNG, SHA-256 `db216ccd6058404de18f797ebb5be87a313899a27c3f1971fdf086b8637dc190`
+- Branch: `backport/1.20.1`
+- Planned tag: `v1.3.0+mc1.20.1`
+- Publication latch: `release_ready=false`
+- Java: `17`
+- Fabric Loader: `0.19.5`
+- Fabric API: `0.92.12+1.20.1`
+- Optional Mod Menu: `7.2.2`
+- NeoForge artifact: `net.neoforged:forge:1.20.1-47.1.106`
+- ModDevGradle legacy plugin: `2.0.146`
+- Config identity: `config/smart_resource_drops.json`, schema 3
+- Stable mod ID and namespace: `smart_resource_drops`
 
-## Compatibility decision
+The shared gameplay, configuration, commands, GUI, bounded network protocol, and safety policies are compiled into both loader builds. Loader-specific code is limited to lifecycle, networking, persistent chunk data, platform events, and client integration. Install exactly one loader-specific JAR; Fabric also requires Fabric API.
 
-The Fabric and NeoForge builds intentionally preserve the same configuration fields, defaults, commands, GUI, block/entity/shearing multipliers, output budgets, permissions, and anti-duplication behavior. The General screen labels its independent controls **Multiply Block XP** and **Block XP Multiplier** on both loaders; Mob XP remains under **Entity Drops**.
+## Current verification state
 
-Install exactly one loader-specific JAR. Fabric also requires Fabric API. Fabric-to-NeoForge placed-block provenance migration is supported and tested for the documented 1.21.11 path, but it is one-way because the loaders store that chunk data differently; back up a world before changing loaders and do not repeatedly move it between loaders.
+This branch is a release candidate, not a published release. The publication latch stays false until every clean, target-native gate is green on the final source state.
 
-## Verification state
+Completed during the backport:
 
-- Package metadata, deterministic source packaging, Mod Menu integration, structured tooltips, edge cases, polish regressions, workflow policy, and 90 framework-independent core assertions pass.
-- Fabric passes all 158 JUnit tests, all 65 required dedicated-server GameTests, the real client GUI/authority GameTest, and a clean Java 21 Loom build.
-- NeoForge passes all 164 JUnit tests, all 64 required dedicated-server GameTests, a clean Java 21 ModDevGradle build, and the loader-isolation/JAR validator.
-- A real NeoForge client confirms all nine Entity Categories rows and tag-based classifications.
-- A separate NeoForge client/server pair confirms `/smartdropsgui`, non-operator read-only access, operator promotion, entity overrides and filters, shearing settings, root Apply, confirmed Reset, near-limit payloads, disconnect cleanup, six-channel reconnect, and fresh server-authoritative state.
-- Physical client-only and server-only installation tests both connect and disconnect cleanly while unavailable configuration channels remain unavailable.
-- A real 1,048,577-character configuration payload is rejected at the 1,048,576-character decoder limit; only the offending client disconnects, configuration and revision stay unchanged, and the server remains responsive.
-- A hash-locked Fabric-authored Minecraft 1.21.11 chunk imports into native NeoForge placement provenance, saves through a real server, restarts in a second JVM, and remains visible to gameplay lookup.
+- Java 17 compilation for Fabric and the NeoForge 47 legacy toolchain.
+- Shared JUnit coverage, including strict fragmented-config wire decoding and transfer-admission bounds.
+- Fabric dedicated-server GameTests and physical client/multiplayer harness implementation.
+- NeoForge legacy metadata, SRG reobfuscation/refmap configuration, MixinExtras JarJar packaging, capability-based placed-block persistence, SimpleChannel networking, and loader-specific shearing hooks.
+- A checksum-pinned official Forge 47.1.106 installer gate that boots the untouched NeoForge release JAR with Java 17 under the true `forgeserver` launch target, runs status/validation, persists the canonical config, and shuts down cleanly.
+- Target-native Minecraft 1.20.1 tag/resource layouts and a Minecraft 1.20.1-authored wide GameTest structure.
+- Guarded release workflow for exactly two loader-labelled JARs with `make_latest: false`.
 
-## Verified artifacts
+Still required before changing `release_ready` to true:
 
-- Fabric JAR: 964,571 bytes, 330 ZIP entries (298 files), SHA-256 `DBF680EBF65BE9EDF97236339550F2A45821AFE5FA58ECAB24AA15AC88A517D4`.
-- NeoForge JAR: 961,150 bytes, 336 ZIP entries (304 files), SHA-256 `45431B7DCD303C610CDC4E6BE35D6D76947FBA844ADC1545B84D52D0FB0C3887`.
-- Inspection confirms public name `Smart Resource Multiplier`, version `1.3.0+mc1.21.11`, Java 21 bytecode, exact Minecraft 1.21.11 loader metadata, the approved icon bytes, the embedded MIT license, no nested dependencies, no test/probe fixtures, and no cross-loader implementation leakage.
+- Clean final Fabric unit, GameTest, physical GUI, physical multiplayer, packaging, and JAR-validation passes.
+- Clean final NeoForge unit, GameTest, physical GUI/multiplayer, optional-installation, hostile-wire, production-server, packaging, and JAR-validation passes.
+- Final hashes and sizes recorded from the two exact release JARs.
 
-## Distribution
+No cross-loader world-conversion guarantee is made for this backport. Fabric and NeoForge store placed-block provenance in different loader-owned chunk envelopes; players should keep a backup and use the same loader for an existing world unless a future release documents a target-native migration test.
 
-The backport remains on `backport/1.21.11` and is published from tag `v1.3.0+mc1.21.11` as a stable but deliberately non-latest GitHub release. The guarded release workflow uses `make_latest: false`; it does not merge into or move `main`. CurseForge receives the Fabric and NeoForge JARs as two separate files with the matching loader selected.
+## Planned artifacts
 
-The Minecraft 26.2 `1.3.0` source, release, and evidence remain on `main` and in [`docs/releases/1.3.0.md`](docs/releases/1.3.0.md). Earlier records remain under `docs/releases/`, `docs/verification/`, and `docs/archive/`.
+- Fabric: `build/libs/smart-resource-multiplier-1.3.0+mc1.20.1.jar`
+- NeoForge: `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar`
+
+The final release workflow publishes only those two JARs from tag `v1.3.0+mc1.20.1`; it does not merge this branch into `main` or mark the backport as the latest GitHub release.

@@ -208,8 +208,8 @@ final class EntityInspectionFormatter {
         final String visible = BlockInspectionFormatter.truncate(id, MAX_VISIBLE_ID);
         return Component.literal(visible).withStyle(style -> style
                 .withColor(ChatFormatting.DARK_GRAY)
-                .withClickEvent(new ClickEvent.CopyToClipboard(id))
-                .withHoverEvent(new HoverEvent.ShowText(Component.literal(
+                .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, id))
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(
                         "Click to copy entity ID\n" + id))));
     }
 

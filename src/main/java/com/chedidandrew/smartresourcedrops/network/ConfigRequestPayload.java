@@ -1,19 +1,31 @@
 package com.chedidandrew.smartresourcedrops.network;
 
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
-public record ConfigRequestPayload(int requestId) implements CustomPacketPayload {
-    public static final Type<ConfigRequestPayload> TYPE =
-            new Type<>(SmartResourceDrops.id("config_request"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, ConfigRequestPayload> CODEC = StreamCodec.of(
-            (buffer, payload) -> buffer.writeVarInt(payload.requestId()),
-            buffer -> new ConfigRequestPayload(buffer.readVarInt()));
+public record ConfigRequestPayload(int requestId) implements ConfigPayload {
+    public static final ResourceLocation TYPE = SmartResourceDrops.id("config_request");
+
+    public ConfigRequestPayload {
+        if (requestId <= 0) {
+            throw new IllegalArgumentException("Config request ID must be positive");
+        }
+    }
+
+    public static ConfigRequestPayload read(final FriendlyByteBuf buffer) {
+        final int requestId = buffer.readVarInt();
+        ConfigPayload.requireFullyRead(buffer, "config request");
+        return new ConfigRequestPayload(requestId);
+    }
 
     @Override
-    public Type<ConfigRequestPayload> type() {
+    public ResourceLocation id() {
         return TYPE;
+    }
+
+    @Override
+    public void write(final FriendlyByteBuf buffer) {
+        buffer.writeVarInt(requestId);
     }
 }

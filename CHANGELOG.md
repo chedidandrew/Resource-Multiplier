@@ -4,6 +4,26 @@ All notable changes are documented here.
 
 ## Unreleased
 
+## 1.3.0+mc1.20.1 - release candidate
+
+### Added
+
+- Added Minecraft Java Edition 1.20.1 builds for Fabric and legacy NeoForge/Forge 47 while keeping Minecraft 26.2 as the newest/default release line.
+- Added target-native Java 17 metadata, resources, GameTests, physical GUI checks, multiplayer authority checks, optional-installation checks, and strict playable-JAR validation for both loaders.
+- Added bounded multi-packet configuration transfers for Minecraft 1.20.1's smaller custom-payload limit, including strict UTF-8, compression, ordering, memory, timeout, authorization, and malformed-input safeguards.
+
+### Changed
+
+- Backported the shared schema 3 configuration, commands, GUI, block/entity/shearing multipliers, safety budgets, and placement protection without changing the public mod ID or config filename.
+- Kept the clearer **Multiply Block XP** wording on both loaders; Mob XP remains a separate setting under Entity Drops.
+- Adapted data-pack tag paths, legacy entity availability, networking, chunk persistence, mixins, shearing hooks, and loader lifecycle code to Minecraft 1.20.1.
+
+### Release status
+
+- Publication is prepared from `backport/1.20.1` under tag `v1.3.0+mc1.20.1`; `release_ready` remains false until every final gate passes.
+- The guarded release publishes exactly one Fabric JAR and one NeoForge JAR with `make_latest: false`, preserving Minecraft 26.2 as **Latest**.
+- No tested Fabric-to-NeoForge world-conversion guarantee is claimed for this backport.
+
 ## 1.3.0+mc1.21.11 - 2026-09-01
 
 ### Added

@@ -1080,7 +1080,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 "EntityDropsScreen",
                 "Entity and Mob Drops");
         final boolean entityDropsEnabled = session.entityDropsEnabled();
-        context.runOnClient(client -> onlyList(entityDrops).rows().getFirst().action().run());
+        context.runOnClient(client -> onlyList(entityDrops).rows().get(0).action().run());
         require(session.entityDropsEnabled() == entityDropsEnabled && !session.isDirty(),
                 "Read-only Entity and Mob Drops screen accepted a staged mutation");
         context.runOnClient(client -> rowWithPrimary(
@@ -1369,7 +1369,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         final int direction = original < root.editorSession().maximumMultiplier() ? 1 : -1;
         final String firstLabel = direction > 0 ? "+" : "-";
         final String revertLabel = direction > 0 ? "-" : "+";
-        final Button globalAdjustment = buttonsWithLabel(root, firstLabel).getFirst();
+        final Button globalAdjustment = buttonsWithLabel(root, firstLabel).get(0);
         require(globalAdjustment.active, "Global adjustment button was unexpectedly disabled");
         context.clickScreenButton(firstLabel);
         require(root.editorSession().globalMultiplier() == original + direction,
@@ -1697,7 +1697,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
             final int direction
     ) {
         final String label = direction > 0 ? "+" : "-";
-        final Button adjustment = buttonsWithLabel(expectedScreen, label).getFirst();
+        final Button adjustment = buttonsWithLabel(expectedScreen, label).get(0);
         require(adjustment.active, "Requested global adjustment was inactive: " + label);
         context.clickScreenButton(label);
     }
@@ -1761,8 +1761,8 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 .map(StructuredConfigList.class::cast)
                 .toList();
         require(lists.size() == 1, "Expected exactly one lightweight scrolling list");
-        require(lists.getFirst().rowCount() <= maximumRows,
-                "Child screen materialized too many rows: " + lists.getFirst().rowCount());
+        require(lists.get(0).rowCount() <= maximumRows,
+                "Child screen materialized too many rows: " + lists.get(0).rowCount());
     }
 
     private static void assertUnsavedChangesIndicator(
@@ -1804,7 +1804,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 .toList();
         require(lists.size() == 1, "Expected exactly one structured list on "
                 + screen.getClass().getSimpleName());
-        return lists.getFirst();
+        return lists.get(0);
     }
 
     private static StructuredConfigList.Row rowWithPrimary(
@@ -1825,7 +1825,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 .toList();
         require(searches.size() == 1, "Expected exactly one search box on "
                 + screen.getClass().getSimpleName());
-        return searches.getFirst();
+        return searches.get(0);
     }
 
     private static boolean hasWidgetLabel(final Screen screen, final String label) {
@@ -1860,7 +1860,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         require(capture.hints.size() <= 1,
                 "Widget exposed more than one tooltip narration hint: "
                         + widget.getMessage().getString());
-        return capture.hints.isEmpty() ? "" : capture.hints.getFirst();
+        return capture.hints.isEmpty() ? "" : capture.hints.get(0);
     }
 
     private static List<Button> buttonsWithLabel(final Screen screen, final String label) {

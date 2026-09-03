@@ -70,6 +70,7 @@ final class PresetPreviewScreen extends SmartDropsSubScreen {
                         button -> onClose())
                 .bounds(buttonLeft + buttonWidth + gap, footerY(), buttonWidth, 20)
                 .build());
+        setInitialFocus();
     }
 
     @Override
@@ -77,7 +78,6 @@ final class PresetPreviewScreen extends SmartDropsSubScreen {
         return false;
     }
 
-    @Override
     protected void setInitialFocus() {
         if (stageButton != null && stageButton.active) {
             setInitialFocus(stageButton);

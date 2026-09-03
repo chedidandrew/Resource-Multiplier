@@ -26,7 +26,6 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,7 +38,7 @@ final class SmartDropsCommandsTest {
     }
 
     @Test
-    void terminalListArgumentsParseNamespacedIdentifiers() {
+    void terminalListArgumentsParseNamespacedResourceLocations() {
         assertParses("blacklist add minecraft:diamond_ore", SmartDropsCommands.ListKind.BLACKLIST);
         assertParses("blacklist remove mod_name:block_name", SmartDropsCommands.ListKind.BLACKLIST);
     }
@@ -51,7 +50,7 @@ final class SmartDropsCommandsTest {
     }
 
     @Test
-    void listNormalizationValidatesAndCanonicalizesIdentifiers() {
+    void listNormalizationValidatesAndCanonicalizesResourceLocations() {
         assertEquals(
                 "c:ores",
                 SmartDropsCommands.normalizeListValue(" #C:ORES ", SmartDropsCommands.ListKind.TAG_BLACKLIST));
@@ -136,14 +135,14 @@ final class SmartDropsCommandsTest {
                 .filter(line -> line.getString().startsWith("  ID: "))
                 .findFirst()
                 .orElseThrow();
-        Component idValue = idLine.getSiblings().getLast();
+        Component idValue = idLine.getSiblings().get(idLine.getSiblings().size() - 1);
         assertTrue(idValue.getString().length() <= 96, idValue.getString());
         assertTrue(idValue.getString().endsWith("…"), idValue.getString());
         assertFalse(idValue.getString().contains(longId));
-        ClickEvent.CopyToClipboard copyEvent = assertInstanceOf(
-                ClickEvent.CopyToClipboard.class,
-                idValue.getStyle().getClickEvent());
-        assertEquals(longId, copyEvent.value());
+        ClickEvent copyEvent = idValue.getStyle().getClickEvent();
+        assertNotNull(copyEvent);
+        assertEquals(ClickEvent.Action.COPY_TO_CLIPBOARD, copyEvent.getAction());
+        assertEquals(longId, copyEvent.getValue());
 
         assertEquals("abcd", BlockInspectionFormatter.truncate("abcd", 4));
         assertEquals("abc…", BlockInspectionFormatter.truncate("abcdef", 4));

@@ -50,8 +50,13 @@ require(
     "Tooltip sections must use explicit lines before vanilla wrapping",
 )
 require(
-    "Tooltip.splitTooltip(" in source,
-    "Composed hover text must still use Minecraft's standard tooltip splitter",
+    "font.split(" in source,
+    "Composed hover text must still use Minecraft 1.20.1's standard font splitter",
+)
+require(
+    "deferredTooltip = hoverText(truncated)" in source
+    and "renderDeferredTooltip" in source,
+    "Hovered row tooltips must be deferred until after list/widget rendering",
 )
 
 print("Structured tooltip composition checks: PASS")

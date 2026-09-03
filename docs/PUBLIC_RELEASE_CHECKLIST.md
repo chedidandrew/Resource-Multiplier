@@ -1,47 +1,48 @@
-# Smart Resource Multiplier public release checklist
+# Public release checklist — Minecraft 1.20.1
 
-## Smart Resource Multiplier 1.3.0+mc1.21.11
-
-Version `1.3.0+mc1.21.11` is the maintained Minecraft 1.21.11 backport for Fabric and NeoForge. The two JARs share gameplay, schema 3 configuration, commands, GUI, safety budgets, and the `smart_resource_drops` compatibility identity while using loader-specific lifecycle, networking, and placed-block-storage adapters. Minecraft 26.2 remains the newest/default release on `main`.
+Version `1.3.0+mc1.20.1` is a dual-loader backport. Minecraft 26.2 must remain the newest/default GitHub release.
 
 ## Identity and compatibility
 
-- [x] Fabric and NeoForge expose the public name **Smart Resource Multiplier** and version `1.3.0+mc1.21.11`.
-- [x] Both builds preserve mod ID and datapack/network namespace `smart_resource_drops`.
-- [x] Both builds preserve `config/smart_resource_drops.json`, schema 3, Java packages, `/smartdrops`, and `/smartdropsgui`.
-- [x] The General screen says **Multiply Block XP** and **Block XP Multiplier** on both loaders; Mob XP remains separately configured under Entity Drops.
-- [x] The production icon is the reviewed `512x512` PNG documented in [`BRANDING.md`](BRANDING.md), SHA-256 `db216ccd6058404de18f797ebb5be87a313899a27c3f1971fdf086b8637dc190`.
-- [x] Fabric-to-NeoForge placed-block provenance migration is validated and explicitly documented as one-way. Players are told to back up worlds and not switch repeatedly between loaders.
-- [x] Universal mod compatibility and broader whole-world/older-version/custom-dimension migration are not claimed.
+- [x] Both loaders retain mod ID, namespace, config path, schema 3, commands, defaults, and GUI behavior.
+- [x] General says **Multiply Block XP**; Mob XP remains clearly under Entity Drops.
+- [x] Fabric and NeoForge use the same bounded fragmented-config protocol and server-authority policy.
+- [x] Resource tags use 1.20.1 plural paths and contain no post-1.20.1 entity/block IDs.
+- [x] Fabric and NeoForge JAR filenames are unambiguous and cannot be installed together accidentally.
+- [x] No unverified cross-loader world-conversion or universal third-party compatibility claim is made.
 
-## Fabric gates
+## Toolchains and metadata
 
-- [x] Package metadata, deterministic-source, Mod Menu, tooltip, copy, and policy validators pass.
-- [x] Core assertions and all 158 mapped JUnit tests pass.
-- [x] All 65 Fabric dedicated-server GameTests pass.
-- [x] The real Fabric client GUI/authority GameTest passes with the updated block-XP wording.
-- [x] The Java 21 Fabric Loom build completes and produces a test-free, dependency-clean playable JAR.
+- [x] Java 17 / class major 61 is required for both targets.
+- [x] Fabric pins Minecraft 1.20.1, Loader 0.19.5, Fabric API 0.92.12+1.20.1, and optional Mod Menu 7.2.2.
+- [x] NeoForge pins `net.neoforged:forge:1.20.1-47.1.106` through ModDevGradle legacy plugin 2.0.146.
+- [x] NeoForge uses legacy `META-INF/mods.toml`, SRG reobfuscation, refmap generation, manifest `MixinConfigs`, and Java-17 mixin compatibility.
+- [x] NeoForge bundles exactly MixinExtras Forge 0.5.4 through JarJar; arbitrary or additional nested archives are rejected.
 
-## NeoForge gates
+## Automated gates
 
-- [x] Clean Java 21 build, 164 JUnit tests, and all 64 NeoForge dedicated-server GameTests pass.
-- [x] A dedicated server reaches `Done` without client-classloading or mixin failure.
-- [x] A physical client opens Entity Categories and verifies all nine rows plus tag-based classifications.
-- [x] A separate physical client/server pair exercises the real `/smartdropsgui` route, non-operator read-only state, operator promotion, entity overrides/filters, shearing, root Apply, confirmed Reset, and server-authoritative results.
-- [x] Disconnect cleanup and reconnect use a new connection identity, renegotiate all six channels, and receive a fresh authoritative snapshot.
-- [x] Client-only and server-only installations join and disconnect cleanly; unavailable destinations stay unavailable and the connected GUI fails closed.
-- [x] A malicious 1,048,577-character wire payload is rejected at the 1,048,576-character limit without changing configuration or revision; the server remains responsive.
-- [x] A captured Fabric-authored chunk imports into native NeoForge provenance, saves through a real server, restarts in a second JVM, and remains visible to gameplay lookup.
-- [x] The NeoForge JAR validator rejects Fabric crossover, test/probe fixtures, nested dependencies, metadata drift, missing mixins, incorrect icon bytes, and non-Java-21 bytecode.
+- [ ] Static package, release-policy, Mod Menu, tooltip, edge-case, polish, and core-rule validators all pass.
+- [ ] Fabric clean JUnit, dedicated GameTest, build, 320x180 physical GUI, and separate-process multiplayer/fragmented-wire gates pass.
+- [ ] NeoForge clean JUnit, generated GameTest, build/JAR audit, 320x180 physical GUI, multiplayer, optional-installation, and hostile-wire gates pass.
+- [ ] The final NeoForge JAR passes the checksum-pinned official Forge 47 installer/server gate under the real `forgeserver` target, including status, validation, config creation, and clean shutdown with no mixin/refmap/JarJar/linkage/client-class errors.
+- [ ] Both physical Java 17 client GUI gates pass, and strict final-JAR audits verify each loader's exact metadata, entrypoints, mixins, refmap, classes, and resources. No named userdev launch is presented as production-namespace evidence.
+- [ ] Near-limit valid C2S and S2C config transfers work across multiple fragments; malformed/oversized/decompression-abuse traffic fails closed without changing config or harming server health.
+- [ ] Test, GameTest, probe, dev metadata, and cross-loader implementation classes are absent from both playable JARs.
 
-## Packaging and distribution
+## Manual checks
 
-- [x] Fabric and NeoForge `mod_version` values match exactly at `1.3.0+mc1.21.11`; the guarded workflow accepts `release_ready=true` only in the final tested release commit.
-- [x] Deterministic packaging requires both freshly rebuilt, separately validated JARs.
-- [x] Fabric filename: `smart-resource-multiplier-1.3.0+mc1.21.11.jar`.
-- [x] NeoForge filename: `smart-resource-multiplier-neoforge-1.3.0+mc1.21.11.jar`.
-- [x] The checksum manifest covers both JARs and the source archive.
-- [x] CurseForge instructions require two separate file uploads with the correct loader selected and warn never to install both JARs together.
-- [x] Backport source remains on `backport/1.21.11`; tag `v1.3.0+mc1.21.11` invokes the guarded publisher with `make_latest: false`, preserving Minecraft 26.2 tag `v1.3.0` as GitHub's **Latest** release.
+- [ ] Test block loot, Block XP, entity death loot, Mob XP, player/tamed-wolf/non-player attribution, and supported shearing on both final JARs.
+- [ ] Test placed/natural blocks, pistons, falling blocks, chunk unload, and a full restart on both loaders.
+- [ ] Inspect all GUI screens, tooltips, focus, dirty/apply/reset state, and read-only/operator behavior at representative scales.
+- [ ] Verify client-only, server-only, and both-sides installation behavior where supported.
+- [ ] Record exact versions, date, results, final file sizes, and SHA-256 hashes.
 
-Exact final file sizes, ZIP-entry counts, and SHA-256 values are recorded in [`BUILD_STATUS.md`](../BUILD_STATUS.md) after the serialized release build.
+## Publication
+
+- [x] Release workflow requires exact tag `v1.3.0+mc1.20.1` on `origin/backport/1.20.1` and exact matching loader versions.
+- [x] Workflow publishes exactly the Fabric and NeoForge JARs with `make_latest: false`.
+- [x] Casual-player release notes exist at `docs/releases/1.3.0+mc1.20.1.md`.
+- [ ] Every gate above is complete on the exact final commit.
+- [ ] Final commit changes `release_ready=false` to `release_ready=true` only after verification.
+- [ ] Push final commit and tag; confirm Minecraft 26.2 remains marked **Latest**.
+- [ ] Upload each JAR separately to CurseForge with its correct loader and Minecraft 1.20.1 classification.

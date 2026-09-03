@@ -134,10 +134,10 @@ public final class SmartDropsConfig {
 
         int remaining = MAX_BLOCK_RULE_ENTRIES;
         blacklist = sanitizeIds(
-                blacklist, remaining, SmartDropsConfig::isIdentifier, diagnostics, "blacklist", DiagnosticKind.IDENTIFIER);
+                blacklist, remaining, SmartDropsConfig::isResourceLocation, diagnostics, "blacklist", DiagnosticKind.IDENTIFIER);
         remaining -= blacklist.size();
         whitelist = sanitizeIds(
-                whitelist, remaining, SmartDropsConfig::isIdentifier, diagnostics, "whitelist", DiagnosticKind.IDENTIFIER);
+                whitelist, remaining, SmartDropsConfig::isResourceLocation, diagnostics, "whitelist", DiagnosticKind.IDENTIFIER);
         remaining -= whitelist.size();
         tagBlacklist = sanitizeTagIds(tagBlacklist, remaining, diagnostics, "tagBlacklist");
         remaining -= tagBlacklist.size();
@@ -146,7 +146,7 @@ public final class SmartDropsConfig {
         blockEntityAllowlist = sanitizeIds(
                 blockEntityAllowlist,
                 remaining,
-                SmartDropsConfig::isIdentifier,
+                SmartDropsConfig::isResourceLocation,
                 diagnostics,
                 "blockEntityAllowlist",
                 DiagnosticKind.IDENTIFIER);
@@ -155,7 +155,7 @@ public final class SmartDropsConfig {
                 dimensionMultipliers,
                 maximumMultiplier,
                 remaining,
-                SmartDropsConfig::isIdentifier,
+                SmartDropsConfig::isResourceLocation,
                 diagnostics,
                 "dimensionMultipliers",
                 DiagnosticKind.IDENTIFIER);
@@ -173,7 +173,7 @@ public final class SmartDropsConfig {
                 blockMultipliers,
                 maximumMultiplier,
                 remaining,
-                SmartDropsConfig::isIdentifier,
+                SmartDropsConfig::isResourceLocation,
                 diagnostics,
                 "blockMultipliers",
                 DiagnosticKind.IDENTIFIER);
@@ -203,7 +203,7 @@ public final class SmartDropsConfig {
         entityBlacklist = sanitizeIds(
                 entityBlacklist,
                 remaining,
-                SmartDropsConfig::isEntityIdentifier,
+                SmartDropsConfig::isEntityResourceLocation,
                 diagnostics,
                 "entityBlacklist",
                 DiagnosticKind.IDENTIFIER);
@@ -211,7 +211,7 @@ public final class SmartDropsConfig {
         entityWhitelist = sanitizeIds(
                 entityWhitelist,
                 remaining,
-                SmartDropsConfig::isEntityIdentifier,
+                SmartDropsConfig::isEntityResourceLocation,
                 diagnostics,
                 "entityWhitelist",
                 DiagnosticKind.IDENTIFIER);
@@ -224,7 +224,7 @@ public final class SmartDropsConfig {
                 entityMultipliers,
                 maximumMultiplier,
                 remaining,
-                SmartDropsConfig::isEntityIdentifier,
+                SmartDropsConfig::isEntityResourceLocation,
                 diagnostics,
                 "entityMultipliers",
                 DiagnosticKind.IDENTIFIER);
@@ -233,7 +233,7 @@ public final class SmartDropsConfig {
                 shearingEntityMultipliers,
                 maximumMultiplier,
                 MAX_SHEARING_RULE_ENTRIES,
-                SmartDropsConfig::isEntityIdentifier,
+                SmartDropsConfig::isEntityResourceLocation,
                 diagnostics,
                 "shearingEntityMultipliers",
                 DiagnosticKind.IDENTIFIER);
@@ -281,8 +281,6 @@ public final class SmartDropsConfig {
         blacklist.add("minecraft:end_portal_frame");
         blacklist.add("minecraft:nether_portal");
         blacklist.add("minecraft:spawner");
-        blacklist.add("minecraft:trial_spawner");
-        blacklist.add("minecraft:vault");
         blacklist.add("minecraft:reinforced_deepslate");
         blacklist.add("minecraft:light");
         blacklist.add("minecraft:dragon_egg");
@@ -431,7 +429,7 @@ public final class SmartDropsConfig {
             while (clean.startsWith("#")) {
                 clean = clean.substring(1);
             }
-            if (validLength(clean) && isIdentifier(clean)) {
+            if (validLength(clean) && isResourceLocation(clean)) {
                 output.add(clean);
             } else {
                 recordInvalid(diagnostics, DiagnosticKind.IDENTIFIER, settingPath, value);
@@ -475,7 +473,7 @@ public final class SmartDropsConfig {
             return;
         }
         switch (kind) {
-            case IDENTIFIER -> diagnostics.invalidIdentifier(settingPath, value);
+            case IDENTIFIER -> diagnostics.invalidResourceLocation(settingPath, value);
             case CATEGORY -> diagnostics.invalidCategory(settingPath, value);
             case PLAYER -> diagnostics.invalidPlayerOverride();
         }
@@ -491,16 +489,16 @@ public final class SmartDropsConfig {
         return !value.isEmpty() && value.length() <= MAX_RULE_KEY_LENGTH;
     }
 
-    private static boolean isIdentifier(String value) {
+    private static boolean isResourceLocation(String value) {
         int separator = value.indexOf(':');
         if (separator <= 0 || separator == value.length() - 1 || value.indexOf(':', separator + 1) >= 0) {
             return false;
         }
-        return validIdentifierPart(value, 0, separator, false)
-                && validIdentifierPart(value, separator + 1, value.length(), true);
+        return validResourceLocationPart(value, 0, separator, false)
+                && validResourceLocationPart(value, separator + 1, value.length(), true);
     }
 
-    private static boolean validIdentifierPart(String value, int start, int end, boolean allowSlash) {
+    private static boolean validResourceLocationPart(String value, int start, int end, boolean allowSlash) {
         for (int index = start; index < end; index++) {
             char character = value.charAt(index);
             boolean valid = character >= 'a' && character <= 'z'
@@ -524,8 +522,8 @@ public final class SmartDropsConfig {
         return EntityCategory.parse(value).isPresent();
     }
 
-    private static boolean isEntityIdentifier(String value) {
-        return isIdentifier(value) && !"minecraft:player".equals(value);
+    private static boolean isEntityResourceLocation(String value) {
+        return isResourceLocation(value) && !"minecraft:player".equals(value);
     }
 
     private static LinkedHashMap<String, Integer> defaultEntityCategoryMultipliers() {

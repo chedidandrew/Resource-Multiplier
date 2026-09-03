@@ -66,10 +66,10 @@ final class ClientEntityCategoryTagIndexTest {
     }
 
     private static String path(final String value) {
-        return "data/smart_resource_drops/tags/entity_type/" + value + ".json";
+        return "data/smart_resource_drops/tags/entity_types/" + value + ".json";
     }
 
     private static String testPath(final String value) {
-        return "data/test/tags/entity_type/" + value + ".json";
+        return "data/test/tags/entity_types/" + value + ".json";
     }
 }

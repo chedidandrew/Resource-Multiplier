@@ -23,7 +23,7 @@ final class ClientShearingTagIndex {
             ShearingTags.STANDARD_RESOURCES.location().toString();
     static final String SPECIAL_ID = ShearingTags.SPECIAL.location().toString();
 
-    private static final String TAG_ROOT = "data/%s/tags/entity_type/%s.json";
+    private static final String TAG_ROOT = "data/%s/tags/entity_types/%s.json";
 
     private ClientShearingTagIndex() {
     }

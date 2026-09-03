@@ -4,7 +4,7 @@
 
 Smart Resource Multiplier `1.3.0` provides native Fabric and NeoForge 26.2 builds from one shared gameplay/configuration/GUI implementation. Both loader files preserve schema 3, commands, multiplayer authority, block/entity/shearing rules, safety budgets, and the `smart_resource_drops` compatibility namespace. The General screen now labels block XP explicitly; mob XP remains an independent setting under Entity Drops.
 
-The `smart_resource_drops` mod ID and datapack/network namespace, `config/smart_resource_drops.json`, Java package, `/smartdrops`, and `/smartdropsgui` remain stable. Fabric-to-NeoForge placed-block provenance migration is validated but intentionally one-way because the loaders use different chunk-data envelopes; back up worlds before changing loaders. Both artifacts package the approved **SMART RESOURCE MULTIPLIER** diamond-mining icon documented in [BRANDING.md](BRANDING.md). Future feature work remains governed by the historical scope and safety decisions below.
+The `smart_resource_drops` mod ID and datapack/network namespace, `config/smart_resource_drops.json`, Java package, `/smartdrops`, and `/smartdropsgui` remain stable. Fabric and NeoForge use different loader-owned placed-block envelopes, so the 1.20.1 backport does not migrate provenance between loaders; back up worlds and keep an existing world on one loader. Both artifacts package the approved **SMART RESOURCE MULTIPLIER** diamond-mining icon documented in [BRANDING.md](BRANDING.md). Future feature work remains governed by the historical scope and safety decisions below.
 
 ## Historical roadmap
 

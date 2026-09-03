@@ -5,7 +5,7 @@ OUT="$ROOT/.build/core-tests"
 rm -rf "$OUT"
 mkdir -p "$OUT"
 
-javac --release 21 -Xlint:deprecation -d "$OUT" \
+javac --release 17 -Xlint:deprecation -d "$OUT" \
   "$ROOT/src/main/java/com/chedidandrew/smartresourcedrops/config/ConfigLoadDiagnostics.java" \
   "$ROOT/src/main/java/com/chedidandrew/smartresourcedrops/config/SmartDropsConfig.java" \
   "$ROOT/src/main/java/com/chedidandrew/smartresourcedrops/core/entity/EntityCategory.java" \

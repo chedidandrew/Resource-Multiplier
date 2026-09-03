@@ -14,7 +14,7 @@ import com.chedidandrew.smartresourcedrops.provenance.ProtectedPistonMovement;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import net.fabricmc.api.EnvType;
-import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.minecraft.gametest.framework.GameTest;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
@@ -23,7 +23,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.PermissionSet;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
@@ -49,7 +48,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 public final class SmartResourceDropsGameTests {
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void dedicatedServerLoadsEveryRequiredMixin(final GameTestHelper helper) {
         final FabricLoader loader = FabricLoader.getInstance();
         helper.assertTrue(loader.getEnvironmentType() == EnvType.SERVER, "GameTest must run on a dedicated server");
@@ -67,7 +66,7 @@ public final class SmartResourceDropsGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void levelMixinPreservesTransformsAndClearsUnrelatedReplacements(final GameTestHelper helper) {
         assertPreserved(helper, new BlockPos(1, 2, 1), Blocks.DIRT, Blocks.FARMLAND);
         assertPreserved(helper, new BlockPos(2, 2, 1), Blocks.OAK_LOG, Blocks.STRIPPED_OAK_LOG);
@@ -86,14 +85,14 @@ public final class SmartResourceDropsGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void blockItemPlacementMarksBothDoorBlocks(final GameTestHelper helper) {
         final BlockPos support = new BlockPos(1, 1, 1);
         final BlockPos lower = support.above();
         helper.setBlock(support, Blocks.STONE);
         final ServerPlayer player = GameTestPlayers.survival(helper);
         final ItemStack door = new ItemStack(Items.OAK_DOOR);
-        // NeoForge's placement hook reads the stack from the real hand in 1.21.11.
+        // Forge 47's placement hook reads the stack from the real hand in 1.20.1.
         player.setItemInHand(InteractionHand.MAIN_HAND, door);
         helper.placeAt(player, door, support, Direction.UP);
 
@@ -118,7 +117,7 @@ public final class SmartResourceDropsGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void realLootPipelineProtectsPlacedBlocksAndAggregatesHighMultipliers(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -155,7 +154,7 @@ public final class SmartResourceDropsGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void repeatedBlockInspectionIsReadOnlyAndMatchesGameplayResolution(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -269,7 +268,7 @@ public final class SmartResourceDropsGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void inspectCommandHandlesLookTargetSkyAndConsole(final GameTestHelper helper) {
         final ServerPlayer player = GameTestPlayers.survival(helper);
         final BlockPos targetPos = helper.absolutePos(new BlockPos(2, 2, 5));
@@ -286,9 +285,9 @@ public final class SmartResourceDropsGameTests {
         final double horizontal = Math.sqrt(xDelta * xDelta + zDelta * zDelta);
         final float yaw = (float) Math.toDegrees(Math.atan2(target.z - eye.z, target.x - eye.x)) - 90.0F;
         final float pitch = (float) -Math.toDegrees(Math.atan2(target.y - eye.y, horizontal));
-        player.absSnapRotationTo(yaw, pitch);
+        player.absMoveTo(player.getX(), player.getY(), player.getZ(), yaw, pitch);
 
-        final HitResult targetHit = player.pick(player.blockInteractionRange(), 1.0F, false);
+        final HitResult targetHit = player.pick(5.0D, 1.0F, false);
         helper.assertTrue(targetHit.getType() == HitResult.Type.BLOCK,
                 "The server-side inspection raycast did not acquire the looked-at block");
         helper.assertTrue(((BlockHitResult) targetHit).getBlockPos().equals(targetPos),
@@ -304,9 +303,9 @@ public final class SmartResourceDropsGameTests {
                 "The successful command did not emit the expected inspection components");
 
         player.setPos(targetPos.getX() + 0.5, targetPos.getY() + 10.0, targetPos.getZ() + 0.5);
-        player.absSnapRotationTo(player.getYRot(), -90.0F);
+        player.absMoveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), -90.0F);
         helper.assertTrue(
-                player.pick(player.blockInteractionRange(), 1.0F, false).getType() == HitResult.Type.MISS,
+                player.pick(5.0D, 1.0F, false).getType() == HitResult.Type.MISS,
                 "The no-target command check unexpectedly hit a block");
         final CapturingCommandSource noTargetMessages = new CapturingCommandSource();
         helper.assertTrue(executeCommand(
@@ -332,7 +331,7 @@ public final class SmartResourceDropsGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void validationCommandIsOperatorOnlyBoundedAndReadOnlyForConsoleAndPlayers(
             final GameTestHelper helper
     ) {
@@ -379,7 +378,7 @@ public final class SmartResourceDropsGameTests {
                             helper,
                             "smartdrops validate verbose",
                             operator.createCommandSourceStack()
-                                    .withPermission(PermissionSet.ALL_PERMISSIONS)
+                                    .withPermission(4)
                                     .withSource(verboseMessages)) == 1,
                     "Operator verbose validation command did not succeed");
             helper.assertTrue(verboseMessages.text().contains("missing:block_19")
@@ -392,7 +391,7 @@ public final class SmartResourceDropsGameTests {
             helper.assertTrue(commandIsRejected(
                             helper,
                             "smartdrops validate",
-                            normalPlayer.createCommandSourceStack().withPermission(PermissionSet.NO_PERMISSIONS)),
+                            normalPlayer.createCommandSourceStack().withPermission(0)),
                     "Non-operator validation was not rejected by the server command tree");
 
             helper.assertTrue(ConfigManager.revision() == revisionBefore,
@@ -415,7 +414,7 @@ public final class SmartResourceDropsGameTests {
         helper.succeed();
     }
 
-    @GameTest
+    @GameTest(template = "fabric-gametest-api-v1:empty")
     public void configurationResetPreservesPlacedBlockProvenance(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         final BlockPos placed = helper.absolutePos(new BlockPos(2, 2, 5));
@@ -603,7 +602,7 @@ public final class SmartResourceDropsGameTests {
     }
 
     private static void removeDrops(final GameTestHelper helper, final BlockPos absolutePos) {
-        dropsNear(helper, absolutePos).forEach(entity -> entity.kill(helper.getLevel()));
+        dropsNear(helper, absolutePos).forEach(ItemEntity::kill);
     }
 
     private static List<ItemEntity> dropsNear(final GameTestHelper helper, final BlockPos absolutePos) {

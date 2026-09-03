@@ -3,20 +3,20 @@ package com.chedidandrew.smartresourcedrops.platform.neoforge;
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
 import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
 /** Server-side observer for the separate-process NeoForge multiplayer smoke test. */
-@Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.DEDICATED_SERVER)
+@Mod.EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, value = Dist.DEDICATED_SERVER)
 public final class NeoForgeMultiplayerServerSmokeTest {
     private static final int PROMOTION_TICKS = 120;
-    private static final AtomicBoolean REGISTERED = new AtomicBoolean();
+    private static final NeoForgeMultiplayerServerSmokeTest INSTANCE =
+            new NeoForgeMultiplayerServerSmokeTest();
 
     private ServerPlayer player;
     private int connectedTicks;
@@ -27,16 +27,28 @@ public final class NeoForgeMultiplayerServerSmokeTest {
     private boolean sawFirstLogout;
     private int loginCount;
 
-    public NeoForgeMultiplayerServerSmokeTest() {
-        if (Boolean.getBoolean("smart_resource_drops.multiplayerTest")
-                && REGISTERED.compareAndSet(false, true)) {
-            NeoForge.EVENT_BUS.addListener(
-                    PlayerEvent.PlayerLoggedInEvent.class,
-                    this::onPlayerLoggedIn);
-            NeoForge.EVENT_BUS.addListener(
-                    PlayerEvent.PlayerLoggedOutEvent.class,
-                    this::onPlayerLoggedOut);
-            NeoForge.EVENT_BUS.addListener(ServerTickEvent.Post.class, this::onServerTick);
+    private NeoForgeMultiplayerServerSmokeTest() {
+    }
+
+    @SubscribeEvent
+    public static void loggedIn(final PlayerEvent.PlayerLoggedInEvent event) {
+        if (Boolean.getBoolean("smart_resource_drops.multiplayerTest")) {
+            INSTANCE.onPlayerLoggedIn(event);
+        }
+    }
+
+    @SubscribeEvent
+    public static void loggedOut(final PlayerEvent.PlayerLoggedOutEvent event) {
+        if (Boolean.getBoolean("smart_resource_drops.multiplayerTest")) {
+            INSTANCE.onPlayerLoggedOut(event);
+        }
+    }
+
+    @SubscribeEvent
+    public static void tick(final TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END
+                && Boolean.getBoolean("smart_resource_drops.multiplayerTest")) {
+            INSTANCE.onServerTick();
         }
     }
 
@@ -55,12 +67,12 @@ public final class NeoForgeMultiplayerServerSmokeTest {
         }
     }
 
-    private void onServerTick(final ServerTickEvent.Post event) {
+    private void onServerTick() {
         if (this.player == null) {
             return;
         }
         this.connectedTicks++;
-        final MinecraftServer server = event.getServer();
+        final MinecraftServer server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         if (!this.promoted && this.connectedTicks >= PROMOTION_TICKS) {
             server.getCommands().performPrefixedCommand(
                     server.createCommandSourceStack(),

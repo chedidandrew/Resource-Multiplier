@@ -2,7 +2,10 @@ package com.chedidandrew.smartresourcedrops.client;
 
 import java.util.Objects;
 
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import com.chedidandrew.smartresourcedrops.network.ConfigPayload;
+import com.chedidandrew.smartresourcedrops.network.ConfigPatchFragmentPayload;
+import com.chedidandrew.smartresourcedrops.network.ConfigPatchPayload;
+import net.minecraft.resources.ResourceLocation;
 
 /** Loader-installed transport for the shared server-authoritative config client. */
 public final class ClientNetworkBridge {
@@ -15,22 +18,31 @@ public final class ClientNetworkBridge {
         transport = Objects.requireNonNull(installedTransport, "installedTransport");
     }
 
-    public static boolean canSend(final CustomPacketPayload.Type<?> type) {
+    public static boolean canSend(final ResourceLocation type) {
         final Transport current = transport;
-        return current != null && current.canSend(type);
+        final ResourceLocation wireType = type.equals(ConfigPatchPayload.TYPE)
+                ? ConfigPatchFragmentPayload.TYPE
+                : type;
+        return current != null && current.canSend(wireType);
     }
 
-    public static void send(final CustomPacketPayload payload) {
+    public static void send(final ConfigPayload payload) {
         final Transport current = transport;
         if (current == null) {
             throw new IllegalStateException("Client networking has not been installed by the active loader");
+        }
+        if (payload instanceof ConfigPatchPayload patch) {
+            for (ConfigPatchFragmentPayload fragment : ConfigPatchFragmentPayload.encode(patch)) {
+                current.send(fragment);
+            }
+            return;
         }
         current.send(payload);
     }
 
     public interface Transport {
-        boolean canSend(CustomPacketPayload.Type<?> type);
+        boolean canSend(ResourceLocation type);
 
-        void send(CustomPacketPayload payload);
+        void send(ConfigPayload payload);
     }
 }

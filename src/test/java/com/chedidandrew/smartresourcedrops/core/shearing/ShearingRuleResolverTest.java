@@ -83,11 +83,11 @@ final class ShearingRuleResolverTest {
     @Test
     void knownVanillaSpecialRemainsFixedIfDataPackReplacesSpecialTag() {
         SmartDropsConfig config = SmartDropsConfig.defaults();
-        config.shearingEntityMultipliers.put("minecraft:bogged", 64);
+        config.shearingEntityMultipliers.put("minecraft:mooshroom", 64);
 
         ShearingRuleTrace trace = ShearingRuleResolver.trace(
                 config,
-                "minecraft:bogged",
+                "minecraft:mooshroom",
                 true,
                 false,
                 ShearingSource.MANUAL_PLAYER);

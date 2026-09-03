@@ -10,7 +10,7 @@ import java.util.List;
  * limited to non-sensitive setting values; player UUIDs are counted but never retained.</p>
  */
 public record ConfigLoadDiagnostics(
-        int invalidIdentifiersRemoved,
+        int invalidResourceLocationsRemoved,
         int invalidCategoryNamesRemoved,
         int invalidPlayerOverridesRemoved,
         int valuesAdjusted,
@@ -34,7 +34,7 @@ public record ConfigLoadDiagnostics(
     private static final int MAX_VALUE_LENGTH = 256;
 
     public ConfigLoadDiagnostics {
-        invalidIdentifiersRemoved = Math.max(0, invalidIdentifiersRemoved);
+        invalidResourceLocationsRemoved = Math.max(0, invalidResourceLocationsRemoved);
         invalidCategoryNamesRemoved = Math.max(0, invalidCategoryNamesRemoved);
         invalidPlayerOverridesRemoved = Math.max(0, invalidPlayerOverridesRemoved);
         valuesAdjusted = Math.max(0, valuesAdjusted);
@@ -107,7 +107,7 @@ public record ConfigLoadDiagnostics(
     }
 
     static final class Builder {
-        private int invalidIdentifiersRemoved;
+        private int invalidResourceLocationsRemoved;
         private int invalidCategoryNamesRemoved;
         private int invalidPlayerOverridesRemoved;
         private int valuesAdjusted;
@@ -127,7 +127,7 @@ public record ConfigLoadDiagnostics(
         }
 
         private Builder(final ConfigLoadDiagnostics diagnostics) {
-            invalidIdentifiersRemoved = diagnostics.invalidIdentifiersRemoved;
+            invalidResourceLocationsRemoved = diagnostics.invalidResourceLocationsRemoved;
             invalidCategoryNamesRemoved = diagnostics.invalidCategoryNamesRemoved;
             invalidPlayerOverridesRemoved = diagnostics.invalidPlayerOverridesRemoved;
             valuesAdjusted = diagnostics.valuesAdjusted;
@@ -144,8 +144,8 @@ public record ConfigLoadDiagnostics(
             samples.addAll(diagnostics.samples);
         }
 
-        void invalidIdentifier(final String settingPath, final String value) {
-            invalidIdentifiersRemoved++;
+        void invalidResourceLocation(final String settingPath, final String value) {
+            invalidResourceLocationsRemoved++;
             sample(settingPath, value, "removed invalid identifier");
         }
 
@@ -199,7 +199,7 @@ public record ConfigLoadDiagnostics(
 
         ConfigLoadDiagnostics build() {
             return new ConfigLoadDiagnostics(
-                    invalidIdentifiersRemoved,
+                    invalidResourceLocationsRemoved,
                     invalidCategoryNamesRemoved,
                     invalidPlayerOverridesRemoved,
                     valuesAdjusted,

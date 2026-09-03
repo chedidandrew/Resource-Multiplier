@@ -14,20 +14,20 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml"><img alt="Build and verify" src="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.11"></a>
-  <img alt="Minecraft 1.21.11" src="https://img.shields.io/badge/Minecraft-1.21.11-62B47A">
+  <a href="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml"><img alt="Build and verify" src="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml/badge.svg?branch=backport%2F1.20.1"></a>
+  <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-62B47A">
   <img alt="Fabric and NeoForge loaders" src="https://img.shields.io/badge/Loaders-Fabric%20%7C%20NeoForge-DBD0B4">
   <a href="https://www.curseforge.com/minecraft/mc-mods/resource-multiplier"><img alt="Download on CurseForge" src="https://img.shields.io/badge/Download-CurseForge-F16436?logo=curseforge&amp;logoColor=white"></a>
-  <img alt="Java 21" src="https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&amp;logoColor=white">
+  <img alt="Java 17" src="https://img.shields.io/badge/Java-17-ED8B00?logo=openjdk&amp;logoColor=white">
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/License-MIT-2EA44F"></a>
-  <img alt="Stable 1.21.11 backport" src="https://img.shields.io/badge/Status-1.3.0%2Bmc1.21.11-Release-2EA44F">
+  <img alt="Minecraft 1.20.1 release candidate" src="https://img.shields.io/badge/Status-1.20.1%20Candidate-E5A50A">
 </p>
 
 > [!IMPORTANT]
-> **Current stable release:** Minecraft 26.2 remains the newest, default release on the `main` branch. This maintained branch provides the same Smart Resource Multiplier `1.3.0` feature set for Minecraft Java Edition 1.21.11 as separate Fabric and NeoForge files.
+> **Release line:** Minecraft 26.2 remains the newest, default release on the `main` branch. This branch prepares the Smart Resource Multiplier `1.3.0` feature set for Minecraft Java Edition 1.20.1 as separate Fabric and NeoForge files.
 
 > [!NOTE]
-> Fabric and NeoForge store placed-block provenance in loader-specific chunk-data envelopes. Migration from Fabric to NeoForge is supported and validated, but it is intentionally one-way; back up a world before changing loaders and do not repeatedly switch the same world between them.
+> Fabric and NeoForge store placed-block provenance in loader-specific chunk-data envelopes. This backport does not claim tested conversion of an existing world between loaders. Keep backups and use the same loader for an existing world.
 
 Smart Resource Multiplier speeds up repetitive gathering by multiplying the final loot Minecraft already calculated. Fortune, Silk Touch, Looting, loot-table changes, item components, NBT, and legal stack sizes are preserved because the mod works after normal loot evaluation instead of replacing it.
 
@@ -77,9 +77,9 @@ These are real captures of the shared configuration interface used by both loade
 
 ## Download
 
-Download the current release from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier). Source code, the dedicated 1.21.11 backport release, and checksums are maintained on [GitHub](https://github.com/chedidandrew/Resource-Multiplier).
+Download the current release from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier). Source code, the dedicated 1.20.1 backport release, and checksums are maintained on [GitHub](https://github.com/chedidandrew/Resource-Multiplier).
 
-Choose exactly one loader-specific file: `smart-resource-multiplier-1.3.0+mc1.21.11.jar` for Fabric or `smart-resource-multiplier-neoforge-1.3.0+mc1.21.11.jar` for NeoForge. Remove older copies first and never install both files in the same Minecraft instance.
+Choose exactly one loader-specific file: `smart-resource-multiplier-1.3.0+mc1.20.1.jar` for Fabric or `smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar` for NeoForge. Remove older copies first and never install both files in the same Minecraft instance.
 
 You can also [build the current source](#build-from-source). Do not download JARs from unofficial mirrors.
 
@@ -87,13 +87,13 @@ You can also [build the current source](#build-from-source). Do not download JAR
 
 | Component | Supported version |
 | --- | --- |
-| Minecraft Java Edition | 1.21.11 |
-| Mod loader | Fabric Loader 0.19.5+ or NeoForge 21.11.45+ |
-| Fabric API | 0.141.6+1.21.11 for Fabric only |
-| Java | 21, required by Minecraft 1.21.11 |
-| Configuration-list integration | Mod Menu 17.0.0+ optional on Fabric; native Configure support on NeoForge |
+| Minecraft Java Edition | 1.20.1 |
+| Mod loader | Fabric Loader 0.19.5+ or NeoForge 1.20.1-47.1.106+ |
+| Fabric API | 0.92.12+1.20.1 for Fabric only |
+| Java | 17 |
+| Configuration-list integration | Mod Menu 7.2.2+ optional on Fabric; native Configure support on NeoForge |
 
-1. Install Minecraft Java Edition 1.21.11.
+1. Install Minecraft Java Edition 1.20.1.
 2. Install either Fabric Loader or NeoForge.
 3. When using Fabric, install the matching Fabric API.
 4. Place only the matching Fabric or NeoForge Smart Resource Multiplier JAR in the `mods` folder.
@@ -146,7 +146,7 @@ Smart Resource Multiplier supports documented vanilla, Fabric, and NeoForge boun
 
 ## Build from source
 
-Java 21 is required. The included Gradle wrapper verifies its pinned Gradle distribution. The root build produces the Fabric JAR in `build/libs/`; the NeoForge build produces its JAR in `neoforge/build/libs/`.
+Java 17 is required. The included Gradle wrapper verifies its pinned Gradle distribution. The root build produces the Fabric JAR in `build/libs/`; the NeoForge build produces its JAR in `neoforge/build/libs/`.
 
 macOS or Linux:
 
@@ -162,7 +162,7 @@ gradlew.bat clean build
 gradlew.bat -p neoforge clean build
 ```
 
-The stable backport source builds `build/libs/smart-resource-multiplier-1.3.0+mc1.21.11.jar` and `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.21.11.jar`. Gradle automatically selects an installed Java 21 toolchain—or downloads one when absent. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
+The stable backport source builds `build/libs/smart-resource-multiplier-1.3.0+mc1.20.1.jar` and `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar`. Gradle automatically selects an installed Java 17 toolchain—or downloads one when absent. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
 
 ## Documentation
 

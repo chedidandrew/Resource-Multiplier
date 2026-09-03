@@ -2,18 +2,17 @@ package com.chedidandrew.smartresourcedrops.core.entity;
 
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.ambient.AmbientCreature;
 import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.animal.fish.WaterAnimal;
-import net.minecraft.world.entity.animal.golem.AbstractGolem;
+import net.minecraft.world.entity.animal.WaterAnimal;
+import net.minecraft.world.entity.animal.AbstractGolem;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.npc.Npc;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.npc.AbstractVillager;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -51,9 +50,6 @@ public final class EntityClassifier {
 
         if (isKnownBossType(entityId)) {
             add(evidence, EntityCategory.BOSSES, EntityClassification.MatchSource.KNOWN_VANILLA_TYPE);
-        }
-        if (typeHolder.is(EntityTypeTags.AQUATIC)) {
-            add(evidence, EntityCategory.AQUATIC, EntityClassification.MatchSource.VANILLA_ENTITY_TYPE_TAG);
         }
         if (entity instanceof AbstractVillager || entity instanceof Npc) {
             add(evidence, EntityCategory.VILLAGERS_NPCS, EntityClassification.MatchSource.VANILLA_CLASS);
@@ -127,7 +123,7 @@ public final class EntityClassifier {
                 return category;
             }
         }
-        return matches.getFirst();
+        return matches.get(0);
     }
 
     private static void addMobCategoryEvidence(

@@ -1,63 +1,63 @@
 package com.chedidandrew.smartresourcedrops.gametest;
 
-import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Consumer;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.FunctionGameTestInstance;
-import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.TestData;
-import net.minecraft.gametest.framework.TestEnvironmentDefinition;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.block.Rotation;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.RegisterGameTestsEvent;
-import net.neoforged.neoforge.registries.RegisterEvent;
 
-/** Registers the loader-neutral Fabric GameTest bodies with NeoForge's 1.21.11 registry API. */
-@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID)
+import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
+
+import net.minecraft.gametest.framework.GameTestGenerator;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.gametest.framework.TestFunction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraftforge.event.RegisterGameTestsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+
+/** Registers the loader-neutral test bodies through Forge 47's legacy GameTest API. */
+@Mod.EventBusSubscriber(
+        modid = SmartResourceDrops.MOD_ID,
+        bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class NeoForgeGameTestRegistrar {
+    public static final int EXPECTED_TEST_COUNT = 62;
     private static final String TEST_NAMESPACE = "smart_resource_drops_gametest";
-    private static final Identifier EMPTY_STRUCTURE = id("empty");
+    private static final String WIDE_STRUCTURE = TEST_NAMESPACE + ":wide";
     private static final Set<String> EXCLUDED = Set.of(
             "dedicatedServerLoadsEveryRequiredMixin",
-            "dedicatedServerAuditsAllThreeShearingMixins");
+            "dedicatedServerAuditsAllShearingMixins");
     private static final List<TestSpec> TESTS = discover();
 
-    private NeoForgeGameTestRegistrar() {}
-
-    @SubscribeEvent
-    public static void registerFunctions(final RegisterEvent event) {
-        event.register(Registries.TEST_FUNCTION, helper -> {
-            for (TestSpec spec : TESTS) {
-                helper.register(spec.id(), spec.function());
-            }
-        });
+    private NeoForgeGameTestRegistrar() {
     }
 
     @SubscribeEvent
-    public static void registerTests(final RegisterGameTestsEvent event) {
-        final Holder<TestEnvironmentDefinition> environment =
-                event.registerEnvironment(id("environment"));
-        for (TestSpec spec : TESTS) {
-            final ResourceKey<Consumer<GameTestHelper>> functionKey =
-                    ResourceKey.create(Registries.TEST_FUNCTION, spec.id());
-            final TestData<Holder<TestEnvironmentDefinition>> data = new TestData<>(
-                    environment, EMPTY_STRUCTURE, 20, 0, true, Rotation.NONE,
-                    false, 1, 1, false);
-            event.registerTest(spec.id(), new FunctionGameTestInstance(functionKey, data));
-        }
+    public static void register(final RegisterGameTestsEvent event) {
+        event.register(NeoForgeGameTestRegistrar.class);
+    }
+
+    @GameTestGenerator
+    public static Collection<TestFunction> generateTests() {
+        SmartResourceDrops.LOGGER.info(
+                "Smart Resource Multiplier NeoForge GameTest discovery: {} tests",
+                TESTS.size());
+        return TESTS.stream().map(spec -> new TestFunction(
+                "defaultBatch",
+                spec.id().toString(),
+                WIDE_STRUCTURE,
+                Rotation.NONE,
+                20,
+                0L,
+                true,
+                spec.function())).toList();
     }
 
     private static List<TestSpec> discover() {
@@ -67,6 +67,11 @@ public final class NeoForgeGameTestRegistrar {
         addTests(result, SmartResourceDropsBlockBudgetGameTests.class);
         addTests(result, SmartResourceDropsEntityGameTests.class);
         addTests(result, NeoForgeMixinAuditGameTests.class);
+        if (result.size() != EXPECTED_TEST_COUNT) {
+            throw new IllegalStateException(
+                    "NeoForge GameTest discovery drifted: expected "
+                            + EXPECTED_TEST_COUNT + " tests, found " + result.size());
+        }
         return List.copyOf(result);
     }
 
@@ -94,13 +99,14 @@ public final class NeoForgeGameTestRegistrar {
         final String path = (type.getSimpleName() + "_" + method.getName())
                 .replaceAll("([a-z])([A-Z])", "$1_$2")
                 .toLowerCase(Locale.ROOT);
-        return new TestSpec(id(path), function);
+        return new TestSpec(new ResourceLocation(TEST_NAMESPACE, path), function);
     }
 
     private static void invoke(
             final Method method,
             final Object target,
-            final GameTestHelper helper) {
+            final GameTestHelper helper
+    ) {
         try {
             method.invoke(target, helper);
         } catch (InvocationTargetException exception) {
@@ -117,9 +123,6 @@ public final class NeoForgeGameTestRegistrar {
         }
     }
 
-    private static Identifier id(final String path) {
-        return Identifier.fromNamespaceAndPath(TEST_NAMESPACE, path);
+    private record TestSpec(ResourceLocation id, Consumer<GameTestHelper> function) {
     }
-
-    private record TestSpec(Identifier id, Consumer<GameTestHelper> function) {}
 }

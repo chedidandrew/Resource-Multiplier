@@ -13,9 +13,9 @@ import net.minecraft.world.level.chunk.LevelChunk;
 
 /** Fabric persistent chunk-attachment implementation for placed-block provenance. */
 final class FabricPlacementStorage implements PlacementTracker.Storage {
-    private static final AttachmentType<PlacedBlockData> PLACED_BLOCKS = AttachmentRegistry.create(
+    private static final AttachmentType<PlacedBlockData> PLACED_BLOCKS = AttachmentRegistry.createPersistent(
             SmartResourceDrops.id("placed_blocks"),
-            builder -> builder.initializer(PlacedBlockData::new).persistent(PlacedBlockData.CODEC));
+            PlacedBlockData.CODEC);
 
     @Override
     public boolean contains(
@@ -32,9 +32,9 @@ final class FabricPlacementStorage implements PlacementTracker.Storage {
     public void mark(final ServerLevel level, final BlockPos pos, final int packedPosition) {
         final LevelChunk chunk = level.getChunkAt(pos);
         final AttachmentTarget target = (AttachmentTarget) (Object) chunk;
-        final PlacedBlockData data = target.getAttachedOrCreate(PLACED_BLOCKS);
+        final PlacedBlockData data = target.getAttachedOrCreate(PLACED_BLOCKS, PlacedBlockData::new);
         if (data.add(packedPosition)) {
-            chunk.markUnsaved();
+            chunk.setUnsaved(true);
         }
     }
 
@@ -49,7 +49,7 @@ final class FabricPlacementStorage implements PlacementTracker.Storage {
         if (data.isEmpty()) {
             target.removeAttached(PLACED_BLOCKS);
         }
-        chunk.markUnsaved();
+        chunk.setUnsaved(true);
         return true;
     }
 }

@@ -10,7 +10,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,6 +19,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -31,6 +32,7 @@ public final class ConfigManager {
     private static volatile String cachedClientSnapshotJson;
     private static long configRevision;
     private static ConfigLoadDiagnostics loadDiagnostics = ConfigLoadDiagnostics.empty();
+    private static volatile PersistenceWriter persistenceWriter = AtomicConfigWriter::write;
     private static volatile PublicationListener publicationListener = (revision, kind) -> {
     };
 
@@ -59,6 +61,19 @@ public final class ConfigManager {
             "shearingEntityMultipliers");
 
     private ConfigManager() {
+    }
+
+    @FunctionalInterface
+    interface PersistenceWriter {
+        void write(Path path, String content) throws IOException;
+    }
+
+    static synchronized void setPersistenceWriterForTests(final PersistenceWriter writer) {
+        persistenceWriter = Objects.requireNonNull(writer, "writer");
+    }
+
+    static synchronized void resetPersistenceWriterForTests() {
+        persistenceWriter = AtomicConfigWriter::write;
     }
 
     public static synchronized boolean load() {
@@ -187,7 +202,7 @@ public final class ConfigManager {
             final String operation
     ) {
         try {
-            AtomicConfigWriter.write(path, GSON.toJson(candidate));
+            persistenceWriter.write(path, GSON.toJson(candidate));
             return true;
         } catch (IOException exception) {
             SmartResourceDrops.LOGGER.error("Could not " + operation + "; the active configuration was not changed", exception);
@@ -376,7 +391,7 @@ public final class ConfigManager {
         }
 
         try {
-            AtomicConfigWriter.write(path, GSON.toJson(candidate));
+            persistenceWriter.write(path, GSON.toJson(candidate));
         } catch (IOException exception) {
             SmartResourceDrops.LOGGER.error(
                     "Could not persist the configuration patch; the active configuration was not changed",
@@ -443,7 +458,7 @@ public final class ConfigManager {
         applyMapPatch(candidate.categoryMultipliers, patch.categoryMultipliers, patch.inheritedCategories, true);
         applyMapPatch(candidate.dimensionMultipliers, patch.dimensionMultipliers, patch.inheritedDimensions, false);
         patch.blockFilters.forEach((rawKey, state) -> {
-            final String key = normalizedIdentifier(rawKey);
+            final String key = normalizedResourceLocation(rawKey);
             candidate.blacklist.remove(key);
             candidate.whitelist.remove(key);
             switch (state) {
@@ -482,7 +497,7 @@ public final class ConfigManager {
             final boolean tag
     ) {
         changes.forEach((rawKey, state) -> {
-            final String key = tag ? normalizedTagIdentifier(rawKey) : normalizedEntityIdentifier(rawKey);
+            final String key = tag ? normalizedTagResourceLocation(rawKey) : normalizedEntityResourceLocation(rawKey);
             blacklist.remove(key);
             whitelist.remove(key);
             switch (state) {
@@ -527,7 +542,7 @@ public final class ConfigManager {
     }
 
     private static boolean validEntityKeys(final Set<String> keys) {
-        return keys.stream().allMatch(key -> normalizedEntityIdentifier(key) != null);
+        return keys.stream().allMatch(key -> normalizedEntityResourceLocation(key) != null);
     }
 
     private static boolean validEntityCategoryKeys(final Set<String> keys) {
@@ -535,7 +550,7 @@ public final class ConfigManager {
     }
 
     private static boolean validTagKeys(final Set<String> keys) {
-        return keys.stream().allMatch(key -> normalizedTagIdentifier(key) != null);
+        return keys.stream().allMatch(key -> normalizedTagResourceLocation(key) != null);
     }
 
     private static String normalizedPatchKey(String raw, boolean category) {
@@ -549,10 +564,10 @@ public final class ConfigManager {
         if (category) {
             return Category.parse(normalized).map(Category::key).orElse(null);
         }
-        return normalizedIdentifier(normalized);
+        return normalizedResourceLocation(normalized);
     }
 
-    private static String normalizedIdentifier(String raw) {
+    private static String normalizedResourceLocation(String raw) {
         if (raw == null) {
             return null;
         }
@@ -560,16 +575,16 @@ public final class ConfigManager {
         if (normalized.isEmpty() || normalized.length() > SmartDropsConfig.MAX_RULE_KEY_LENGTH) {
             return null;
         }
-        final Identifier identifier = Identifier.tryParse(normalized);
+        final ResourceLocation identifier = ResourceLocation.tryParse(normalized);
         return identifier == null ? null : identifier.toString();
     }
 
-    private static String normalizedEntityIdentifier(final String raw) {
-        final String normalized = normalizedIdentifier(raw);
+    private static String normalizedEntityResourceLocation(final String raw) {
+        final String normalized = normalizedResourceLocation(raw);
         return normalized == null || "minecraft:player".equals(normalized) ? null : normalized;
     }
 
-    private static String normalizedTagIdentifier(final String raw) {
+    private static String normalizedTagResourceLocation(final String raw) {
         if (raw == null) {
             return null;
         }
@@ -577,7 +592,7 @@ public final class ConfigManager {
         while (normalized.startsWith("#")) {
             normalized = normalized.substring(1);
         }
-        return normalizedIdentifier(normalized);
+        return normalizedResourceLocation(normalized);
     }
 
     private static String normalizedEntityCategory(final String raw) {
@@ -731,7 +746,7 @@ public final class ConfigManager {
             return true;
         }
         try {
-            AtomicConfigWriter.write(path, GSON.toJson(copy));
+            persistenceWriter.write(path, GSON.toJson(copy));
         } catch (IOException exception) {
             SmartResourceDrops.LOGGER.error(
                     "Could not persist the configuration update; the active configuration was not changed",
@@ -761,7 +776,7 @@ public final class ConfigManager {
     static synchronized boolean reset(final Path path) {
         final SmartDropsConfig defaults = SmartDropsConfig.defaults();
         try {
-            AtomicConfigWriter.write(path, GSON.toJson(defaults));
+            persistenceWriter.write(path, GSON.toJson(defaults));
         } catch (IOException exception) {
             SmartResourceDrops.LOGGER.error(
                     "Could not persist the configuration reset; the active configuration was not changed",
@@ -784,7 +799,7 @@ public final class ConfigManager {
         final SmartDropsConfig candidate = snapshot();
         candidate.sanitize();
         try {
-            AtomicConfigWriter.write(path, GSON.toJson(candidate));
+            persistenceWriter.write(path, GSON.toJson(candidate));
         } catch (IOException exception) {
             SmartResourceDrops.LOGGER.error("Could not save Smart Resource Multiplier config", exception);
             return false;

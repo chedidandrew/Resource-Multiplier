@@ -7,28 +7,23 @@
   "entrypoints": {
     "main": [
       "com.chedidandrew.smartresourcedrops.gametest.fixture.FabricGameTestEntityFixtures",
-      "com.chedidandrew.smartresourcedrops.gametest.fixture.FabricGameTestBlockLootFixtures"
+      "com.chedidandrew.smartresourcedrops.gametest.fixture.FabricGameTestBlockLootFixtures",
+      "com.chedidandrew.smartresourcedrops.gametest.fixture.FabricGameTestCountGuard"
     ],
     "fabric-gametest": [
       "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsGameTests",
       "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsEntityGameTests",
       "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsBlockBudgetGameTests",
       "com.chedidandrew.smartresourcedrops.gametest.SmartResourceDropsShearingGameTests"
-    ],
-    "fabric-client-gametest": [
-      "com.chedidandrew.smartresourcedrops.gametest.SmartDropsClientGameTest"
     ]
   },
   "mixins": [
-    "smart_resource_drops_gametest.mixins.json"
+    "smart_resource_drops_gametest.server.mixins.json"
   ],
   "depends": {
     "fabricloader": "*",
-    "minecraft": "1.21.11",
+    "minecraft": "1.20.1",
     "fabric-gametest-api-v1": "*",
     "smart_resource_drops": "*"
-  },
-  "suggests": {
-    "fabric-client-gametest-api-v1": "*"
   }
 }
