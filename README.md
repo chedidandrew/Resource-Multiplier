@@ -146,7 +146,7 @@ Smart Resource Multiplier supports documented vanilla, Fabric, and NeoForge boun
 
 ## Build from source
 
-Java 17 is required. The included Gradle wrapper verifies its pinned Gradle distribution. The root build produces the Fabric JAR in `build/libs/`; the NeoForge build produces its JAR in `neoforge/build/libs/`.
+Minecraft 1.20.1 runs this mod on Java 17. Building from source uses Java 21 to launch the included Gradle/Loom toolchain, which then compiles and launches tests with the pinned Java 17 toolchain. The root build produces the Fabric JAR in `build/libs/`; the NeoForge build produces its JAR in `neoforge/build/libs/`.
 
 macOS or Linux:
 
@@ -162,7 +162,7 @@ gradlew.bat clean build
 gradlew.bat -p neoforge clean build
 ```
 
-The stable backport source builds `build/libs/smart-resource-multiplier-1.3.0+mc1.20.1.jar` and `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar`. Gradle automatically selects an installed Java 17 toolchain—or downloads one when absent. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
+The stable backport source builds `build/libs/smart-resource-multiplier-1.3.0+mc1.20.1.jar` and `neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar`. Launch Gradle with Java 21; Gradle automatically selects an installed Java 17 compilation/runtime toolchain—or downloads one when absent. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
 
 ## Documentation
 

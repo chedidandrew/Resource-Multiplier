@@ -7,7 +7,7 @@ Smart Resource Multiplier `1.3.0+mc1.20.1` is the maintained Minecraft Java Edit
 - Branch: `backport/1.20.1`
 - Planned tag: `v1.3.0+mc1.20.1`
 - Publication latch: `release_ready=false`
-- Java: `17`
+- Minecraft/runtime bytecode: Java `17` (Gradle/Loom launcher: Java `21`)
 - Fabric Loader: `0.19.5`
 - Fabric API: `0.92.12+1.20.1`
 - Optional Mod Menu: `7.2.2`

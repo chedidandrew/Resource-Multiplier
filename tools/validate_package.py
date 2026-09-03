@@ -331,16 +331,21 @@ forbid(
 )
 
 workflow_build = read(".github/workflows/build.yml")
-require(workflow_build, ["Build and verify Minecraft 1.20.1", "Set up Java 17", "runClientSmoke", "run_fabric_multiplayer_smoke.sh", "runPersistenceVerifyAbsentServerTest", "runGameTestServer", "run_neoforge_optional_channel_smoke.sh", "run_neoforge_oversized_wire_smoke.sh", "run_neoforge_production_server_smoke.sh", "timeout-minutes: 150", "timeout-minutes: 210"], "build workflow")
+require(workflow_build, ["Build and verify Minecraft 1.20.1", "Set up Java 21 Gradle runtime", "Switch to Java 17 for production server", "runClientSmoke", "run_fabric_multiplayer_smoke.sh", "runPersistenceVerifyAbsentServerTest", "runGameTestServer", "run_neoforge_optional_channel_smoke.sh", "run_neoforge_oversized_wire_smoke.sh", "run_neoforge_production_server_smoke.sh", "timeout-minutes: 150", "timeout-minutes: 210"], "build workflow")
 require(
     root_build,
     ["Fabric client smoke produced no", "Fabric client smoke log contains unexpected ERROR lines", "Failed to verify authentication", "Error while loading the narrator", "Error starting SoundSystem. Turning off sounds & music", "Fabric client smoke log contains forbidden failure", "'Game crashed!'"],
     "Fabric physical-client log gate",
 )
 workflow_release = read(".github/workflows/release.yml")
-require(workflow_release, ["v1.3.0+mc1.20.1", "origin/backport/1.20.1", "tag_commit\" = \"$branch_commit", "release_ready", "make_latest: false", "docs/releases/1.3.0+mc1.20.1.md", "timeout-minutes: 300", "runPersistenceVerifyAbsentServerTest", "run_neoforge_production_server_smoke.sh", "tools/package_release.py --output dist", "dist/smart-resource-multiplier-1.3.0+mc1.20.1.jar", "dist/smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar"], "release workflow")
+require(workflow_release, ["v1.3.0+mc1.20.1", "origin/backport/1.20.1", "tag_commit\" = \"$branch_commit", "release_ready", "make_latest: false", "docs/releases/1.3.0+mc1.20.1.md", "timeout-minutes: 300", "Set up Java 21 Gradle runtime", "Switch to Java 17 for production server", "runPersistenceVerifyAbsentServerTest", "run_neoforge_production_server_smoke.sh", "tools/package_release.py --output dist", "dist/smart-resource-multiplier-1.3.0+mc1.20.1.jar", "dist/smart-resource-multiplier-neoforge-1.3.0+mc1.20.1.jar"], "release workflow")
 for workflow_name, workflow in (("build workflow", workflow_build), ("release workflow", workflow_release)):
-    forbid(workflow, ["runClientGameTest", "runMigrationRestart", "runPackagedServerTest", "runPackagedClientTest", "Java 21", "1.21.11", "21.11.45", "forgeserveruserdev"], workflow_name)
+    forbid(workflow, ["runClientGameTest", "runMigrationRestart", "runPackagedServerTest", "runPackagedClientTest", "1.21.11", "21.11.45", "forgeserveruserdev"], workflow_name)
+
+if workflow_build.count("java-version: '21'") != 2 or workflow_build.count("java-version: '17'") != 1:
+    fail("build workflow must use Java 21 for both Gradle jobs and Java 17 only for the production server")
+if workflow_release.count("java-version: '21'") != 1 or workflow_release.count("java-version: '17'") != 1:
+    fail("release workflow must use Java 21 for Gradle and Java 17 only for the production server")
 
 production_server_smoke = read("tools/run_neoforge_production_server_smoke.sh")
 require(

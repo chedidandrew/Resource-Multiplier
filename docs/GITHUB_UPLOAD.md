@@ -4,7 +4,7 @@ The canonical repository is [chedidandrew/Resource-Multiplier](https://github.co
 
 ## Ordinary development
 
-Work on `backport/1.20.1`, keep `release_ready=false`, and push or open a pull request normally. The build workflow uses Java 17 and checks both loaders. It does not publish a release.
+Work on `backport/1.20.1`, keep `release_ready=false`, and push or open a pull request normally. The build workflow launches Gradle with Java 21 because Fabric Loom requires it, while compiling and running the Minecraft 1.20.1 targets with Java 17. It checks both loaders and does not publish a release.
 
 Expected artifacts:
 
@@ -18,7 +18,7 @@ Do not commit generated build directories or rename both files to the same filen
 Before authorizing publication:
 
 1. Complete every automated and manual item in [TESTING.md](TESTING.md) and [PUBLIC_RELEASE_CHECKLIST.md](PUBLIC_RELEASE_CHECKLIST.md).
-2. Rebuild from a clean checkout of the exact candidate commit using Java 17.
+2. Rebuild from a clean checkout of the exact candidate commit with Java 21 launching Gradle and its Java 17 toolchain compiling/running the Minecraft targets.
 3. Validate both final, playable JARs; do not use a NeoForge `devlibs` artifact.
 4. Record final SHA-256 hashes and sizes.
 5. Confirm `mod_version=1.3.0+mc1.20.1` in both Gradle property files.

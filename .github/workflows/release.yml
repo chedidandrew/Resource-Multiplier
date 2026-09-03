@@ -57,11 +57,11 @@ jobs:
             exit 1
           }
 
-      - name: Set up Java 17
+      - name: Set up Java 21 Gradle runtime
         uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - name: Cache Gradle data
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
@@ -91,7 +91,16 @@ jobs:
           bash tools/run_neoforge_optional_channel_smoke.sh
           bash tools/run_neoforge_oversized_wire_smoke.sh
           ./gradlew -p neoforge --no-daemon runPersistenceVerifyAbsentServerTest
-          bash tools/run_neoforge_production_server_smoke.sh
+
+      - name: Switch to Java 17 for production server
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Run final JAR on an official production Forge 47 server
+        timeout-minutes: 45
+        run: bash tools/run_neoforge_production_server_smoke.sh
 
       - name: Package and assert exact validated release artifacts
         shell: bash

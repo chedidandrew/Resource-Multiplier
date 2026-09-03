@@ -1,6 +1,6 @@
 # Testing Minecraft 1.20.1
 
-This branch targets Minecraft Java Edition 1.20.1 with Java 17. A successful compile alone is not release evidence: both loader JARs must pass their target-native server, client, multiplayer, protocol, and packaging gates from the exact candidate commit.
+This branch targets Minecraft Java Edition 1.20.1 with Java 17. Launch Gradle with Java 21 because the pinned Fabric Loom plugin requires it; Gradle then selects the declared Java 17 toolchain for compilation and Minecraft test processes. A successful compile alone is not release evidence: both loader JARs must pass their target-native server, client, multiplayer, protocol, and packaging gates from the exact candidate commit.
 
 ## Static and framework-independent checks
 
