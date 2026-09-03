@@ -70,6 +70,10 @@ public final class NeoForgeClientCategorySmokeTest {
                 this.rootScreen = root;
                 this.session = root.editorSession();
                 minecraft.setScreen(root);
+                // Forge 47/GLFW clamps the physical Linux test window to 854x480.
+                // Resize the real screen itself so the layout is still exercised at
+                // the same compact 320x180 logical dimensions on every platform.
+                root.resize(minecraft, 320, 180);
                 return;
             }
             switch (this.phase) {
