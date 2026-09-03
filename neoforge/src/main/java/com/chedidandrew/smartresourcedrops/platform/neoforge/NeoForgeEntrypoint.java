@@ -16,15 +16,23 @@ import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.IExtensionPoint;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.network.NetworkConstants;
 
 /** Physical-server-safe legacy NeoForge/Forge bootstrap for Minecraft 1.20.1. */
 @Mod(SmartResourceDrops.MOD_ID)
 public final class NeoForgeEntrypoint {
     public NeoForgeEntrypoint() {
         final IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+        ModLoadingContext.get().registerExtensionPoint(
+                IExtensionPoint.DisplayTest.class,
+                () -> new IExtensionPoint.DisplayTest(
+                        () -> NetworkConstants.IGNORESERVERONLY,
+                        (remoteVersion, isServer) -> true));
         ConfigManager.configureConfigDirectory(FMLPaths.CONFIGDIR.get());
         PlatformPlayerSupport.installFakePlayerPredicate(player -> player instanceof FakePlayer);
 

@@ -282,6 +282,23 @@ def validate(path: Path, version: str) -> tuple[int, str]:
             errors.append("unsupported cross-loader migration implementation leaked")
 
         try:
+            entrypoint = archive.read(
+                "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeEntrypoint.class"
+            )
+            for marker in (
+                b"net/minecraftforge/fml/IExtensionPoint$DisplayTest",
+                b"registerExtensionPoint",
+                b"OHNOES",
+            ):
+                if marker not in entrypoint:
+                    errors.append(
+                        "NeoForgeEntrypoint is missing packaged server-only display-test marker "
+                        + repr(marker)
+                    )
+        except KeyError:
+            errors.append("cannot inspect packaged NeoForgeEntrypoint display test")
+
+        try:
             pack_metadata = json.loads(archive.read(PACK_METADATA))
             if pack_metadata != {
                 "pack": {
@@ -332,6 +349,7 @@ def validate(path: Path, version: str) -> tuple[int, str]:
                 "modId": MOD_ID,
                 "version": version,
                 "displayName": PUBLIC_NAME,
+                "displayTest": "NONE",
                 "logoFile": ICON,
             }
             for key, expected in expected_mod.items():

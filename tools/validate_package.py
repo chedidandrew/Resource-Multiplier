@@ -106,6 +106,7 @@ REQUIRED_FILES = [
     "neoforge/src/main/resources/smart_resource_drops.neoforge.mixins.json",
     "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structures/wide.nbt",
     "neoforge/src/optionalchanneltest/resources/META-INF/mods.toml",
+    "neoforge/src/optionalchanneltest/resources/pack.mcmeta",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementPersistenceSmokeTest.java",
     "tools/validate_neoforge_jar.py",
     "tools/validate_fabric_jar.py",
@@ -135,6 +136,18 @@ try:
         fail(f"pack.mcmeta must be the exact Minecraft 1.20.1 pack contract, found {pack_metadata!r}")
 except json.JSONDecodeError as exc:
     fail(f"Invalid JSON in src/main/resources/pack.mcmeta: {exc}")
+
+try:
+    optional_channel_pack = json.loads(read("neoforge/src/optionalchanneltest/resources/pack.mcmeta"))
+    if optional_channel_pack != {
+        "pack": {
+            "pack_format": 15,
+            "description": "Smart Resource Multiplier optional-channel test resources",
+        }
+    }:
+        fail(f"optional-channel pack.mcmeta must be the exact test-resource contract, found {optional_channel_pack!r}")
+except json.JSONDecodeError as exc:
+    fail(f"Invalid JSON in neoforge/src/optionalchanneltest/resources/pack.mcmeta: {exc}")
 
 root_props = parse_properties("gradle.properties")
 validate_exact(
@@ -194,6 +207,7 @@ require(
         'modLoader="javafml"',
         'loaderVersion="[47,)"',
         'modId="${mod_id}"',
+        'displayTest="NONE"',
         'logoFile="assets/smart_resource_drops/icon.png"',
         'modId="forge"',
         'versionRange="[47.1.106,)"',
@@ -349,6 +363,16 @@ require(fabric_networking, ["ConfigPatchFragmentPayload", "ServerPlayNetworking.
 forbid(fabric_networking, ["ConfigPatchPayload.ID,", "ConfigSnapshotPayload.ID,"], "Fabric registered wire channels")
 neo_networking = read("neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeNetworking.java")
 require(neo_networking, ["PROTOCOL_VERSION = \"2\"", "ConfigPatchFragmentPayload", "ConfigSnapshotFragmentPayload", "PLAY_TO_SERVER", "PLAY_TO_CLIENT", "acceptMissingOr"], "NeoForge SimpleChannel")
+neo_entrypoint = read("neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeEntrypoint.java")
+require(
+    neo_entrypoint,
+    [
+        "IExtensionPoint.DisplayTest.class",
+        "NetworkConstants.IGNORESERVERONLY",
+        "(remoteVersion, isServer) -> true",
+    ],
+    "NeoForge missing-client display test",
+)
 require(read("src/client/java/com/chedidandrew/smartresourcedrops/client/ClientCategoryTagIndex.java"), ["tags/blocks"], "1.20.1 client block-tag fallback")
 require(read("src/client/java/com/chedidandrew/smartresourcedrops/client/ClientEntityCategoryTagIndex.java"), ["tags/entity_types"], "1.20.1 client entity-tag fallback")
 require(read("src/client/java/com/chedidandrew/smartresourcedrops/client/ClientShearingTagIndex.java"), ["tags/entity_types"], "1.20.1 client shearing-tag fallback")

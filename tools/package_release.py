@@ -99,6 +99,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "neoforge/src/main/templates/META-INF/mods.toml",
         "neoforge/src/main/resources/smart_resource_drops.neoforge.mixins.json",
         "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structures/wide.nbt",
+        "neoforge/src/optionalchanneltest/resources/pack.mcmeta",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementPersistenceSmokeTest.java",
     }
     | {f"src/main/resources/{name}" for name in PRODUCTION_RESOURCES}
