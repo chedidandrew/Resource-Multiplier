@@ -63,6 +63,12 @@ def optionalServerOnlyClientDirectory =
 def oversizedWireServerDirectory = layout.buildDirectory.dir('oversized-wire-test/server')
 def oversizedWireClientDirectory = layout.buildDirectory.dir('oversized-wire-test/client')
 def persistenceTestDirectory = layout.buildDirectory.dir('persistence-server-test')
+def addProductionMixinArguments = { run ->
+    run.programArgument '--mixin.config'
+    run.programArgument 'smart_resource_drops.mixins.json'
+    run.programArgument '--mixin.config'
+    run.programArgument 'smart_resource_drops.neoforge.mixins.json'
+}
 def prepareClientCategoryTest = tasks.register('prepareClientCategoryTest') {
     outputs.upToDateWhen { false }
     doLast {
@@ -237,22 +243,26 @@ legacyForge {
         client {
             client()
             loadedMods.set([legacyForge.mods.getByName(mod_id)])
+            addProductionMixinArguments(delegate)
         }
         server {
             server()
             loadedMods.set([legacyForge.mods.getByName(mod_id)])
+            addProductionMixinArguments(delegate)
             programArgument '--nogui'
         }
         gameTestServer {
             type = 'gameTestServer'
             sourceSet = gameTestSourceSet
             loadedMods.set([legacyForge.mods.getByName('smartResourceDropsGameTest')])
+            addProductionMixinArguments(delegate)
             systemProperty 'forge.enabledGameTestNamespaces', 'smart_resource_drops_gametest'
         }
         clientCategoryTest {
             client()
             sourceSet = clientTestSourceSet
             loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
+            addProductionMixinArguments(delegate)
             gameDirectory = clientCategoryTestDirectory
             systemProperty 'smart_resource_drops.clientCategoryTest', 'true'
             systemProperty 'smart_resource_drops.clientCategoryTestDirectory',
@@ -263,6 +273,7 @@ legacyForge {
             server()
             sourceSet = clientTestSourceSet
             loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
+            addProductionMixinArguments(delegate)
             gameDirectory = multiplayerServerDirectory
             systemProperty 'smart_resource_drops.multiplayerTest', 'true'
             taskBefore prepareMultiplayerServerTest
@@ -272,6 +283,7 @@ legacyForge {
             client()
             sourceSet = clientTestSourceSet
             loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
+            addProductionMixinArguments(delegate)
             gameDirectory = multiplayerClientDirectory
             systemProperty 'smart_resource_drops.multiplayerTest', 'true'
             taskBefore prepareMultiplayerClientTest
@@ -291,6 +303,7 @@ legacyForge {
             client()
             sourceSet = clientTestSourceSet
             loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
+            addProductionMixinArguments(delegate)
             gameDirectory = optionalClientOnlyClientDirectory
             systemProperty 'smart_resource_drops.optionalClientOnlyTest', 'true'
             taskBefore prepareOptionalClientOnlyClientTest
@@ -303,6 +316,7 @@ legacyForge {
             loadedMods.set([
                     legacyForge.mods.getByName(mod_id),
                     legacyForge.mods.getByName('optionalChannelProbe')])
+            addProductionMixinArguments(delegate)
             gameDirectory = optionalServerOnlyServerDirectory
             systemProperty 'smart_resource_drops.optionalChannelTest', 'serverOnly'
             taskBefore prepareOptionalServerOnlyServerTest
@@ -322,6 +336,7 @@ legacyForge {
             server()
             sourceSet = clientTestSourceSet
             loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
+            addProductionMixinArguments(delegate)
             gameDirectory = oversizedWireServerDirectory
             systemProperty 'smart_resource_drops.oversizedWireTest', 'true'
             taskBefore prepareOversizedWireServerTest
@@ -331,6 +346,7 @@ legacyForge {
             client()
             sourceSet = clientTestSourceSet
             loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
+            addProductionMixinArguments(delegate)
             gameDirectory = oversizedWireClientDirectory
             systemProperty 'smart_resource_drops.oversizedWireTest', 'true'
             taskBefore prepareOversizedWireClientTest
@@ -341,6 +357,7 @@ legacyForge {
             server()
             sourceSet = clientTestSourceSet
             loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
+            addProductionMixinArguments(delegate)
             gameDirectory = persistenceTestDirectory
             systemProperty 'smart_resource_drops.persistenceTestPhase', 'mark'
             systemProperty 'smart_resource_drops.persistenceTestDirectory',
@@ -352,6 +369,7 @@ legacyForge {
             server()
             sourceSet = clientTestSourceSet
             loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
+            addProductionMixinArguments(delegate)
             gameDirectory = persistenceTestDirectory
             systemProperty 'smart_resource_drops.persistenceTestPhase', 'remove'
             systemProperty 'smart_resource_drops.persistenceTestDirectory',
@@ -362,6 +380,7 @@ legacyForge {
             server()
             sourceSet = clientTestSourceSet
             loadedMods.set([legacyForge.mods.getByName('smartResourceDropsClientTest')])
+            addProductionMixinArguments(delegate)
             gameDirectory = persistenceTestDirectory
             systemProperty 'smart_resource_drops.persistenceTestPhase', 'verify_absent'
             systemProperty 'smart_resource_drops.persistenceTestDirectory',
@@ -582,8 +601,6 @@ jar {
 
 mixin {
     add sourceSets.main, 'smart_resource_drops.refmap.json'
-    config 'smart_resource_drops.mixins.json'
-    config 'smart_resource_drops.neoforge.mixins.json'
 }
 
 publishing {

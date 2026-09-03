@@ -42,6 +42,26 @@ def forbid(text: str, needles: Iterable[str], label: str) -> None:
             fail(f"{label} contains forbidden stale text: {needle!r}")
 
 
+def gradle_named_block(text: str, name: str) -> str:
+    """Return a named Gradle closure, including nested braces."""
+    marker = f"        {name} {{"
+    start = text.find(marker)
+    if start < 0:
+        fail(f"NeoForge build is missing run block: {name}")
+        return ""
+    brace = text.find("{", start)
+    depth = 0
+    for index in range(brace, len(text)):
+        if text[index] == "{":
+            depth += 1
+        elif text[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start:index + 1]
+    fail(f"NeoForge build has an unterminated run block: {name}")
+    return text[start:]
+
+
 def parse_properties(path: str) -> dict[str, str]:
     result: dict[str, str] = {}
     for raw in read(path).splitlines():
@@ -202,6 +222,49 @@ require(
     "NeoForge build",
 )
 forbid(neo_build, ["runMigrationRestart", "--tests smart_resource_drops_gametest", "version = neo_version"], "NeoForge build")
+
+require(
+    neo_build,
+    [
+        "def addProductionMixinArguments = { run ->",
+        "run.programArgument '--mixin.config'",
+        "run.programArgument 'smart_resource_drops.mixins.json'",
+        "run.programArgument 'smart_resource_drops.neoforge.mixins.json'",
+    ],
+    "NeoForge per-run mixin configuration",
+)
+if neo_build.count("def addProductionMixinArguments = { run ->") != 1:
+    fail("NeoForge build must define exactly one production-mixin argument helper")
+if neo_build.count("addProductionMixinArguments(delegate)") != 13:
+    fail("NeoForge build must attach production mixins to exactly 13 production-mod runs")
+for run_name in (
+    "client",
+    "server",
+    "gameTestServer",
+    "clientCategoryTest",
+    "multiplayerServerTest",
+    "multiplayerClientTest",
+    "optionalClientOnlyClientTest",
+    "optionalServerOnlyServerTest",
+    "oversizedWireServerTest",
+    "oversizedWireClientTest",
+    "persistenceMarkServerTest",
+    "persistenceRemoveServerTest",
+    "persistenceVerifyAbsentServerTest",
+):
+    if "addProductionMixinArguments(delegate)" not in gradle_named_block(neo_build, run_name):
+        fail(f"NeoForge production-mod run must receive production mixins: {run_name}")
+for run_name in ("optionalClientOnlyServerTest", "optionalServerOnlyClientTest"):
+    if "addProductionMixinArguments(delegate)" in gradle_named_block(neo_build, run_name):
+        fail(f"NeoForge probe-only run must not receive production mixins: {run_name}")
+forbid(
+    neo_build,
+    [
+        "config 'smart_resource_drops.mixins.json'",
+        "config 'smart_resource_drops.neoforge.mixins.json'",
+    ],
+    "NeoForge global mixin configuration",
+)
 
 for path in (
     "src/main/resources/smart_resource_drops.mixins.json",
