@@ -10,7 +10,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-/** Proves a malformed wire patch only disconnects its sender and cannot mutate server state. */
+/** Proves malformed fragment sequences fail closed without mutating server state. */
 @Mod.EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, value = Dist.DEDICATED_SERVER)
 public final class NeoForgeOversizedWireServerSmokeTest {
     private static final int HEALTH_CHECK_TICKS = 40;
@@ -75,7 +75,7 @@ public final class NeoForgeOversizedWireServerSmokeTest {
         this.attackedPlayer = null;
         this.ticksAfterDisconnect = 0;
         SmartResourceDrops.LOGGER.info(
-                "NeoForge oversized-wire server observed rejection; beginning post-disconnect health check");
+                "NeoForge oversized-wire server observed the hostile fixture exit; beginning post-disconnect health check");
     }
 
     private void onServerTick() {
@@ -94,7 +94,7 @@ public final class NeoForgeOversizedWireServerSmokeTest {
         server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "smartdrops status");
         assertConfigurationUnchanged();
         SmartResourceDrops.LOGGER.info(
-                "NeoForge oversized-wire server smoke passed: decoder rejection, unchanged revision/config, {} healthy ticks, and responsive command dispatcher",
+                "NeoForge oversized-wire server smoke passed: malformed fragments failed closed, unchanged revision/config, {} healthy ticks, and responsive command dispatcher",
                 HEALTH_CHECK_TICKS);
         this.baselineJson = null;
         server.execute(() -> server.halt(false));

@@ -6,9 +6,8 @@ readonly READY_TIMEOUT_SECONDS=180
 readonly CLIENT_TIMEOUT_SECONDS=300
 readonly SERVER_SHUTDOWN_TIMEOUT_SECONDS=60
 readonly SERVER_READY_MARKER='For help, type "help"'
-readonly DECODER_REJECTION_MARKER='The received string length is longer than maximum allowed (1048577 > 1048576)'
-readonly CLIENT_PASS_MARKER='NeoForge oversized-wire client smoke passed: 1048577-character patch reached the wire and the offending connection was rejected'
-readonly SERVER_PASS_MARKER='NeoForge oversized-wire server smoke passed: decoder rejection, unchanged revision/config, 40 healthy ticks, and responsive command dispatcher'
+readonly CLIENT_PASS_MARKER='NeoForge oversized-wire client smoke passed: malformed fragments failed closed and a later fragmented snapshot succeeded'
+readonly SERVER_PASS_MARKER='NeoForge oversized-wire server smoke passed: malformed fragments failed closed, unchanged revision/config, 40 healthy ticks, and responsive command dispatcher'
 
 readonly REPOSITORY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly LOG_DIRECTORY="${REPOSITORY_ROOT}/neoforge/build/oversized-wire-smoke-logs"
@@ -156,24 +155,20 @@ client_marker_status=0
 grep -Fq -- "${CLIENT_PASS_MARKER}" "${CLIENT_CONSOLE_LOG}" || client_marker_status=$?
 server_marker_status=0
 grep -Fq -- "${SERVER_PASS_MARKER}" "${SERVER_CONSOLE_LOG}" || server_marker_status=$?
-decoder_marker_status=0
-grep -Fq -- "${DECODER_REJECTION_MARKER}" "${SERVER_CONSOLE_LOG}" || decoder_marker_status=$?
 
 if (( client_status != 0 \
         || server_status != 0 \
         || client_marker_status != 0 \
-        || server_marker_status != 0 \
-        || decoder_marker_status != 0 )); then
-    printf 'NeoForge oversized-wire smoke failed: client_status=%s, server_status=%s, client_marker=%s, server_marker=%s, decoder_marker=%s.\n' \
+        || server_marker_status != 0 )); then
+    printf 'NeoForge oversized-wire smoke failed: client_status=%s, server_status=%s, client_marker=%s, server_marker=%s.\n' \
         "${client_status}" \
         "${server_status}" \
         "${client_marker_status}" \
-        "${server_marker_status}" \
-        "${decoder_marker_status}" >&2
+        "${server_marker_status}" >&2
     print_failure_logs
     exit 1
 fi
 
 SERVER_PID=''
 trap - EXIT INT TERM
-printf '%s\n' 'NeoForge malicious oversized-wire client/server smoke completed successfully.'
+printf '%s\n' 'NeoForge malicious fragmented-wire client/server smoke completed successfully.'

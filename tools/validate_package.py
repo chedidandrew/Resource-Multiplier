@@ -445,6 +445,52 @@ require(workflow_release, ["v1.3.0+mc1.20.1", "origin/backport/1.20.1", "tag_com
 for workflow_name, workflow in (("build workflow", workflow_build), ("release workflow", workflow_release)):
     forbid(workflow, ["runClientGameTest", "runMigrationRestart", "runPackagedServerTest", "runPackagedClientTest", "1.21.11", "21.11.45", "forgeserveruserdev"], workflow_name)
 
+oversized_wire_client = read(
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.java"
+)
+require(
+    oversized_wire_client,
+    [
+        "minecraft.setScreen(new SmartDropsConfigLoadingScreen(null))",
+        "malformed fragments failed closed and a later fragmented snapshot succeeded",
+    ],
+    "NeoForge malformed-fragment client gate",
+)
+forbid(
+    oversized_wire_client,
+    ["ClientConfigState.request(minecraft)"],
+    "NeoForge malformed-fragment client gate",
+)
+oversized_wire_server = read(
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.java"
+)
+require(
+    oversized_wire_server,
+    [
+        "malformed fragments failed closed, unchanged revision/config",
+        "responsive command dispatcher",
+    ],
+    "NeoForge malformed-fragment server gate",
+)
+oversized_wire_runner = read("tools/run_neoforge_oversized_wire_smoke.sh")
+require(
+    oversized_wire_runner,
+    [
+        "malformed fragments failed closed and a later fragmented snapshot succeeded",
+        "malformed fragments failed closed, unchanged revision/config",
+        "client_status != 0",
+        "server_status != 0",
+        "client_marker_status != 0",
+        "server_marker_status != 0",
+    ],
+    "NeoForge malformed-fragment runner",
+)
+forbid(
+    oversized_wire_runner,
+    ["DECODER_REJECTION_MARKER", "1048577-character patch", "decoder_marker_status"],
+    "NeoForge malformed-fragment runner",
+)
+
 if workflow_build.count("java-version: '21'") != 2 or workflow_build.count("java-version: '17'") != 1:
     fail("build workflow must use Java 21 for both Gradle jobs and Java 17 only for the production server")
 if workflow_release.count("java-version: '21'") != 1 or workflow_release.count("java-version: '17'") != 1:

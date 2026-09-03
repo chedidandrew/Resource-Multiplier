@@ -125,10 +125,7 @@ public final class NeoForgeOversizedWireClientSmokeTest {
         if (++attackTicks < TRANSFER_EXPIRY_WAIT_TICKS) {
             return;
         }
-        final ClientConfigState.RequestStart request = ClientConfigState.request(minecraft);
-        if (!request.started()) {
-            throw new AssertionError("Healthy request could not start after fragment attacks: " + request.failure());
-        }
+        minecraft.setScreen(new SmartDropsConfigLoadingScreen(null));
         phase = Phase.WAIT_HEALTHY_SNAPSHOT;
     }
 
