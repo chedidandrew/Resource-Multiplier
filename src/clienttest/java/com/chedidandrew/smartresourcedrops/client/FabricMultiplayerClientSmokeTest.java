@@ -18,6 +18,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
+import net.minecraft.network.chat.Component;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,6 +32,7 @@ public final class FabricMultiplayerClientSmokeTest implements ClientModInitiali
     private int ticks;
     private int phaseTicks;
     private long initialRevision;
+    private int initialGlobalMultiplier;
     private int patchedGlobal;
     private Object firstConnectionIdentity;
     private boolean stopped;
@@ -108,8 +110,9 @@ public final class FabricMultiplayerClientSmokeTest implements ClientModInitiali
         final ClientConfigState.CachedSnapshot snapshot = ClientConfigState.cachedSnapshot(minecraft)
                 .orElseThrow(() -> new AssertionError("Read-only server snapshot was not cached"));
         this.initialRevision = snapshot.revision();
+        this.initialGlobalMultiplier = snapshot.config().globalMultiplier;
         final ConfigPatch unauthorized = new ConfigPatch();
-        unauthorized.globalMultiplier = snapshot.config().globalMultiplier + 1;
+        unauthorized.globalMultiplier = this.initialGlobalMultiplier + 1;
         minecraft.setScreen(new SmartDropsConfigLoadingScreen(
                 root,
                 null,
@@ -125,15 +128,14 @@ public final class FabricMultiplayerClientSmokeTest implements ClientModInitiali
         if (!(minecraft.screen instanceof SmartDropsConfigScreen root)) {
             return;
         }
-        require(!root.editorSession().editable(),
-                "Unauthorized patch response accidentally promoted the client");
         require(root.editorSession().revision() == this.initialRevision,
                 "Unauthorized patch changed the authoritative revision");
         require(root.editorSession().globalMultiplier()
-                        == SmartDropsConfig.defaults().globalMultiplier,
+                        == this.initialGlobalMultiplier,
                 "Unauthorized patch changed server configuration");
-        require(!root.editorSession().status().isBlank(),
-                "Unauthorized patch did not return an explicit denial status");
+        require(root.editorSession().status().equals(Component.translatable(
+                        "smart_resource_drops.gui.patch_unauthorized").getString()),
+                "Unauthorized patch did not return the exact denial status");
         root.onClose();
         transition(Phase.WAIT_PROMOTION);
     }

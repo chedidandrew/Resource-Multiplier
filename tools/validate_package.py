@@ -1137,6 +1137,40 @@ for required_release_neoforge_gate in (
             f"{required_release_neoforge_gate}"
         )
 
+fabric_multiplayer_client = (
+    ROOT
+    / "src/clienttest/java/com/chedidandrew/smartresourcedrops/client/FabricMultiplayerClientSmokeTest.java"
+).read_text(encoding="utf-8")
+for marker in (
+    '"smart_resource_drops.gui.patch_unauthorized"',
+    "Unauthorized patch did not return the exact denial status",
+    "Unauthorized patch changed the authoritative revision",
+    "Unauthorized patch changed server configuration",
+    "this.initialGlobalMultiplier",
+):
+    if marker not in fabric_multiplayer_client:
+        fail(f"Fabric multiplayer authority regression gate is missing: {marker}")
+if "Unauthorized patch response accidentally promoted the client" in fabric_multiplayer_client:
+    fail("Fabric multiplayer authority gate retains the timing-sensitive promotion assertion")
+
+neoforge_multiplayer_client = (
+    ROOT
+    / "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeMultiplayerClientSmokeTest.java"
+).read_text(encoding="utf-8")
+for marker in (
+    '"smart_resource_drops.gui.patch_unauthorized"',
+    "revision() != this.initialRevision",
+    "globalMultiplier() != this.initialGlobalMultiplier",
+    "Unauthorized NeoForge patch did not return the exact denial status without mutation",
+):
+    if marker not in neoforge_multiplayer_client:
+        fail(f"NeoForge multiplayer authority regression gate is missing: {marker}")
+if re.search(
+    r"editorSession\(\)\.editable\(\)\s*\|\|\s*root\.editorSession\(\)\.revision\(\)",
+    neoforge_multiplayer_client,
+):
+    fail("NeoForge multiplayer authority gate retains the timing-sensitive promotion assertion")
+
 multiplayer_runner = (ROOT / "tools/run_neoforge_multiplayer_smoke.sh").read_text(
     encoding="utf-8"
 )

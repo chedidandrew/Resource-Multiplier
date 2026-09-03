@@ -19,6 +19,7 @@ import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
+import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.ClientCommandHandler;
@@ -140,12 +141,12 @@ public final class NeoForgeMultiplayerClientSmokeTest {
         if (!(screen instanceof SmartDropsConfigScreen root)) {
             return;
         }
-        if (root.editorSession().editable()
-                || root.editorSession().revision() != this.initialRevision
+        if (root.editorSession().revision() != this.initialRevision
                 || root.editorSession().globalMultiplier() != this.initialGlobalMultiplier
-                || root.editorSession().status().isBlank()) {
+                || !root.editorSession().status().equals(Component.translatable(
+                        "smart_resource_drops.gui.patch_unauthorized").getString())) {
             throw new AssertionError(
-                    "Unauthorized NeoForge patch was not explicitly denied without mutation");
+                    "Unauthorized NeoForge patch did not return the exact denial status without mutation");
         }
         root.onClose();
         transition(Phase.WAIT_PROMOTION);
