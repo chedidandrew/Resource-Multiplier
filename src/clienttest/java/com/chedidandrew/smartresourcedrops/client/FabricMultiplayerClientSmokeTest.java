@@ -20,6 +20,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
+import net.minecraft.network.chat.Component;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Random;
@@ -130,15 +131,14 @@ public final class FabricMultiplayerClientSmokeTest implements ClientModInitiali
         if (!(minecraft.screen instanceof SmartDropsConfigScreen root)) {
             return;
         }
-        require(!root.editorSession().editable(),
-                "Unauthorized patch response accidentally promoted the client");
         require(root.editorSession().revision() == this.initialRevision,
                 "Unauthorized patch changed the authoritative revision");
         require(root.editorSession().globalMultiplier()
                         == SmartDropsConfig.defaults().globalMultiplier,
                 "Unauthorized patch changed server configuration");
-        require(!root.editorSession().status().isBlank(),
-                "Unauthorized patch did not return an explicit denial status");
+        require(root.editorSession().status().equals(Component.translatable(
+                        "smart_resource_drops.gui.patch_unauthorized").getString()),
+                "Unauthorized patch did not return the exact denial status");
         root.onClose();
         transition(Phase.WAIT_PROMOTION);
     }

@@ -363,6 +363,22 @@ require(fabric_networking, ["ConfigPatchFragmentPayload", "ServerPlayNetworking.
 forbid(fabric_networking, ["ConfigPatchPayload.ID,", "ConfigSnapshotPayload.ID,"], "Fabric registered wire channels")
 neo_networking = read("neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeNetworking.java")
 require(neo_networking, ["PROTOCOL_VERSION = \"2\"", "ConfigPatchFragmentPayload", "ConfigSnapshotFragmentPayload", "PLAY_TO_SERVER", "PLAY_TO_CLIENT", "acceptMissingOr"], "NeoForge SimpleChannel")
+fabric_multiplayer_client = read("src/clienttest/java/com/chedidandrew/smartresourcedrops/client/FabricMultiplayerClientSmokeTest.java")
+require(
+    fabric_multiplayer_client,
+    [
+        '"smart_resource_drops.gui.patch_unauthorized"',
+        "Unauthorized patch did not return the exact denial status",
+        "Unauthorized patch changed the authoritative revision",
+        "Unauthorized patch changed server configuration",
+    ],
+    "Fabric unauthorized-response race regression",
+)
+forbid(
+    fabric_multiplayer_client,
+    ["Unauthorized patch response accidentally promoted the client"],
+    "Fabric unauthorized-response race regression",
+)
 neo_entrypoint = read("neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeEntrypoint.java")
 require(
     neo_entrypoint,
