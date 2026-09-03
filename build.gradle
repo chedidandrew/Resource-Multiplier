@@ -279,8 +279,17 @@ tasks.named('runClientSmoke') {
         }
         final File logFile = file('build/fabric-client-smoke/logs/latest.log')
         final String log = logFile.isFile() ? logFile.getText('UTF-8') : ''
+        // GitHub's headless Linux image has neither Flite nor a physical OpenAL
+        // device. Minecraft logs those two unavailable optional services as
+        // ERROR even though the tested GUI opens, completes, and shuts down.
+        final List<String> unexpectedErrors = log.readLines().findAll { line ->
+            line.contains('/ERROR]')
+                    && !line.contains('Error while loading the narrator')
+                    && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+        }
         if (!logFile.isFile()
-                || log.readLines().any { line -> line.contains('/ERROR]') || line.contains('/FATAL]') }
+                || !unexpectedErrors.isEmpty()
+                || log.readLines().any { line -> line.contains('/FATAL]') }
                 || log.contains('Game crashed!')) {
             throw new GradleException('Fabric client smoke logged an error, fatal event, or crash')
         }

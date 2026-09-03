@@ -526,8 +526,14 @@ tasks.named('runClientCategoryTest') {
         }
         final File logFile = new File(clientCategoryTestDirectory.get().asFile, 'logs/latest.log')
         final String log = logFile.isFile() ? logFile.getText('UTF-8') : ''
+        final List<String> unexpectedErrors = log.readLines().findAll { line ->
+            line.contains('/ERROR]')
+                    && !line.contains('Error while loading the narrator')
+                    && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+        }
         if (!logFile.isFile()
-                || log.readLines().any { line -> line.contains('/ERROR]') || line.contains('/FATAL]') }
+                || !unexpectedErrors.isEmpty()
+                || log.readLines().any { line -> line.contains('/FATAL]') }
                 || log.contains('Game crashed!')) {
             throw new GradleException('NeoForge category client logged an error, fatal event, or crash')
         }
@@ -592,8 +598,14 @@ tasks.named('runPackagedClientTest') {
         }
         final File logFile = new File(packagedClientTestDirectory.get().asFile, 'logs/latest.log')
         final String log = logFile.isFile() ? logFile.getText('UTF-8') : ''
+        final List<String> unexpectedErrors = log.readLines().findAll { line ->
+            line.contains('/ERROR]')
+                    && !line.contains('Error while loading the narrator')
+                    && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+        }
         if (!logFile.isFile()
-                || log.readLines().any { line -> line.contains('/ERROR]') || line.contains('/FATAL]') }
+                || !unexpectedErrors.isEmpty()
+                || log.readLines().any { line -> line.contains('/FATAL]') }
                 || log.contains('Game crashed!')) {
             throw new GradleException('Packaged production client logged an error, fatal event, or crash')
         }
