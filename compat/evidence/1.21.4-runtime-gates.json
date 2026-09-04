@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "lane": "minecraft-1.21.4",
+  "recordedAtUtc": "2026-09-04T19:09:37.9133518Z",
+  "releaseReady": false,
+  "runtime": {
+    "java": 21,
+    "minecraft": "1.21.4",
+    "fabricLoader": "0.19.5",
+    "neoForge": "21.4.157"
+  },
+  "candidates": {
+    "fabric": {
+      "path": "compat/candidates/smart-resource-multiplier-fabric-1.3.2+mc1.21.4.jar",
+      "sha256": "4b84930eaff19a7100f3ab9c9718aab2c7d5a2a83a34cf177eaf945706088129",
+      "sha256SumsMatch": true,
+      "finalBuildJarSha256Match": true
+    },
+    "neoforge": {
+      "path": "compat/candidates/smart-resource-multiplier-neoforge-1.3.2+mc1.21.4.jar",
+      "sha256": "1442f542fd3a68fb86f292af629cf9b86a27b426e7f45a0713b5f6cf00c9e1f4",
+      "sha256SumsMatch": true,
+      "finalBuildJarSha256Match": true
+    }
+  },
+  "gates": [
+    {
+      "id": "fabric-placement-persistence",
+      "status": "pass",
+      "completedAtUtc": "2026-09-04T18:55:52.8994034Z",
+      "command": ".\\gradlew.bat --no-daemon --console=plain runPersistenceVerifyAbsentServerSmoke",
+      "markers": [
+        {
+          "path": "build/fabric-persistence-smoke/fabric-persistence-mark.success",
+          "value": "mark",
+          "writtenAtUtc": "2026-09-04T18:55:27.7208889Z"
+        },
+        {
+          "path": "build/fabric-persistence-smoke/fabric-persistence-remove.success",
+          "value": "remove",
+          "writtenAtUtc": "2026-09-04T18:55:40.4519437Z"
+        },
+        {
+          "path": "build/fabric-persistence-smoke/fabric-persistence-absent.success",
+          "value": "verify_absent",
+          "writtenAtUtc": "2026-09-04T18:55:52.4983422Z"
+        }
+      ],
+      "finalPhaseLogSha256": "2cf381fef202722b40b50f96d96cc9d4ea9acc2cf4057e97a38d5dd8f561902a",
+      "passMarker": "Fabric native placement removal persistence phase passed"
+    },
+    {
+      "id": "neoforge-placement-persistence",
+      "status": "pass",
+      "completedAtUtc": "2026-09-04T18:57:00.2611880Z",
+      "command": ".\\gradlew.bat -p neoforge --no-daemon --console=plain runPersistenceVerifyAbsentServerTest",
+      "markers": [
+        {
+          "path": "neoforge/build/persistence-server-test/persistence-mark.success",
+          "value": "mark",
+          "writtenAtUtc": "2026-09-04T18:56:31.7516899Z"
+        },
+        {
+          "path": "neoforge/build/persistence-server-test/persistence-remove.success",
+          "value": "remove",
+          "writtenAtUtc": "2026-09-04T18:56:44.2545513Z"
+        },
+        {
+          "path": "neoforge/build/persistence-server-test/persistence-absent.success",
+          "value": "verify_absent",
+          "writtenAtUtc": "2026-09-04T18:56:59.8133935Z"
+        }
+      ],
+      "finalPhaseLogSha256": "b9806aa8338768d36a11c87cfdd7c2e227bc01510c4939142dea0e145862e604",
+      "passMarker": "NeoForge native placement removal persistence phase passed"
+    },
+    {
+      "id": "fabric-multiplayer-authority-reconnect",
+      "status": "pass",
+      "completedAtUtc": "2026-09-04T19:00:33.0888792Z",
+      "commands": [
+        ".\\gradlew.bat --no-daemon --console=plain runMultiplayerServerSmoke",
+        ".\\gradlew.bat --no-daemon --console=plain runMultiplayerClientSmoke"
+      ],
+      "serverLogSha256": "191cac71e2c63235817d676d4c35bee3407444243ea89f6acd3e500795f5753f",
+      "clientLogSha256": "b2e7c677fdb8635d7aeee852d8f71e892b58570b1adf6aa03e9e355dea00f46c",
+      "serverPassMarker": "Fabric multiplayer server smoke passed: non-op denial, operator promotion, authoritative patch/reset, disconnect cleanup, and reconnect",
+      "clientPassMarker": "Fabric multiplayer client smoke passed: real non-op denial, operator Apply/Reset revisions, disconnect cleanup, channel renegotiation, and reconnect"
+    },
+    {
+      "id": "neoforge-multiplayer-authority-reconnect",
+      "status": "pass",
+      "completedAtUtc": "2026-09-04T19:03:24.8556927Z",
+      "commands": [
+        ".\\gradlew.bat -p neoforge --no-daemon --console=plain runMultiplayerServerTest",
+        ".\\gradlew.bat -p neoforge --no-daemon --console=plain runMultiplayerClientTest"
+      ],
+      "serverLogSha256": "0130befe0a1706bf94826dcd4649bf6a876c07c2bf8374c9973e86d48b1b3b90",
+      "clientLogSha256": "54058c3b88ef89944764936ceb157151da9d240e08ae2f2d69e1d4053dacd2ae",
+      "serverPassMarker": "NeoForge multiplayer server smoke test passed: non-op, promotion, connected entity/filter/shearing GUI patch, near-limit patch, confirmed reset, disconnect, and reconnect",
+      "clientPassMarker": "NeoForge multiplayer client smoke test passed: /smartdropsgui, non-op denial, operator connected entity/filter/shearing child Apply, six channels, near-limit patch, oversized rejection, confirmed reset, disconnect cleanup, and reconnect"
+    },
+    {
+      "id": "neoforge-optional-client-only",
+      "status": "pass",
+      "completedAtUtc": "2026-09-04T19:04:40.6306104Z",
+      "commands": [
+        ".\\gradlew.bat -p neoforge --no-daemon --console=plain runOptionalClientOnlyServerTest",
+        ".\\gradlew.bat -p neoforge --no-daemon --console=plain runOptionalClientOnlyClientTest"
+      ],
+      "serverLogSha256": "91489cabc1228802403f1fc00cc0777dbbec7ea7a4f4184cc76e078846714440",
+      "clientLogSha256": "42432cc2d502a6b509c2cfaedd6a0c4471514b1f1450a72259ab0459a7161fbe",
+      "serverPassMarker": "NeoForge optional-channel server probe passed: clientOnly installation and clean disconnect",
+      "clientPassMarker": "NeoForge optional-channel client passed: client-only installation connected, server-bound channels unavailable, and config route failed closed"
+    },
+    {
+      "id": "neoforge-optional-server-only",
+      "status": "pass",
+      "completedAtUtc": "2026-09-04T19:05:53.6625282Z",
+      "commands": [
+        ".\\gradlew.bat -p neoforge --no-daemon --console=plain runOptionalServerOnlyServerTest",
+        ".\\gradlew.bat -p neoforge --no-daemon --console=plain runOptionalServerOnlyClientTest"
+      ],
+      "serverLogSha256": "333b118b5c170a8e881a804bfc46fd30156a5898beec73640e515aa2151c4583",
+      "clientLogSha256": "0460fa2677b930de4dbdbbe74aaba9d252b6e9d04dd59700b4f8692b1a95848d",
+      "serverPassMarker": "NeoForge optional-channel server probe passed: serverOnly installation and clean disconnect",
+      "clientPassMarker": "NeoForge optional-channel client passed: production-unmodded client remained connected to the server-only installation"
+    },
+    {
+      "id": "neoforge-oversized-wire-rejection",
+      "status": "pass",
+      "completedAtUtc": "2026-09-04T19:07:12.3950056Z",
+      "commands": [
+        ".\\gradlew.bat -p neoforge --no-daemon --console=plain runOversizedWireServerTest",
+        ".\\gradlew.bat -p neoforge --no-daemon --console=plain runOversizedWireClientTest"
+      ],
+      "serverLogSha256": "9d9346398998e5d7f43c62d605c45006ed887b33ae7d9518d3d82455397579cc",
+      "clientLogSha256": "337f87ab6ec711df3d3117619e0105ed73384e5f3624d11cdf49e6999b217ce9",
+      "decoderMarker": "The received string length is longer than maximum allowed (1048577 > 1048576)",
+      "serverPassMarker": "NeoForge oversized-wire server smoke passed: decoder rejection, unchanged revision/config, 40 healthy ticks, and responsive command dispatcher",
+      "clientPassMarker": "NeoForge oversized-wire client smoke passed: 1048577-character patch reached the wire and the offending connection was rejected"
+    },
+    {
+      "id": "neoforge-exact-packaged-server-client",
+      "status": "pass",
+      "completedAtUtc": "2026-09-04T19:08:50.3525867Z",
+      "commands": [
+        ".\\gradlew.bat -p neoforge --no-daemon --console=plain -Ppackaged_candidate_jar=<absolute-candidate-path> runPackagedServerTest",
+        ".\\gradlew.bat -p neoforge --no-daemon --console=plain -Ppackaged_candidate_jar=<absolute-candidate-path> runPackagedClientTest"
+      ],
+      "candidateSha256": "1442f542fd3a68fb86f292af629cf9b86a27b426e7f45a0713b5f6cf00c9e1f4",
+      "serverCopiedJarSha256": "1442f542fd3a68fb86f292af629cf9b86a27b426e7f45a0713b5f6cf00c9e1f4",
+      "clientCopiedJarSha256": "1442f542fd3a68fb86f292af629cf9b86a27b426e7f45a0713b5f6cf00c9e1f4",
+      "serverCopyMatchesCandidate": true,
+      "clientCopyMatchesCandidate": true,
+      "serverMarker": {
+        "path": "neoforge/build/packaged-jar-test/server/packaged-server.success",
+        "value": "pass",
+        "writtenAtUtc": "2026-09-04T19:08:01.2705120Z"
+      },
+      "clientMarker": {
+        "path": "neoforge/build/packaged-jar-test/client/packaged-client.success",
+        "value": "pass",
+        "writtenAtUtc": "2026-09-04T19:08:50.3355667Z"
+      },
+      "serverLogSha256": "ea692e56963ad84222c34e9ba3b636ebbe92c10cb45bf3be764829e8e851a1c5",
+      "clientLogSha256": "6a4300681e40195bfc5cad5a87b5f3fa43d3d6432a30910159afefa31c7aa5d4",
+      "serverPassMarker": "Packaged NeoForge server candidate Smart Resource Multiplier 1.3.2+mc1.21.4 passed exact version, code-source, config, status, and validation checks",
+      "clientPassMarker": "packaged-client.success=pass",
+      "clientAssertions": "exact version and owning mod-file path, production config creation, title-screen config route, structured Entity Categories navigation, nine visible category rows, and target-native entity catalog"
+    }
+  ],
+  "notes": [
+    "All commands exited successfully.",
+    "The referenced build logs are intentionally not source-controlled; their SHA-256 digests and exact pass markers are retained here so clean builds do not erase the audit record.",
+    "No production behavior or release latch was changed while collecting this evidence."
+  ]
+}

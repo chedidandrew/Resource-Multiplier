@@ -94,7 +94,7 @@ public final class EntityMultiplierResolver {
             @Nullable UUID rememberedPlayerId,
             EntityKillAttribution.Kind rememberedOrigin
     ) {
-        // In 1.21.1 LivingEntity records the immediate player directly inside
+        // LivingEntity records the immediate player directly inside
         // hurt(), before the lethal die/drop path runs and before our RETURN
         // observer can classify the remembered origin. Matching that live
         // vanilla player record is therefore the authoritative direct-kill

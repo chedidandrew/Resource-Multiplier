@@ -60,14 +60,14 @@ public final class NeoForgeGameTestRegistrar {
                     "Expected " + EXPECTED_TEST_COUNT + " NeoForge GameTests, discovered " + discovered);
         }
         SmartResourceDrops.LOGGER.info(
-                "Registered exactly {} NeoForge 1.21.2 GameTests",
+                "Registered exactly {} NeoForge 1.21.4 GameTests",
                 discovered);
     }
 
     /**
-     * NeoForge 21.1 prefixes ordinary test templates with the declaring class.
+     * NeoForge prefixes ordinary test templates with the declaring class.
      * A generator preserves Fabric's full-ID annotations while binding every
-     * shared method to one explicit binary 1.21.2 structure.
+     * shared method to one explicit binary 1.21.4 structure.
      */
     @GameTestGenerator
     public static Collection<TestFunction> generatedSharedTests() {

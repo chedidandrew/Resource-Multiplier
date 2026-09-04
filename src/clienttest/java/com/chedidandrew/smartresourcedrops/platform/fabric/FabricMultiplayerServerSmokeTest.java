@@ -13,7 +13,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Server observer for the separate-process Fabric permission/network smoke gate. */
 public final class FabricMultiplayerServerSmokeTest implements ModInitializer {
-    private static final int PROMOTION_TICKS = 120;
+    // Clean 1.21.4 clients can spend close to a minute loading before opening the
+    // initial read-only config screen. Keep promotion behind that observation window.
+    private static final int PROMOTION_TICKS = 1_800;
     private static final AtomicBoolean REGISTERED = new AtomicBoolean();
 
     private ServerPlayer player;

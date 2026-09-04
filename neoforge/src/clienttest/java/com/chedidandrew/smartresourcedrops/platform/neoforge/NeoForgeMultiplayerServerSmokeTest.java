@@ -15,7 +15,9 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 /** Server-side observer for the separate-process NeoForge multiplayer smoke test. */
 @Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.DEDICATED_SERVER)
 public final class NeoForgeMultiplayerServerSmokeTest {
-    private static final int PROMOTION_TICKS = 120;
+    // Clean 1.21.4 clients can spend close to a minute loading before opening the
+    // initial read-only config screen. Keep promotion behind that observation window.
+    private static final int PROMOTION_TICKS = 1_800;
     private static final AtomicBoolean REGISTERED = new AtomicBoolean();
 
     private ServerPlayer player;

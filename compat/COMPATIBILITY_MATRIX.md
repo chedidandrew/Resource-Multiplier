@@ -1,53 +1,58 @@
-# Minecraft 1.21.2-1.21.10 compatibility experiment
+# Minecraft 1.21.4 compatibility lane
 
-This work is experimental and has not been published. Fabric and NeoForge remain
+This lane is experimental and has not been published. Fabric and NeoForge remain
 separate artifacts because their entrypoints, networking, placement storage, and
-loader hooks are not binary-compatible.
+loader hooks are not binary-compatible. Both artifacts use Java 21 and version
+`1.3.2+mc1.21.4`, and both declare Minecraft 1.21.4 only.
 
-## Verified lane: Minecraft 1.21.2-1.21.3
+## Verified runtime matrix
 
-The production artifacts are compiled against Minecraft 1.21.2 and declare the
-half-open range `>=1.21.2 <1.21.4` (Fabric) or `[1.21.2,1.21.4)` (NeoForge).
+| Gate | Fabric 1.21.4 | NeoForge 1.21.4 |
+| --- | --- | --- |
+| Production compile and unit tests | Pass | Pass |
+| Required gameplay GameTests | 64/64 | 64/64 |
+| Automated client GUI/category smoke | Pass | Pass |
+| Dedicated-server multiplayer authority and reconnect | Pass | Pass |
+| Placement persistence across restart and removal | Pass | Pass |
+| Optional client-only/server-only installation | N/A | Pass |
+| Oversized network-payload rejection | Not separately probed | Pass |
+| Exact packaged-JAR dedicated-server boot | Pass | Pass |
+| Exact packaged-JAR physical client probe | N/A | Pass |
 
-| Gate | Fabric 1.21.2 | Fabric 1.21.3 | NeoForge 1.21.2 | NeoForge 1.21.3 |
-| --- | --- | --- | --- | --- |
-| Production compile | Pass | Pass | Pass | Pass |
-| Required gameplay GameTests | 64/64 | 64/64 | 64/64 | 64/64 |
-| Automated client GUI smoke | Pass | Pass | Pass | Pass |
-| Exact packaged-JAR server boot | Pass | Pass | Pass | Pass |
-| Exact packaged-JAR client probe | N/A | N/A | Pass | Pass |
-
-Fabric's client smoke uses the production source set compiled for the target
-runtime. Its separate exact-JAR harness proves that the unchanged distributable
-loads on a real dedicated server and retains the same SHA-256 before and after
-the run. NeoForge's packaged probes load the unchanged distributable on both the
-client and dedicated server. The shared unit-test suites also pass on the
-1.21.2 build baseline.
+Fabric's exact-JAR harness loaded the unchanged distributable on a real 1.21.4
+dedicated server and confirmed that its SHA-256 remained unchanged. NeoForge's
+packaged probes loaded the unchanged distributable on both the dedicated server
+and physical client. Production mixin audits ran as part of both 64-test gameplay
+suites.
 
 Candidate hashes:
 
-- Fabric: `C4170F36BBF4E8199755997E63478D4B35888903A77DCCAF42753375E73E3AF3`
-- NeoForge: `8A46A4F9997E708CE8A541D8E02122733DCAC587E8FE7FA092F8ACEA42B03848`
+- Fabric: `4B84930EAFF19A7100F3AB9C9718AAB2C7D5A2A83A34CF177EAF945706088129`
+- NeoForge: `1442F542FD3A68FB86F292AF629CF9B86A27B426E7F45A0713B5F6CF00C9E1F4`
+
+Retained evidence:
+
+- `compat/candidates/SHA256SUMS.txt` records both candidate hashes.
+- `compat/evidence/1.21.4-runtime-gates.json` records the final-candidate hashes,
+  UTC timestamps, persistence markers, multiplayer/optional/wire pass markers,
+  transient-log hashes, and byte-identical NeoForge packaged server/client copies.
+- `compat/fabric-exact-smoke/runtime/fabric-1.21.4/20260904-130538-59c4e943/evidence/smoke-result.json`
+  records the exact Fabric candidate's clean dedicated-server boot and unchanged
+  before/after hash.
+- `py -3 tools/validate_package.py` passed all package metadata, JSON, icon, and
+  124-source checks.
+- The loader-isolation validators accepted 301 Fabric entries and 304 NeoForge
+  entries with no test classes, wrong-loader metadata, or non-Java-21 bytecode.
 
 The JAR files are retained locally in `compat/candidates/` but intentionally
 ignored by Git. Release binaries should be attached to a release, not committed
-to source control.
+to source control. `release_ready=false` remains set until a later release review.
 
-## Why one 1.21.2-1.21.10 JAR is unsafe
+## Version boundary
 
-The next-version compile probe fails on Minecraft 1.21.4 because that version
-removes the `AbstractSelectionList` scrolling methods used by
-`StructuredConfigList`: `clampScrollAmount()` and `getScrollAmount()`. Later
-versions introduce additional entity attribution, persistence, networking,
-input, loot, and NeoForge mixin-descriptor changes. Trimming only the first or
-last version cannot remove boundaries located inside the requested range.
-
-Conservative source lanes to implement and verify separately:
-
-| Loader | Candidate unchanged-JAR lanes |
-| --- | --- |
-| Fabric | 1.21.2-1.21.3; 1.21.4; 1.21.5; 1.21.6-1.21.8; 1.21.9-1.21.10 |
-| NeoForge | 1.21.2-1.21.3; 1.21.4; 1.21.5; 1.21.6; 1.21.7-1.21.8; 1.21.9; 1.21.10 |
-
-Each advertised Minecraft version must pass the complete matrix with the exact
-same JAR bytes before its metadata range is widened.
+Minecraft 1.21.4 changed the `AbstractSelectionList` scroll API used by the
+structured configuration GUI. This lane replaces the earlier
+`clampScrollAmount()`/`getScrollAmount()` calls with the 1.21.4
+`refreshScrollAmount()`/`scrollAmount()` API. Its metadata is intentionally not
+widened to adjacent Minecraft versions; each additional version must pass this
+same matrix with identical artifact bytes before it can be advertised.

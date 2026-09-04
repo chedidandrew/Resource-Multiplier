@@ -13,13 +13,13 @@ Test-only installation-matrix observer. This mod is never packaged for release.
 [[dependencies.smart_resource_drops_optional_channel_probe]]
 modId="neoforge"
 type="required"
-versionRange="[21.1.249,)"
+versionRange="[21.4.157,21.5)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.smart_resource_drops_optional_channel_probe]]
 modId="minecraft"
 type="required"
-versionRange="[1.21.1]"
+versionRange="[1.21.4,1.21.5)"
 ordering="NONE"
 side="BOTH"

@@ -49,7 +49,7 @@ EXPECTED_PRODUCTION_MIXINS = [
     "LivingEntityDeathLootMixin",
     "PlayerShearingContextMixin",
     "ShearsDispenseItemBehaviorMixin",
-    "SheepShearingLootMixin",
+    "LivingEntityShearingLootMixin",
     "FallingBlockEntityMixin",
     "PistonMovingBlockEntityMixin",
     "BlockItemPlacementCaptureMixin",
@@ -118,7 +118,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleTrace.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingTags.java",
-        "src/main/java/com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.java",
+        "src/main/java/com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.java",
         "src/client/java/com/chedidandrew/smartresourcedrops/client/ShearingDropsScreen.java",
@@ -309,7 +309,7 @@ REQUIRED_RELEASE_JAR_ENTRIES = frozenset(
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.class",
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleTrace.class",
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingTags.class",
-        "com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.class",
+        "com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.class",
         "com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.class",
         "com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.class",
         "assets/smart_resource_drops/icon.png",
@@ -823,7 +823,7 @@ def validate_release_jar(
                         if mixin_config.get("mixins") != EXPECTED_PRODUCTION_MIXINS:
                             errors.append(
                                 f"declared mixin config {config_name!r} does not contain the "
-                                "exact audited 1.21.1 production mixin set"
+                                "exact audited 1.21.4 production mixin set"
                             )
                         for side in ("client", "server"):
                             if mixin_config.get(side, []) != []:

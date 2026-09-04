@@ -522,7 +522,7 @@ tasks.named('runGameTestServer') {
         }
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
-                'Registered exactly 64 NeoForge 1.21.2 GameTests',
+                'Registered exactly 64 NeoForge 1.21.4 GameTests',
                 '64 tests are now running',
                 '64 GAME TESTS COMPLETE',
                 'All 64 required tests passed',
@@ -601,8 +601,8 @@ tasks.named('runPackagedServerTest') {
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
                 'Done (',
-                'Smart Resource Multiplier 1.3.2+mc1.21.2-1.21.3',
-                'Packaged NeoForge server candidate Smart Resource Multiplier 1.3.2+mc1.21.2-1.21.3 passed exact version, code-source, config, status, and validation checks']) {
+                'Smart Resource Multiplier 1.3.2+mc1.21.4',
+                'Packaged NeoForge server candidate Smart Resource Multiplier 1.3.2+mc1.21.4 passed exact version, code-source, config, status, and validation checks']) {
             if (!log.contains(evidence)) {
                 throw new GradleException("Packaged server log is missing: ${evidence}")
             }
