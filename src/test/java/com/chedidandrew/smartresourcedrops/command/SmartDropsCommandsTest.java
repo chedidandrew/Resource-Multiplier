@@ -140,10 +140,10 @@ final class SmartDropsCommandsTest {
         assertTrue(idValue.getString().length() <= 96, idValue.getString());
         assertTrue(idValue.getString().endsWith("…"), idValue.getString());
         assertFalse(idValue.getString().contains(longId));
-        ClickEvent copyEvent = idValue.getStyle().getClickEvent();
-        assertNotNull(copyEvent);
-        assertEquals(ClickEvent.Action.COPY_TO_CLIPBOARD, copyEvent.getAction());
-        assertEquals(longId, copyEvent.getValue());
+        ClickEvent.CopyToClipboard copyEvent = assertInstanceOf(
+                ClickEvent.CopyToClipboard.class,
+                idValue.getStyle().getClickEvent());
+        assertEquals(longId, copyEvent.value());
 
         assertEquals("abcd", BlockInspectionFormatter.truncate("abcd", 4));
         assertEquals("abc…", BlockInspectionFormatter.truncate("abcdef", 4));

@@ -1,30 +1,38 @@
 # Build status
 
-## Smart Resource Multiplier 1.3.1+mc1.21.1 dual-loader backport
+## Smart Resource Multiplier 1.3.2 — Minecraft 1.21.6-1.21.8 lane
 
-This branch targets Minecraft Java Edition 1.21.1 on Fabric and NeoForge. Minecraft 26.2 remains the newest/default line on `main`; the `v1.3.1+mc1.21.1` release is deliberately non-latest.
+This branch prepares three unpublished Java 21 artifacts:
 
-- Version: `1.3.1+mc1.21.1`
-- Publication latch: `release_ready=true`
-- Branch/tag: `backport/1.21.1`, `v1.3.1+mc1.21.1`
-- Fabric: Loader `0.19.5`, Fabric API `0.116.17+1.21.1`, optional Mod Menu `11.0.4`
-- NeoForge: `21.1.249`, ModDevGradle `2.0.146`, FML `4`
-- Java: `21`
-- Mod/config identity: `smart_resource_drops`, `config/smart_resource_drops.json`, schema 3
-- Commands: `/smartdrops`, `/smartdropsgui`
+- Fabric `1.3.2+mc1.21.6-1.21.8`, built against Minecraft 1.21.6,
+  Fabric Loader 0.19.5, and Fabric API 0.128.2+1.21.6.
+- NeoForge `1.3.2+mc1.21.6`, built against NeoForge 21.6.20-beta.
+- NeoForge `1.3.2+mc1.21.7-1.21.8`, built against Minecraft 1.21.7 and
+  NeoForge 21.7.25-beta.
 
-Both loader builds share gameplay, configuration, commands, GUI, network payload policy, permissions, and safety budgets. Loader-specific adapters handle lifecycle, networking, fake-player detection, and placed-block storage. The General screen uses the unambiguous **Multiply Block XP** and **Block XP Multiplier** labels; Mob XP remains under Entity Drops.
+Fabric uses one unchanged JAR on Minecraft 1.21.6, 1.21.7, and 1.21.8.
+NeoForge keeps 1.21.6 separate and uses one unchanged JAR on 1.21.7 and
+1.21.8. Mod/config identity remains `smart_resource_drops`,
+`config/smart_resource_drops.json`, schema 3; gameplay, commands, GUI,
+authority, persistence policy, and safety budgets remain aligned across the
+two loaders.
 
-Minecraft 1.21.1 has no generic final-output shearing hook. This target therefore multiplies vanilla Sheep shearing only. Other special vanilla shearing rewards remain 1x, and arbitrary datapack-tagged shearables fail closed. Configuration identity remains compatible, but Minecraft world downgrades and cross-loader placed-block-data migration are not claimed; back up worlds before changing versions or loaders.
+## Verification
 
-## Current evidence
+- Production compilation and JUnit pass on every declared loader/version
+  target (164 Fabric tests and 165 NeoForge tests).
+- Fabric passes all 65 required GameTests and its physical client GUI smoke on
+  1.21.6, 1.21.7, and 1.21.8.
+- NeoForge passes all 64 required GameTests and its physical client GUI smoke
+  on 1.21.6, 1.21.7, and 1.21.8.
+- Every candidate passes isolated exact-JAR server and client probes on every
+  Minecraft version declared by its metadata. Shared-lane candidates retain
+  identical SHA-256 bytes across all target launches.
+- Candidate hashes and the detailed gate matrix are recorded under `compat/`.
 
-- Package metadata/policy validation, Mod Menu integration, structured-tooltip checks, edge-case checks, polish regressions, the 90-assertion core runner, mapped compilation, and all 163 Java 21 unit tests pass locally.
-- Fabric discovers, executes, and passes exactly 64 dedicated-server GameTests, including the real Fabric fake-player denial, exact 1.21.1 death/XP hooks, Sheep-only shearing boundaries, and the retry-hardened atomic configuration writer under OneDrive. Its native placement attachment also passes a three-fresh-JVM mark/save/restart/remove/save/restart persistence chain.
-- NeoForge discovers, executes, and passes exactly 64 target-native GameTests. Its native placement attachment passes the same three-fresh-JVM persistence proof, and its real multiplayer authority/revision/reconnect test, both optional-channel installation matrices, and hostile oversized-wire rejection all pass.
-- A clean NeoForge installation loads the production JAR by itself on a dedicated server and physical client. The packaged client opens production configuration/category UI from the candidate JAR and exits with a clean success marker.
-- Fabric's target-native physical-client smoke opens the production GUI, verifies non-empty entity categories and child navigation, exercises edit/Back/dirty/root-Apply behavior, and checks the local/operator/non-operator authority models. Its separate-process client/server gate passes non-operator denial, operator Apply/Reset revision updates, disconnect cleanup, channel renegotiation, and reconnect.
-- Both rebuilt playable candidates pass final-JAR validation. Fresh release-candidate sizes and SHA-256 values are recorded by the guarded release workflow from the exact tagged commit.
-- A disposable tracked-source dry run created and validated the deterministic dual-loader source ZIP, both real playable JARs, checksums, package README/status record, and release bundle.
+## Publication state
 
-The publication latch is authorized for this manually accepted patch. The guarded tag workflow still reruns every required gate on the exact source commit before it can publish either JAR.
+- Branch: `backport/1.21.6-1.21.8-compat`
+- Publication latch: `release_ready=false`
+- No commit, tag, push, or release was created by this compatibility pass.
+- Minecraft 26.2 remains the newest/default release line on `main`.

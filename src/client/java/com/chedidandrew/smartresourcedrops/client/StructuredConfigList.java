@@ -35,9 +35,6 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
     private int preferredRowWidth;
     private List<Row> rows = List.of();
-    private List<net.minecraft.util.FormattedCharSequence> pendingTooltip;
-    private int pendingTooltipX;
-    private int pendingTooltipY;
 
     /**
      * @param screenWidth the full screen width; the list centers itself within it
@@ -73,7 +70,7 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         this.rows = List.copyOf(newRows);
         replaceEntries(rows.stream().map(row -> new Entry(row)).toList());
         setScrollAmount(0.0);
-        clampScrollAmount();
+        refreshScrollAmount();
     }
 
     public List<Row> rows() {
@@ -104,29 +101,6 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
     @Override
     public int getRowWidth() {
         return Math.max(1, Math.min(preferredRowWidth, getWidth() - 24));
-    }
-
-    /** Compatibility accessor matching the newer selection-list API used by the shared screens. */
-    public double scrollAmount() {
-        return getScrollAmount();
-    }
-
-    @Override
-    public void renderWidget(
-            final GuiGraphics graphics,
-            final int mouseX,
-            final int mouseY,
-            final float partialTick
-    ) {
-        pendingTooltip = null;
-        super.renderWidget(graphics, mouseX, mouseY, partialTick);
-        if (pendingTooltip != null) {
-            graphics.renderTooltip(
-                    minecraft.font,
-                    pendingTooltip,
-                    pendingTooltipX,
-                    pendingTooltipY);
-        }
     }
 
     /**
@@ -227,10 +201,10 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
                     || rightDetail.truncated();
             if (hovered && (!row.tooltip().getString().isEmpty() || truncated)) {
                 Component tooltip = hoverText(truncated);
-                StructuredConfigList.this.pendingTooltip =
-                        Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip);
-                StructuredConfigList.this.pendingTooltipX = mouseX;
-                StructuredConfigList.this.pendingTooltipY = mouseY;
+                graphics.setTooltipForNextFrame(
+                        Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip),
+                        mouseX,
+                        mouseY);
             }
         }
 

@@ -7,19 +7,18 @@ import java.nio.file.StandardOpenOption;
 import net.neoforged.fml.ModList;
 
 final class PackagedProbeSupport {
-    private static final String EXPECTED_VERSION = "1.3.2+mc1.21.2-1.21.3";
-
     private PackagedProbeSupport() {
     }
 
     static void verifyProductionModAndCodeSource() throws Exception {
+        final String expectedVersion = expectedVersion();
         final var container = ModList.get()
                 .getModContainerById("smart_resource_drops")
                 .orElseThrow(() -> new AssertionError("Production mod was not discovered from mods/"));
         final String actualVersion = container.getModInfo().getVersion().toString();
-        if (!EXPECTED_VERSION.equals(actualVersion)) {
+        if (!expectedVersion.equals(actualVersion)) {
             throw new AssertionError(
-                    "Expected production version " + EXPECTED_VERSION + ", found " + actualVersion);
+                    "Expected production version " + expectedVersion + ", found " + actualVersion);
         }
 
         final String configuredJar = System.getProperty("smart_resource_drops.packagedCandidateJar");
@@ -48,6 +47,14 @@ final class PackagedProbeSupport {
                     "Production entrypoint was not transformed into the smart_resource_drops module: "
                             + entrypoint.getModule());
         }
+    }
+
+    static String expectedVersion() {
+        final String expected = System.getProperty("smart_resource_drops.packagedExpectedVersion");
+        if (expected == null || expected.isBlank()) {
+            throw new AssertionError("Missing packaged candidate expected-version property");
+        }
+        return expected;
     }
 
     static void writeMarker(final String markerName) throws Exception {

@@ -19,6 +19,7 @@ import com.chedidandrew.smartresourcedrops.network.ConfigSnapshotPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.commands.Commands;
+import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -30,7 +31,6 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 /** Physical-client-only NeoForge bootstrap. */
 @Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.CLIENT)
@@ -48,7 +48,11 @@ public final class NeoForgeClientEntrypoint {
 
             @Override
             public void send(final CustomPacketPayload payload) {
-                PacketDistributor.sendToServer(payload);
+                final var listener = Minecraft.getInstance().getConnection();
+                if (listener == null) {
+                    throw new IllegalStateException("Cannot send a config payload while disconnected");
+                }
+                listener.send(new ServerboundCustomPayloadPacket(payload));
             }
         });
         NeoForgeNetworking.installClientReceiver(NeoForgeClientEntrypoint::handleClientPayload);

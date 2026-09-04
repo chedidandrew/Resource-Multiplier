@@ -3,9 +3,9 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $CandidateJar,
 
-    [string] $MinecraftVersion = "1.21.3",
+    [string] $MinecraftVersion = "1.21.6",
     [string] $LoaderVersion = "0.19.5",
-    [string] $FabricApiVersion = "0.114.1+1.21.3",
+    [string] $FabricApiVersion = "0.128.2+1.21.6",
     [string] $JavaExecutable = "java",
     [ValidateRange(60, 900)]
     [int] $StartupTimeoutSeconds = 300,

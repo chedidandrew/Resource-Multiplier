@@ -28,7 +28,7 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 /** NeoForge registration and final-loot adapters for the shared entity GameTest fixtures. */
-@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID)
 public final class NeoForgeGameTestEntityFixtures {
     private NeoForgeGameTestEntityFixtures() {
     }
@@ -56,7 +56,7 @@ public final class NeoForgeGameTestEntityFixtures {
         }
     }
 
-    @EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
+    @EventBusSubscriber(modid = SmartResourceDrops.MOD_ID)
     public static final class GameBusEvents {
         private GameBusEvents() {
         }

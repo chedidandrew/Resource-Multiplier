@@ -13,6 +13,7 @@ def modMenuVersionValue = providers.gradleProperty('modmenu_version').get()
 def archivesBaseNameValue = providers.gradleProperty('archives_base_name').get()
 def mavenGroupValue = providers.gradleProperty('maven_group').get()
 def junitVersionValue = providers.gradleProperty('junit_version').get()
+def packagedCandidateJarProperty = providers.gradleProperty('packaged_candidate_jar')
 
 version = modVersionValue
 group = mavenGroupValue
@@ -35,7 +36,7 @@ loom {
     splitEnvironmentSourceSets()
 }
 
-// Fabric API 0.116.x predates the client GameTest API. Keep the physical GUI
+// Keep the physical GUI
 // regression harness in a separate, run-only mod so none of its entrypoints or
 // marker logic can enter the production JAR.
 def clientTestSourceSet = sourceSets.create('clienttest')
@@ -139,7 +140,7 @@ loom {
     runs {
         clientSmoke {
             client()
-            name = 'Fabric 1.21.2-1.21.3 client GUI smoke'
+            name = 'Fabric 1.21.6-1.21.8 client GUI smoke'
             source clientTestSourceSet
             runDir 'build/fabric-client-smoke'
             property 'smart_resource_drops.fabricClientSmoke', 'true'
@@ -281,6 +282,31 @@ tasks.named('processClienttestResources') {
 
 tasks.named('runClientSmoke') {
     dependsOn prepareClientSmoke
+    if (packagedCandidateJarProperty.isPresent()) {
+        final File configuredCandidate = new File(packagedCandidateJarProperty.get())
+        if (!configuredCandidate.isAbsolute()) {
+            throw new GradleException('packaged_candidate_jar must be an absolute path')
+        }
+        final File candidate = configuredCandidate.canonicalFile
+        if (!candidate.isFile()) {
+            throw new GradleException("External packaged candidate does not exist: ${candidate}")
+        }
+
+        // The normal development smoke loads production classes directly from
+        // main/client outputs. For an exact-JAR probe, remove those directories
+        // from Knot's runtime classpath and let Fabric Loader discover only the
+        // immutable candidate via fabric.addMods. The separate clienttest output
+        // remains on the classpath to drive the real production GUI.
+        final Set<File> productionOutputs = (
+                sourceSets.main.output.files + sourceSets.client.output.files)
+                .collect { it.canonicalFile } as Set<File>
+        classpath = classpath.filter { entry ->
+            !productionOutputs.contains(entry.canonicalFile)
+        }
+        systemProperty 'fabric.addMods', candidate.absolutePath
+        systemProperty 'smart_resource_drops.packagedCandidateJar', candidate.absolutePath
+        systemProperty 'smart_resource_drops.packagedExpectedVersion', modVersionValue
+    }
     doLast {
         final File marker = file('build/fabric-client-smoke/client-smoke.success')
         if (!marker.isFile()) {
@@ -322,9 +348,9 @@ tasks.named('runGameTest') {
         }
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
-                '64 tests are now running',
-                '64 GAME TESTS COMPLETE',
-                'All 64 required tests passed',
+                '65 tests are now running',
+                '65 GAME TESTS COMPLETE',
+                'All 65 required tests passed',
                 'Game test server shutting down']) {
             if (!log.contains(evidence)) {
                 throw new GradleException(

@@ -1,53 +1,42 @@
-# Minecraft 1.21.2-1.21.10 compatibility experiment
+# Minecraft 1.21.6-1.21.8 compatibility lane
 
-This work is experimental and has not been published. Fabric and NeoForge remain
-separate artifacts because their entrypoints, networking, placement storage, and
-loader hooks are not binary-compatible.
+This work is fully tested but remains unpublished. Fabric and NeoForge are
+separate artifacts because their entrypoints, networking, placement storage,
+and loader hooks are not binary-compatible.
 
-## Verified lane: Minecraft 1.21.2-1.21.3
+Fabric uses one unchanged production JAR for Minecraft 1.21.6 through 1.21.8.
+NeoForge uses an exact 1.21.6 JAR plus one unchanged JAR for 1.21.7 through
+1.21.8. The split keeps the NeoForge dependency boundary explicit rather than
+claiming an untested cross-minor loader range.
 
-The production artifacts are compiled against Minecraft 1.21.2 and declare the
-half-open range `>=1.21.2 <1.21.4` (Fabric) or `[1.21.2,1.21.4)` (NeoForge).
+## Verified matrix
 
-| Gate | Fabric 1.21.2 | Fabric 1.21.3 | NeoForge 1.21.2 | NeoForge 1.21.3 |
-| --- | --- | --- | --- | --- |
-| Production compile | Pass | Pass | Pass | Pass |
-| Required gameplay GameTests | 64/64 | 64/64 | 64/64 | 64/64 |
-| Automated client GUI smoke | Pass | Pass | Pass | Pass |
-| Exact packaged-JAR server boot | Pass | Pass | Pass | Pass |
-| Exact packaged-JAR client probe | N/A | N/A | Pass | Pass |
+| Gate | Fabric 1.21.6 | Fabric 1.21.7 | Fabric 1.21.8 | NeoForge 1.21.6 | NeoForge 1.21.7 | NeoForge 1.21.8 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Production compile | Pass | Pass | Pass | Pass | Pass | Pass |
+| JUnit suite | 164 pass | 164 pass | 164 pass | 165 pass | 165 pass | 165 pass |
+| Required gameplay GameTests | 65/65 | 65/65 | 65/65 | 64/64 | 64/64 | 64/64 |
+| Automated client GUI smoke | Pass | Pass | Pass | Pass | Pass | Pass |
+| Exact packaged-JAR server boot | Pass | Pass | Pass | Pass | Pass | Pass |
+| Exact packaged-JAR client GUI probe | Pass | Pass | Pass | Pass | Pass | Pass |
 
-Fabric's client smoke uses the production source set compiled for the target
-runtime. Its separate exact-JAR harness proves that the unchanged distributable
-loads on a real dedicated server and retains the same SHA-256 before and after
-the run. NeoForge's packaged probes load the unchanged distributable on both the
-client and dedicated server. The shared unit-test suites also pass on the
-1.21.2 build baseline.
+Every exact-JAR row used the candidate retained in `compat/candidates/`; the
+candidate was not rebuilt between versions in a shared lane. The client probes
+also verify the loader-selected physical origin and version before driving the
+production configuration screens. The dedicated-server harness preserves and
+compares SHA-256 before and after each launch.
 
-Candidate hashes:
+## Candidate artifacts
 
-- Fabric: `C4170F36BBF4E8199755997E63478D4B35888903A77DCCAF42753375E73E3AF3`
-- NeoForge: `8A46A4F9997E708CE8A541D8E02122733DCAC587E8FE7FA092F8ACEA42B03848`
+- Fabric 1.21.6-1.21.8:
+  `731D313D3E2FAF8EE71AA50353DC7C407DCF481196B3EA9B57D49917F84F2456`
+- NeoForge 1.21.6:
+  `6C0437BD8C48E0DB10B2DFA67919B0AD7BD8B45CFD83A79E489B5C611E0DA024`
+- NeoForge 1.21.7-1.21.8:
+  `504503E6B106690E379009ADAA7CFBB1D0488955007977946717D95C858A4073`
 
 The JAR files are retained locally in `compat/candidates/` but intentionally
-ignored by Git. Release binaries should be attached to a release, not committed
-to source control.
+ignored by Git. Release binaries belong on the release, not in source control.
 
-## Why one 1.21.2-1.21.10 JAR is unsafe
-
-The next-version compile probe fails on Minecraft 1.21.4 because that version
-removes the `AbstractSelectionList` scrolling methods used by
-`StructuredConfigList`: `clampScrollAmount()` and `getScrollAmount()`. Later
-versions introduce additional entity attribution, persistence, networking,
-input, loot, and NeoForge mixin-descriptor changes. Trimming only the first or
-last version cannot remove boundaries located inside the requested range.
-
-Conservative source lanes to implement and verify separately:
-
-| Loader | Candidate unchanged-JAR lanes |
-| --- | --- |
-| Fabric | 1.21.2-1.21.3; 1.21.4; 1.21.5; 1.21.6-1.21.8; 1.21.9-1.21.10 |
-| NeoForge | 1.21.2-1.21.3; 1.21.4; 1.21.5; 1.21.6; 1.21.7-1.21.8; 1.21.9; 1.21.10 |
-
-Each advertised Minecraft version must pass the complete matrix with the exact
-same JAR bytes before its metadata range is widened.
+`release_ready=false` remains set. Publishing requires a separate reviewed
+release action.

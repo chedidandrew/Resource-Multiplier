@@ -175,8 +175,8 @@ final class BlockInspectionFormatter {
         String visible = truncate(id, MAX_VISIBLE_ID);
         return Component.literal(visible).withStyle(style -> style
                 .withColor(ChatFormatting.DARK_GRAY)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, id))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(
+                .withClickEvent(new ClickEvent.CopyToClipboard(id))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal(
                         "Click to copy block ID\n" + id))));
     }
 
@@ -187,7 +187,7 @@ final class BlockInspectionFormatter {
         if (!visible.equals(full)) {
             String hover = truncate(full, MAX_HOVER_STATE);
             return value.withStyle(style -> style.withHoverEvent(
-                    new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(hover))));
+                    new HoverEvent.ShowText(Component.literal(hover))));
         }
         return value;
     }

@@ -15,7 +15,7 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 /** NeoForge adapter for the shared pathological block-loot fixture state. */
-@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID)
 public final class NeoForgeGameTestBlockLootFixtures {
     private NeoForgeGameTestBlockLootFixtures() {
     }

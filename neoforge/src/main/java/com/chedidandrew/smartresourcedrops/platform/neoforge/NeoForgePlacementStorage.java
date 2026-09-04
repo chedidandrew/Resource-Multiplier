@@ -21,7 +21,7 @@ final class NeoForgePlacementStorage implements PlacementTracker.Storage {
     private static final Supplier<AttachmentType<PlacedBlockData>> PLACED_BLOCKS = ATTACHMENTS.register(
             "placed_blocks",
             () -> AttachmentType.builder(PlacedBlockData::new)
-                    .serialize(PlacedBlockData.MAP_CODEC.codec(), data -> !data.isEmpty())
+                    .serialize(PlacedBlockData.MAP_CODEC, data -> !data.isEmpty())
                     .build());
 
     static void register(final IEventBus modBus) {
