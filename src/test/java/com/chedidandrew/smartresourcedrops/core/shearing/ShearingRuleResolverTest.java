@@ -46,15 +46,17 @@ final class ShearingRuleResolverTest {
         SmartDropsConfig config = SmartDropsConfig.defaults();
         config.inheritDefaultShearingMultiplier = false;
         config.defaultShearingMultiplier = 3;
-        config.shearingEntityMultipliers.put("minecraft:sheep", 7);
+        config.shearingEntityMultipliers.put("example:certified_shearable", 7);
 
         ShearingRuleTrace trace = ShearingRuleResolver.trace(
                 config,
-                "minecraft:sheep",
+                "example:certified_shearable",
                 true,
                 false,
                 ShearingSource.MANUAL_PLAYER);
 
+        assertEquals(ShearingClassification.STANDARD_RESOURCE, trace.classification());
+        assertTrue(trace.standardTagged());
         assertEquals(7, trace.appliedMultiplier());
         assertEquals(7, trace.exactOverride());
         assertEquals(ShearingRuleTrace.RuleSource.ENTITY_OVERRIDE, trace.selectedRule());

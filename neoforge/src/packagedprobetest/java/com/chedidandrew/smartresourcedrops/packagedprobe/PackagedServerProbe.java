@@ -37,7 +37,7 @@ public final class PackagedServerProbe {
             }
             PackagedProbeSupport.writeMarker("packaged-server.success");
             LOGGER.info(
-                    "Packaged NeoForge server candidate Smart Resource Multiplier 1.3.1+mc1.21.1 passed exact version, code-source, config, status, and validation checks");
+                    "Packaged NeoForge server candidate Smart Resource Multiplier 1.3.2+mc1.21.2-1.21.3 passed exact version, code-source, config, status, and validation checks");
             event.getServer().halt(false);
         } catch (Throwable failure) {
             throw failure instanceof Error error

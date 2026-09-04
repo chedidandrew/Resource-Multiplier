@@ -73,6 +73,27 @@ def oversizedWireClientDirectory = layout.buildDirectory.dir('oversized-wire-tes
 def persistenceTestDirectory = layout.buildDirectory.dir('persistence-server-test')
 def packagedServerTestDirectory = layout.buildDirectory.dir('packaged-jar-test/server')
 def packagedClientTestDirectory = layout.buildDirectory.dir('packaged-jar-test/client')
+def packagedCandidateJarProperty = providers.gradleProperty('packaged_candidate_jar')
+def packagedCandidateJarName = "${archives_base_name}-${mod_version}.jar"
+def resolvePackagedCandidateJar = {
+    if (packagedCandidateJarProperty.isPresent()) {
+        final File candidate = new File(packagedCandidateJarProperty.get())
+        if (!candidate.isAbsolute()) {
+            throw new GradleException('packaged_candidate_jar must be an absolute path')
+        }
+        if (!candidate.isFile()) {
+            throw new GradleException("External packaged candidate does not exist: ${candidate}")
+        }
+        return candidate
+    }
+
+    final File candidate = layout.buildDirectory
+            .file("libs/${packagedCandidateJarName}").get().asFile
+    if (!candidate.isFile()) {
+        throw new GradleException("Built packaged candidate does not exist: ${candidate}")
+    }
+    return candidate
+}
 def prepareClientCategoryTest = tasks.register('prepareClientCategoryTest') {
     outputs.upToDateWhen { false }
     doLast {
@@ -220,16 +241,17 @@ motd=Smart Resource Multiplier native persistence smoke test
     }
 }
 def preparePackagedServerTest = tasks.register('preparePackagedServerTest') {
-    dependsOn tasks.named('jar')
+    if (!packagedCandidateJarProperty.isPresent()) {
+        dependsOn tasks.named('jar')
+    }
     outputs.upToDateWhen { false }
     doLast {
         final File directory = packagedServerTestDirectory.get().asFile
         project.delete(directory)
         final File modsDirectory = new File(directory, 'mods')
         modsDirectory.mkdirs()
-        final File sourceJar = layout.buildDirectory
-                .file("libs/${archives_base_name}-${mod_version}.jar").get().asFile
-        final File copiedJar = new File(modsDirectory, sourceJar.name)
+        final File sourceJar = resolvePackagedCandidateJar()
+        final File copiedJar = new File(modsDirectory, packagedCandidateJarName)
         java.nio.file.Files.copy(sourceJar.toPath(), copiedJar.toPath())
         if (java.nio.file.Files.mismatch(sourceJar.toPath(), copiedJar.toPath()) != -1L) {
             throw new GradleException('Packaged server candidate copy is not byte-identical')
@@ -249,16 +271,17 @@ motd=Smart Resource Multiplier packaged JAR server test
     }
 }
 def preparePackagedClientTest = tasks.register('preparePackagedClientTest') {
-    dependsOn tasks.named('jar')
+    if (!packagedCandidateJarProperty.isPresent()) {
+        dependsOn tasks.named('jar')
+    }
     outputs.upToDateWhen { false }
     doLast {
         final File directory = packagedClientTestDirectory.get().asFile
         project.delete(directory)
         final File modsDirectory = new File(directory, 'mods')
         modsDirectory.mkdirs()
-        final File sourceJar = layout.buildDirectory
-                .file("libs/${archives_base_name}-${mod_version}.jar").get().asFile
-        final File copiedJar = new File(modsDirectory, sourceJar.name)
+        final File sourceJar = resolvePackagedCandidateJar()
+        final File copiedJar = new File(modsDirectory, packagedCandidateJarName)
         java.nio.file.Files.copy(sourceJar.toPath(), copiedJar.toPath())
         if (java.nio.file.Files.mismatch(sourceJar.toPath(), copiedJar.toPath()) != -1L) {
             throw new GradleException('Packaged client candidate copy is not byte-identical')
@@ -440,7 +463,7 @@ neoForge {
                     packagedServerTestDirectory.get().asFile.absolutePath
             systemProperty 'smart_resource_drops.packagedCandidateJar',
                     new File(packagedServerTestDirectory.get().asFile,
-                            "mods/${archives_base_name}-${mod_version}.jar").absolutePath
+                            "mods/${packagedCandidateJarName}").absolutePath
             taskBefore preparePackagedServerTest
             programArgument '--nogui'
         }
@@ -454,7 +477,7 @@ neoForge {
                     packagedClientTestDirectory.get().asFile.absolutePath
             systemProperty 'smart_resource_drops.packagedCandidateJar',
                     new File(packagedClientTestDirectory.get().asFile,
-                            "mods/${archives_base_name}-${mod_version}.jar").absolutePath
+                            "mods/${packagedCandidateJarName}").absolutePath
             taskBefore preparePackagedClientTest
         }
     }
@@ -499,7 +522,7 @@ tasks.named('runGameTestServer') {
         }
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
-                'Registered exactly 64 NeoForge 1.21.1 GameTests',
+                'Registered exactly 64 NeoForge 1.21.2 GameTests',
                 '64 tests are now running',
                 '64 GAME TESTS COMPLETE',
                 'All 64 required tests passed',
@@ -578,8 +601,8 @@ tasks.named('runPackagedServerTest') {
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
                 'Done (',
-                'Smart Resource Multiplier 1.3.1+mc1.21.1',
-                'Packaged NeoForge server candidate Smart Resource Multiplier 1.3.1+mc1.21.1 passed exact version, code-source, config, status, and validation checks']) {
+                'Smart Resource Multiplier 1.3.2+mc1.21.2-1.21.3',
+                'Packaged NeoForge server candidate Smart Resource Multiplier 1.3.2+mc1.21.2-1.21.3 passed exact version, code-source, config, status, and validation checks']) {
             if (!log.contains(evidence)) {
                 throw new GradleException("Packaged server log is missing: ${evidence}")
             }
@@ -634,6 +657,7 @@ var generateModMetadata = tasks.register('generateModMetadata', ProcessResources
             minecraft_version      : minecraft_version,
             minecraft_version_range: minecraft_version_range,
             neo_version            : neo_version,
+            neo_version_range      : neo_version_range,
             mod_id                 : mod_id,
             mod_name               : mod_name,
             mod_license            : mod_license,

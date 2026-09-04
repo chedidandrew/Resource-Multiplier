@@ -49,7 +49,7 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
     }
 
     @WrapOperation(
-            method = "dropFromLootTable(Lnet/minecraft/world/damagesource/DamageSource;Z)V",
+            method = "dropFromLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;Z)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/loot/LootTable;getRandomItems(Lnet/minecraft/world/level/storage/loot/LootParams;JLjava/util/function/Consumer;)V"),
             require = 1,
             expect = 1)
@@ -66,7 +66,7 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
     }
 
     @WrapOperation(
-            method = "dropExperience(Lnet/minecraft/world/entity/Entity;)V",
+            method = "dropExperience(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V"),
             require = 1,
             expect = 1)
@@ -100,11 +100,12 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
     }
 
     @Inject(
-            method = "hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z",
+            method = "hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z",
             at = @At("RETURN"),
             require = 1,
             expect = 1)
     private void smartResourceDrops$rememberSuccessfulDamageOrigin(
+            final ServerLevel level,
             final DamageSource source,
             final float amount,
             final CallbackInfoReturnable<Boolean> callback

@@ -145,15 +145,47 @@ public final class SmartResourceDropsBlockBudgetGameTests {
 
     private static Explosion explosion(final ServerLevel level, final BlockPos pos) {
         final Vec3 center = Vec3.atCenterOf(pos);
-        return new Explosion(
-                level,
-                null,
-                center.x,
-                center.y,
-                center.z,
-                4.0F,
-                false,
-                Explosion.BlockInteraction.DESTROY);
+        return new Explosion() {
+            @Override
+            public ServerLevel level() {
+                return level;
+            }
+
+            @Override
+            public BlockInteraction getBlockInteraction() {
+                return BlockInteraction.DESTROY;
+            }
+
+            @Override
+            public LivingEntity getIndirectSourceEntity() {
+                return null;
+            }
+
+            @Override
+            public Entity getDirectSourceEntity() {
+                return null;
+            }
+
+            @Override
+            public float radius() {
+                return 4.0F;
+            }
+
+            @Override
+            public Vec3 center() {
+                return center;
+            }
+
+            @Override
+            public boolean canTriggerBlocks() {
+                return false;
+            }
+
+            @Override
+            public boolean shouldAffectBlocklikeEntities() {
+                return true;
+            }
+        };
     }
 
     private static void assertWorldDrops(
@@ -199,6 +231,6 @@ public final class SmartResourceDropsBlockBudgetGameTests {
     }
 
     private static void removeDrops(final GameTestHelper helper, final BlockPos pos) {
-        dropsNear(helper, pos).forEach(Entity::kill);
+        dropsNear(helper, pos).forEach(entity -> entity.kill(helper.getLevel()));
     }
 }

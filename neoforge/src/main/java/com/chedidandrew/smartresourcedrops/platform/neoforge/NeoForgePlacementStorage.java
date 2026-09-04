@@ -35,7 +35,7 @@ final class NeoForgePlacementStorage implements PlacementTracker.Storage {
             final int packedPosition
     ) {
         final LevelChunk chunk = level.getChunkAt(pos);
-        final PlacedBlockData data = chunk.getExistingDataOrNull(PLACED_BLOCKS);
+        final PlacedBlockData data = chunk.getExistingData(PLACED_BLOCKS).orElse(null);
         return data != null && data.contains(packedPosition);
     }
 
@@ -44,21 +44,21 @@ final class NeoForgePlacementStorage implements PlacementTracker.Storage {
         final LevelChunk chunk = level.getChunkAt(pos);
         final PlacedBlockData data = chunk.getData(PLACED_BLOCKS);
         if (data.add(packedPosition)) {
-            chunk.setUnsaved(true);
+            chunk.markUnsaved();
         }
     }
 
     @Override
     public boolean remove(final ServerLevel level, final BlockPos pos, final int packedPosition) {
         final LevelChunk chunk = level.getChunkAt(pos);
-        final PlacedBlockData data = chunk.getExistingDataOrNull(PLACED_BLOCKS);
+        final PlacedBlockData data = chunk.getExistingData(PLACED_BLOCKS).orElse(null);
         if (data == null || !data.remove(packedPosition)) {
             return false;
         }
         if (data.isEmpty()) {
             chunk.removeData(PLACED_BLOCKS);
         }
-        chunk.setUnsaved(true);
+        chunk.markUnsaved();
         return true;
     }
 }

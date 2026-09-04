@@ -52,7 +52,8 @@ public final class NeoForgeAutomationAuthorityGameTests {
                     GameTestEntityFixtures.HOSTILE,
                     relative);
             helper.assertTrue(
-                    victim.hurt(
+                    victim.hurtServer(
+                            helper.getLevel(),
                             helper.getLevel().damageSources().playerAttack(automation),
                             Float.MAX_VALUE),
                     "Fixture refused lethal NeoForge FakePlayer damage");

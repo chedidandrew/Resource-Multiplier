@@ -19,7 +19,7 @@ public final class NeoForgeMixinAuditGameTests {
     private static final List<String> SHEARING_MIXIN_RESOURCES = List.of(
             "com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.class",
             "com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.class",
-            "com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.class",
+            "com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.class",
             "com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/NeoForgeShearsDispenseItemBehaviorMixin.class");
 
     @GameTest(templateNamespace = "smart_resource_drops_gametest", template = "wide")

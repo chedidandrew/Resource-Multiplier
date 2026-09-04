@@ -32,8 +32,8 @@ public final class LiveConfigRegistryView implements ConfigRegistryView {
 
     public static LiveConfigRegistryView from(final CommandSourceStack source) {
         return new LiveConfigRegistryView(
-                source.registryAccess().registryOrThrow(Registries.BLOCK),
-                source.registryAccess().registryOrThrow(Registries.ENTITY_TYPE),
+                source.registryAccess().lookupOrThrow(Registries.BLOCK),
+                source.registryAccess().lookupOrThrow(Registries.ENTITY_TYPE),
                 source.getServer());
     }
 
@@ -58,13 +58,13 @@ public final class LiveConfigRegistryView implements ConfigRegistryView {
     @Override
     public boolean blockTagBound(final String identifier) {
         final ResourceLocation id = ResourceLocation.tryParse(identifier);
-        return id != null && blocks.getTag(TagKey.create(Registries.BLOCK, id)).isPresent();
+        return id != null && blocks.get(TagKey.create(Registries.BLOCK, id)).isPresent();
     }
 
     @Override
     public boolean entityTagBound(final String identifier) {
         final ResourceLocation id = ResourceLocation.tryParse(identifier);
-        return id != null && entityTypes.getTag(TagKey.create(Registries.ENTITY_TYPE, id)).isPresent();
+        return id != null && entityTypes.get(TagKey.create(Registries.ENTITY_TYPE, id)).isPresent();
     }
 
     @Override
@@ -74,7 +74,7 @@ public final class LiveConfigRegistryView implements ConfigRegistryView {
             return Set.of();
         }
         final LinkedHashSet<String> members = new LinkedHashSet<>();
-        entityTypes.getTag(TagKey.create(Registries.ENTITY_TYPE, id)).ifPresent(tag -> tag.stream()
+        entityTypes.get(TagKey.create(Registries.ENTITY_TYPE, id)).ifPresent(tag -> tag.stream()
                 .map(holder -> EntityType.getKey(holder.value()))
                 .filter(java.util.Objects::nonNull)
                 .map(ResourceLocation::toString)
@@ -92,7 +92,7 @@ public final class LiveConfigRegistryView implements ConfigRegistryView {
         if (!blocks.containsKey(id)) {
             return BlockEntityCapability.UNKNOWN;
         }
-        final Block block = blocks.get(id);
+        final Block block = blocks.getValue(id);
         if (block == null) {
             return BlockEntityCapability.UNKNOWN;
         }

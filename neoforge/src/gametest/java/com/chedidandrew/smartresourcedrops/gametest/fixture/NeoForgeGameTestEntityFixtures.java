@@ -63,7 +63,7 @@ public final class NeoForgeGameTestEntityFixtures {
 
         @SubscribeEvent
         public static void lootTableLoad(final LootTableLoadEvent event) {
-            if (!event.getKey().equals(GameTestEntityFixtures.EXCEPTION_LOOT)) {
+            if (!event.getName().equals(GameTestEntityFixtures.EXCEPTION_LOOT.location())) {
                 return;
             }
             event.getTable().addPool(LootPool.lootPool()

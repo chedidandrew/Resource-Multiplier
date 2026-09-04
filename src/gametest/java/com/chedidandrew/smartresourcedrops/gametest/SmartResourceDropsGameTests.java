@@ -577,7 +577,7 @@ public final class SmartResourceDropsGameTests {
     }
 
     private static void removeDrops(final GameTestHelper helper, final BlockPos absolutePos) {
-        dropsNear(helper, absolutePos).forEach(entity -> entity.kill());
+        dropsNear(helper, absolutePos).forEach(entity -> entity.kill(helper.getLevel()));
     }
 
     private static List<ItemEntity> dropsNear(final GameTestHelper helper, final BlockPos absolutePos) {

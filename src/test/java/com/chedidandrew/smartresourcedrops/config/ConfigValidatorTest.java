@@ -245,6 +245,25 @@ final class ConfigValidatorTest {
     }
 
     @Test
+    void certifiedNonSheepShearingOverrideIsReachable() {
+        SmartDropsConfig config = SmartDropsConfig.defaults();
+        config.shearingEntityMultipliers.put("example:certified_shearable", 7);
+        ConfigRegistryView registries = new FakeRegistryView(
+                Set.of("minecraft:sheep", "example:certified_shearable"),
+                Set.of("minecraft:mooshroom"),
+                true,
+                true);
+
+        ConfigValidationReport report = ConfigValidator.validate(
+                new ConfigManager.ValidationSnapshot(config, 1L, false, ConfigLoadDiagnostics.empty()),
+                registries);
+
+        assertFalse(report.issues().stream().anyMatch(issue ->
+                issue.code() == ValidationCode.UNSAFE_SHEARING_OVERRIDE
+                        && "example:certified_shearable".equals(issue.identifier())));
+    }
+
+    @Test
     void writesSuppressedAndUnsupportedSchemaAreErrors() {
         SmartDropsConfig config = SmartDropsConfig.defaults();
         config.schemaVersion = SmartDropsConfig.CURRENT_SCHEMA + 1;

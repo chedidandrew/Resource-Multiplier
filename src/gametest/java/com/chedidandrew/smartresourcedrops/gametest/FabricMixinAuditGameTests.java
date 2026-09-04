@@ -46,7 +46,7 @@ public final class FabricMixinAuditGameTests {
         for (String resource : List.of(
                 "com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.class",
                 "com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.class",
-                "com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.class")) {
+                "com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.class")) {
             helper.assertTrue(
                     classLoader.getResource(resource) != null,
                     "Dedicated server omitted required shearing mixin class " + resource);

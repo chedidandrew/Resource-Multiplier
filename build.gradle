@@ -5,6 +5,7 @@ plugins {
 
 def modVersionValue = providers.gradleProperty('mod_version').get()
 def minecraftVersionValue = providers.gradleProperty('minecraft_version').get()
+def minecraftVersionRangeValue = providers.gradleProperty('minecraft_version_range').get()
 def javaVersionValue = providers.gradleProperty('java_version').get().toInteger()
 def loaderVersionValue = providers.gradleProperty('loader_version').get()
 def fabricVersionValue = providers.gradleProperty('fabric_version').get()
@@ -138,7 +139,7 @@ loom {
     runs {
         clientSmoke {
             client()
-            name = 'Fabric 1.21.1 client GUI smoke'
+            name = 'Fabric 1.21.2-1.21.3 client GUI smoke'
             source clientTestSourceSet
             runDir 'build/fabric-client-smoke'
             property 'smart_resource_drops.fabricClientSmoke', 'true'
@@ -238,6 +239,7 @@ dependencies {
 processResources {
     inputs.property 'version', modVersionValue
     inputs.property 'minecraft_version', minecraftVersionValue
+    inputs.property 'minecraft_version_range', minecraftVersionRangeValue
     inputs.property 'loader_version', loaderVersionValue
     inputs.property 'fabric_version', fabricVersionValue
     inputs.property 'modmenu_version', modMenuVersionValue
@@ -246,6 +248,7 @@ processResources {
         expand(
             version: modVersionValue,
             minecraft_version: minecraftVersionValue,
+            minecraft_version_range: minecraftVersionRangeValue,
             loader_version: loaderVersionValue,
             fabric_version: fabricVersionValue,
             modmenu_version: modMenuVersionValue
@@ -257,15 +260,22 @@ processResources {
 // shown by Fabric Loader and CI logs instead of retaining a stale hard-coded value.
 tasks.named('processGametestResources') {
     inputs.property 'version', modVersionValue
+    inputs.property 'minecraft_version_range', minecraftVersionRangeValue
     filesMatching('fabric.mod.json') {
-        expand(version: modVersionValue)
+        expand(
+                version: modVersionValue,
+                minecraft_version_range: minecraftVersionRangeValue)
     }
 }
 
 tasks.named('processClienttestResources') {
     inputs.property 'version', modVersionValue
+    inputs.property 'minecraft_version_range', minecraftVersionRangeValue
     filesMatching('fabric.mod.json') {
-        expand(version: modVersionValue)
+        expand(
+                version: modVersionValue,
+                minecraft_version_range: minecraftVersionRangeValue
+        )
     }
 }
 

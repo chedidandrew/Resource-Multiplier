@@ -142,9 +142,9 @@ public final class GameTestEntityFixtures {
         if (nestedOuter && nestedTarget != null) {
             final LivingEntity target = nestedTarget;
             nestedTarget = null;
-            final DamageSource source = context.getParamOrNull(LootContextParams.DAMAGE_SOURCE);
+            final DamageSource source = context.getOptionalParameter(LootContextParams.DAMAGE_SOURCE);
             if (source != null) {
-                target.hurt(source, Float.MAX_VALUE);
+                target.hurtServer(context.getLevel(), source, Float.MAX_VALUE);
             }
         }
     }
@@ -174,9 +174,9 @@ public final class GameTestEntityFixtures {
         if (stack.is(Items.COAL) && nestedTarget != null) {
             final LivingEntity target = nestedTarget;
             nestedTarget = null;
-            final DamageSource source = params.getParamOrNull(LootContextParams.DAMAGE_SOURCE);
+            final DamageSource source = params.contextMap().getOptional(LootContextParams.DAMAGE_SOURCE);
             if (source != null) {
-                target.hurt(source, Float.MAX_VALUE);
+                target.hurtServer(params.getLevel(), source, Float.MAX_VALUE);
             }
         }
     }
@@ -218,7 +218,7 @@ public final class GameTestEntityFixtures {
         final EntityType<T> type = EntityType.Builder.of(factory, category)
                 .sized(0.6F, 1.8F)
                 .clientTrackingRange(8)
-                .build(id.toString());
+                .build(key);
         registrar.register(key, type);
         return type;
     }
@@ -279,7 +279,7 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        protected int getBaseExperienceReward(final ServerLevel level) {
             // 7x and its 3x result (17 + 3 + 1) use distinct vanilla orb values, so the
             // fixture can total getValue() without undercounting randomly count-merged orbs.
             return 7;
@@ -296,11 +296,11 @@ public final class GameTestEntityFixtures {
 
         public void fixturePickUp(final ServerLevel level, final ItemEntity itemEntity) {
             setCanPickUpLoot(true);
-            pickUpItem(itemEntity);
+            pickUpItem(level, itemEntity);
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        protected int getBaseExperienceReward(final ServerLevel level) {
             return 5;
         }
     }
@@ -331,16 +331,16 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        protected int getBaseExperienceReward(final ServerLevel level) {
             return 5;
         }
 
         @Override
-        protected void dropEquipment() {
-            super.dropEquipment();
+        protected void dropEquipment(final ServerLevel level) {
+            super.dropEquipment(level);
             for (ItemStack stack : inventory.removeAllItems()) {
                 if (!stack.isEmpty()) {
-                    spawnAtLocation(stack);
+                    spawnAtLocation(level, stack);
                 }
             }
         }
@@ -354,7 +354,7 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        protected int getBaseExperienceReward(final ServerLevel level) {
             return 5;
         }
 
@@ -364,7 +364,7 @@ public final class GameTestEntityFixtures {
                 final DamageSource source,
                 final boolean recentlyHitByPlayer) {
             super.dropCustomDeathLoot(level, source, recentlyHitByPlayer);
-            spawnAtLocation(new ItemStack(Items.EMERALD));
+            spawnAtLocation(level, new ItemStack(Items.EMERALD));
         }
     }
 
@@ -377,16 +377,17 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        protected int getBaseExperienceReward(final ServerLevel level) {
             return 5;
         }
 
         @Override
         protected void dropFromLootTable(
+                final ServerLevel level,
                 final DamageSource source,
                 final boolean recentlyHitByPlayer) {
-            super.dropFromLootTable(source, recentlyHitByPlayer);
-            super.dropFromLootTable(source, recentlyHitByPlayer);
+            super.dropFromLootTable(level, source, recentlyHitByPlayer);
+            super.dropFromLootTable(level, source, recentlyHitByPlayer);
         }
     }
 

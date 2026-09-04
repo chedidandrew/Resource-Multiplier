@@ -48,11 +48,9 @@ public final class ShearingRuleResolver {
         Objects.requireNonNull(source, "source");
 
         boolean knownVanillaSpecial = ShearingTags.isKnownVanillaSpecial(entityId);
-        boolean supportedStandard = standardTagged
-                && ShearingTags.isSupportedStandardTarget(entityId);
         ShearingClassification classification = specialTagged || knownVanillaSpecial
                 ? ShearingClassification.SPECIAL
-                : supportedStandard
+                : standardTagged
                         ? ShearingClassification.STANDARD_RESOURCE
                         : ShearingClassification.UNKNOWN;
         int maximum = Math.max(1, Math.min(
@@ -93,9 +91,9 @@ public final class ShearingRuleResolver {
             return result(
                     entityId,
                     classification,
-                    standardTagged,
-                    specialTagged,
-                    knownVanillaSpecial,
+                    false,
+                    false,
+                    false,
                     source,
                     config,
                     sourceEnabled,
@@ -103,9 +101,7 @@ public final class ShearingRuleResolver {
                     exactOverride,
                     1,
                     ShearingRuleTrace.RuleSource.UNKNOWN_SAFETY,
-                    standardTagged
-                            ? "Minecraft 1.21.1 supports final-output multiplication for sheep only; other standard-resource tag members remain vanilla 1x"
-                            : "unknown shearables are fixed at vanilla 1x on Minecraft 1.21.1");
+                    "unknown shearables require explicit standard-resource certification");
         }
         if (!config.enabled) {
             return result(

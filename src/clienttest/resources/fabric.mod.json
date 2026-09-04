@@ -16,7 +16,7 @@
   },
   "depends": {
     "fabricloader": "*",
-    "minecraft": "1.21.1",
+    "minecraft": "${minecraft_version_range}",
     "fabric-lifecycle-events-v1": "*",
     "smart_resource_drops": "*"
   }

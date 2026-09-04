@@ -358,12 +358,11 @@ public final class ConfigValidator {
                         "This override is unreachable because special shearing transformations are fixed at vanilla 1x.",
                         identifier,
                         "shearingEntityMultipliers"));
-            } else if (!standard.contains(identifier)
-                    || !ShearingTags.isSupportedStandardTarget(identifier)) {
+            } else if (!standard.contains(identifier)) {
                 report.add(ValidationIssue.at(
                         ValidationSeverity.WARNING,
                         ValidationCode.UNSAFE_SHEARING_OVERRIDE,
-                        "Minecraft 1.21.1 can safely multiply final shearing output for sheep only; this preserved override remains inactive.",
+                        "This override cannot apply until the entity is certified by the standard-resources shearing tag.",
                         identifier,
                         "shearingEntityMultipliers"));
             }
@@ -387,9 +386,7 @@ public final class ConfigValidator {
                     : config.defaultShearingMultiplier;
             int highestReachable = 0;
             for (String identifier : standard) {
-                if (special.contains(identifier)
-                        || ShearingTags.isKnownVanillaSpecial(identifier)
-                        || !ShearingTags.isSupportedStandardTarget(identifier)) {
+                if (special.contains(identifier) || ShearingTags.isKnownVanillaSpecial(identifier)) {
                     continue;
                 }
                 final Integer exact = overrides.get(identifier);

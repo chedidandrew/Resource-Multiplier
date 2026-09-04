@@ -199,7 +199,8 @@ public final class SmartResourceDropsEntityGameTests {
 
             final Mob creditedVictim = spawn(helper, GameTestEntityFixtures.HOSTILE, 7);
             helper.assertTrue(
-                    creditedVictim.hurt(
+                    creditedVictim.hurtServer(
+                            helper.getLevel(),
                             helper.getLevel().damageSources().playerAttack(player),
                             1.0F),
                     "Could not establish vanilla last-player credit");
@@ -215,7 +216,8 @@ public final class SmartResourceDropsEntityGameTests {
                     GameTestEntityFixtures.HOSTILE,
                     25);
             helper.assertTrue(
-                    playerCreditedAfterUntamedWolf.hurt(
+                    playerCreditedAfterUntamedWolf.hurtServer(
+                            helper.getLevel(),
                             helper.getLevel().damageSources().playerAttack(player),
                             1.0F),
                     "Could not establish player credit before untamed-wolf damage");
@@ -224,7 +226,8 @@ public final class SmartResourceDropsEntityGameTests {
                     EntityType.WOLF,
                     new BlockPos(25, 2, 2));
             helper.assertTrue(
-                    playerCreditedAfterUntamedWolf.hurt(
+                    playerCreditedAfterUntamedWolf.hurtServer(
+                            helper.getLevel(),
                             helper.getLevel().damageSources().mobAttack(untamedWolf),
                             1.0F),
                     "Untamed-wolf fixture damage was rejected");
@@ -855,7 +858,7 @@ public final class SmartResourceDropsEntityGameTests {
             final Mob victim,
             final DamageSource source) {
         helper.assertTrue(
-                victim.hurt(source, Float.MAX_VALUE),
+                victim.hurtServer(helper.getLevel(), source, Float.MAX_VALUE),
                 "Fixture refused lethal damage: " + EntityType.getKey(victim.getType()));
         helper.assertTrue(victim.isDeadOrDying(), "Fixture survived lethal damage");
     }

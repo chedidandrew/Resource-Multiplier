@@ -11,7 +11,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Explosion;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
@@ -34,26 +33,22 @@ abstract class BlockStateBaseDropsMixin {
 
     @WrapMethod(method = "onExplosionHit")
     private void smartResourceDrops$wrapExplosion(
-            Level level,
+            ServerLevel level,
             BlockPos pos,
             Explosion explosion,
             BiConsumer<ItemStack, BlockPos> onHit,
             Operation<Void> original
     ) {
-        if (!(level instanceof ServerLevel serverLevel)) {
-            original.call(level, pos, explosion, onHit);
-            return;
-        }
         BlockState state = (BlockState) (Object) this;
         BlockEntity blockEntity = state.hasBlockEntity() ? level.getBlockEntity(pos) : null;
         Entity actor = explosion.getIndirectSourceEntity();
-        DropContext.beginExplosion(serverLevel, pos, state, blockEntity, actor);
+        DropContext.beginExplosion(level, pos, state, blockEntity, actor);
         try {
             original.call(level, pos, explosion, onHit);
         } finally {
             BlockState current = level.getBlockState(pos);
             if (current.isAir() || !current.is(state.getBlock())) {
-                PlacementTracker.remove(serverLevel, pos);
+                PlacementTracker.remove(level, pos);
             }
             DropContext.endExpected(DropSource.EXPLOSION);
         }

@@ -329,10 +329,10 @@ public final class SmartResourceDropsShearingGameTests {
 
             final ItemStack shears = dispenseShears(helper, DISPENSER_POS, Direction.EAST);
             helper.assertTrue(sheep.isLeashed(),
-                    "Minecraft 1.21.1 unexpectedly removed the leash while dispensing shears");
+                    "Minecraft 1.21.2-1.21.3 unexpectedly removed the leash while dispensing shears");
             helper.assertTrue(sheep.isSheared(),
-                    "Minecraft 1.21.1 did not shear a ready leashed sheep");
-            assertItemTotal(helper, ENTITY_POS, Items.LEAD, 0, "1.21.1 leashed sheep lead");
+                    "Minecraft 1.21.2-1.21.3 did not shear a ready leashed sheep");
+            assertItemTotal(helper, ENTITY_POS, Items.LEAD, 0, "1.21.2-1.21.3 leashed sheep lead");
             final int wool = itemTotal(helper, ENTITY_POS, Items.WHITE_WOOL);
             helper.assertTrue(wool >= 64 && wool <= 192 && wool % 64 == 0,
                     "Leashed sheep output did not preserve 1-3 vanilla wool emissions at 64x");
@@ -510,10 +510,10 @@ public final class SmartResourceDropsShearingGameTests {
         final SmartDropsConfig config = SmartDropsConfig.defaults();
         config.inheritDefaultShearingMultiplier = false;
         config.defaultShearingMultiplier = 7;
-        config.shearingEntityMultipliers.put("minecraft:sheep", 3);
+        config.shearingEntityMultipliers.put("example:certified", 3);
         final ShearingRuleTrace trace = ShearingGameTestAccess.syntheticTrace(
                 config,
-                "minecraft:sheep",
+                "example:certified",
                 true,
                 false,
                 ShearingSource.MANUAL_PLAYER);
@@ -533,13 +533,13 @@ public final class SmartResourceDropsShearingGameTests {
         config.defaultShearingMultiplier = 5;
         final ShearingRuleTrace manual = ShearingGameTestAccess.syntheticTrace(
                 config,
-                "minecraft:sheep",
+                "example:certified",
                 true,
                 false,
                 ShearingSource.MANUAL_PLAYER);
         final ShearingRuleTrace automated = ShearingGameTestAccess.syntheticTrace(
                 config,
-                "minecraft:sheep",
+                "example:certified",
                 true,
                 false,
                 ShearingSource.VANILLA_DISPENSER);
@@ -557,7 +557,7 @@ public final class SmartResourceDropsShearingGameTests {
         config.inheritDefaultShearingMultiplier = true;
         final ShearingRuleTrace inherited = ShearingGameTestAccess.syntheticTrace(
                 config,
-                "minecraft:sheep",
+                "example:certified",
                 true,
                 false,
                 ShearingSource.MANUAL_PLAYER);
@@ -569,7 +569,7 @@ public final class SmartResourceDropsShearingGameTests {
         config.enabled = false;
         final ShearingRuleTrace disabled = ShearingGameTestAccess.syntheticTrace(
                 config,
-                "minecraft:sheep",
+                "example:certified",
                 true,
                 false,
                 ShearingSource.MANUAL_PLAYER);

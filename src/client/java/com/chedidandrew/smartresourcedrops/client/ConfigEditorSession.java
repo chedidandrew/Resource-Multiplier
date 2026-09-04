@@ -21,7 +21,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -698,7 +697,7 @@ public final class ConfigEditorSession {
             final ResourceLocation identifier = ResourceLocation.tryParse(key);
             final EntityType<?> type = identifier == null
                     ? null
-                    : BuiltInRegistries.ENTITY_TYPE.get(identifier);
+                    : BuiltInRegistries.ENTITY_TYPE.getValue(identifier);
             if (type != null) {
                 return runtimeShearingClassification(type);
             }
@@ -1500,7 +1499,7 @@ public final class ConfigEditorSession {
 
         final List<ResourceLocation> ids = BuiltInRegistries.BLOCK.keySet().stream().sorted().toList();
         for (ResourceLocation identifier : ids) {
-            final Block block = BuiltInRegistries.BLOCK.get(identifier);
+            final Block block = BuiltInRegistries.BLOCK.getValue(identifier);
             if (block == null) {
                 continue;
             }
@@ -1568,11 +1567,11 @@ public final class ConfigEditorSession {
         final List<ResourceLocation> ids = BuiltInRegistries.ENTITY_TYPE.keySet().stream().sorted().toList();
         for (ResourceLocation identifier : ids) {
             final String id = identifier.toString();
-            final EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(identifier);
+            final EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(identifier);
             if (type == null
                     || "minecraft:player".equals(id)
                     || type == EntityType.ARMOR_STAND
-                    || type.getDefaultLootTable().equals(BuiltInLootTables.EMPTY)) {
+                    || type.getDefaultLootTable().isEmpty()) {
                 continue;
             }
 
@@ -1651,7 +1650,7 @@ public final class ConfigEditorSession {
 
         // Runtime holder tags are authoritative in-world. This scan reads registry metadata only.
         for (ResourceLocation identifier : BuiltInRegistries.ENTITY_TYPE.keySet()) {
-            final EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(identifier);
+            final EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(identifier);
             if (type != null
                     && runtimeShearingTrace(type).classification()
                             != ShearingClassification.UNKNOWN) {
@@ -1669,7 +1668,7 @@ public final class ConfigEditorSession {
             final ResourceLocation identifier = ResourceLocation.tryParse(id);
             final EntityType<?> type = identifier == null
                     ? null
-                    : BuiltInRegistries.ENTITY_TYPE.get(identifier);
+                    : BuiltInRegistries.ENTITY_TYPE.getValue(identifier);
             final ShearingRuleTrace runtime = type == null ? null : runtimeShearingTrace(type);
             final boolean standardTagged = declared.standardResources().contains(id)
                     || (runtime != null && runtime.standardTagged());
@@ -1679,7 +1678,7 @@ public final class ConfigEditorSession {
                             && (runtime.specialTagged() || runtime.knownVanillaSpecial()));
             final ShearingClassification classification = specialTagged
                     ? ShearingClassification.SPECIAL
-                    : standardTagged && ShearingTags.isSupportedStandardTarget(id)
+                    : standardTagged
                             ? ShearingClassification.STANDARD_RESOURCE
                             : ShearingClassification.UNKNOWN;
             final String displayName = type == null ? id : type.getDescription().getString();

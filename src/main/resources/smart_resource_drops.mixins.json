@@ -9,7 +9,7 @@
     "LivingEntityDeathLootMixin",
     "PlayerShearingContextMixin",
     "ShearsDispenseItemBehaviorMixin",
-    "SheepShearingLootMixin",
+    "LivingEntityShearingLootMixin",
     "FallingBlockEntityMixin",
     "PistonMovingBlockEntityMixin",
     "BlockItemPlacementCaptureMixin",
