@@ -12,6 +12,7 @@ public final class ShearingTags {
     /** Vanilla one-time/conversion/equipment outputs remain fixed even if a data pack replaces the tag. */
     public static final Set<String> KNOWN_VANILLA_SPECIAL_IDS = Set.of(
             "minecraft:bogged",
+            "minecraft:copper_golem",
             "minecraft:mooshroom",
             "minecraft:snow_golem");
     public static final TagKey<EntityType<?>> STANDARD_RESOURCES = TagKey.create(

@@ -1,7 +1,5 @@
 package com.chedidandrew.smartresourcedrops.platform.neoforge;
 
-import java.io.FileNotFoundException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +28,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 /** Physical-client-only NeoForge bootstrap. */
 @Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.CLIENT)
@@ -48,7 +46,7 @@ public final class NeoForgeClientEntrypoint {
 
             @Override
             public void send(final CustomPacketPayload payload) {
-                PacketDistributor.sendToServer(payload);
+                ClientPacketDistributor.sendToServer(payload);
             }
         });
         NeoForgeNetworking.installClientReceiver(NeoForgeClientEntrypoint::handleClientPayload);
@@ -110,17 +108,14 @@ public final class NeoForgeClientEntrypoint {
     private static List<ClientModResources.Resource> findResources(final String relativePath) {
         final ArrayList<ClientModResources.Resource> resources = new ArrayList<>();
         ModList.get().forEachModFile(file -> {
-            final var resourcePath = file.findResource(relativePath.split("/"));
-            if (!Files.isRegularFile(resourcePath)) {
+            final var contents = file.getContents();
+            if (!contents.containsFile(relativePath)) {
                 return;
             }
             final String source = file.getFileName() + "!/" + relativePath;
-            resources.add(new ClientModResources.Resource(source, () -> {
-                if (!Files.isRegularFile(resourcePath)) {
-                    throw new FileNotFoundException(source);
-                }
-                return Files.newInputStream(resourcePath);
-            }));
+            resources.add(new ClientModResources.Resource(
+                    source,
+                    () -> contents.openFile(relativePath)));
         });
         return resources;
     }

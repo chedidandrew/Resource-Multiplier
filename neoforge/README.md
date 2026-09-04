@@ -1,11 +1,11 @@
-# Smart Resource Multiplier - NeoForge 1.21.1
+# Smart Resource Multiplier - NeoForge 1.21.9
 
-This directory is the NeoForge target for Minecraft 1.21.1. It consumes the canonical gameplay, schema 3 configuration, command, network-policy, and GUI sources while keeping NeoForge lifecycle, transport, fake-player, shearing, and placed-block-storage adapters local to this module. Minecraft 26.2 remains the newest/default release on `main`.
+This directory is the exact NeoForge target for Minecraft 1.21.9. It consumes the canonical gameplay, schema 3 configuration, command, network-policy, and GUI sources while keeping NeoForge lifecycle, transport, fake-player, shearing, and placed-block-storage adapters local to this module. Minecraft 26.2 remains the newest/default release on `main`.
 
 ## Toolchain
 
-- Minecraft 1.21.1
-- NeoForge 21.1.249
+- Minecraft 1.21.9
+- NeoForge 21.9.16-beta
 - ModDevGradle 2.0.146
 - FML 4 / `javafml`
 - Java 21
@@ -44,7 +44,7 @@ Test entrypoints, probes, fixtures, and structures are run-only and must never a
 ## Playable artifact
 
 ```text
-neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.1+mc1.21.1.jar
+neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.2+mc1.21.9.jar
 ```
 
 Validate it from the repository root with:
@@ -55,10 +55,10 @@ py -3 tools/validate_neoforge_jar.py
 
 The validator checks `javafml`/FML 4 metadata, exact Minecraft and NeoForge dependencies, all-class Java 21 bytecode, required mixins, icon bytes, and loader/test isolation.
 
-For final release, the candidate JAR must also start in clean packaged-JAR-only NeoForge 21.1.249 server and client profiles. Source-set ModDevGradle runs are development evidence, not substitutes for that final installation test.
+For final release, the candidate JAR must also start in clean packaged-JAR-only NeoForge 21.9.16-beta server and client profiles. Source-set ModDevGradle runs are development evidence, not substitutes for that final installation test.
 
 ## Compatibility boundary
 
-Both loaders preserve mod ID `smart_resource_drops`, `config/smart_resource_drops.json`, schema 3, commands, and network identifiers. On Minecraft 1.21.1 shearing multiplication deliberately supports vanilla Sheep only. Minecraft world downgrades and cross-loader placed-block-data migration are unsupported; back up worlds before changing versions or loaders.
+Both loaders preserve mod ID `smart_resource_drops`, `config/smart_resource_drops.json`, schema 3, commands, and network identifiers. The 1.21.9 shearing adapters cover the audited standard and special vanilla shearable entities, including Copper Golems. This NeoForge build can import same-version placed-block provenance written by Fabric and then persists it in NeoForge-native chunk attachments. Minecraft world downgrades remain unsupported; back up worlds before changing versions or loaders.
 
 `release_ready` remains `false` until every release checklist gate passes.

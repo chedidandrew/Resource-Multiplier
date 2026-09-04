@@ -111,11 +111,11 @@ def write_minimum_release_entries(
         "mixins": ["smart_resource_drops.mixins.json"],
         "depends": {
             "fabricloader": ">=0.19.5",
-            "minecraft": "1.21.1",
+            "minecraft": ">=1.21.9 <1.21.11",
             "java": ">=21",
-            "fabric-api": ">=0.116.17+1.21.1",
+            "fabric-api": ">=0.134.1+1.21.9",
         },
-        "suggests": {"modmenu": ">=11.0.4"},
+        "suggests": {"modmenu": ">=16.0.1"},
     }
     if metadata_overrides is not None:
         metadata.update(metadata_overrides)
@@ -160,6 +160,7 @@ def write_minimum_release_entries(
                 "replace": False,
                 "values": [
                     "minecraft:bogged",
+                    "minecraft:copper_golem",
                     "minecraft:mooshroom",
                     "minecraft:snow_golem",
                 ],
@@ -301,7 +302,14 @@ for missing_source in (
     "src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/fabric/FabricPlacementPersistenceSmokeTest.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/FabricAutomationAuthorityGameTests.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/FabricMixinAuditGameTests.java",
+    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/GameTestAssertions.java",
     "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeAutomationAuthorityGameTests.java",
+    "neoforge/src/gametest/java/net/fabricmc/fabric/api/gametest/v1/GameTest.java",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigration.java",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/SerializableChunkDataLegacyProvenanceMixin.java",
+    "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigrationTest.java",
+    "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.java",
     "neoforge/src/gametest/resources/data/smart_resource_drops_gametest/structure/wide.nbt",
     "tools/run_fabric_multiplayer_smoke.sh",
     "tools/run_neoforge_multiplayer_smoke.sh",
@@ -368,8 +376,17 @@ for required_build_input in (
 root_properties = package_release.parse_properties(ROOT / "gradle.properties")
 neoforge_properties = package_release.parse_properties(ROOT / "neoforge/gradle.properties")
 require(
-    root_properties["mod_version"] == neoforge_properties["mod_version"],
-    "Fabric and NeoForge release versions drifted",
+    root_properties["mod_version"] == "1.3.2+mc1.21.9-1.21.10",
+    "Fabric release version drifted from the audited 1.21.9-1.21.10 lane",
+)
+require(
+    neoforge_properties["mod_version"] == "1.3.2+mc1.21.9",
+    "NeoForge release version drifted from the audited exact 1.21.9 lane",
+)
+require(
+    root_properties["mod_version"].split("+", 1)[0]
+    == neoforge_properties["mod_version"].split("+", 1)[0],
+    "Fabric and NeoForge public release versions drifted",
 )
 
 with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-") as temp_dir:
@@ -577,7 +594,7 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
         "data/smart_resource_drops/tags/entity_type/shearing/standard_resources.json",
         "data/smart_resource_drops/tags/entity_type/shearing/special.json",
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.class",
-        "com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.class",
+        "com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.class",
     ):
         incomplete_jar = temp_root / ("missing_" + missing_entry.replace("/", "_") + ".jar")
         with zipfile.ZipFile(incomplete_jar, "w") as archive:

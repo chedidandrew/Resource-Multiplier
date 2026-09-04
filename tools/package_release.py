@@ -49,7 +49,7 @@ EXPECTED_PRODUCTION_MIXINS = [
     "LivingEntityDeathLootMixin",
     "PlayerShearingContextMixin",
     "ShearsDispenseItemBehaviorMixin",
-    "SheepShearingLootMixin",
+    "LivingEntityShearingLootMixin",
     "FallingBlockEntityMixin",
     "PistonMovingBlockEntityMixin",
     "BlockItemPlacementCaptureMixin",
@@ -118,7 +118,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleTrace.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingTags.java",
-        "src/main/java/com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.java",
+        "src/main/java/com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.java",
         "src/client/java/com/chedidandrew/smartresourcedrops/client/ShearingDropsScreen.java",
@@ -154,6 +154,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/SmartResourceDropsShearingGameTests.java",
         "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/FabricAutomationAuthorityGameTests.java",
         "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/FabricMixinAuditGameTests.java",
+        "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/GameTestAssertions.java",
         "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/mixin/FabricGameTestLootTableMixin.java",
         "src/gametest/resources/data/smart_resource_drops_gametest/gametest/structure/wide.snbt",
         "src/gametest/resources/fabric.mod.json",
@@ -183,12 +184,17 @@ REQUIRED_SOURCE_FILES = frozenset(
         "neoforge/src/main/resources/smart_resource_drops.neoforge.mixins.json",
         "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeEntrypoint.java",
         "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeClientEntrypoint.java",
+        "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigration.java",
         "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeNetworking.java",
         "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementStorage.java",
         "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/CommonHooksPlacementMixin.java",
         "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/NeoForgeShearsDispenseItemBehaviorMixin.java",
         "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/ServerPlayerGameModeMixin.java",
+        "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/SerializableChunkDataLegacyProvenanceMixin.java",
+        "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigrationTest.java",
+        "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
         "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeGameTestRegistrar.java",
+        "neoforge/src/gametest/java/net/fabricmc/fabric/api/gametest/v1/GameTest.java",
         "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeAutomationAuthorityGameTests.java",
         "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeMixinAuditGameTests.java",
         "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/NeoForgeGameTestBlockLootFixtures.java",
@@ -202,6 +208,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.java",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.java",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementPersistenceSmokeTest.java",
+        "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.java",
         "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.java",
         "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.java",
         "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.java",
@@ -309,7 +316,7 @@ REQUIRED_RELEASE_JAR_ENTRIES = frozenset(
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.class",
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleTrace.class",
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingTags.class",
-        "com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.class",
+        "com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.class",
         "com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.class",
         "com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.class",
         "assets/smart_resource_drops/icon.png",
@@ -823,7 +830,7 @@ def validate_release_jar(
                         if mixin_config.get("mixins") != EXPECTED_PRODUCTION_MIXINS:
                             errors.append(
                                 f"declared mixin config {config_name!r} does not contain the "
-                                "exact audited 1.21.1 production mixin set"
+                                "exact audited production mixin set"
                             )
                         for side in ("client", "server"):
                             if mixin_config.get(side, []) != []:
@@ -855,7 +862,7 @@ def validate_release_jar(
                 properties = parse_properties(ROOT / "gradle.properties")
                 expected_depends = {
                     "fabricloader": f">={properties['loader_version']}",
-                    "minecraft": properties["minecraft_version"],
+                    "minecraft": properties["minecraft_version_range"],
                     "java": f">={properties['java_version']}",
                     "fabric-api": f">={properties['fabric_version']}",
                 }
@@ -895,6 +902,7 @@ def validate_release_jar(
                     elif tag_entry.endswith("/entity_type/shearing/special.json"):
                         expected_special = {
                             "minecraft:bogged",
+                            "minecraft:copper_golem",
                             "minecraft:mooshroom",
                             "minecraft:snow_golem",
                         }
@@ -1010,15 +1018,23 @@ def main() -> None:
     neoforge_properties = parse_properties(ROOT / "neoforge/gradle.properties")
     version = properties["mod_version"]
     neoforge_version = neoforge_properties["mod_version"]
-    if neoforge_version != version:
+    fabric_release_version = version.split("+", 1)[0]
+    neoforge_release_version = neoforge_version.split("+", 1)[0]
+    if fabric_release_version != neoforge_release_version:
         raise SystemExit(
-            "Fabric and NeoForge release versions differ: "
+            "Fabric and NeoForge public release versions differ: "
             f"{version!r} versus {neoforge_version!r}"
+        )
+    if neoforge_properties["minecraft_version"] != properties["minecraft_version"]:
+        raise SystemExit(
+            "Fabric and NeoForge baseline Minecraft versions differ: "
+            f"{properties['minecraft_version']!r} versus "
+            f"{neoforge_properties['minecraft_version']!r}"
         )
     minecraft_version = properties["minecraft_version"]
     prefix = f"{PUBLIC_ARCHIVE_BASE}-{version}"
     jar_name = f"{PLAYABLE_JAR_BASE}-{version}.jar"
-    neoforge_jar_name = f"{NEOFORGE_PLAYABLE_JAR_BASE}-{version}.jar"
+    neoforge_jar_name = f"{NEOFORGE_PLAYABLE_JAR_BASE}-{neoforge_version}.jar"
     source_name = f"{prefix}-source.zip"
     checksum_name = f"{prefix}-SHA256SUMS.txt"
     package_readme_name = f"{prefix}-PACKAGE_README.txt"
@@ -1069,7 +1085,7 @@ def main() -> None:
         )
     try:
         validate_release_jar(jar_source, version)
-        validate_neoforge_release_candidate(neoforge_jar_source, version)
+        validate_neoforge_release_candidate(neoforge_jar_source, neoforge_version)
     except ReleasePackageError as exc:
         raise SystemExit(f"Release JAR content validation failed: {exc}") from exc
 
@@ -1089,7 +1105,7 @@ def main() -> None:
     except ReleasePackageError as exc:
         raise SystemExit(f"Source package validation failed: {exc}") from exc
 
-    package_readme = f"""Smart Resource Multiplier {version} package\n\nTarget: Minecraft Java {minecraft_version}, Java {properties['java_version']}. Choose exactly one loader-specific JAR.\n\nFiles:\n- {jar_name}: Fabric release JAR for Fabric Loader {properties['loader_version']} and Fabric API {properties['fabric_version']}.\n- {neoforge_jar_name}: NeoForge release JAR for NeoForge {neoforge_properties['neo_version']}.\n- {source_name}: Complete GitHub-ready dual-loader source, tests, documentation, Gradle builds, and GitHub Actions workflows.\n- {checksum_name}: SHA-256 hashes for both release JARs and the source archive.\n- {prefix}-BUILD_STATUS.md: Validation status and release evidence.\n\nInstallation:\nUpload the two JARs as separate CurseForge files with the correct Fabric or NeoForge loader selection. Never install both JARs in the same Minecraft instance. Back up a world before changing Minecraft versions or mod loaders; world downgrades and cross-loader placed-block-data migration are unsupported on this backport.\n"""
+    package_readme = f"""Smart Resource Multiplier {fabric_release_version} package\n\nTargets: Fabric {properties['minecraft_version_range']} and NeoForge {neoforge_properties['minecraft_version_range']}, Java {properties['java_version']}. Choose exactly one loader-specific JAR.\n\nFiles:\n- {jar_name}: Fabric release JAR for Fabric Loader {properties['loader_version']} and Fabric API {properties['fabric_version']}.\n- {neoforge_jar_name}: NeoForge release JAR for NeoForge {neoforge_properties['neo_version']}.\n- {source_name}: Complete GitHub-ready dual-loader source, tests, documentation, Gradle builds, and GitHub Actions workflows.\n- {checksum_name}: SHA-256 hashes for both release JARs and the source archive.\n- {prefix}-BUILD_STATUS.md: Validation status and release evidence.\n\nInstallation:\nUpload the two JARs as separate CurseForge files with the correct Minecraft version and Fabric or NeoForge loader selection. Never install both JARs in the same Minecraft instance. Back up a world before changing Minecraft versions or mod loaders. World downgrades remain unsupported; this NeoForge build can import same-version placed-block provenance written by the Fabric build.\n"""
     package_readme_output.write_text(package_readme, encoding="utf-8", newline="\n")
 
     checksums = [jar_output, neoforge_jar_output, source_output]

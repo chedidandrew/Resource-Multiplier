@@ -12,6 +12,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -22,10 +23,10 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Target-native physical client smoke gate for the Fabric 1.21.2-1.21.3 lane.
+ * Target-native physical client smoke gate for the Fabric 1.21.9-1.21.10 lane.
  *
- * <p>Fabric API 0.116.x has no client GameTest API. This run-only mod therefore drives the real
- * production screens from a client-tick state machine, writes a deterministic marker, and exits.
+ * <p>This run-only mod drives the real production screens from a client-tick state machine,
+ * writes a deterministic marker, and exits.
  * It is compiled and loaded only by {@code runClientSmoke}; it is never packaged in the mod JAR.</p>
  */
 public final class FabricClientSmokeTest implements ClientModInitializer {
@@ -75,7 +76,7 @@ public final class FabricClientSmokeTest implements ClientModInitializer {
         }
         try {
             if (++this.ticks > TIMEOUT_TICKS) {
-                throw new AssertionError("Timed out waiting for the Fabric 1.21.2-1.21.3 client smoke test");
+                throw new AssertionError("Timed out waiting for the Fabric 1.21.9-1.21.10 client smoke test");
             }
             switch (this.phase) {
                 case 0 -> this.openLocalRoot(minecraft);
@@ -100,7 +101,7 @@ public final class FabricClientSmokeTest implements ClientModInitializer {
             }
         } catch (Throwable failure) {
             this.stopped = true;
-            SmartResourceDrops.LOGGER.error("Fabric 1.21.2-1.21.3 client smoke test failed", failure);
+            SmartResourceDrops.LOGGER.error("Fabric 1.21.9-1.21.10 client smoke test failed", failure);
             minecraft.stop();
         }
     }
@@ -392,10 +393,10 @@ public final class FabricClientSmokeTest implements ClientModInitializer {
         }
         Files.writeString(
                 marker,
-                "Fabric 1.21.2-1.21.3 client GUI/authority smoke passed\n",
+                "Fabric 1.21.9-1.21.10 client GUI/authority smoke passed\n",
                 StandardCharsets.UTF_8);
         SmartResourceDrops.LOGGER.info(
-                "Fabric 1.21.2-1.21.3 client smoke passed: block-XP wording, non-empty entity categories, navigation/back, local apply/reset, and connected operator/non-operator authority");
+                "Fabric 1.21.9-1.21.10 client smoke passed: block-XP wording, non-empty entity categories, navigation/back, local apply/reset, and connected operator/non-operator authority");
         this.stopped = true;
         minecraft.stop();
     }
@@ -483,8 +484,7 @@ public final class FabricClientSmokeTest implements ClientModInitializer {
         assertSelected(session, "minecraft:iron_golem", EntityCategory.GOLEMS);
         assertSelected(session, "minecraft:cow", EntityCategory.PASSIVE);
         assertSelected(session, "minecraft:zombie", EntityCategory.HOSTILE);
-        require(session.entityInfo("minecraft:copper_golem").isEmpty(),
-                "1.21.2-1.21.3 catalog unexpectedly exposed the later copper golem entity");
+        assertSelected(session, "minecraft:copper_golem", EntityCategory.GOLEMS);
     }
 
     private static void assertSelected(
@@ -541,7 +541,7 @@ public final class FabricClientSmokeTest implements ClientModInitializer {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError(
                         screen.getClass().getSimpleName() + " omitted button " + label))
-                .onPress();
+                .onPress(new KeyEvent(257, 0, 0));
     }
 
     private static boolean hasWidgetLabel(final Screen screen, final String label) {

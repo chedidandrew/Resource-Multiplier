@@ -5,7 +5,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.navigation.CommonInputs;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
@@ -35,9 +36,6 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
     private int preferredRowWidth;
     private List<Row> rows = List.of();
-    private List<net.minecraft.util.FormattedCharSequence> pendingTooltip;
-    private int pendingTooltipX;
-    private int pendingTooltipY;
 
     /**
      * @param screenWidth the full screen width; the list centers itself within it
@@ -73,7 +71,7 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         this.rows = List.copyOf(newRows);
         replaceEntries(rows.stream().map(row -> new Entry(row)).toList());
         setScrollAmount(0.0);
-        clampScrollAmount();
+        refreshScrollAmount();
     }
 
     public List<Row> rows() {
@@ -86,7 +84,7 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
     public void setPreferredRowWidth(final int preferredRowWidth) {
         this.preferredRowWidth = Math.max(1, preferredRowWidth);
-        updateSizeAndPosition(getWidth(), getHeight(), getY());
+        updateSizeAndPosition(getWidth(), getHeight(), getX(), getY());
     }
 
     public int getPreferredRowWidth() {
@@ -98,35 +96,15 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
      * windows and a small gutter for the vanilla scrollbar on larger windows.
      */
     public void updateResponsiveBounds(final int screenWidth, final int height, final int y) {
-        updateSizeAndPosition(screenWidth, height, y);
+        int availableWidth = Math.max(1, screenWidth - LIST_SIDE_MARGIN * 2);
+        int listWidth = Math.min(availableWidth, preferredRowWidth + 24);
+        int x = (screenWidth - listWidth) / 2;
+        updateSizeAndPosition(listWidth, height, x, y);
     }
 
     @Override
     public int getRowWidth() {
         return Math.max(1, Math.min(preferredRowWidth, getWidth() - 24));
-    }
-
-    /** Compatibility accessor matching the newer selection-list API used by the shared screens. */
-    public double scrollAmount() {
-        return getScrollAmount();
-    }
-
-    @Override
-    public void renderWidget(
-            final GuiGraphics graphics,
-            final int mouseX,
-            final int mouseY,
-            final float partialTick
-    ) {
-        pendingTooltip = null;
-        super.renderWidget(graphics, mouseX, mouseY, partialTick);
-        if (pendingTooltip != null) {
-            graphics.renderTooltip(
-                    minecraft.font,
-                    pendingTooltip,
-                    pendingTooltipX,
-                    pendingTooltipY);
-        }
     }
 
     /**
@@ -173,13 +151,8 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         }
 
         @Override
-        public void render(
+        public void renderContent(
                 final GuiGraphics graphics,
-                final int index,
-                final int top,
-                final int left,
-                final int width,
-                final int height,
                 final int mouseX,
                 final int mouseY,
                 final boolean hovered,
@@ -187,29 +160,29 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         ) {
             if (hovered) {
                 graphics.fill(
-                        left + 1,
-                        top + 1,
-                        left + width - 1,
-                        top + height - 1,
+                        getX() + 1,
+                        getY() + 1,
+                        getX() + getWidth() - 1,
+                        getY() + getHeight() - 1,
                         HOVER_BACKGROUND);
             }
             graphics.fill(
-                    left + 1,
-                    top + height - 1,
-                    left + width - 1,
-                    top + height,
+                    getX() + 1,
+                    getY() + getHeight() - 1,
+                    getX() + getWidth() - 1,
+                    getY() + getHeight(),
                     ROW_SEPARATOR);
 
             Font font = StructuredConfigList.this.minecraft.font;
-            int contentLeft = left + ROW_HORIZONTAL_PADDING;
-            int right = left + width - ROW_HORIZONTAL_PADDING;
-            int availableWidth = Math.max(0, right - contentLeft);
-            int lineY = top + 2;
+            int left = getContentX() + ROW_HORIZONTAL_PADDING;
+            int right = getContentRight() - ROW_HORIZONTAL_PADDING;
+            int availableWidth = Math.max(0, right - left);
+            int lineY = getContentY();
 
             ClippedText primary = clip(font, row.primary(), availableWidth);
             ClippedText secondary = clip(font, row.secondary(), availableWidth);
-            graphics.drawString(font, primary.text(), contentLeft, lineY, PRIMARY_COLOR);
-            graphics.drawString(font, secondary.text(), contentLeft, lineY + 10, SECONDARY_COLOR);
+            graphics.drawString(font, primary.text(), left, lineY, PRIMARY_COLOR);
+            graphics.drawString(font, secondary.text(), left, lineY + 10, SECONDARY_COLOR);
 
             int detailWidth = row.leftDetail().getString().isEmpty() || row.rightDetail().getString().isEmpty()
                     ? availableWidth
@@ -217,7 +190,7 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
             ClippedText leftDetail = clip(font, row.leftDetail(), detailWidth);
             ClippedText rightDetail = clip(font, row.rightDetail(), detailWidth);
             int detailY = lineY + 20;
-            graphics.drawString(font, leftDetail.text(), contentLeft, detailY, DETAIL_COLOR);
+            graphics.drawString(font, leftDetail.text(), left, detailY, DETAIL_COLOR);
             int rightDetailX = right - font.width(rightDetail.text());
             graphics.drawString(font, rightDetail.text(), rightDetailX, detailY, DETAIL_COLOR);
 
@@ -227,16 +200,16 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
                     || rightDetail.truncated();
             if (hovered && (!row.tooltip().getString().isEmpty() || truncated)) {
                 Component tooltip = hoverText(truncated);
-                StructuredConfigList.this.pendingTooltip =
-                        Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip);
-                StructuredConfigList.this.pendingTooltipX = mouseX;
-                StructuredConfigList.this.pendingTooltipY = mouseY;
+                graphics.setTooltipForNextFrame(
+                        Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip),
+                        mouseX,
+                        mouseY);
             }
         }
 
         @Override
-        public boolean mouseClicked(final double mouseX, final double mouseY, final int button) {
-            if (button != 0) {
+        public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
+            if (event.button() != 0) {
                 return false;
             }
             activate();
@@ -244,12 +217,12 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         }
 
         @Override
-        public boolean keyPressed(final int keyCode, final int scanCode, final int modifiers) {
-            if (CommonInputs.selected(keyCode)) {
+        public boolean keyPressed(final KeyEvent event) {
+            if (event.isSelection()) {
                 activate();
                 return true;
             }
-            return super.keyPressed(keyCode, scanCode, modifiers);
+            return super.keyPressed(event);
         }
 
         @Override

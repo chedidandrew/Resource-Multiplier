@@ -15,6 +15,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.Mod;
@@ -199,10 +200,12 @@ public final class NeoForgeClientCategorySmokeTest {
                 .contains("minecraft:iron_golem")) {
             throw new AssertionError("Iron Golem is missing from the Golems category tag");
         }
-        if (resolved.values().stream().mapToInt(Set::size).sum() <= 20
-                || resolved.values().stream().anyMatch(values ->
-                        values.contains("minecraft:copper_golem"))) {
-            throw new AssertionError("Target-native entity catalog was empty, incomplete, or exposed copper_golem");
+        if (!resolved.getOrDefault(EntityCategory.GOLEMS, Set.of())
+                .contains("minecraft:copper_golem")) {
+            throw new AssertionError("Copper Golem is missing from the Golems category tag");
+        }
+        if (resolved.values().stream().mapToInt(Set::size).sum() <= 20) {
+            throw new AssertionError("Target-native entity catalog was empty or incomplete");
         }
     }
 
@@ -253,6 +256,6 @@ public final class NeoForgeClientCategorySmokeTest {
     }
 
     private static void press(final Button button) {
-        button.onPress();
+        button.onPress(new KeyEvent(257, 0, 0));
     }
 }

@@ -16,6 +16,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
@@ -305,7 +306,7 @@ public final class FabricMultiplayerClientSmokeTest implements ClientModInitiali
     }
 
     private static void press(final Button button) {
-        button.onPress();
+        button.onPress(new KeyEvent(257, 0, 0));
     }
 
     private static void require(final boolean condition, final String message) {

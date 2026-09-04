@@ -7,7 +7,7 @@ import com.chedidandrew.smartresourcedrops.platform.PlatformPlayerSupport;
 import com.mojang.authlib.GameProfile;
 import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -20,7 +20,7 @@ import java.util.UUID;
 
 /** Loader-specific proof that a real Fabric FakePlayer never gains player-kill authority. */
 public final class FabricAutomationAuthorityGameTests {
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide")
     public void fabricFakePlayerDeathRemainsVanillaOneX(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -41,20 +41,20 @@ public final class FabricAutomationAuthorityGameTests {
                     new GameProfile(
                             UUID.fromString("00000000-0000-0000-0000-00000000fa21"),
                             "smartdrops-fabric-automation"));
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     PlatformPlayerSupport.isFakePlayer(automation),
                     "Fabric FakePlayer was not recognized as automation");
             final BlockPos relative = new BlockPos(3, 2, 4);
             final var victim = helper.spawnWithNoFreeWill(
                     GameTestEntityFixtures.HOSTILE,
                     relative);
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     victim.hurtServer(
                             helper.getLevel(),
                             helper.getLevel().damageSources().playerAttack(automation),
                             Float.MAX_VALUE),
                     "Fixture refused lethal Fabric FakePlayer damage");
-            helper.assertTrue(victim.isDeadOrDying(), "Fixture survived FakePlayer damage");
+            GameTestAssertions.assertTrue(helper, victim.isDeadOrDying(), "Fixture survived FakePlayer damage");
 
             final Vec3 center = Vec3.atCenterOf(helper.absolutePos(relative));
             final int drops = helper.getLevel().getEntities(
@@ -66,7 +66,7 @@ public final class FabricAutomationAuthorityGameTests {
                     .filter(stack -> stack.is(Items.ROTTEN_FLESH))
                     .mapToInt(ItemStack::getCount)
                     .sum();
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     drops == 1,
                     "Fabric FakePlayer produced " + drops
                             + " rotten flesh instead of the vanilla 1x result");

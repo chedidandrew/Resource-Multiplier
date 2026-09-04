@@ -37,7 +37,7 @@ EXPECTED_ICON_SIZE = 512
 EXPECTED_ICON_SHA256 = "db216ccd6058404de18f797ebb5be87a313899a27c3f1971fdf086b8637dc190"
 EXPECTED_SOURCE_DEPENDS = {
     "fabricloader": ">=${loader_version}",
-    "minecraft": "${minecraft_version}",
+    "minecraft": "${minecraft_version_range}",
     "java": ">=21",
     "fabric-api": ">=${fabric_version}",
 }
@@ -100,7 +100,7 @@ required = [
     "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingOutputBudget.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingTags.java",
-    "src/main/java/com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.java",
+    "src/main/java/com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/platform/PlatformPlayerSupport.java",
@@ -137,6 +137,7 @@ required = [
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/FabricGameTestBlockLootFixtures.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/FabricAutomationAuthorityGameTests.java",
     "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/FabricMixinAuditGameTests.java",
+    "src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/GameTestAssertions.java",
     "src/gametest/resources/data/smart_resource_drops_gametest/gametest/structure/wide.snbt",
     "src/clienttest/java/com/chedidandrew/smartresourcedrops/client/FabricClientSmokeTest.java",
     "src/clienttest/java/com/chedidandrew/smartresourcedrops/client/FabricMultiplayerClientSmokeTest.java",
@@ -178,12 +179,17 @@ required = [
     "neoforge/src/main/resources/smart_resource_drops.neoforge.mixins.json",
     "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeEntrypoint.java",
     "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeClientEntrypoint.java",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigration.java",
     "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeNetworking.java",
     "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementStorage.java",
     "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/CommonHooksPlacementMixin.java",
     "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/NeoForgeShearsDispenseItemBehaviorMixin.java",
     "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/ServerPlayerGameModeMixin.java",
+    "neoforge/src/main/java/com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/SerializableChunkDataLegacyProvenanceMixin.java",
+    "neoforge/src/test/java/com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigrationTest.java",
+    "neoforge/src/test/resources/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64",
     "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeGameTestRegistrar.java",
+    "neoforge/src/gametest/java/net/fabricmc/fabric/api/gametest/v1/GameTest.java",
     "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeMixinAuditGameTests.java",
     "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/NeoForgeAutomationAuthorityGameTests.java",
     "neoforge/src/gametest/java/com/chedidandrew/smartresourcedrops/gametest/fixture/NeoForgeGameTestBlockLootFixtures.java",
@@ -197,6 +203,7 @@ required = [
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeOversizedWireClientSmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMultiplayerServerSmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementPersistenceSmokeTest.java",
+    "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeMigrationRestartSmokeTest.java",
     "neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeOversizedWireServerSmokeTest.java",
     "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalChannelServerProbe.java",
     "neoforge/src/optionalchanneltest/java/com/chedidandrew/smartresourcedrops/optionaltest/NeoForgeOptionalServerOnlyClientSmokeTest.java",
@@ -370,12 +377,14 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
-    "mod_version": "1.3.1+mc1.21.1",
-    "minecraft_version": "1.21.1",
+    "mod_version": "1.3.2+mc1.21.9-1.21.10",
+    "minecraft_version": "1.21.9",
+    "minecraft_version_range": ">=1.21.9 <1.21.11",
     "java_version": "21",
     "loader_version": "0.19.5",
     "loom_version": "1.17.20",
-    "fabric_version": "0.116.17+1.21.1",
+    "fabric_version": "0.134.1+1.21.9",
+    "modmenu_version": "16.0.1",
     "maven_group": "com.chedidandrew",
     "archives_base_name": "smart-resource-multiplier",
 }
@@ -391,15 +400,25 @@ for raw_line in (ROOT / "neoforge/gradle.properties").read_text(encoding="utf-8"
     if line and not line.startswith("#") and "=" in line:
         key, value = line.split("=", 1)
         neoforge_properties[key.strip()] = value.strip()
-if neoforge_properties.get("mod_version") != properties["mod_version"]:
+if neoforge_properties.get("mod_version") != "1.3.2+mc1.21.9":
     fail(
-        "Fabric and NeoForge mod_version values must match exactly, found "
+        "NeoForge mod_version must identify the audited exact Minecraft 1.21.9 lane, found "
+        f"{neoforge_properties.get('mod_version')!r}"
+    )
+if (
+    neoforge_properties.get("mod_version", "").split("+", 1)[0]
+    != properties["mod_version"].split("+", 1)[0]
+):
+    fail(
+        "Fabric and NeoForge public release versions must match, found "
         f"{properties['mod_version']!r} and {neoforge_properties.get('mod_version')!r}"
     )
 expected_neoforge_properties = {
-    "minecraft_version": "1.21.1",
+    "minecraft_version": "1.21.9",
+    "minecraft_version_range": "[1.21.9]",
     "java_version": "21",
-    "neo_version": "21.1.249",
+    "neo_version": "21.9.16-beta",
+    "neo_version_range": "[21.9,21.10)",
     "moddev_version": "2.0.146",
     "mod_id": "smart_resource_drops",
     "mod_name": "Smart Resource Multiplier",
@@ -662,8 +681,19 @@ for java_root in java_roots:
     for path in java_root.rglob("*.java"):
         source_text = path.read_text(encoding="utf-8")
         package_match = re.search(r"(?m)^package\s+([^;]+);", source_text)
-        if package_match is None or not package_match.group(1).startswith(
-            "com.chedidandrew.smartresourcedrops"
+        relative_java_path = path.relative_to(ROOT).as_posix()
+        is_exact_gametest_api_bridge = (
+            relative_java_path
+            == "neoforge/src/gametest/java/net/fabricmc/fabric/api/gametest/v1/GameTest.java"
+            and package_match is not None
+            and package_match.group(1) == "net.fabricmc.fabric.api.gametest.v1"
+        )
+        if (
+            package_match is None
+            or (
+                not package_match.group(1).startswith("com.chedidandrew.smartresourcedrops")
+                and not is_exact_gametest_api_bridge
+            )
         ):
             fail(f"Java package namespace changed in {path.relative_to(ROOT)}")
         if "com.chedidandrew.resourcemultiplier" in source_text:
@@ -684,7 +714,7 @@ if isinstance(mixin, dict):
         "LivingEntityDeathLootMixin",
         "PlayerShearingContextMixin",
         "ShearsDispenseItemBehaviorMixin",
-        "SheepShearingLootMixin",
+        "LivingEntityShearingLootMixin",
         "FallingBlockEntityMixin",
         "PistonMovingBlockEntityMixin",
         "BlockItemPlacementCaptureMixin",
@@ -693,7 +723,7 @@ if isinstance(mixin, dict):
     if isinstance(listed, list):
         if listed != expected_production_mixins:
             fail(
-                "Production mixin configuration must declare the exact audited 1.21.1 set: "
+                "Production mixin configuration must declare the exact audited production set: "
                 f"expected={expected_production_mixins}, actual={listed}"
             )
         for obsolete in ("BlockItemPlacementMixin", "LevelSetBlockMixin"):
@@ -930,6 +960,7 @@ if isinstance(standard_shearing, dict):
 special_shearing = read_json(shearing_tag_root / "special.json")
 expected_special_shearing = {
     "minecraft:bogged",
+    "minecraft:copper_golem",
     "minecraft:mooshroom",
     "minecraft:snow_golem",
 }
@@ -938,7 +969,7 @@ if isinstance(special_shearing, dict):
         fail("Special shearing tag must remain datapack-extensible with replace=false")
     special_values = special_shearing.get("values")
     if not isinstance(special_values, list) or set(special_values) != expected_special_shearing:
-        fail("Production special shearing tag differs from the audited Minecraft 1.21.1 safety set")
+        fail("Production special shearing tag differs from the audited target-version safety set")
     if any("gametest" in str(value) or "fixture" in str(value) for value in special_values):
         fail("Development-only shearing fixture leaked into the production special tag")
 
@@ -1223,7 +1254,7 @@ neoforge_build = (ROOT / "neoforge/build.gradle").read_text(encoding="utf-8")
 for game_test_contract in (
     "gameTestServer {",
     "smart_resource_drops_gametest",
-    "Registered exactly 64 NeoForge 1.21.1 GameTests",
+    "Registered exactly 64 NeoForge 1.21.9 GameTests",
     "64 tests are now running",
     "64 GAME TESTS COMPLETE",
     "All 64 required tests passed",
@@ -1231,7 +1262,7 @@ for game_test_contract in (
     "client-category.success",
     "runPackagedServerTest",
     "runPackagedClientTest",
-    "Packaged NeoForge server candidate Smart Resource Multiplier 1.3.1+mc1.21.1",
+    '"Packaged NeoForge server candidate Smart Resource Multiplier ${mod_version}',
     "log.readLines().any { line -> line.contains('/ERROR]') }",
 ):
     if game_test_contract not in neoforge_build:

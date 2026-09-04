@@ -11,13 +11,13 @@ description='''Test-only packaged-JAR observer. Never included in release artifa
 [[dependencies.smart_resource_drops_packaged_probe]]
 modId="neoforge"
 type="required"
-versionRange="[21.2,21.4)"
+versionRange="[21.9,21.10)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.smart_resource_drops_packaged_probe]]
 modId="minecraft"
 type="required"
-versionRange="[1.21.2,1.21.4)"
+versionRange="[1.21.9]"
 ordering="NONE"
 side="BOTH"

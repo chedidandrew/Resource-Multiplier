@@ -45,7 +45,7 @@ final class EntityExperienceHardeningTest {
     }
 
     @Test
-    void immediatePlayerMustMatchLiveVanillaAttribution() {
+    void immediatePlayerMustMatchPersistedDirectVanillaAttribution() {
         EntityKillAttribution valid = EntityMultiplierResolver.validateImmediatePlayer(
                 PLAYER,
                 true,
@@ -65,7 +65,7 @@ final class EntityExperienceHardeningTest {
                 true,
                 PLAYER,
                 EntityKillAttribution.Kind.TAMED_ENTITY);
-        assertEquals(EntityKillAttribution.Kind.DIRECT_PLAYER, tamedMemory.kind());
+        assertEquals(EntityKillAttribution.Kind.NONE, tamedMemory.kind());
     }
 
     @Test

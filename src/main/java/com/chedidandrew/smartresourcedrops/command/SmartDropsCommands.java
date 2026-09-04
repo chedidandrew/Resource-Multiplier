@@ -619,7 +619,7 @@ public final class SmartDropsCommands {
             return 0;
         }
 
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.level();
         HitResult hit = player.pick(player.blockInteractionRange(), 1.0F, false);
         if (player.level() != level) {
             source.sendFailure(Component.literal("Your dimension changed during inspection."));
@@ -670,7 +670,7 @@ public final class SmartDropsCommands {
             return 0;
         }
 
-        final ServerLevel level = player.serverLevel();
+        final ServerLevel level = player.level();
         final double range = player.entityInteractionRange();
         final HitResult hit = ProjectileUtil.getHitResultOnViewVector(
                 player,

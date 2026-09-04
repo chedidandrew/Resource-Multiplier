@@ -27,11 +27,13 @@ REQUIRED_CLASSES = {
     "com/chedidandrew/smartresourcedrops/platform/PlatformPlayerSupport.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeClientEntrypoint.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeEntrypoint.class",
+    "com/chedidandrew/smartresourcedrops/platform/neoforge/LegacyFabricProvenanceMigration.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgeNetworking.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/NeoForgePlacementStorage.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/CommonHooksPlacementMixin.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/NeoForgeShearsDispenseItemBehaviorMixin.class",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/ServerPlayerGameModeMixin.class",
+    "com/chedidandrew/smartresourcedrops/platform/neoforge/mixin/SerializableChunkDataLegacyProvenanceMixin.class",
 }
 FORBIDDEN_PARTS = {
     "clienttest",
@@ -47,6 +49,7 @@ FORBIDDEN_TEST_CLASS_PREFIXES = {
     "com/chedidandrew/smartresourcedrops/client/neoforgemultiplayerclientsmoketest",
     "com/chedidandrew/smartresourcedrops/client/neoforgeoptionalclientonlysmoketest",
     "com/chedidandrew/smartresourcedrops/client/neoforgeoversizedwireclientsmoketest",
+    "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemigrationrestartsmoketest",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgemultiplayerserversmoketest",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgeplacementpersistencesmoketest",
     "com/chedidandrew/smartresourcedrops/platform/neoforge/neoforgeoversizedwireserversmoketest",
@@ -229,7 +232,7 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
             dependencies = metadata.get("dependencies", {}).get(MOD_ID, []) \
                     if isinstance(metadata.get("dependencies"), dict) else []
             expected_dependencies = {
-                "neoforge": f"[{expected_properties['neo_version']},)",
+                "neoforge": expected_properties["neo_version_range"],
                 "minecraft": expected_properties["minecraft_version_range"],
             }
             actual_dependencies = {
@@ -239,7 +242,7 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
             } if isinstance(dependencies, list) else {}
             if actual_dependencies != expected_dependencies:
                 errors.append(
-                    "NeoForge metadata dependencies differ from the exact 1.21.1/21.1.249 target: "
+                    "NeoForge metadata dependencies differ from the configured exact target: "
                     f"{actual_dependencies!r}"
                 )
             declared_mixins = metadata.get("mixins")

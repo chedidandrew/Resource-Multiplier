@@ -71,6 +71,12 @@ def optionalServerOnlyClientDirectory =
 def oversizedWireServerDirectory = layout.buildDirectory.dir('oversized-wire-test/server')
 def oversizedWireClientDirectory = layout.buildDirectory.dir('oversized-wire-test/client')
 def persistenceTestDirectory = layout.buildDirectory.dir('persistence-server-test')
+def migrationTestDirectory = layout.buildDirectory.dir('migration-server-test')
+def migrationFixtureRelativePath =
+        'src/test/resources/fixtures/fabric-placement-provenance-chunk--554625--233041.nbt.b64'
+def migrationFixtureSha256 =
+        'c390fc16519a7b9f9a1fc29feab66209bca96b5db8bff6e659b239d16d36a38d'
+def migrationWorldName = 'migration-smoke-world'
 def packagedServerTestDirectory = layout.buildDirectory.dir('packaged-jar-test/server')
 def packagedClientTestDirectory = layout.buildDirectory.dir('packaged-jar-test/client')
 def packagedCandidateJarProperty = providers.gradleProperty('packaged_candidate_jar')
@@ -240,6 +246,85 @@ motd=Smart Resource Multiplier native persistence smoke test
 ''', 'UTF-8')
     }
 }
+def prepareMigrationServerTest = tasks.register('prepareMigrationServerTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final java.nio.file.Path buildRoot = layout.buildDirectory.get().asFile
+                .toPath()
+                .toAbsolutePath()
+                .normalize()
+        final java.nio.file.Path testRoot = migrationTestDirectory.get().asFile
+                .toPath()
+                .toAbsolutePath()
+                .normalize()
+        if (testRoot == buildRoot || !testRoot.startsWith(buildRoot)) {
+            throw new GradleException("Refusing to recreate migration test directory outside ${buildRoot}: ${testRoot}")
+        }
+
+        project.delete(testRoot.toFile())
+        java.nio.file.Files.createDirectories(testRoot)
+        java.nio.file.Files.writeString(
+                testRoot.resolve('eula.txt'),
+                'eula=true\n',
+                java.nio.charset.StandardCharsets.UTF_8)
+        java.nio.file.Files.writeString(
+                testRoot.resolve('server.properties'),
+                '''\
+online-mode=false
+server-port=0
+level-name=migration-smoke-world
+gamemode=creative
+difficulty=peaceful
+spawn-protection=0
+view-distance=2
+simulation-distance=2
+motd=Smart Resource Multiplier migration restart smoke test
+''',
+                java.nio.charset.StandardCharsets.UTF_8)
+
+        final File fixture = layout.projectDirectory.file(migrationFixtureRelativePath).asFile
+        final byte[] fixtureBytes = java.util.Base64.getMimeDecoder().decode(
+                fixture.getText('UTF-8').getBytes(java.nio.charset.StandardCharsets.UTF_8))
+        final String actualSha256 = java.util.HexFormat.of().formatHex(
+                java.security.MessageDigest.getInstance('SHA-256').digest(fixtureBytes))
+        if (actualSha256 != migrationFixtureSha256) {
+            throw new GradleException(
+                    "Fabric migration fixture SHA-256 mismatch: expected ${migrationFixtureSha256}, got ${actualSha256}")
+        }
+
+        final ByteArrayOutputStream compressedBuffer = new ByteArrayOutputStream()
+        new java.util.zip.DeflaterOutputStream(compressedBuffer).withCloseable { stream ->
+            stream.write(fixtureBytes)
+        }
+        final byte[] compressed = compressedBuffer.toByteArray()
+        final int recordLength = 1 + compressed.length
+        final int sectorCount = Math.floorDiv(4 + recordLength + 4095, 4096)
+        if (sectorCount < 1 || sectorCount > 255) {
+            throw new GradleException("Fabric migration fixture needs unsupported MCA sector count ${sectorCount}")
+        }
+
+        final int chunkX = -554625
+        final int chunkZ = -233041
+        final int chunkSlot = (chunkX & 31) + ((chunkZ & 31) * 32)
+        final java.nio.ByteBuffer regionBytes = java.nio.ByteBuffer
+                .allocate(8192 + sectorCount * 4096)
+                .order(java.nio.ByteOrder.BIG_ENDIAN)
+        regionBytes.putInt(chunkSlot * 4, (2 << 8) | sectorCount)
+        regionBytes.putInt(4096 + chunkSlot * 4, 1788300953)
+        regionBytes.position(8192)
+        regionBytes.putInt(recordLength)
+        regionBytes.put((byte) 2)
+        regionBytes.put(compressed)
+
+        final java.nio.file.Path regionDirectory = testRoot
+                .resolve(migrationWorldName)
+                .resolve('region')
+        java.nio.file.Files.createDirectories(regionDirectory)
+        java.nio.file.Files.write(
+                regionDirectory.resolve('r.-17333.-7283.mca'),
+                regionBytes.array())
+    }
+}
 def preparePackagedServerTest = tasks.register('preparePackagedServerTest') {
     if (!packagedCandidateJarProperty.isPresent()) {
         dependsOn tasks.named('jar')
@@ -333,6 +418,8 @@ neoForge {
             sourceSet = gameTestSourceSet
             loadedMods.set([neoForge.mods.getByName('smartResourceDropsGameTest')])
             systemProperty 'neoforge.enabledGameTestNamespaces', 'smart_resource_drops_gametest'
+            programArgument '--tests'
+            programArgument 'smart_resource_drops_gametest:*'
         }
         clientCategoryTest {
             client()
@@ -453,6 +540,27 @@ neoForge {
                     persistenceTestDirectory.get().asFile.absolutePath
             programArgument '--nogui'
         }
+        migrationImportServerTest {
+            server()
+            sourceSet = clientTestSourceSet
+            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
+            gameDirectory = migrationTestDirectory
+            systemProperty 'smart_resource_drops.migrationTestPhase', 'import'
+            systemProperty 'smart_resource_drops.migrationTestDirectory',
+                    migrationTestDirectory.get().asFile.absolutePath
+            taskBefore prepareMigrationServerTest
+            programArgument '--nogui'
+        }
+        migrationRestartServerTest {
+            server()
+            sourceSet = clientTestSourceSet
+            loadedMods.set([neoForge.mods.getByName('smartResourceDropsClientTest')])
+            gameDirectory = migrationTestDirectory
+            systemProperty 'smart_resource_drops.migrationTestPhase', 'restart'
+            systemProperty 'smart_resource_drops.migrationTestDirectory',
+                    migrationTestDirectory.get().asFile.absolutePath
+            programArgument '--nogui'
+        }
         packagedServerTest {
             server()
             sourceSet = packagedProbeSourceSet
@@ -464,6 +572,7 @@ neoForge {
             systemProperty 'smart_resource_drops.packagedCandidateJar',
                     new File(packagedServerTestDirectory.get().asFile,
                             "mods/${packagedCandidateJarName}").absolutePath
+            systemProperty 'smart_resource_drops.packagedExpectedVersion', mod_version
             taskBefore preparePackagedServerTest
             programArgument '--nogui'
         }
@@ -478,6 +587,7 @@ neoForge {
             systemProperty 'smart_resource_drops.packagedCandidateJar',
                     new File(packagedClientTestDirectory.get().asFile,
                             "mods/${packagedCandidateJarName}").absolutePath
+            systemProperty 'smart_resource_drops.packagedExpectedVersion', mod_version
             taskBefore preparePackagedClientTest
         }
     }
@@ -522,7 +632,7 @@ tasks.named('runGameTestServer') {
         }
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
-                'Registered exactly 64 NeoForge 1.21.2 GameTests',
+                'Registered exactly 64 NeoForge 1.21.9 GameTests',
                 '64 tests are now running',
                 '64 GAME TESTS COMPLETE',
                 'All 64 required tests passed',
@@ -553,6 +663,9 @@ tasks.named('runClientCategoryTest') {
             line.contains('/ERROR]')
                     && !line.contains('Error while loading the narrator')
                     && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+                    && !line.contains('Failed to fetch user properties')
+                    && !line.contains('Failed to fetch Realms feature flags')
+                    && !line.contains("Couldn't connect to realms")
         }
         if (!logFile.isFile()
                 || !unexpectedErrors.isEmpty()
@@ -588,6 +701,27 @@ tasks.named('runPersistenceVerifyAbsentServerTest') {
     }
 }
 
+tasks.named('runMigrationImportServerTest') {
+    doLast {
+        final File marker = new File(migrationTestDirectory.get().asFile, 'migration-import.success')
+        if (!marker.isFile()) {
+            throw new GradleException("Migration import server exited without success marker ${marker}")
+        }
+    }
+}
+
+tasks.named('runMigrationRestartServerTest') {
+    dependsOn tasks.named('runMigrationImportServerTest')
+    doLast {
+        for (String markerName : ['migration-import.success', 'migration-restart.success']) {
+            final File marker = new File(migrationTestDirectory.get().asFile, markerName)
+            if (!marker.isFile()) {
+                throw new GradleException("Migration restart gate exited without success marker ${marker}")
+            }
+        }
+    }
+}
+
 tasks.named('runPackagedServerTest') {
     doLast {
         final File marker = new File(packagedServerTestDirectory.get().asFile, 'packaged-server.success')
@@ -601,8 +735,8 @@ tasks.named('runPackagedServerTest') {
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
                 'Done (',
-                'Smart Resource Multiplier 1.3.2+mc1.21.2-1.21.3',
-                'Packaged NeoForge server candidate Smart Resource Multiplier 1.3.2+mc1.21.2-1.21.3 passed exact version, code-source, config, status, and validation checks']) {
+                "Smart Resource Multiplier ${mod_version}",
+                "Packaged NeoForge server candidate Smart Resource Multiplier ${mod_version} passed exact version, code-source, config, status, and validation checks"]) {
             if (!log.contains(evidence)) {
                 throw new GradleException("Packaged server log is missing: ${evidence}")
             }
@@ -625,6 +759,9 @@ tasks.named('runPackagedClientTest') {
             line.contains('/ERROR]')
                     && !line.contains('Error while loading the narrator')
                     && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+                    && !line.contains('Failed to fetch user properties')
+                    && !line.contains('Failed to fetch Realms feature flags')
+                    && !line.contains("Couldn't connect to realms")
         }
         if (!logFile.isFile()
                 || !unexpectedErrors.isEmpty()

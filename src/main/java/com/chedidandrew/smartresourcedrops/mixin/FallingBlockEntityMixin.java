@@ -5,8 +5,9 @@ import com.chedidandrew.smartresourcedrops.provenance.ProtectedFallingBlock;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -70,13 +71,15 @@ abstract class FallingBlockEntityMixin implements ProtectedFallingBlock {
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
-    private void smartResourceDrops$saveProtectedOrigin(CompoundTag output, CallbackInfo callback) {
+    private void smartResourceDrops$saveProtectedOrigin(ValueOutput output, CallbackInfo callback) {
         output.putBoolean(SMART_RESOURCE_DROPS_PROTECTED, smartResourceDrops$protectedOrigin);
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
-    private void smartResourceDrops$loadProtectedOrigin(CompoundTag input, CallbackInfo callback) {
-        smartResourceDrops$protectedOrigin = input.getBoolean(SMART_RESOURCE_DROPS_PROTECTED);
+    private void smartResourceDrops$loadProtectedOrigin(ValueInput input, CallbackInfo callback) {
+        smartResourceDrops$protectedOrigin = input.getBooleanOr(
+                SMART_RESOURCE_DROPS_PROTECTED,
+                false);
     }
 
     @Override

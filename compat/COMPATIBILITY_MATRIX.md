@@ -33,6 +33,74 @@ The JAR files are retained locally in `compat/candidates/` but intentionally
 ignored by Git. Release binaries should be attached to a release, not committed
 to source control.
 
+## Verified Fabric lane: Minecraft 1.21.9-1.21.10
+
+One unchanged Fabric artifact is compiled against Minecraft 1.21.9 and declares
+the half-open range `>=1.21.9 <1.21.11`. The same candidate bytes were exercised
+with Fabric API `0.134.1+1.21.9` on Minecraft 1.21.9 and Fabric API
+`0.138.4+1.21.10` on Minecraft 1.21.10.
+
+| Gate | Fabric 1.21.9 | Fabric 1.21.10 |
+| --- | --- | --- |
+| Production and client-test compile | Pass | Pass |
+| Shared JUnit suite | 164/164 | 164/164 |
+| Runtime GameTests (64 project + 1 Fabric API runner) | 65/65 | 65/65 |
+| Automated client GUI/authority smoke | Pass | Pass |
+| Three-restart placement-persistence smoke | Pass | Pass |
+| Separate-process multiplayer authority/reconnect smoke | Pass | Pass |
+| Exact packaged-JAR dedicated-server boot | Pass | Pass |
+| Candidate SHA-256 preserved before/after exact boot | Pass | Pass |
+
+Candidate:
+
+- File: `smart-resource-multiplier-fabric-1.3.2+mc1.21.9-1.21.10.jar`
+- Size: `967231` bytes
+- SHA-256: `9D67F48CB7AF50D2712CB8EEC7674B12759B61341879FC65303236611BA430C9`
+- Metadata: mod version `1.3.2+mc1.21.9-1.21.10`, Fabric Loader
+  `>=0.19.5`, Fabric API `>=0.134.1+1.21.9`, Java `>=21`
+
+The artifact audit checked all 272 class files at Java class-file major 65,
+verified the metadata and audited mixin/tag set, and found no GameTest, client
+smoke, fixture, source, nested-JAR, Fabric Loader, or Minecraft classes bundled
+inside the candidate. Publication remains locked with `release_ready=false`
+until manual testing and the other loader lanes are complete.
+
+## Verified NeoForge lane: Minecraft 1.21.9
+
+NeoForge crosses an API boundary before Minecraft 1.21.10, so this artifact is
+intentionally exact to Minecraft 1.21.9 and NeoForge 21.9.16-beta. It retains
+the 1.21.9 three-argument `ServerPlayerGameMode#removeBlock` hook and declares
+exact metadata ranges rather than claiming compatibility with 1.21.10.
+
+| Gate | NeoForge 1.21.9 |
+| --- | --- |
+| Clean production build and shared JUnit suite | Pass (170/170) |
+| Runtime GameTests | Pass (64/64) |
+| Automated physical-client GUI/category smoke, including Copper Golem classification | Pass |
+| Three-restart native placement-persistence smoke | Pass |
+| Fabric provenance import and NeoForge-native restart smoke | Pass |
+| Separate-process multiplayer authority/reconnect smoke | Pass |
+| Optional-channel client-only and server-only matrix | Pass |
+| Oversized-wire rejection and post-rejection server health | Pass |
+| Exact preserved-JAR dedicated-server probe | Pass |
+| Exact preserved-JAR physical-client navigation/category probe | Pass |
+| Candidate SHA-256 preserved in both packaged-profile copies | Pass |
+
+Candidate:
+
+- File: `smart-resource-multiplier-neoforge-1.3.2+mc1.21.9.jar`
+- Size: `964156` bytes
+- SHA-256: `30FD6BA53D31A3BCED760AD1FEBDCFA4482DD818DC50D0EE0B22F313D89882B8`
+- Metadata: mod version `1.3.2+mc1.21.9`, JavaFML `[4,)`, NeoForge
+  `[21.9,21.10)`, Minecraft `[1.21.9]`, Java 21 bytecode
+
+The artifact audit checked all 277 class files and 307 total file entries,
+verified every class as Java class-file major 65, and found no Fabric platform,
+development-test, nested-JAR, source, or GameTest contamination. The Fabric
+provenance importer gives same-version Fabric-to-NeoForge world moves a tested
+one-way migration path while native NeoForge attachment data remains
+authoritative. Publication remains locked with `release_ready=false`.
+
 ## Why one 1.21.2-1.21.10 JAR is unsafe
 
 The next-version compile probe fails on Minecraft 1.21.4 because that version

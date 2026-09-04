@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -110,11 +111,12 @@ public final class PackagedClientProbe {
         }
         requireMember(byCategory, "NEUTRAL", "minecraft:enderman");
         requireMember(byCategory, "GOLEMS", "minecraft:iron_golem");
+        requireMember(byCategory, "GOLEMS", "minecraft:copper_golem");
         requireMember(byCategory, "PASSIVE", "minecraft:cow");
         requireMember(byCategory, "HOSTILE", "minecraft:zombie");
-        if (allEntities.size() <= 20 || allEntities.contains("minecraft:copper_golem")) {
+        if (allEntities.size() <= 20) {
             throw new AssertionError(
-                    "Packaged target-native entity catalog was empty, incomplete, or exposed copper_golem");
+                    "Packaged target-native entity catalog was empty or incomplete");
         }
     }
 
@@ -145,7 +147,7 @@ public final class PackagedClientProbe {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError(
                         screen.getClass().getSimpleName() + " omitted button " + label))
-                .onPress();
+                .onPress(new KeyEvent(257, 0, 0));
     }
 
     private static void runStructuredRow(final Screen screen, final String label) throws Exception {

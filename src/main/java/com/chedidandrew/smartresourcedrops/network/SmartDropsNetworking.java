@@ -383,7 +383,7 @@ public final class SmartDropsNetworking {
     }
 
     static boolean canEditConfiguration(final ServerPlayer player) {
-        return player.level().getServer().isSingleplayerOwner(player.getGameProfile())
+        return player.level().getServer().isSingleplayerOwner(player.nameAndId())
                 || player.hasPermissions(2);
     }
 

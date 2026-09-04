@@ -35,9 +35,8 @@ loom {
     splitEnvironmentSourceSets()
 }
 
-// Fabric API 0.116.x predates the client GameTest API. Keep the physical GUI
-// regression harness in a separate, run-only mod so none of its entrypoints or
-// marker logic can enter the production JAR.
+// Keep the physical GUI regression harness in a separate, run-only mod so none
+// of its entrypoints or marker logic can enter the production JAR.
 def clientTestSourceSet = sourceSets.create('clienttest')
 clientTestSourceSet.java.setSrcDirs(['src/clienttest/java'])
 clientTestSourceSet.resources.setSrcDirs(['src/clienttest/resources'])
@@ -139,7 +138,7 @@ loom {
     runs {
         clientSmoke {
             client()
-            name = 'Fabric 1.21.2-1.21.3 client GUI smoke'
+            name = 'Fabric 1.21.9-1.21.10 client GUI smoke'
             source clientTestSourceSet
             runDir 'build/fabric-client-smoke'
             property 'smart_resource_drops.fabricClientSmoke', 'true'
@@ -148,7 +147,7 @@ loom {
         }
         multiplayerServerSmoke {
             server()
-            name = 'Fabric 1.21.1 multiplayer authority server smoke'
+            name = 'Fabric 1.21.9-1.21.10 multiplayer authority server smoke'
             source clientTestSourceSet
             runDir 'build/fabric-multiplayer-smoke/server'
             property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
@@ -156,7 +155,7 @@ loom {
         }
         multiplayerClientSmoke {
             client()
-            name = 'Fabric 1.21.1 multiplayer authority client smoke'
+            name = 'Fabric 1.21.9-1.21.10 multiplayer authority client smoke'
             source clientTestSourceSet
             runDir 'build/fabric-multiplayer-smoke/client'
             property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
@@ -165,7 +164,7 @@ loom {
         }
         persistenceMarkServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence mark/save smoke'
+            name = 'Fabric 1.21.9-1.21.10 placement persistence mark/save smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'mark'
@@ -175,7 +174,7 @@ loom {
         }
         persistenceRemoveServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence remove/save smoke'
+            name = 'Fabric 1.21.9-1.21.10 placement persistence remove/save smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'remove'
@@ -185,7 +184,7 @@ loom {
         }
         persistenceVerifyAbsentServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence verify-absent smoke'
+            name = 'Fabric 1.21.9-1.21.10 placement persistence verify-absent smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'verify_absent'
@@ -296,6 +295,9 @@ tasks.named('runClientSmoke') {
             line.contains('/ERROR]')
                     && !line.contains('Error while loading the narrator')
                     && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+                    && !line.contains('Failed to fetch user properties')
+                    && !line.contains('Failed to fetch Realms feature flags')
+                    && !line.contains("Couldn't connect to realms")
         }
         if (!logFile.isFile()
                 || !unexpectedErrors.isEmpty()
@@ -322,9 +324,9 @@ tasks.named('runGameTest') {
         }
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
-                '64 tests are now running',
-                '64 GAME TESTS COMPLETE',
-                'All 64 required tests passed',
+                '65 tests are now running',
+                '65 GAME TESTS COMPLETE',
+                'All 65 required tests passed',
                 'Game test server shutting down']) {
             if (!log.contains(evidence)) {
                 throw new GradleException(
