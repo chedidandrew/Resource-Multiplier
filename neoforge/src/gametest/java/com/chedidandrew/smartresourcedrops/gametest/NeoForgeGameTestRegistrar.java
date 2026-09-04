@@ -21,7 +21,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 
-/** Registers all shared and loader-specific scenarios with NeoForge's 1.21.9 test registry. */
+/** Registers all shared and loader-specific scenarios with NeoForge's 1.21.10 test registry. */
 @EventBusSubscriber(modid = SmartResourceDrops.MOD_ID)
 public final class NeoForgeGameTestRegistrar {
     public static final int EXPECTED_TEST_COUNT = 64;
@@ -70,7 +70,7 @@ public final class NeoForgeGameTestRegistrar {
         }
 
         SmartResourceDrops.LOGGER.info(
-                "Registered exactly {} NeoForge 1.21.9 GameTests",
+                "Registered exactly {} NeoForge 1.21.10 GameTests",
                 methods.size());
     }
 

@@ -101,6 +101,41 @@ provenance importer gives same-version Fabric-to-NeoForge world moves a tested
 one-way migration path while native NeoForge attachment data remains
 authoritative. Publication remains locked with `release_ready=false`.
 
+## Verified NeoForge lane: Minecraft 1.21.10
+
+Minecraft 1.21.10 adds an `ItemStack` argument to
+`ServerPlayerGameMode#removeBlock`, so NeoForge uses a separately compiled exact
+artifact with the four-argument hook and strict 1.21.10 metadata. The shared
+gameplay, configuration, GUI, networking policy, safety budgets, and provenance
+migration remain aligned with the other loader lanes.
+
+| Gate | NeoForge 1.21.10 |
+| --- | --- |
+| Clean production build and shared JUnit suite | Pass (170/170) |
+| Runtime GameTests | Pass (64/64) |
+| Automated physical-client GUI/category smoke, including Copper Golem classification | Pass |
+| Three-restart native placement-persistence smoke | Pass |
+| Fabric provenance import and NeoForge-native restart smoke | Pass |
+| Separate-process multiplayer authority/reconnect smoke | Pass |
+| Client-only and server-only installation matrix | Pass |
+| Oversized-wire rejection and post-rejection server health | Pass |
+| Exact preserved-JAR dedicated-server probe | Pass |
+| Exact preserved-JAR physical-client navigation/category probe | Pass |
+| Candidate SHA-256 preserved in build, candidate, server, and client copies | Pass |
+
+Candidate:
+
+- File: `smart-resource-multiplier-neoforge-1.3.2+mc1.21.10.jar`
+- Size: `964183` bytes
+- SHA-256: `B8F7DD054839EBFBD4B0ACB436EBB64A90BC5ECDF51664154CC9083B112EC61C`
+- Metadata: mod version `1.3.2+mc1.21.10`, JavaFML `[4,)`, NeoForge
+  `[21.10,21.11)`, Minecraft `[1.21.10]`, Java 21 bytecode
+
+The artifact audit checked all 277 class files and 307 file entries, verified
+every class as Java class-file major 65, and found no Fabric platform,
+development-test, nested-JAR, source, or GameTest contamination. Publication
+remains locked with `release_ready=false`.
+
 ## Why one 1.21.2-1.21.10 JAR is unsafe
 
 The next-version compile probe fails on Minecraft 1.21.4 because that version

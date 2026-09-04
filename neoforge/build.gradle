@@ -632,7 +632,7 @@ tasks.named('runGameTestServer') {
         }
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
-                'Registered exactly 64 NeoForge 1.21.9 GameTests',
+                'Registered exactly 64 NeoForge 1.21.10 GameTests',
                 '64 tests are now running',
                 '64 GAME TESTS COMPLETE',
                 'All 64 required tests passed',

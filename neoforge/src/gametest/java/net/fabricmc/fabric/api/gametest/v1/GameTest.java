@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import net.minecraft.world.level.block.Rotation;
 
-/** Test-source mirror of Fabric's 1.21.9 GameTest annotation for shared tests. */
+/** Test-source mirror of Fabric's 1.21.10 GameTest annotation for shared tests. */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @Documented

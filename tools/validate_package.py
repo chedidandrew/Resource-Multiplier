@@ -400,9 +400,9 @@ for raw_line in (ROOT / "neoforge/gradle.properties").read_text(encoding="utf-8"
     if line and not line.startswith("#") and "=" in line:
         key, value = line.split("=", 1)
         neoforge_properties[key.strip()] = value.strip()
-if neoforge_properties.get("mod_version") != "1.3.2+mc1.21.9":
+if neoforge_properties.get("mod_version") != "1.3.2+mc1.21.10":
     fail(
-        "NeoForge mod_version must identify the audited exact Minecraft 1.21.9 lane, found "
+        "NeoForge mod_version must identify the audited exact Minecraft 1.21.10 lane, found "
         f"{neoforge_properties.get('mod_version')!r}"
     )
 if (
@@ -414,11 +414,11 @@ if (
         f"{properties['mod_version']!r} and {neoforge_properties.get('mod_version')!r}"
     )
 expected_neoforge_properties = {
-    "minecraft_version": "1.21.9",
-    "minecraft_version_range": "[1.21.9]",
+    "minecraft_version": "1.21.10",
+    "minecraft_version_range": "[1.21.10]",
     "java_version": "21",
-    "neo_version": "21.9.16-beta",
-    "neo_version_range": "[21.9,21.10)",
+    "neo_version": "21.10.64",
+    "neo_version_range": "[21.10,21.11)",
     "moddev_version": "2.0.146",
     "mod_id": "smart_resource_drops",
     "mod_name": "Smart Resource Multiplier",
@@ -1254,7 +1254,7 @@ neoforge_build = (ROOT / "neoforge/build.gradle").read_text(encoding="utf-8")
 for game_test_contract in (
     "gameTestServer {",
     "smart_resource_drops_gametest",
-    "Registered exactly 64 NeoForge 1.21.9 GameTests",
+    "Registered exactly 64 NeoForge 1.21.10 GameTests",
     "64 tests are now running",
     "64 GAME TESTS COMPLETE",
     "All 64 required tests passed",

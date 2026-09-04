@@ -1025,11 +1025,15 @@ def main() -> None:
             "Fabric and NeoForge public release versions differ: "
             f"{version!r} versus {neoforge_version!r}"
         )
-    if neoforge_properties["minecraft_version"] != properties["minecraft_version"]:
+    baseline_pair = (
+        properties["minecraft_version"],
+        neoforge_properties["minecraft_version"],
+    )
+    if baseline_pair != ("1.21.9", "1.21.10"):
         raise SystemExit(
-            "Fabric and NeoForge baseline Minecraft versions differ: "
-            f"{properties['minecraft_version']!r} versus "
-            f"{neoforge_properties['minecraft_version']!r}"
+            "This compatibility bundle requires the audited Fabric 1.21.9-1.21.10 "
+            "lane and exact NeoForge 1.21.10 lane; found baselines "
+            f"{baseline_pair[0]!r} and {baseline_pair[1]!r}"
         )
     minecraft_version = properties["minecraft_version"]
     prefix = f"{PUBLIC_ARCHIVE_BASE}-{version}"

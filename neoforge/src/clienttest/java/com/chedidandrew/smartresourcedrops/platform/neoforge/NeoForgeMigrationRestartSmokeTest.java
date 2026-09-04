@@ -192,7 +192,7 @@ public final class NeoForgeMigrationRestartSmokeTest {
         }
     }
 
-    /** Exposes Minecraft's protected 1.21.9 region-I/O constructor to this test only. */
+    /** Exposes Minecraft's protected 1.21.10 region-I/O constructor to this test only. */
     private static final class TestIOWorker extends IOWorker {
         private TestIOWorker(
                 final RegionStorageInfo storageInfo,

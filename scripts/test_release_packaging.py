@@ -380,8 +380,8 @@ require(
     "Fabric release version drifted from the audited 1.21.9-1.21.10 lane",
 )
 require(
-    neoforge_properties["mod_version"] == "1.3.2+mc1.21.9",
-    "NeoForge release version drifted from the audited exact 1.21.9 lane",
+    neoforge_properties["mod_version"] == "1.3.2+mc1.21.10",
+    "NeoForge release version drifted from the audited exact 1.21.10 lane",
 )
 require(
     root_properties["mod_version"].split("+", 1)[0]

@@ -2,12 +2,12 @@
 
 ## Smart Resource Multiplier 1.21.9-1.21.10 compatibility candidates
 
-This unpublished branch provides one unchanged Fabric JAR for Minecraft 1.21.9-1.21.10 and an exact NeoForge JAR for Minecraft 1.21.9. NeoForge 1.21.10 requires a separate artifact because the loader-facing block-removal hook changed between the two versions. Minecraft 26.2 remains the newest/default line on `main`.
+This unpublished branch keeps the verified unchanged Fabric lane for Minecraft 1.21.9-1.21.10 and provides the separately compiled exact NeoForge JAR for Minecraft 1.21.10. NeoForge cannot share its 1.21.9 binary because the loader-facing block-removal hook changed between those versions. Minecraft 26.2 remains the newest/default line on `main`.
 
 - Fabric version: `1.3.2+mc1.21.9-1.21.10`
 - Fabric baseline/range: Minecraft `1.21.9`, `>=1.21.9 <1.21.11`
-- NeoForge version: `1.3.2+mc1.21.9`
-- NeoForge baseline/range: Minecraft `[1.21.9]`, NeoForge `[21.9,21.10)`
+- NeoForge version: `1.3.2+mc1.21.10`
+- NeoForge baseline/range: Minecraft `[1.21.10]`, NeoForge `[21.10,21.11)`
 - Publication latch: `release_ready=false`
 - Java: `21`
 - Mod/config identity: `smart_resource_drops`, `config/smart_resource_drops.json`, schema 3
@@ -18,8 +18,8 @@ Fabric and NeoForge retain the same gameplay, configuration, command, GUI, permi
 ## Verified evidence
 
 - The unchanged Fabric candidate passed compilation, 164/164 unit tests, 65/65 runtime GameTests, GUI/authority smoke, three-restart persistence, multiplayer/reconnect, and exact packaged-JAR server boots on both Minecraft 1.21.9 and 1.21.10.
-- The exact NeoForge 1.21.9 candidate passed 170/170 unit tests, 64/64 runtime GameTests, GUI/category smoke, three-restart native persistence, Fabric-provenance migration with a native restart, multiplayer/reconnect, optional-channel matrices, oversized-wire rejection, and exact packaged-JAR server and physical-client probes.
-- Both candidates passed metadata, Java 21 bytecode, loader-isolation, and artifact-contamination audits. Their frozen SHA-256 values are recorded in `compat/candidates/SHA256SUMS.txt`.
-- NeoForge 1.21.10 is intentionally not claimed by this NeoForge JAR and will be built and verified as a separate exact candidate.
+- The exact NeoForge 1.21.10 candidate passed 170/170 unit tests, 64/64 runtime GameTests, GUI/category smoke, three-restart native persistence, Fabric-provenance migration with a native restart, multiplayer/reconnect, client-only and server-only installation matrices, oversized-wire rejection, and exact packaged-JAR server and physical-client probes.
+- The NeoForge candidate passed metadata, Java 21 bytecode, loader-isolation, and artifact-contamination audits. Its frozen 964183-byte JAR has SHA-256 `B8F7DD054839EBFBD4B0ACB436EBB64A90BC5ECDF51664154CC9083B112EC61C`, recorded in `compat/candidates/SHA256SUMS.txt`.
+- The exact four-argument `ServerPlayerGameMode#removeBlock` injection was exercised at runtime with `require=1` and `expect=1`; no additional production API boundary appeared between the audited 1.21.9 and 1.21.10 NeoForge sources.
 
-No candidate on this branch is authorized for publication yet. Manual player testing and the remaining NeoForge 1.21.10 lane must be completed before enabling the guarded release workflow.
+The local candidate directory in this dedicated worktree contains only the exact NeoForge 1.21.10 JAR. No candidate on this branch is authorized for publication yet; `release_ready=false` remains in force pending manual player testing and release assembly.
