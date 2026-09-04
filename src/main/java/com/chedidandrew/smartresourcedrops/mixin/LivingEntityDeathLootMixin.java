@@ -11,7 +11,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootParams;
@@ -29,8 +29,8 @@ import java.util.function.Consumer;
 
 @Mixin(LivingEntity.class)
 abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
-    @Shadow protected int lastHurtByPlayerTime;
-    @Shadow protected Player lastHurtByPlayer;
+    @Shadow protected int lastHurtByPlayerMemoryTime;
+    @Shadow public abstract Player getLastHurtByPlayer();
 
     @Unique
     private EntityKillAttribution.Kind smartResourceDrops$rememberedKillOrigin =
@@ -85,12 +85,13 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
     }
 
     @Inject(
-            method = "setLastHurtByPlayer(Lnet/minecraft/world/entity/player/Player;)V",
+            method = "setLastHurtByPlayer(Lnet/minecraft/world/entity/player/Player;I)V",
             at = @At("TAIL"),
             require = 1,
             expect = 1)
     private void smartResourceDrops$rememberDirectPlayer(
             final Player player,
+            final int memoryTime,
             final CallbackInfo callback
     ) {
         smartResourceDrops$rememberedKillOrigin = smartResourceDrops$trackingEnabled()
@@ -128,19 +129,19 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
 
     @Override
     public EntityKillAttribution.Kind smartResourceDrops$rememberedKillOrigin() {
-        return lastHurtByPlayerTime > 0
+        return lastHurtByPlayerMemoryTime > 0
                 ? smartResourceDrops$rememberedKillOrigin
                 : EntityKillAttribution.Kind.NONE;
     }
 
     @Override
     public boolean smartResourceDrops$hasRememberedPlayerKill() {
-        return lastHurtByPlayerTime > 0 && lastHurtByPlayer != null;
+        return lastHurtByPlayerMemoryTime > 0 && getLastHurtByPlayer() != null;
     }
 
     @Override
     public Player smartResourceDrops$rememberedPlayer() {
-        return lastHurtByPlayerTime > 0 ? lastHurtByPlayer : null;
+        return lastHurtByPlayerMemoryTime > 0 ? getLastHurtByPlayer() : null;
     }
 
     @Unique

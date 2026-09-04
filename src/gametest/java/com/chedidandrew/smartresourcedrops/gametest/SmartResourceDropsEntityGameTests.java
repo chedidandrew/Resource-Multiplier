@@ -22,15 +22,16 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.GameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.item.Item;
@@ -43,7 +44,7 @@ import net.minecraft.world.phys.Vec3;
 
 /** Black-box coverage for the server-authoritative entity death-loot and XP hooks. */
 public final class SmartResourceDropsEntityGameTests {
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void entityFeatureGateAndBoundaryMultipliersUseFinalStandardLoot(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -74,7 +75,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void finalLoaderLootModifierIsMultipliedOnceWithComponentsIntact(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         GameTestEntityFixtures.resetTransientState();
@@ -84,7 +85,7 @@ public final class SmartResourceDropsEntityGameTests {
             configureEntityTest(config -> exactMultiplier(config, GameTestEntityFixtures.COMPONENT_RICH, 1));
             killByPlayer(helper, spawn(helper, GameTestEntityFixtures.COMPONENT_RICH, 2), player);
             assertComponentRichDrop(helper, 2, 1, "component-rich 1x identity");
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     GameTestEntityFixtures.COMPONENT_MODIFIER_INVOCATIONS.get() == 1,
                     "Final-drop modifier ran more than once at 1x");
 
@@ -92,7 +93,7 @@ public final class SmartResourceDropsEntityGameTests {
             configureEntityTest(config -> exactMultiplier(config, GameTestEntityFixtures.COMPONENT_RICH, 3));
             killByPlayer(helper, spawn(helper, GameTestEntityFixtures.COMPONENT_RICH, 6), player);
             assertComponentRichDrop(helper, 6, 3, "component-rich loader-modified loot");
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     GameTestEntityFixtures.COMPONENT_MODIFIER_INVOCATIONS.get() == 1,
                     "Final-drop modifier ran more than once");
         } finally {
@@ -102,7 +103,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void equipmentCarriedInventoryAndDirectOutputsAreNeverMultiplied(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -120,7 +121,7 @@ public final class SmartResourceDropsEntityGameTests {
             final FixturePickupMonster carrying = spawn(helper, GameTestEntityFixtures.CARRYING, 5);
             final ItemEntity pickup = helper.spawnItem(Items.DIAMOND_SWORD, new BlockPos(5, 2, 4));
             carrying.fixturePickUp(helper.getLevel(), pickup);
-            helper.assertTrue(pickup.isRemoved() && carrying.getMainHandItem().is(Items.DIAMOND_SWORD),
+            GameTestAssertions.assertTrue(helper, pickup.isRemoved() && carrying.getMainHandItem().is(Items.DIAMOND_SWORD),
                     "Fixture did not exercise Minecraft's real mob pickup path");
             killByPlayer(helper, carrying, player);
             assertItemTotal(helper, 5, Items.CLAY_BALL, 3, "carrying fixture standard loot");
@@ -143,7 +144,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void bossGateProtectsSaddlesTotemsAndExperienceSeparately(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -178,7 +179,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void vanillaPlayerProjectileEnvironmentalAndTamedAttributionAreRespected(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -198,7 +199,7 @@ public final class SmartResourceDropsEntityGameTests {
             assertItemTotal(helper, 4, Items.ROTTEN_FLESH, 3, "player projectile kill");
 
             final Mob creditedVictim = spawn(helper, GameTestEntityFixtures.HOSTILE, 7);
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     creditedVictim.hurtServer(
                             helper.getLevel(),
                             helper.getLevel().damageSources().playerAttack(player),
@@ -215,7 +216,7 @@ public final class SmartResourceDropsEntityGameTests {
                     helper,
                     GameTestEntityFixtures.HOSTILE,
                     25);
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     playerCreditedAfterUntamedWolf.hurtServer(
                             helper.getLevel(),
                             helper.getLevel().damageSources().playerAttack(player),
@@ -225,7 +226,7 @@ public final class SmartResourceDropsEntityGameTests {
             final Wolf untamedWolf = helper.spawnWithNoFreeWill(
                     EntityType.WOLF,
                     new BlockPos(25, 2, 2));
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     playerCreditedAfterUntamedWolf.hurtServer(
                             helper.getLevel(),
                             helper.getLevel().damageSources().mobAttack(untamedWolf),
@@ -258,8 +259,8 @@ public final class SmartResourceDropsEntityGameTests {
 
             final Wolf offlineOwner = helper.spawnWithNoFreeWill(EntityType.WOLF, new BlockPos(19, 2, 2));
             offlineOwner.setTame(true, false);
-            offlineOwner.setOwnerUUID(UUID.fromString(
-                    "00000000-0000-0000-0000-000000000123"));
+            offlineOwner.setOwnerReference(new EntityReference<>(UUID.fromString(
+                    "00000000-0000-0000-0000-000000000123")));
             final Mob offlineOwnerVictim = spawn(helper, GameTestEntityFixtures.HOSTILE, 19);
             kill(helper, offlineOwnerVictim, helper.getLevel().damageSources().mobAttack(offlineOwner));
             assertItemTotal(helper, 19, Items.ROTTEN_FLESH, 1, "offline tamed owner");
@@ -277,7 +278,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void mobLootGameRuleAndExperienceContextsRemainScoped(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         final boolean previousMobDrops = helper.getLevel().getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT);
@@ -354,7 +355,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void nestedAndExceptionalLootGenerationDoesNotLeakContext(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         GameTestEntityFixtures.resetTransientState();
@@ -393,7 +394,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void duplicateStandardLootHookClaimsTheMultiplierExactlyOnce(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -420,7 +421,7 @@ public final class SmartResourceDropsEntityGameTests {
                         EntityDeathContext.wrapStandardLootConsumer(wrapperFixture, inner);
                 outer.accept(new ItemStack(Items.ROTTEN_FLESH));
             }
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     sameList.stream().mapToInt(ItemStack::getCount).sum() == 2,
                     "Two production wrappers around the same list multiplied 2x loot more than once");
 
@@ -432,7 +433,7 @@ public final class SmartResourceDropsEntityGameTests {
                 EntityDeathContext.wrapStandardLootConsumer(player, playerDrops::add)
                         .accept(new ItemStack(Items.DIAMOND));
             }
-            helper.assertTrue(playerDrops.size() == 1 && playerDrops.getFirst().getCount() == 1,
+            GameTestAssertions.assertTrue(helper, playerDrops.size() == 1 && playerDrops.getFirst().getCount() == 1,
                     "Runtime player-death context did not preserve vanilla output");
         } finally {
             restoreEntityConfiguration(previous);
@@ -440,7 +441,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void finalLootingCookedEmptyBabyAndUnstackableResultsKeepVanillaShape(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         GameTestEntityFixtures.resetTransientState();
@@ -476,13 +477,13 @@ public final class SmartResourceDropsEntityGameTests {
 
             configureEntityTest(config -> exactMultiplier(config, GameTestEntityFixtures.EMPTY, 3));
             killByPlayer(helper, spawn(helper, GameTestEntityFixtures.EMPTY, 9), player);
-            helper.assertTrue(allItemDrops(helper, 9).isEmpty(), "Empty entity loot table was recreated");
+            GameTestAssertions.assertTrue(helper, allItemDrops(helper, 9).isEmpty(), "Empty entity loot table was recreated");
 
             configureEntityTest(config -> exactMultiplier(config, GameTestEntityFixtures.UNSTACKABLE, 3));
             killByPlayer(helper, spawn(helper, GameTestEntityFixtures.UNSTACKABLE, 13), player);
             assertItemTotal(helper, 13, Items.IRON_SWORD, 3, "unstackable final loot");
             final List<ItemEntity> swords = itemDrops(helper, 13, Items.IRON_SWORD);
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     swords.size() == 3 && swords.stream().allMatch(drop -> drop.getItem().getCount() == 1),
                     "Unstackable item was not emitted as three legal individual stacks");
 
@@ -499,7 +500,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void runtimeRulePrecedenceAndWhitelistModesAreComplete(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -515,7 +516,7 @@ public final class SmartResourceDropsEntityGameTests {
                 config.entityMultipliers.put(hostileId, 5);
             });
             EntityRuleTrace trace = EntityMultiplierResolver.inspect(helper.getLevel(), hostile, player);
-            helper.assertTrue(trace.appliedMultiplier() == 5
+            GameTestAssertions.assertTrue(helper, trace.appliedMultiplier() == 5
                             && trace.selectedRule() == EntityRuleTrace.RuleSource.ENTITY_OVERRIDE,
                     "Exact entity override did not win");
 
@@ -526,7 +527,7 @@ public final class SmartResourceDropsEntityGameTests {
                 config.entityCategoryMultipliers.put(EntityCategory.HOSTILE.key(), 4);
             });
             trace = EntityMultiplierResolver.inspect(helper.getLevel(), hostile, player);
-            helper.assertTrue(trace.appliedMultiplier() == 4
+            GameTestAssertions.assertTrue(helper, trace.appliedMultiplier() == 4
                             && trace.selectedRule() == EntityRuleTrace.RuleSource.CATEGORY_OVERRIDE,
                     "Entity category override did not win over the default/global rule");
 
@@ -536,7 +537,7 @@ public final class SmartResourceDropsEntityGameTests {
                 config.defaultEntityMultiplier = 3;
             });
             trace = EntityMultiplierResolver.inspect(helper.getLevel(), hostile, player);
-            helper.assertTrue(trace.appliedMultiplier() == 3
+            GameTestAssertions.assertTrue(helper, trace.appliedMultiplier() == 3
                             && trace.selectedRule() == EntityRuleTrace.RuleSource.ENTITY_DEFAULT,
                     "Default entity multiplier did not win over the global rule");
 
@@ -545,7 +546,7 @@ public final class SmartResourceDropsEntityGameTests {
                 config.inheritDefaultEntityMultiplier = true;
             });
             trace = EntityMultiplierResolver.inspect(helper.getLevel(), hostile, player);
-            helper.assertTrue(trace.appliedMultiplier() == 2
+            GameTestAssertions.assertTrue(helper, trace.appliedMultiplier() == 2
                             && trace.selectedRule() == EntityRuleTrace.RuleSource.GLOBAL,
                     "Inherited entity default did not fall back to the global rule");
 
@@ -554,7 +555,7 @@ public final class SmartResourceDropsEntityGameTests {
                 config.entityWhitelist.add(hostileId);
             });
             trace = EntityMultiplierResolver.inspect(helper.getLevel(), hostile, player);
-            helper.assertTrue(trace.filterEligible() && trace.exactWhitelisted(),
+            GameTestAssertions.assertTrue(helper, trace.filterEligible() && trace.exactWhitelisted(),
                     "Exact entity whitelist match did not allow the fixture");
 
             configureEntityTest(config -> {
@@ -562,20 +563,20 @@ public final class SmartResourceDropsEntityGameTests {
                 config.entityTagWhitelist.add("smart_resource_drops_gametest:filter_fixture");
             });
             trace = EntityMultiplierResolver.inspect(helper.getLevel(), hostile, player);
-            helper.assertTrue(trace.filterEligible()
+            GameTestAssertions.assertTrue(helper, trace.filterEligible()
                             && trace.matchingWhitelistTags().contains(
                                     "smart_resource_drops_gametest:filter_fixture"),
                     "Entity-type tag whitelist match did not allow the fixture");
 
             configureEntityTest(config -> config.entityFilterMode = SmartDropsConfig.FilterMode.WHITELIST);
             trace = EntityMultiplierResolver.inspect(helper.getLevel(), hostile, player);
-            helper.assertFalse(trace.filterEligible(), "Whitelist mode allowed an unmatched entity");
+            GameTestAssertions.assertFalse(helper, trace.filterEligible(), "Whitelist mode allowed an unmatched entity");
 
             final EntityRuleTrace playerTrace = EntityMultiplierResolver.inspect(
                     helper.getLevel(),
                     player,
                     player);
-            helper.assertTrue(playerTrace.permanentlyExcluded() && !playerTrace.itemEligible(),
+            GameTestAssertions.assertTrue(helper, playerTrace.permanentlyExcluded() && !playerTrace.itemEligible(),
                     "Player entity was not permanently excluded from entity drops");
         } finally {
             restoreEntityConfiguration(previous);
@@ -583,7 +584,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void moddedClassificationPriorityFallbackAndInspectionAreDeterministic(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -626,7 +627,7 @@ public final class SmartResourceDropsEntityGameTests {
                     2,
                     false,
                     false);
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     multiCategory.matchedCategories().contains(EntityCategory.HOSTILE)
                             && multiCategory.matchedCategories().contains(EntityCategory.AMBIENT),
                     "Multi-category fixture did not retain all classification evidence");
@@ -645,8 +646,8 @@ public final class SmartResourceDropsEntityGameTests {
                 config.entityTagBlacklist.add("smart_resource_drops_gametest:filter_fixture");
             });
             final EntityRuleTrace filtered = EntityMultiplierResolver.inspect(helper.getLevel(), hostile, player);
-            helper.assertFalse(filtered.filterEligible(), "Runtime entity-type tag blacklist was ignored");
-            helper.assertTrue(
+            GameTestAssertions.assertFalse(helper, filtered.filterEligible(), "Runtime entity-type tag blacklist was ignored");
+            GameTestAssertions.assertTrue(helper,
                     filtered.matchingBlacklistTags().contains("smart_resource_drops_gametest:filter_fixture"),
                     "Inspection omitted the matching runtime entity-type tag");
         } finally {
@@ -655,7 +656,7 @@ public final class SmartResourceDropsEntityGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void entityInspectCommandTargetsVerboseMissAndConsoleWithoutMutation(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -678,40 +679,40 @@ public final class SmartResourceDropsEntityGameTests {
                     ExperienceOrb::isAlive).size();
 
             final CapturingCommandSource compact = new CapturingCommandSource();
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     executeCommand(
                             helper,
                             "smartdrops inspect entity",
                             player.createCommandSourceStack().withSource(compact)) == 1,
                     "Looked-at entity inspection did not succeed");
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     compact.text().contains("Smart Resource Multiplier Entity Inspection")
                             && compact.text().contains("smart_resource_drops_gametest:hostile"),
                     "Compact entity inspection omitted its heading or entity ID");
 
             final CapturingCommandSource verbose = new CapturingCommandSource();
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     executeCommand(
                             helper,
                             "smartdrops inspect entity verbose",
                             player.createCommandSourceStack().withSource(verbose)) == 1,
                     "Verbose looked-at entity inspection did not succeed");
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     verbose.text().contains("Classification reason")
                             && verbose.text().contains("Runtime entity-type tags")
                             && verbose.text().contains("Item rule reason"),
                     "Verbose entity inspection omitted diagnostic sections");
 
-            helper.assertTrue(target.isAlive() && target.getHealth() == health,
+            GameTestAssertions.assertTrue(helper, target.isAlive() && target.getHealth() == health,
                     "Entity inspection damaged or killed its target");
-            helper.assertTrue(target.position().equals(position), "Entity inspection moved its target");
-            helper.assertTrue(ConfigManager.revision() == revision,
+            GameTestAssertions.assertTrue(helper, target.position().equals(position), "Entity inspection moved its target");
+            GameTestAssertions.assertTrue(helper, ConfigManager.revision() == revision,
                     "Entity inspection changed the authoritative config revision");
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     helper.getLevel().getEntities(EntityType.ITEM, target.getBoundingBox().inflate(3.0),
                             ItemEntity::isAlive).size() == itemsBefore,
                     "Entity inspection spawned item output");
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     helper.getLevel().getEntities(
                             EntityType.EXPERIENCE_ORB,
                             target.getBoundingBox().inflate(3.0),
@@ -719,27 +720,27 @@ public final class SmartResourceDropsEntityGameTests {
                     "Entity inspection spawned experience output");
 
             player.setPos(target.getX(), target.getY() + 8.0, target.getZ());
-            player.absRotateTo(player.getYRot(), -90.0F);
+            player.absSnapRotationTo(player.getYRot(), -90.0F);
             final CapturingCommandSource miss = new CapturingCommandSource();
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     executeCommand(
                             helper,
                             "smartdrops inspect entity verbose",
                             player.createCommandSourceStack().withSource(miss)) == 0,
                     "Entity inspection without a target did not fail cleanly");
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     miss.text().contains("No living entity is currently targeted")
                             && miss.text().contains("within interaction range"),
                     "No-target entity inspection omitted recovery guidance");
 
             final CapturingCommandSource console = new CapturingCommandSource();
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     executeCommand(
                             helper,
                             "smartdrops inspect entity",
                             helper.getLevel().getServer().createCommandSourceStack().withSource(console)) == 0,
                     "Console entity inspection did not require a player");
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     console.text().contains("A player target is required")
                             && console.text().contains("/smartdrops inspect entity as a player"),
                     "Console entity inspection omitted player guidance");
@@ -761,15 +762,15 @@ public final class SmartResourceDropsEntityGameTests {
         final Vec3 position = entity.position();
         final EntityRuleTrace first = EntityMultiplierResolver.inspect(helper.getLevel(), entity, player);
         final EntityRuleTrace second = EntityMultiplierResolver.inspect(helper.getLevel(), entity, player);
-        helper.assertTrue(first.equals(second), "Repeated entity inspection produced different traces");
-        helper.assertTrue(first.selectedCategory() == expectedCategory,
+        GameTestAssertions.assertTrue(helper, first.equals(second), "Repeated entity inspection produced different traces");
+        GameTestAssertions.assertTrue(helper, first.selectedCategory() == expectedCategory,
                 "Expected " + expectedCategory + " but selected " + first.selectedCategory());
-        helper.assertTrue(first.appliedMultiplier() == expectedMultiplier,
+        GameTestAssertions.assertTrue(helper, first.appliedMultiplier() == expectedMultiplier,
                 "Expected " + expectedMultiplier + "x but resolved " + first.appliedMultiplier() + "x");
-        helper.assertTrue(first.boss() == expectedBoss, "Boss classification did not match the fixture");
-        helper.assertTrue(first.miscellaneousFallback() == expectedFallback,
+        GameTestAssertions.assertTrue(helper, first.boss() == expectedBoss, "Boss classification did not match the fixture");
+        GameTestAssertions.assertTrue(helper, first.miscellaneousFallback() == expectedFallback,
                 "Miscellaneous fallback did not match the fixture");
-        helper.assertTrue(entity.isAlive() && entity.getHealth() == health && entity.position().equals(position),
+        GameTestAssertions.assertTrue(helper, entity.isAlive() && entity.getHealth() == health && entity.position().equals(position),
                 "Read-only inspection mutated the fixture entity");
         return first;
     }
@@ -778,11 +779,11 @@ public final class SmartResourceDropsEntityGameTests {
             final GameTestHelper helper,
             final EntityRuleTrace trace,
             final EntityCategory category) {
-        helper.assertTrue(
+        GameTestAssertions.assertTrue(helper,
                 trace.categorySources().getOrDefault(category, java.util.Set.of())
                         .contains(EntityClassification.MatchSource.VANILLA_CLASS),
                 category + " fixture was not classified through the vanilla class fallback");
-        helper.assertFalse(
+        GameTestAssertions.assertFalse(helper,
                 trace.categorySources().getOrDefault(category, java.util.Set.of())
                         .contains(EntityClassification.MatchSource.SMART_RESOURCE_DROPS_TAG),
                 category + " fixture was still masked by a project-owned category tag");
@@ -795,7 +796,7 @@ public final class SmartResourceDropsEntityGameTests {
         final double horizontal = Math.sqrt(xDelta * xDelta + zDelta * zDelta);
         final float yaw = (float) Math.toDegrees(Math.atan2(zDelta, xDelta)) - 90.0F;
         final float pitch = (float) -Math.toDegrees(Math.atan2(target.y - eye.y, horizontal));
-        player.absRotateTo(yaw, pitch);
+        player.absSnapRotationTo(yaw, pitch);
     }
 
     private static int executeCommand(
@@ -857,10 +858,10 @@ public final class SmartResourceDropsEntityGameTests {
             final GameTestHelper helper,
             final Mob victim,
             final DamageSource source) {
-        helper.assertTrue(
+        GameTestAssertions.assertTrue(helper,
                 victim.hurtServer(helper.getLevel(), source, Float.MAX_VALUE),
                 "Fixture refused lethal damage: " + EntityType.getKey(victim.getType()));
-        helper.assertTrue(victim.isDeadOrDying(), "Fixture survived lethal damage");
+        GameTestAssertions.assertTrue(helper, victim.isDeadOrDying(), "Fixture survived lethal damage");
     }
 
     private static void assertBossOutputs(
@@ -881,16 +882,16 @@ public final class SmartResourceDropsEntityGameTests {
         assertItemTotal(helper, x, Items.DIAMOND, expected, scenario);
         for (ItemEntity drop : itemDrops(helper, x, Items.DIAMOND)) {
             final ItemStack stack = drop.getItem();
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     stack.get(DataComponents.CUSTOM_NAME) != null
                             && GameTestEntityFixtures.COMPONENT_MARKER.equals(
                                     stack.get(DataComponents.CUSTOM_NAME).getString()),
                     scenario + " lost its custom name component");
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     stack.get(DataComponents.CUSTOM_DATA) != null
                             && GameTestEntityFixtures.COMPONENT_MARKER.equals(
                                     stack.get(DataComponents.CUSTOM_DATA).copyTag()
-                                            .getString("fixture")),
+                                            .getStringOr("fixture", "")),
                     scenario + " lost its custom data component");
         }
     }
@@ -905,14 +906,14 @@ public final class SmartResourceDropsEntityGameTests {
                 .map(ItemEntity::getItem)
                 .mapToInt(ItemStack::getCount)
                 .sum();
-        helper.assertTrue(
+        GameTestAssertions.assertTrue(helper,
                 actual == expected,
                 scenario + " produced " + actual + " " + item + " items instead of " + expected);
     }
 
     private static void assertLegalStacks(final GameTestHelper helper, final int x, final Item item) {
         for (ItemEntity drop : itemDrops(helper, x, item)) {
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     drop.getItem().getCount() <= drop.getItem().getMaxStackSize(),
                     "Multiplier emitted an illegal stack: " + drop.getItem());
         }
@@ -948,7 +949,7 @@ public final class SmartResourceDropsEntityGameTests {
                 .stream()
                 .mapToInt(ExperienceOrb::getValue)
                 .sum();
-        helper.assertTrue(
+        GameTestAssertions.assertTrue(helper,
                 actual == expected,
                 scenario + " produced " + actual + " XP instead of " + expected);
         clearExperienceOrbs(helper);

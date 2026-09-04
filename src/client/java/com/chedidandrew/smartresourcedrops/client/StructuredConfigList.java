@@ -73,7 +73,7 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         this.rows = List.copyOf(newRows);
         replaceEntries(rows.stream().map(row -> new Entry(row)).toList());
         setScrollAmount(0.0);
-        clampScrollAmount();
+        refreshScrollAmount();
     }
 
     public List<Row> rows() {
@@ -106,9 +106,10 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         return Math.max(1, Math.min(preferredRowWidth, getWidth() - 24));
     }
 
-    /** Compatibility accessor matching the newer selection-list API used by the shared screens. */
+    /** Exposes the current selection-list scroll amount to the shared screens. */
+    @Override
     public double scrollAmount() {
-        return getScrollAmount();
+        return super.scrollAmount();
     }
 
     @Override

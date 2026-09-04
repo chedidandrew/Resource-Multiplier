@@ -33,6 +33,35 @@ The JAR files are retained locally in `compat/candidates/` but intentionally
 ignored by Git. Release binaries should be attached to a release, not committed
 to source control.
 
+## Verified lane: Minecraft 1.21.5
+
+The 1.21.5 production artifacts are compiled against Minecraft 1.21.5 and
+declare that exact Minecraft version (`1.21.5` for Fabric and `[1.21.5]` for
+NeoForge). They use Fabric API `0.128.2+1.21.5`, Mod Menu `14.0.2`, NeoForge
+`21.5.98`, and Java 21. This lane remains experimental and has not been
+published.
+
+| Gate | Fabric 1.21.5 | NeoForge 1.21.5 |
+| --- | --- | --- |
+| Production compile and unit tests | Pass | Pass |
+| Required gameplay GameTests | 64/64 | 64/64 |
+| Automated client GUI smoke | Pass | Pass |
+| Three-start persistence lifecycle | Pass | Pass |
+| Exact packaged-JAR server boot | Pass | Pass |
+| Exact packaged-JAR client probe | N/A | Pass |
+| Metadata and loader-contamination audit | Pass | Pass |
+
+Candidate hashes:
+
+- Fabric: `1ABD817E395AE13585FC71D4A35E8CB637B4073C4C105ADDF9AB36EA98BF79A4`
+- NeoForge: `67D9EFE5A3E40D3CB4B13DE59BF8A26A562D7470DF77F0BE423CF3BBC65813C0`
+
+The exact candidate bytes used by the packaged-server probes are retained in
+`compat/candidates/`. NeoForge's packaged-client probe also loaded those exact
+bytes. Fabric's automated client smoke compiles and exercises the production
+source set; the exact-JAR Fabric harness currently covers the dedicated-server
+runtime.
+
 ## Why one 1.21.2-1.21.10 JAR is unsafe
 
 The next-version compile probe fails on Minecraft 1.21.4 because that version

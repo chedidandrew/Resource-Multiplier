@@ -139,7 +139,7 @@ loom {
     runs {
         clientSmoke {
             client()
-            name = 'Fabric 1.21.2-1.21.3 client GUI smoke'
+            name = 'Fabric 1.21.5 client GUI smoke'
             source clientTestSourceSet
             runDir 'build/fabric-client-smoke'
             property 'smart_resource_drops.fabricClientSmoke', 'true'
@@ -148,7 +148,7 @@ loom {
         }
         multiplayerServerSmoke {
             server()
-            name = 'Fabric 1.21.1 multiplayer authority server smoke'
+            name = 'Fabric 1.21.5 multiplayer authority server smoke'
             source clientTestSourceSet
             runDir 'build/fabric-multiplayer-smoke/server'
             property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
@@ -156,7 +156,7 @@ loom {
         }
         multiplayerClientSmoke {
             client()
-            name = 'Fabric 1.21.1 multiplayer authority client smoke'
+            name = 'Fabric 1.21.5 multiplayer authority client smoke'
             source clientTestSourceSet
             runDir 'build/fabric-multiplayer-smoke/client'
             property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
@@ -165,7 +165,7 @@ loom {
         }
         persistenceMarkServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence mark/save smoke'
+            name = 'Fabric 1.21.5 placement persistence mark/save smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'mark'
@@ -175,7 +175,7 @@ loom {
         }
         persistenceRemoveServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence remove/save smoke'
+            name = 'Fabric 1.21.5 placement persistence remove/save smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'remove'
@@ -185,7 +185,7 @@ loom {
         }
         persistenceVerifyAbsentServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence verify-absent smoke'
+            name = 'Fabric 1.21.5 placement persistence verify-absent smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'verify_absent'
@@ -206,6 +206,10 @@ fabricApi {
 
 loom.runs.named('gameTest') {
     source gameTestSourceSet
+    // Minecraft 1.21.5 bootstraps one built-in minecraft:always_pass test.
+    // Select only this project's namespace so the gate remains the complete,
+    // exact 64-test compatibility suite rather than silently counting it.
+    property 'fabric-api.gametest.filter', 'smart_resource_drops_gametest:*'
 }
 
 repositories {
@@ -296,6 +300,7 @@ tasks.named('runClientSmoke') {
             line.contains('/ERROR]')
                     && !line.contains('Error while loading the narrator')
                     && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+                    && !line.contains('Failed to fetch Realms feature flags')
         }
         if (!logFile.isFile()
                 || !unexpectedErrors.isEmpty()

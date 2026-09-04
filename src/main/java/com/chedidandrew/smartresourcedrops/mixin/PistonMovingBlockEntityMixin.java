@@ -88,8 +88,9 @@ abstract class PistonMovingBlockEntityMixin implements ProtectedPistonMovement {
             HolderLookup.Provider registries,
             CallbackInfo callback
     ) {
-        smartResourceDrops$captured = input.getBoolean(SMART_RESOURCE_DROPS_CAPTURED);
-        smartResourceDrops$protectDestination = input.getBoolean(SMART_RESOURCE_DROPS_PROTECT_DESTINATION);
+        smartResourceDrops$captured = input.getBooleanOr(SMART_RESOURCE_DROPS_CAPTURED, false);
+        smartResourceDrops$protectDestination = input.getBooleanOr(
+                SMART_RESOURCE_DROPS_PROTECT_DESTINATION, false);
     }
 
     @Override

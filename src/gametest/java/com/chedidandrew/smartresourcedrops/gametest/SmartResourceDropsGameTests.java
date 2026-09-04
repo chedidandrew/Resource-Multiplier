@@ -16,7 +16,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.GameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
@@ -41,7 +41,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 public final class SmartResourceDropsGameTests {
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void levelMixinPreservesTransformsAndClearsUnrelatedReplacements(final GameTestHelper helper) {
         assertPreserved(helper, new BlockPos(1, 2, 1), Blocks.DIRT, Blocks.FARMLAND);
         assertPreserved(helper, new BlockPos(2, 2, 1), Blocks.OAK_LOG, Blocks.STRIPPED_OAK_LOG);
@@ -56,11 +56,11 @@ public final class SmartResourceDropsGameTests {
         helper.getLevel().setBlock(unrelated, Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
         PlacementTracker.mark(helper.getLevel(), unrelated);
         helper.getLevel().setBlock(unrelated, Blocks.DIAMOND_ORE.defaultBlockState(), Block.UPDATE_ALL);
-        helper.assertFalse(PlacementTracker.isMarked(helper.getLevel(), unrelated), "Unrelated replacement inherited provenance");
+        GameTestAssertions.assertFalse(helper, PlacementTracker.isMarked(helper.getLevel(), unrelated), "Unrelated replacement inherited provenance");
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void blockItemPlacementMarksBothDoorBlocks(final GameTestHelper helper) {
         final BlockPos support = new BlockPos(1, 1, 1);
         final BlockPos lower = support.above();
@@ -74,8 +74,8 @@ public final class SmartResourceDropsGameTests {
         final BlockPos lowerAbsolute = helper.absolutePos(lower);
         helper.assertBlockPresent(Blocks.OAK_DOOR, lower);
         helper.assertBlockPresent(Blocks.OAK_DOOR, lower.above());
-        helper.assertTrue(PlacementTracker.isMarked(helper.getLevel(), lowerAbsolute), "Door lower half was not marked");
-        helper.assertTrue(PlacementTracker.isMarked(helper.getLevel(), lowerAbsolute.above()), "Door upper half was not marked");
+        GameTestAssertions.assertTrue(helper, PlacementTracker.isMarked(helper.getLevel(), lowerAbsolute), "Door lower half was not marked");
+        GameTestAssertions.assertTrue(helper, PlacementTracker.isMarked(helper.getLevel(), lowerAbsolute.above()), "Door upper half was not marked");
 
         final BlockPos failedLower = new BlockPos(5, 4, 5);
         final ItemStack unsupportedDoor = new ItemStack(Items.OAK_DOOR);
@@ -83,16 +83,16 @@ public final class SmartResourceDropsGameTests {
         helper.placeAt(player, unsupportedDoor, failedLower.below(), Direction.UP);
         final BlockPos failedAbsolute = helper.absolutePos(failedLower);
         helper.assertBlockNotPresent(Blocks.OAK_DOOR, failedLower);
-        helper.assertFalse(
+        GameTestAssertions.assertFalse(helper,
                 PlacementTracker.isMarked(helper.getLevel(), failedAbsolute),
                 "Failed placement left a provenance marker");
-        helper.assertFalse(
+        GameTestAssertions.assertFalse(helper,
                 PlacementTracker.isMarked(helper.getLevel(), failedAbsolute.above()),
                 "Failed multi-block placement left a provenance marker");
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void realLootPipelineProtectsPlacedBlocksAndAggregatesHighMultipliers(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
@@ -129,11 +129,11 @@ public final class SmartResourceDropsGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void repeatedBlockInspectionIsReadOnlyAndMatchesGameplayResolution(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
-            helper.assertTrue(ConfigManager.update(config -> {
+            GameTestAssertions.assertTrue(helper, ConfigManager.update(config -> {
                 config.enabled = true;
                 config.globalMultiplier = 2;
                 config.maximumMultiplier = 64;
@@ -168,7 +168,7 @@ public final class SmartResourceDropsGameTests {
             final BlockState stoneState = helper.getLevel().getBlockState(stonePos);
             final BlockState chestState = helper.getLevel().getBlockState(chestPos);
             final BlockEntity chestEntity = helper.getLevel().getBlockEntity(chestPos);
-            helper.assertTrue(chestEntity instanceof Container, "Real chest did not create a container block entity");
+            GameTestAssertions.assertTrue(helper, chestEntity instanceof Container, "Real chest did not create a container block entity");
             final Container chestInventory = (Container) chestEntity;
             chestInventory.setItem(0, new ItemStack(Items.DIAMOND));
             final ItemStack chestContents = chestInventory.getItem(0).copy();
@@ -183,22 +183,22 @@ public final class SmartResourceDropsGameTests {
             final RuleResolutionTrace chestTrace = MultiplierResolver.inspect(
                     helper.getLevel(), chestPos, chestState, chestEntity, DropSource.PLAYER, player);
             for (int attempt = 0; attempt < 3; attempt++) {
-                helper.assertTrue(stoneTrace.equals(MultiplierResolver.inspect(
+                GameTestAssertions.assertTrue(helper, stoneTrace.equals(MultiplierResolver.inspect(
                                 helper.getLevel(), stonePos, stoneState, null, DropSource.PLAYER, player)),
                         "Repeated stone inspection changed its trace");
-                helper.assertTrue(chestTrace.equals(MultiplierResolver.inspect(
+                GameTestAssertions.assertTrue(helper, chestTrace.equals(MultiplierResolver.inspect(
                                 helper.getLevel(), chestPos, chestState, chestEntity, DropSource.PLAYER, player)),
                         "Repeated chest inspection changed its trace");
             }
 
-            helper.assertTrue(stoneTrace.matchedCategories().contains(Category.STONE),
+            GameTestAssertions.assertTrue(helper, stoneTrace.matchedCategories().contains(Category.STONE),
                     "Real minecraft:stone tag did not resolve the Stone category");
-            helper.assertTrue(stoneTrace.categoryRuleCategory() == Category.STONE
+            GameTestAssertions.assertTrue(helper, stoneTrace.categoryRuleCategory() == Category.STONE
                             && stoneTrace.configuredMultiplier() == 3,
                     "Stone category override was not selected by the inspection trace");
-            helper.assertTrue(chestTrace.hasBlockEntity() && chestTrace.blockEntityProtected(),
+            GameTestAssertions.assertTrue(helper, chestTrace.hasBlockEntity() && chestTrace.blockEntityProtected(),
                     "Real chest was not diagnosed as a protected block entity");
-            helper.assertTrue(chestTrace.playerPlaced(),
+            GameTestAssertions.assertTrue(helper, chestTrace.playerPlaced(),
                     "Tracked chest provenance was not visible to inspection");
 
             assertInspectionUnchanged(
@@ -219,9 +219,9 @@ public final class SmartResourceDropsGameTests {
                     helper.getLevel(), stonePos, stoneState, null, DropSource.PLAYER, player);
             final RuleEngine.Decision chestGameplay = MultiplierResolver.resolve(
                     helper.getLevel(), chestPos, chestState, chestEntity, DropSource.PLAYER, player);
-            helper.assertTrue(stoneTrace.decision().equals(stoneGameplay),
+            GameTestAssertions.assertTrue(helper, stoneTrace.decision().equals(stoneGameplay),
                     "Stone inspection decision diverged from normal gameplay resolution");
-            helper.assertTrue(chestTrace.decision().equals(chestGameplay),
+            GameTestAssertions.assertTrue(helper, chestTrace.decision().equals(chestGameplay),
                     "Chest inspection decision diverged from normal gameplay resolution");
 
             assertInspectionUnchanged(
@@ -243,7 +243,7 @@ public final class SmartResourceDropsGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void inspectCommandHandlesLookTargetSkyAndConsole(final GameTestHelper helper) {
         final ServerPlayer player = GameTestPlayers.survival(helper);
         final BlockPos targetPos = helper.absolutePos(new BlockPos(2, 2, 5));
@@ -260,53 +260,53 @@ public final class SmartResourceDropsGameTests {
         final double horizontal = Math.sqrt(xDelta * xDelta + zDelta * zDelta);
         final float yaw = (float) Math.toDegrees(Math.atan2(target.z - eye.z, target.x - eye.x)) - 90.0F;
         final float pitch = (float) -Math.toDegrees(Math.atan2(target.y - eye.y, horizontal));
-        player.absRotateTo(yaw, pitch);
+        player.absSnapRotationTo(yaw, pitch);
 
         final HitResult targetHit = player.pick(player.blockInteractionRange(), 1.0F, false);
-        helper.assertTrue(targetHit.getType() == HitResult.Type.BLOCK,
+        GameTestAssertions.assertTrue(helper, targetHit.getType() == HitResult.Type.BLOCK,
                 "The server-side inspection raycast did not acquire the looked-at block");
-        helper.assertTrue(((BlockHitResult) targetHit).getBlockPos().equals(targetPos),
+        GameTestAssertions.assertTrue(helper, ((BlockHitResult) targetHit).getBlockPos().equals(targetPos),
                 "The server-side inspection raycast selected the wrong block");
         final CapturingCommandSource targetMessages = new CapturingCommandSource();
-        helper.assertTrue(executeCommand(
+        GameTestAssertions.assertTrue(helper, executeCommand(
                         helper,
                         "smartdrops inspect",
                         player.createCommandSourceStack().withSource(targetMessages)) == 1,
                 "The looked-at block inspection command did not succeed");
-        helper.assertTrue(targetMessages.text().contains("Smart Resource Multiplier Inspection")
+        GameTestAssertions.assertTrue(helper, targetMessages.text().contains("Smart Resource Multiplier Inspection")
                         && targetMessages.text().contains("minecraft:stone"),
                 "The successful command did not emit the expected inspection components");
 
         player.setPos(targetPos.getX() + 0.5, targetPos.getY() + 10.0, targetPos.getZ() + 0.5);
-        player.absRotateTo(player.getYRot(), -90.0F);
-        helper.assertTrue(
+        player.absSnapRotationTo(player.getYRot(), -90.0F);
+        GameTestAssertions.assertTrue(helper,
                 player.pick(player.blockInteractionRange(), 1.0F, false).getType() == HitResult.Type.MISS,
                 "The no-target command check unexpectedly hit a block");
         final CapturingCommandSource noTargetMessages = new CapturingCommandSource();
-        helper.assertTrue(executeCommand(
+        GameTestAssertions.assertTrue(helper, executeCommand(
                         helper,
                         "smartdrops inspect verbose",
                         player.createCommandSourceStack().withSource(noTargetMessages)) == 0,
                 "Looking into the sky did not return the clear no-target failure result");
-        helper.assertTrue(noTargetMessages.text().contains("No block is currently targeted.")
+        GameTestAssertions.assertTrue(helper, noTargetMessages.text().contains("No block is currently targeted.")
                         && noTargetMessages.text().contains("within interaction range"),
                 "The no-target command did not emit clear recovery guidance");
 
         final CapturingCommandSource consoleMessages = new CapturingCommandSource();
-        helper.assertTrue(executeCommand(
+        GameTestAssertions.assertTrue(helper, executeCommand(
                         helper,
                         "smartdrops inspect",
                         helper.getLevel().getServer().createCommandSourceStack().withSource(consoleMessages)) == 0,
                 "Console inspection did not return the player-required failure result");
-        helper.assertTrue(consoleMessages.text().contains("A player target is required")
+        GameTestAssertions.assertTrue(helper, consoleMessages.text().contains("A player target is required")
                         && consoleMessages.text().contains("Run /smartdrops inspect as a player"),
                 "Console inspection did not emit clear player-required guidance");
-        helper.assertTrue(helper.getLevel().getBlockState(targetPos).is(Blocks.STONE),
+        GameTestAssertions.assertTrue(helper, helper.getLevel().getBlockState(targetPos).is(Blocks.STONE),
                 "Inspection command altered the targeted block");
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void validationCommandIsOperatorOnlyBoundedAndReadOnlyForConsoleAndPlayers(
             final GameTestHelper helper
     ) {
@@ -316,7 +316,7 @@ public final class SmartResourceDropsGameTests {
         try {
             helper.getLevel().setBlock(tracked, Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
             PlacementTracker.mark(helper.getLevel(), tracked);
-            helper.assertTrue(ConfigManager.update(config -> {
+            GameTestAssertions.assertTrue(helper, ConfigManager.update(config -> {
                 config.blockMultipliers.clear();
                 for (int index = 0; index < 20; index++) {
                     config.blockMultipliers.put("missing:block_" + index, 2);
@@ -335,53 +335,53 @@ public final class SmartResourceDropsGameTests {
             final boolean provenanceBefore = PlacementTracker.isMarked(helper.getLevel(), tracked);
 
             final CapturingCommandSource consoleMessages = new CapturingCommandSource();
-            helper.assertTrue(executeCommand(
+            GameTestAssertions.assertTrue(helper, executeCommand(
                             helper,
                             "smartdrops validate",
                             helper.getLevel().getServer().createCommandSourceStack().withSource(consoleMessages)) == 1,
                     "Console validation command did not succeed");
-            helper.assertTrue(consoleMessages.text().contains("Smart Resource Multiplier Validation")
+            GameTestAssertions.assertTrue(helper, consoleMessages.text().contains("Smart Resource Multiplier Validation")
                             && consoleMessages.text().contains("additional issue(s) omitted")
                             && consoleMessages.messageCount() <= 24,
                     "Compact validation output was missing or unbounded");
-            helper.assertFalse(consoleMessages.text().contains(privatePlayerId),
+            GameTestAssertions.assertFalse(helper, consoleMessages.text().contains(privatePlayerId),
                     "Validation output exposed a stored player UUID");
 
             final ServerPlayer operator = GameTestPlayers.withGameMode(helper, GameType.CREATIVE);
             final CapturingCommandSource verboseMessages = new CapturingCommandSource();
-            helper.assertTrue(executeCommand(
+            GameTestAssertions.assertTrue(helper, executeCommand(
                             helper,
                             "smartdrops validate verbose",
                             operator.createCommandSourceStack()
                                     .withPermission(4)
                                     .withSource(verboseMessages)) == 1,
                     "Operator verbose validation command did not succeed");
-            helper.assertTrue(verboseMessages.text().contains("missing:block_19")
+            GameTestAssertions.assertTrue(helper, verboseMessages.text().contains("missing:block_19")
                             && verboseMessages.text().contains("BLOCK_ENTITY_ALLOWLIST_ENTRY_UNRESOLVED")
                             && !verboseMessages.text().contains("BLOCK_ENTITY_ALLOWLIST_ENTRY_NOT_BLOCK_ENTITY")
                             && verboseMessages.text().contains("No configuration or world data was changed."),
                     "Verbose validation omitted expected bounded details or its read-only statement");
 
             final ServerPlayer normalPlayer = GameTestPlayers.withGameMode(helper, GameType.SURVIVAL);
-            helper.assertTrue(commandIsRejected(
+            GameTestAssertions.assertTrue(helper, commandIsRejected(
                             helper,
                             "smartdrops validate",
                             normalPlayer.createCommandSourceStack().withPermission(0)),
                     "Non-operator validation was not rejected by the server command tree");
 
-            helper.assertTrue(ConfigManager.revision() == revisionBefore,
+            GameTestAssertions.assertTrue(helper, ConfigManager.revision() == revisionBefore,
                     "Validation changed the authoritative config revision");
-            helper.assertTrue(readConfigJson().equals(jsonBefore),
+            GameTestAssertions.assertTrue(helper, readConfigJson().equals(jsonBefore),
                     "Validation rewrote the configuration file");
-            helper.assertTrue(ConfigManager.get().blockMultipliers.containsKey("missing:block_19"),
+            GameTestAssertions.assertTrue(helper, ConfigManager.get().blockMultipliers.containsKey("missing:block_19"),
                     "Validation removed an unresolved configured block ID");
-            helper.assertTrue(ConfigManager.get().blockEntityAllowlist.contains("missing:block_entity"),
+            GameTestAssertions.assertTrue(helper, ConfigManager.get().blockEntityAllowlist.contains("missing:block_entity"),
                     "Validation removed an unresolved block-entity allowlist ID");
-            helper.assertTrue(SmartDropsStats.snapshot().equals(statisticsBefore),
+            GameTestAssertions.assertTrue(helper, SmartDropsStats.snapshot().equals(statisticsBefore),
                     "Validation changed runtime statistics");
-            helper.assertTrue(helper.getLevel().getBlockState(tracked).equals(stateBefore),
+            GameTestAssertions.assertTrue(helper, helper.getLevel().getBlockState(tracked).equals(stateBefore),
                     "Validation changed world block state");
-            helper.assertTrue(PlacementTracker.isMarked(helper.getLevel(), tracked) == provenanceBefore,
+            GameTestAssertions.assertTrue(helper, PlacementTracker.isMarked(helper.getLevel(), tracked) == provenanceBefore,
                     "Validation changed placement provenance");
         } finally {
             restoreConfiguration(previous);
@@ -389,18 +389,18 @@ public final class SmartResourceDropsGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void configurationResetPreservesPlacedBlockProvenance(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         final BlockPos placed = helper.absolutePos(new BlockPos(2, 2, 5));
         try {
             helper.getLevel().setBlock(placed, Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
             PlacementTracker.mark(helper.getLevel(), placed);
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     PlacementTracker.isMarked(helper.getLevel(), placed),
                     "The pre-reset player-placed marker was not recorded");
 
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     ConfigManager.update(config -> {
                         config.globalMultiplier = 7;
                         config.categoryMultipliers.put("ores", 5);
@@ -412,19 +412,19 @@ public final class SmartResourceDropsGameTests {
                         config.shearingEntityMultipliers.put("minecraft:sheep", 11);
                     }),
                     "Could not prepare the non-default configuration for the reset test");
-            helper.assertTrue(ConfigManager.reset(), "The authoritative configuration reset failed");
+            GameTestAssertions.assertTrue(helper, ConfigManager.reset(), "The authoritative configuration reset failed");
 
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     PlacementTracker.isMarked(helper.getLevel(), placed),
                     "Reset All Settings erased player-placed block provenance");
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     ConfigManager.get().globalMultiplier == SmartDropsConfig.defaults().globalMultiplier,
                     "The real reset path did not restore the default global multiplier");
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     ConfigManager.get().categoryMultipliers.isEmpty()
                             && ConfigManager.get().blockMultipliers.isEmpty(),
                     "The real reset path retained multiplier overrides");
-            helper.assertTrue(
+            GameTestAssertions.assertTrue(helper,
                     ConfigManager.get().manualShearingDropsEnabled
                             && !ConfigManager.get().automatedShearingDropsEnabled
                             && ConfigManager.get().inheritDefaultShearingMultiplier
@@ -538,9 +538,9 @@ public final class SmartResourceDropsGameTests {
     ) {
         final List<ItemEntity> drops = dropsNear(helper, absolutePos);
         final int total = drops.stream().mapToInt(entity -> entity.getItem().getCount()).sum();
-        helper.assertTrue(total == expectedItems,
+        GameTestAssertions.assertTrue(helper, total == expectedItems,
                 scenario + " produced " + total + " items instead of " + expectedItems);
-        helper.assertTrue(drops.size() == expectedEntities,
+        GameTestAssertions.assertTrue(helper, drops.size() == expectedEntities,
                 scenario + " spawned " + drops.size() + " item entities instead of " + expectedEntities);
     }
 
@@ -558,21 +558,21 @@ public final class SmartResourceDropsGameTests {
             final Container chestInventory,
             final ItemStack chestContents
     ) {
-        helper.assertTrue(ConfigManager.revision() == expectedRevision,
+        GameTestAssertions.assertTrue(helper, ConfigManager.revision() == expectedRevision,
                 "Inspection changed the authoritative config revision");
-        helper.assertTrue(SmartDropsStats.snapshot().equals(expectedStatistics),
+        GameTestAssertions.assertTrue(helper, SmartDropsStats.snapshot().equals(expectedStatistics),
                 "Inspection changed block-drop statistics");
-        helper.assertTrue(helper.getLevel().getBlockState(stonePos).equals(stoneState),
+        GameTestAssertions.assertTrue(helper, helper.getLevel().getBlockState(stonePos).equals(stoneState),
                 "Inspection changed the stone block state");
-        helper.assertTrue(helper.getLevel().getBlockState(chestPos).equals(chestState),
+        GameTestAssertions.assertTrue(helper, helper.getLevel().getBlockState(chestPos).equals(chestState),
                 "Inspection changed the chest block state");
-        helper.assertTrue(helper.getLevel().getBlockEntity(chestPos) == chestEntity,
+        GameTestAssertions.assertTrue(helper, helper.getLevel().getBlockEntity(chestPos) == chestEntity,
                 "Inspection replaced or removed the chest block entity");
-        helper.assertTrue(PlacementTracker.isMarked(helper.getLevel(), stonePos) == stoneMarked,
+        GameTestAssertions.assertTrue(helper, PlacementTracker.isMarked(helper.getLevel(), stonePos) == stoneMarked,
                 "Inspection changed natural stone provenance");
-        helper.assertTrue(PlacementTracker.isMarked(helper.getLevel(), chestPos) == chestMarked,
+        GameTestAssertions.assertTrue(helper, PlacementTracker.isMarked(helper.getLevel(), chestPos) == chestMarked,
                 "Inspection changed tracked chest provenance");
-        helper.assertTrue(ItemStack.matches(chestContents, chestInventory.getItem(0)),
+        GameTestAssertions.assertTrue(helper, ItemStack.matches(chestContents, chestInventory.getItem(0)),
                 "Inspection read or modified protected chest inventory data");
     }
 
@@ -597,7 +597,7 @@ public final class SmartResourceDropsGameTests {
         helper.getLevel().setBlock(absolutePos, oldBlock.defaultBlockState(), Block.UPDATE_ALL);
         PlacementTracker.mark(helper.getLevel(), absolutePos);
         helper.getLevel().setBlock(absolutePos, newBlock.defaultBlockState(), Block.UPDATE_ALL);
-        helper.assertTrue(
+        GameTestAssertions.assertTrue(helper,
             PlacementTracker.isMarked(helper.getLevel(), absolutePos),
             oldBlock + " -> " + newBlock + " lost provenance");
     }

@@ -333,6 +333,10 @@ neoForge {
             sourceSet = gameTestSourceSet
             loadedMods.set([neoForge.mods.getByName('smartResourceDropsGameTest')])
             systemProperty 'neoforge.enabledGameTestNamespaces', 'smart_resource_drops_gametest'
+            // Minecraft 1.21.5 contributes minecraft:always_pass to the dynamic
+            // test registry; select only our namespace for the exact 64-test gate.
+            programArgument '--tests'
+            programArgument 'smart_resource_drops_gametest:*'
         }
         clientCategoryTest {
             client()
@@ -522,7 +526,7 @@ tasks.named('runGameTestServer') {
         }
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
-                'Registered exactly 64 NeoForge 1.21.2 GameTests',
+                'Registered exactly 64 NeoForge 1.21.5 GameTests',
                 '64 tests are now running',
                 '64 GAME TESTS COMPLETE',
                 'All 64 required tests passed',
@@ -553,6 +557,7 @@ tasks.named('runClientCategoryTest') {
             line.contains('/ERROR]')
                     && !line.contains('Error while loading the narrator')
                     && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+                    && !line.contains('Failed to fetch Realms feature flags')
         }
         if (!logFile.isFile()
                 || !unexpectedErrors.isEmpty()
@@ -601,8 +606,8 @@ tasks.named('runPackagedServerTest') {
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
                 'Done (',
-                'Smart Resource Multiplier 1.3.2+mc1.21.2-1.21.3',
-                'Packaged NeoForge server candidate Smart Resource Multiplier 1.3.2+mc1.21.2-1.21.3 passed exact version, code-source, config, status, and validation checks']) {
+                'Smart Resource Multiplier 1.3.2+mc1.21.5',
+                'Packaged NeoForge server candidate Smart Resource Multiplier 1.3.2+mc1.21.5 passed exact version, code-source, config, status, and validation checks']) {
             if (!log.contains(evidence)) {
                 throw new GradleException("Packaged server log is missing: ${evidence}")
             }
@@ -625,6 +630,7 @@ tasks.named('runPackagedClientTest') {
             line.contains('/ERROR]')
                     && !line.contains('Error while loading the narrator')
                     && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+                    && !line.contains('Failed to fetch Realms feature flags')
         }
         if (!logFile.isFile()
                 || !unexpectedErrors.isEmpty()

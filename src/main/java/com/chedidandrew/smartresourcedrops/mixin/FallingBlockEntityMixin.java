@@ -76,7 +76,8 @@ abstract class FallingBlockEntityMixin implements ProtectedFallingBlock {
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
     private void smartResourceDrops$loadProtectedOrigin(CompoundTag input, CallbackInfo callback) {
-        smartResourceDrops$protectedOrigin = input.getBoolean(SMART_RESOURCE_DROPS_PROTECTED);
+        smartResourceDrops$protectedOrigin = input.getBooleanOr(
+                SMART_RESOURCE_DROPS_PROTECTED, false);
     }
 
     @Override

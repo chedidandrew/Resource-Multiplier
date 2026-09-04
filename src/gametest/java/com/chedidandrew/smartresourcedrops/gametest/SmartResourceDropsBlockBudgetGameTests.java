@@ -6,7 +6,7 @@ import com.chedidandrew.smartresourcedrops.core.SmartDropsStats;
 import com.chedidandrew.smartresourcedrops.gametest.fixture.GameTestBlockLootFixtures;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.gametest.framework.GameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -32,7 +32,7 @@ public final class SmartResourceDropsBlockBudgetGameTests {
     private static final int ORIGINAL_DIAMONDS = GameTestBlockLootFixtures.PATHOLOGICAL_STACKS
             * GameTestBlockLootFixtures.ITEMS_PER_STACK;
 
-    @GameTest(template = "smart_resource_drops_gametest:wide")
+    @GameTest(structure = "smart_resource_drops_gametest:wide", maxTicks = 100)
     public void pathologicalFinalLootFallsBackForEveryBlockSourceAndRecovers(
             final GameTestHelper helper
     ) {
@@ -77,13 +77,13 @@ public final class SmartResourceDropsBlockBudgetGameTests {
             assertListDrops(helper, explosionDrops, 1, ORIGINAL_DIAMONDS, "explosion fallback");
 
             SmartDropsStats.Snapshot fallbackStats = SmartDropsStats.snapshot();
-            helper.assertTrue(fallbackStats.blocksEvaluated() == 3L,
+            GameTestAssertions.assertTrue(helper, fallbackStats.blocksEvaluated() == 3L,
                     "Budget fallbacks were not recorded as evaluated block events");
-            helper.assertTrue(fallbackStats.blocksMultiplied() == 0L,
+            GameTestAssertions.assertTrue(helper, fallbackStats.blocksMultiplied() == 0L,
                     "Budget fallbacks were incorrectly recorded as successful multiplication");
-            helper.assertTrue(fallbackStats.bonusItems() == 0L,
+            GameTestAssertions.assertTrue(helper, fallbackStats.bonusItems() == 0L,
                     "Budget fallbacks incorrectly recorded requested bonus output");
-            helper.assertTrue(fallbackStats.blockBudgetFallbacks() == 3L,
+            GameTestAssertions.assertTrue(helper, fallbackStats.blockBudgetFallbacks() == 3L,
                     "Expected three block budget fallback statistics");
 
             final BlockPos recoveryPos = helper.absolutePos(new BlockPos(5, 2, 5));
@@ -98,11 +98,11 @@ public final class SmartResourceDropsBlockBudgetGameTests {
             assertWorldDrops(helper, recoveryPos, 64, 0, "post-fallback normal multiplication");
 
             SmartDropsStats.Snapshot recoveredStats = SmartDropsStats.snapshot();
-            helper.assertTrue(recoveredStats.blocksMultiplied() == 1L,
+            GameTestAssertions.assertTrue(helper, recoveredStats.blocksMultiplied() == 1L,
                     "A normal event after fallback did not multiply");
-            helper.assertTrue(recoveredStats.bonusItems() == 63L,
+            GameTestAssertions.assertTrue(helper, recoveredStats.bonusItems() == 63L,
                     "The normal recovery event recorded incorrect bonus output");
-            helper.assertTrue(recoveredStats.blockBudgetFallbacks() == 3L,
+            GameTestAssertions.assertTrue(helper, recoveredStats.blockBudgetFallbacks() == 3L,
                     "The normal recovery event changed the fallback count");
         } finally {
             GameTestBlockLootFixtures.reset();
@@ -210,9 +210,9 @@ public final class SmartResourceDropsBlockBudgetGameTests {
             final int expectedDiamonds,
             final String scenario
     ) {
-        helper.assertTrue(total(drops, Items.DIRT) == expectedDirt,
+        GameTestAssertions.assertTrue(helper, total(drops, Items.DIRT) == expectedDirt,
                 scenario + " produced the wrong dirt count");
-        helper.assertTrue(total(drops, Items.DIAMOND) == expectedDiamonds,
+        GameTestAssertions.assertTrue(helper, total(drops, Items.DIAMOND) == expectedDiamonds,
                 scenario + " produced the wrong diamond count");
     }
 
