@@ -278,6 +278,72 @@ tasks.named('processClienttestResources') {
     }
 }
 
+def unexpectedClientSmokeErrors = { String smokeLog ->
+    // Keep this list limited to optional services that Minecraft reports as
+    // ERROR even after the smoke harness has reached its success marker.
+    final List<String> errorLines = smokeLog.readLines().findAll { line ->
+        line.contains('/ERROR]')
+                && !line.contains('Error while loading the narrator')
+                && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+                && !line.contains('Failed to fetch user properties')
+                && !line.contains('Failed to fetch Realms feature flags')
+                && !line.contains("Couldn't connect to realms")
+    }
+    final List<String> unexpectedErrors = []
+    int index = 0
+    while (index < errorLines.size()) {
+        // GLFW emits this exact three-line GL error group when the headless
+        // X11 server cannot supply a standard cursor shape. It does not affect
+        // rendering or the completed smoke assertion. Only discard the whole
+        // group; an incomplete group or any different GL error remains fatal.
+        if (index + 2 < errorLines.size()
+                && errorLines[index].endsWith('########## GL ERROR ##########')
+                && errorLines[index + 1].endsWith('@ Render')
+                && errorLines[index + 2].endsWith(
+                        '65547: X11: Standard cursor shape unavailable')) {
+            index += 3
+            continue
+        }
+        unexpectedErrors.add(errorLines[index])
+        index++
+    }
+    unexpectedErrors
+}
+
+def verifyClientSmokeLogClassifier = tasks.register('verifyClientSmokeLogClassifier') {
+    doLast {
+        final String benignX11CursorGroup = '''\
+[Render thread/ERROR] (Minecraft) ########## GL ERROR ##########
+[Render thread/ERROR] (Minecraft) @ Render
+[Render thread/ERROR] (Minecraft) 65547: X11: Standard cursor shape unavailable
+'''
+        if (!unexpectedClientSmokeErrors(benignX11CursorGroup).isEmpty()) {
+            throw new GradleException('Benign X11 cursor warning must not fail client smoke')
+        }
+
+        final List<String> genuineErrors = unexpectedClientSmokeErrors(
+                benignX11CursorGroup
+                        + '[Render thread/ERROR] (Minecraft) Unexpected rendering failure\n')
+        if (genuineErrors.size() != 1
+                || !genuineErrors[0].endsWith('Unexpected rendering failure')) {
+            throw new GradleException('Client smoke classifier must retain unrelated errors')
+        }
+
+        final List<String> incompleteGroup = unexpectedClientSmokeErrors(
+                '''\
+[Render thread/ERROR] (Minecraft) ########## GL ERROR ##########
+[Render thread/ERROR] (Minecraft) @ Render
+''')
+        if (incompleteGroup.size() != 2) {
+            throw new GradleException('Client smoke classifier must retain incomplete GL errors')
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn verifyClientSmokeLogClassifier
+}
+
 tasks.named('runClientSmoke') {
     dependsOn prepareClientSmoke
     doLast {
@@ -288,17 +354,7 @@ tasks.named('runClientSmoke') {
         }
         final File logFile = file('build/fabric-client-smoke/logs/latest.log')
         final String log = logFile.isFile() ? logFile.getText('UTF-8') : ''
-        // GitHub's headless Linux image has neither Flite nor a physical OpenAL
-        // device. Minecraft logs those two unavailable optional services as
-        // ERROR even though the tested GUI opens, completes, and shuts down.
-        final List<String> unexpectedErrors = log.readLines().findAll { line ->
-            line.contains('/ERROR]')
-                    && !line.contains('Error while loading the narrator')
-                    && !line.contains('Error starting SoundSystem. Turning off sounds & music')
-                    && !line.contains('Failed to fetch user properties')
-                    && !line.contains('Failed to fetch Realms feature flags')
-                    && !line.contains("Couldn't connect to realms")
-        }
+        final List<String> unexpectedErrors = unexpectedClientSmokeErrors(log)
         if (!logFile.isFile()
                 || !unexpectedErrors.isEmpty()
                 || log.readLines().any { line -> line.contains('/FATAL]') }
