@@ -10,8 +10,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * A centered, responsive selection list for structured configuration rows.
@@ -227,11 +229,13 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
                     || leftDetail.truncated()
                     || rightDetail.truncated();
             if (hovered && (!row.tooltip().getString().isEmpty() || truncated)) {
-                Component tooltip = hoverText(truncated);
-                StructuredConfigList.this.pendingTooltip =
-                        Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip);
-                StructuredConfigList.this.pendingTooltipX = mouseX;
-                StructuredConfigList.this.pendingTooltipY = mouseY;
+                Component tooltip = composeHoverText(row, truncated);
+                if (!tooltip.getString().isEmpty()) {
+                    StructuredConfigList.this.pendingTooltip =
+                            Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip);
+                    StructuredConfigList.this.pendingTooltipX = mouseX;
+                    StructuredConfigList.this.pendingTooltipY = mouseY;
+                }
             }
         }
 
@@ -268,47 +272,62 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
          * supplemental tooltip. When the row is truncated, every unclipped row
          * field is shown first and supplemental details follow on new lines.
          */
-        private Component hoverText(final boolean truncated) {
-            final MutableComponent text = Component.empty();
-            if (truncated) {
-                appendTooltipPart(text, row.primary());
-                appendTooltipPart(text, row.secondary());
-                appendTooltipPart(text, row.leftDetail());
-                appendTooltipPart(text, row.rightDetail());
-            }
-            appendTooltipPart(text, row.tooltip());
-            return text;
-        }
-
         private Component fullRowText() {
-            MutableComponent text = Component.empty();
-            appendNarrationPart(text, row.primary());
-            appendNarrationPart(text, row.secondary());
-            appendNarrationPart(text, row.leftDetail());
-            appendNarrationPart(text, row.rightDetail());
-            appendNarrationPart(text, row.tooltip());
-            return text;
+            return composeNarrationText(row);
         }
     }
 
-    private static void appendTooltipPart(final MutableComponent target, final Component part) {
-        if (part.getString().isEmpty()) {
-            return;
+    static Component composeHoverText(final Row row, final boolean truncated) {
+        final MutableComponent text = Component.empty();
+        final Set<String> seen = new HashSet<>();
+        if (truncated) {
+            appendUniquePart(text, seen, row.primary(), "\n");
+            appendUniquePart(text, seen, row.secondary(), "\n");
+            appendUniquePart(text, seen, row.leftDetail(), "\n");
+            appendUniquePart(text, seen, row.rightDetail(), "\n");
+        } else {
+            rememberPart(seen, row.primary());
+            rememberPart(seen, row.secondary());
+            rememberPart(seen, row.leftDetail());
+            rememberPart(seen, row.rightDetail());
         }
-        if (!target.getString().isEmpty()) {
-            target.append(Component.literal("\n"));
-        }
-        target.append(part);
+        appendUniquePart(text, seen, row.tooltip(), "\n");
+        return text;
     }
 
-    private static void appendNarrationPart(final MutableComponent target, final Component part) {
-        if (part.getString().isEmpty()) {
-            return;
+    static Component composeNarrationText(final Row row) {
+        final MutableComponent text = Component.empty();
+        final Set<String> seen = new HashSet<>();
+        appendUniquePart(text, seen, row.primary(), ", ");
+        appendUniquePart(text, seen, row.secondary(), ", ");
+        appendUniquePart(text, seen, row.leftDetail(), ", ");
+        appendUniquePart(text, seen, row.rightDetail(), ", ");
+        appendUniquePart(text, seen, row.tooltip(), ", ");
+        return text;
+    }
+
+    private static void rememberPart(final Set<String> seen, final Component part) {
+        part.getString().lines()
+                .map(String::strip)
+                .filter(line -> !line.isEmpty())
+                .forEach(seen::add);
+    }
+
+    private static void appendUniquePart(
+            final MutableComponent target,
+            final Set<String> seen,
+            final Component part,
+            final String separator
+    ) {
+        for (String line : part.getString().lines().map(String::strip).filter(value -> !value.isEmpty()).toList()) {
+            if (!seen.add(line)) {
+                continue;
+            }
+            if (!target.getString().isEmpty()) {
+                target.append(Component.literal(separator));
+            }
+            target.append(Component.literal(line));
         }
-        if (!target.getString().isEmpty()) {
-            target.append(Component.literal(", "));
-        }
-        target.append(part);
     }
 
     private static ClippedText clip(final Font font, final Component component, final int maximumWidth) {

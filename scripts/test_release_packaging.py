@@ -110,12 +110,12 @@ def write_minimum_release_entries(
         },
         "mixins": ["smart_resource_drops.mixins.json"],
         "depends": {
-            "fabricloader": ">=0.19.5",
-            "minecraft": "1.21.1",
-            "java": ">=21",
-            "fabric-api": ">=0.116.17+1.21.1",
+            "fabricloader": f">={package_release.parse_properties(ROOT / 'gradle.properties')['loader_version']}",
+            "minecraft": package_release.parse_properties(ROOT / "gradle.properties")["minecraft_version_range"],
+            "java": f">={package_release.parse_properties(ROOT / 'gradle.properties')['java_version']}",
+            "fabric-api": f">={package_release.parse_properties(ROOT / 'gradle.properties')['fabric_version']}",
         },
-        "suggests": {"modmenu": ">=11.0.4"},
+        "suggests": {"modmenu": f">={package_release.parse_properties(ROOT / 'gradle.properties')['modmenu_version']}"},
     }
     if metadata_overrides is not None:
         metadata.update(metadata_overrides)
@@ -212,7 +212,7 @@ for forbidden in (
     ".build/core-tests/Example.class",
     "run/config/smart_resource_drops.json",
     "logs/latest.log",
-    "dist/SmartResourceMultiplier-1.3.1+mc1.21.1-source.zip",
+    "dist/SmartResourceMultiplier-1.3.2+mc1.21.4-source.zip",
     "out/production/Example.class",
     ".idea/workspace.xml",
     ".vs/SmartResourceDrops/v17/.suo",
@@ -260,7 +260,7 @@ for missing_source in (
     "docs/PERFORMANCE.md",
     "docs/PUBLIC_RELEASE_CHECKLIST.md",
     "docs/releases/1.3.0.md",
-    "docs/releases/1.3.1+mc1.21.1.md",
+    "docs/releases/1.3.2+mc1.21.4.md",
     "docs/TESTING.md",
     "docs/images/general-config.webp",
     "docs/images/block-overrides.webp",
@@ -577,7 +577,7 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
         "data/smart_resource_drops/tags/entity_type/shearing/standard_resources.json",
         "data/smart_resource_drops/tags/entity_type/shearing/special.json",
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.class",
-        "com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.class",
+        "com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.class",
     ):
         incomplete_jar = temp_root / ("missing_" + missing_entry.replace("/", "_") + ".jar")
         with zipfile.ZipFile(incomplete_jar, "w") as archive:

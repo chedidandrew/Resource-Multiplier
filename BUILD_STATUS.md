@@ -1,47 +1,32 @@
 # Build status
 
-## Smart Resource Multiplier 1.3.2+mc1.21.4 candidate lane
+## Smart Resource Multiplier 1.3.2 for Minecraft 1.21.4
 
-This worktree contains separate Fabric and NeoForge candidates for exactly
-Minecraft 1.21.4. The lane is tested locally but remains unpublished.
+This branch is the tested, release-ready source for separate Fabric and NeoForge JARs targeting Minecraft 1.21.4. Minecraft 26.2 remains the newest/default line on `main`.
 
-- Branch: `backport/1.21.4-compat`
+- Branch: `backport/1.21.4`
+- Exact release tag: `v1.3.2+mc1.21.4`
 - Version: `1.3.2+mc1.21.4`
+- Publication latch: `release_ready=true`
 - Java: `21`
 - Fabric: Loader `0.19.5`, Fabric API `0.119.4+1.21.4`, optional Mod Menu `13.0.4`
 - NeoForge: `21.4.157`, ModDevGradle `2.0.146`
-- Publication latch: `release_ready=false`
-- Publication state: no tag, push, GitHub release, or other publication is authorized
 
-## Candidate artifacts
+## Release artifacts
 
-- Fabric: `compat/candidates/smart-resource-multiplier-fabric-1.3.2+mc1.21.4.jar`
-  - SHA-256: `4B84930EAFF19A7100F3AB9C9718AAB2C7D5A2A83A34CF177EAF945706088129`
-- NeoForge: `compat/candidates/smart-resource-multiplier-neoforge-1.3.2+mc1.21.4.jar`
-  - SHA-256: `1442F542FD3A68FB86F292AF629CF9B86A27B426E7F45A0713B5F6CF00C9E1F4`
-
-Both local files match `compat/candidates/SHA256SUMS.txt` and the retained
-runtime evidence. Candidate JARs are intentionally ignored by Git.
+- Fabric: `smart-resource-multiplier-1.3.2+mc1.21.4.jar`
+  - SHA-256: `8A470D9BE6EDD6D1E8DF966F5162A6052C950F660FAFFD9698EA12D0F59528A9`
+- NeoForge: `smart-resource-multiplier-neoforge-1.3.2+mc1.21.4.jar`
+  - SHA-256: `7B792370FF42F066DB024A06B1A00408C55192216EE7059A8285B2341EC20032`
 
 ## Verified evidence
 
-- Production compilation and unit tests pass for both loaders.
-- Fabric and NeoForge each pass all 64 required gameplay GameTests.
-- Both client GUI/category smokes, multiplayer authority/reconnect tests, and
-  three-start placement-persistence lifecycles pass.
-- NeoForge passes the client-only and server-only optional-installation matrix
-  and rejects an oversized network payload without changing server state.
-- The unchanged Fabric candidate boots on a dedicated server with its hash
-  preserved. The unchanged NeoForge candidate passes both dedicated-server and
-  physical-client packaged-JAR probes.
-- Package and loader-isolation audits pass. Fabric's exact packaged-JAR harness
-  does not include a physical-client probe; its client coverage comes from the
-  production-source GUI smoke.
+- Both loaders pass production compilation, unit tests, and all 64 gameplay GameTests.
+- Client GUI/category smokes verify centered multiplier values and deduplicated structured tooltips and narration.
+- Both loaders pass multiplayer authority/reconnect and three-start placement-persistence gates.
+- NeoForge passes optional-installation, oversized-wire, and exact packaged server/client probes.
+- The unchanged Fabric JAR passes an exact packaged dedicated-server boot; its physical-client coverage is the production-source GUI smoke.
+- Artifact audits confirm correct metadata, Java 21 bytecode, and loader isolation.
+- Manual in-game acceptance was completed on both loaders.
 
-The detailed matrix is in `compat/COMPATIBILITY_MATRIX.md`. Compact replay
-evidence is in `compat/evidence/1.21.4-runtime-gates.json`, and the exact Fabric
-server result is retained below `compat/fabric-exact-smoke/runtime/`.
-
-This is a local candidate-ready state awaiting manual acceptance. Keep
-`release_ready=false`; do not push or publish it without a separate release
-decision.
+The guarded release workflow will publish only when the exact tag points to the remote tip of this branch. It sets `make_latest: false`, preserving Minecraft 26.2 as GitHub's **Latest** release.

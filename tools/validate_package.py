@@ -160,7 +160,7 @@ required = [
     "docs/BRANDING.md",
     "docs/NEOFORGE_PORT.md",
     "docs/releases/1.3.0.md",
-    "docs/releases/1.3.1+mc1.21.1.md",
+    "docs/releases/1.3.2+mc1.21.4.md",
     "docs/releases/1.2.2.md",
     "docs/releases/1.2.3.md",
     "docs/images/general-config.webp",
@@ -305,7 +305,7 @@ form_markers = {
         "id: loader",
         "Mod loader version",
         "Loader-specific dependencies",
-        "placeholder: 1.3.1+mc1.21.1",
+        "placeholder: 1.3.2+mc1.21.4",
         'placeholder: "21"',
         "NeoForge",
         "Java version",
@@ -438,12 +438,12 @@ for marker in (
     '<h1 align="center">Smart Resource Multiplier</h1>',
     'src="src/main/resources/assets/smart_resource_drops/icon.png"',
     'alt="Smart Resource Multiplier icon"',
-    "actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.1",
-    "Minecraft-1.21.1",
+    "actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.4",
+    "Minecraft-1.21.4",
     "Loaders-Fabric%20%7C%20NeoForge",
     "Java-21",
     "License-MIT",
-    "Status-1.3.0%2Bmc1.21.1-Testing",
+    "Status-1.3.2%2Bmc1.21.4-Stable",
     "> [!IMPORTANT]",
     "Current stable release:",
     "www.curseforge.com/minecraft/mc-mods/resource-multiplier",
@@ -1244,16 +1244,16 @@ if "tags: ['v*']" not in release_workflow:
     fail("The release workflow must remain the sole v* tag workflow")
 if (
     "tools/package_release.py --output-dir dist" not in release_workflow
-    or "dist/smart-resource-multiplier-1.3.1+mc1.21.1.jar" not in release_workflow
-    or "dist/smart-resource-multiplier-neoforge-1.3.1+mc1.21.1.jar" not in release_workflow
+    or "dist/smart-resource-multiplier-1.3.2+mc1.21.4.jar" not in release_workflow
+    or "dist/smart-resource-multiplier-neoforge-1.3.2+mc1.21.4.jar" not in release_workflow
 ):
     fail("The release workflow must create and publish the validated deterministic release bundle")
 for required_release_gate in (
     '[[ "$GITHUB_REF" == refs/tags/* ]]',
-    "refs/tags/v1.3.1+mc1.21.1",
+    "refs/tags/v1.3.2+mc1.21.4",
     'test "$release_ready" = "true"',
     'test "$tag_commit" = "$branch_commit"',
-    "refs/remotes/origin/backport/1.21.1",
+    "refs/remotes/origin/backport/1.21.4",
     "fetch-depth: 0",
     "make_latest: false",
 ):
