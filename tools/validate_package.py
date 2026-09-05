@@ -162,6 +162,7 @@ required = [
     "docs/NEOFORGE_PORT.md",
     "docs/releases/1.3.0.md",
     "docs/releases/1.3.1+mc1.21.1.md",
+    "docs/releases/1.3.2+mc1.21.9-1.21.10.md",
     "docs/releases/1.2.2.md",
     "docs/releases/1.2.3.md",
     "docs/images/general-config.webp",
@@ -312,7 +313,7 @@ form_markers = {
         "id: loader",
         "Mod loader version",
         "Loader-specific dependencies",
-        "placeholder: 1.3.1+mc1.21.1",
+        "placeholder: 1.3.2+mc1.21.9-1.21.10",
         'placeholder: "21"',
         "NeoForge",
         "Java version",
@@ -457,12 +458,12 @@ for marker in (
     '<h1 align="center">Smart Resource Multiplier</h1>',
     'src="src/main/resources/assets/smart_resource_drops/icon.png"',
     'alt="Smart Resource Multiplier icon"',
-    "actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.1",
-    "Minecraft-1.21.1",
+    "actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.9--1.21.10",
+    "Minecraft-1.21.9--1.21.10",
     "Loaders-Fabric%20%7C%20NeoForge",
     "Java-21",
     "License-MIT",
-    "Status-1.3.0%2Bmc1.21.1-Testing",
+    "Status-1.3.2%2Bmc1.21.9--1.21.10-Stable",
     "> [!IMPORTANT]",
     "Current stable release:",
     "www.curseforge.com/minecraft/mc-mods/resource-multiplier",
@@ -1273,18 +1274,25 @@ if "branches: ['**']" not in build_workflow or "pull_request:" not in build_work
     fail("The regular build workflow must retain branch-push and pull-request validation")
 if "tags: ['v*']" not in release_workflow:
     fail("The release workflow must remain the sole v* tag workflow")
-if (
-    "tools/package_release.py --output-dir dist" not in release_workflow
-    or "dist/smart-resource-multiplier-1.3.1+mc1.21.1.jar" not in release_workflow
-    or "dist/smart-resource-multiplier-neoforge-1.3.1+mc1.21.1.jar" not in release_workflow
+for required_release_asset in (
+    'release-parent/tools/package_release.py --output-dir "$GITHUB_WORKSPACE/release-parent-dist"',
+    "release-assets/smart-resource-multiplier-1.3.2+mc1.21.9-1.21.10.jar",
+    "release-assets/smart-resource-multiplier-neoforge-1.3.2+mc1.21.9.jar",
+    "release-assets/smart-resource-multiplier-neoforge-1.3.2+mc1.21.10.jar",
 ):
-    fail("The release workflow must create and publish the validated deterministic release bundle")
+    if required_release_asset not in release_workflow:
+        fail(f"The release workflow is missing its three-asset contract: {required_release_asset}")
+if release_workflow.count("release-assets/smart-resource-multiplier-") != 6:
+    fail("The release workflow must stage and publish exactly three named playable JARs")
 for required_release_gate in (
     '[[ "$GITHUB_REF" == refs/tags/* ]]',
-    "refs/tags/v1.3.1+mc1.21.1",
+    "refs/tags/v1.3.2+mc1.21.9-1.21.10",
     'test "$release_ready" = "true"',
-    'test "$tag_commit" = "$branch_commit"',
-    "refs/remotes/origin/backport/1.21.1",
+    'test "$tag_commit" = "$exact_commit"',
+    'test "$parent_ready" = "false"',
+    "ref: backport/1.21.9-1.21.10",
+    "ref: backport/1.21.10-neoforge",
+    'merge-base --is-ancestor "$parent_commit" "$exact_commit"',
     "fetch-depth: 0",
     "make_latest: false",
 ):

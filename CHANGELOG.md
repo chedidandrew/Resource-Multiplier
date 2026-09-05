@@ -4,6 +4,27 @@ All notable changes are documented here.
 
 ## Unreleased
 
+## 1.3.2+mc1.21.9-1.21.10 - 2026-09-04
+
+### Added
+
+- Added a shared Fabric build for Minecraft 1.21.9-1.21.10 and exact NeoForge builds for Minecraft 1.21.9 and 1.21.10.
+
+### Fixed
+
+- Centered multiplier values explicitly on the Minecraft 1.21.9+ GUI implementation.
+- Removed duplicated row titles, descriptions, and actions from structured configuration tooltips and narration.
+
+### Verification
+
+- Passed automated build, unit, GameTest, physical-client GUI, persistence, multiplayer, packaged-JAR, metadata, and loader-isolation gates.
+- Completed hands-on testing across both Fabric versions and both exact NeoForge versions.
+
+### Release status
+
+- Prepared a three-asset release under tag `v1.3.2+mc1.21.9-1.21.10` from `backport/1.21.10-neoforge`, with `backport/1.21.9-1.21.10` required as an ancestor.
+- Uses `make_latest: false`, keeping Minecraft 26.2 tag `v1.3.0` as GitHub's **Latest** release.
+
 ## 1.3.1+mc1.21.1 - 2026-09-03
 
 ### Fixed

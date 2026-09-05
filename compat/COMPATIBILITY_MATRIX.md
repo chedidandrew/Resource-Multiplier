@@ -1,6 +1,6 @@
-# Minecraft 1.21.2-1.21.10 compatibility experiment
+# Minecraft 1.21.2-1.21.10 compatibility matrix
 
-This work is experimental and has not been published. Fabric and NeoForge remain
+Fabric and NeoForge remain
 separate artifacts because their entrypoints, networking, placement storage, and
 loader hooks are not binary-compatible.
 
@@ -62,8 +62,9 @@ Candidate:
 The artifact audit checked all 272 class files at Java class-file major 65,
 verified the metadata and audited mixin/tag set, and found no GameTest, client
 smoke, fixture, source, nested-JAR, Fabric Loader, or Minecraft classes bundled
-inside the candidate. Publication remains locked with `release_ready=false`
-until manual testing and the other loader lanes are complete.
+inside the candidate. Hands-on client acceptance also passed on both declared
+Minecraft versions. Publication is deliberately delegated to the exact 1.21.10
+NeoForge child branch so all three release assets share one guarded tag.
 
 ## Verified NeoForge lane: Minecraft 1.21.9
 
@@ -99,7 +100,9 @@ verified every class as Java class-file major 65, and found no Fabric platform,
 development-test, nested-JAR, source, or GameTest contamination. The Fabric
 provenance importer gives same-version Fabric-to-NeoForge world moves a tested
 one-way migration path while native NeoForge attachment data remains
-authoritative. Publication remains locked with `release_ready=false`.
+authoritative. Hands-on client acceptance passed. The parent branch remains
+locked because the combined release tag must live on the exact 1.21.10 NeoForge
+child tip.
 
 ## Why one 1.21.2-1.21.10 JAR is unsafe
 

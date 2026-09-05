@@ -176,6 +176,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "docs/NEOFORGE_PORT.md",
         "docs/releases/1.3.0.md",
         "docs/releases/1.3.1+mc1.21.1.md",
+        "docs/releases/1.3.2+mc1.21.9-1.21.10.md",
         "neoforge/build.gradle",
         "neoforge/gradle.properties",
         "neoforge/settings.gradle",
