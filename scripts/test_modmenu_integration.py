@@ -184,7 +184,7 @@ require(
 )
 require("modCompileOnly \"com.terraformersmc:modmenu:${modMenuVersionValue}\"" in build, "Mod Menu must be compile-only")
 require("https://maven.terraformersmc.com/" in build, "Terraformers release repository is missing")
-require(re.search(r"^modmenu_version=11\.0\.4$", props, re.MULTILINE) is not None, "Expected Mod Menu 11.0.4 pin")
+require(re.search(r"^modmenu_version=16\.0\.1$", props, re.MULTILINE) is not None, "Expected Mod Menu 16.0.1 pin")
 require("implements ModMenuApi" in integration, "Integration must implement ModMenuApi")
 require("SmartDropsConfigScreens::create" in integration, "Mod Menu must use the shared config-screen route")
 require("SmartDropsConfigScreens.create" in client, "/smartdropsgui must use the same config-screen route")
@@ -673,8 +673,8 @@ require(
     "StructuredConfigList must extend ObjectSelectionList",
 )
 require(
-    re.search(r"public\s+void\s+render\s*\(", structured_list) is not None,
-    "Structured list rows must render through the Minecraft 1.21.1 list-entry rendering hook",
+    re.search(r"public\s+void\s+renderContent\s*\(", structured_list) is not None,
+    "Structured list rows must render through the Minecraft 1.21.9+ content hook",
 )
 require(re.search(r"\bmouseClicked\s*\(", structured_list) is not None, "Structured list rows must handle selection without child Buttons")
 for forbidden in ("import net.minecraft.client.gui.components.Button", "Button.builder(", "new Button("):
@@ -689,9 +689,11 @@ require(
 )
 multiplier_layout = method_body(multiplier_control, "repositionWidgets")
 require(
-    "valueWidget.setPosition(valueAreaX, y);" in multiplier_layout
-    and "renderedValueWidth" not in multiplier_layout,
-    "Multiplier values must remain centered in the fixed-width area between the adjustment buttons",
+    "int renderedValueWidth = Math.min(VALUE_WIDTH, font.width(valueWidget.getMessage()));"
+    in multiplier_layout
+    and "valueWidget.setPosition(valueAreaX + (VALUE_WIDTH - renderedValueWidth) / 2, y);"
+    in multiplier_layout,
+    "Minecraft 1.21.9+ multiplier values must be explicitly centered between the adjustment buttons",
 )
 
 # Apply is staged, dirty-gated, and emits exactly one patch. Local/default authority

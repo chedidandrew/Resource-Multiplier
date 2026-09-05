@@ -45,7 +45,7 @@ with Fabric API `0.134.1+1.21.9` on Minecraft 1.21.9 and Fabric API
 | Production and client-test compile | Pass | Pass |
 | Shared JUnit suite | 164/164 | 164/164 |
 | Runtime GameTests (64 project + 1 Fabric API runner) | 65/65 | 65/65 |
-| Automated client GUI/authority smoke | Pass | Pass |
+| Automated client GUI/authority smoke, including value centering and tooltip deduplication | Pass | Pass |
 | Three-restart placement-persistence smoke | Pass | Pass |
 | Separate-process multiplayer authority/reconnect smoke | Pass | Pass |
 | Exact packaged-JAR dedicated-server boot | Pass | Pass |
@@ -54,8 +54,8 @@ with Fabric API `0.134.1+1.21.9` on Minecraft 1.21.9 and Fabric API
 Candidate:
 
 - File: `smart-resource-multiplier-fabric-1.3.2+mc1.21.9-1.21.10.jar`
-- Size: `967231` bytes
-- SHA-256: `9D67F48CB7AF50D2712CB8EEC7674B12759B61341879FC65303236611BA430C9`
+- Size: `968433` bytes
+- SHA-256: `6B27365B16EBA57D12C681154468ACE21A3B217A81C6AD2CA5B9DE30298C8106`
 - Metadata: mod version `1.3.2+mc1.21.9-1.21.10`, Fabric Loader
   `>=0.19.5`, Fabric API `>=0.134.1+1.21.9`, Java `>=21`
 
@@ -76,7 +76,7 @@ exact metadata ranges rather than claiming compatibility with 1.21.10.
 | --- | --- |
 | Clean production build and shared JUnit suite | Pass (170/170) |
 | Runtime GameTests | Pass (64/64) |
-| Automated physical-client GUI/category smoke, including Copper Golem classification | Pass |
+| Automated physical-client GUI/category smoke, including value centering, tooltip deduplication, and Copper Golem classification | Pass |
 | Three-restart native placement-persistence smoke | Pass |
 | Fabric provenance import and NeoForge-native restart smoke | Pass |
 | Separate-process multiplayer authority/reconnect smoke | Pass |
@@ -89,8 +89,8 @@ exact metadata ranges rather than claiming compatibility with 1.21.10.
 Candidate:
 
 - File: `smart-resource-multiplier-neoforge-1.3.2+mc1.21.9.jar`
-- Size: `964156` bytes
-- SHA-256: `30FD6BA53D31A3BCED760AD1FEBDCFA4482DD818DC50D0EE0B22F313D89882B8`
+- Size: `965324` bytes
+- SHA-256: `614D57CC846F1C34B8240938F9667D05D2B88D8A5031B9609DFAC3234879634C`
 - Metadata: mod version `1.3.2+mc1.21.9`, JavaFML `[4,)`, NeoForge
   `[21.9,21.10)`, Minecraft `[1.21.9]`, Java 21 bytecode
 

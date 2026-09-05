@@ -25,11 +25,11 @@ require(
     "Supplemental tooltips must not replace complete clipped row text",
 )
 require(
-    "hoverText(truncated)" in source,
+    "composeHoverText(row, truncated)" in source,
     "Structured rows must compose one hover payload from truncation and supplemental details",
 )
 require(
-    "private Component hoverText(final boolean truncated)" in source,
+    "static Component composeHoverText(final Row row, final boolean truncated)" in source,
     "StructuredConfigList must retain an explicit hover-text composition helper",
 )
 for field in ("primary", "secondary", "leftDetail", "rightDetail"):
@@ -38,12 +38,20 @@ for field in ("primary", "secondary", "leftDetail", "rightDetail"):
         f"Truncated hover text must include the complete {field} field",
     )
 require(
-    "appendTooltipPart(text, row.tooltip())" in source,
-    "Supplemental hover details must be appended after complete clipped fields",
+    "appendTooltipPart(text, uniqueSupplementalText(row))" in source,
+    "Supplemental hover details must be de-duplicated after complete clipped fields",
 )
 require(
-    source.index("if (truncated)") < source.index("appendTooltipPart(text, row.tooltip())"),
-    "Complete clipped fields must precede supplemental hover details",
+    ".filter(representedLines::add)" in source,
+    "Supplemental tooltip lines must be compared against represented row lines",
+)
+require(
+    "appendNarrationPart(text, uniqueSupplementalText(row))" in source,
+    "Narration must use the same de-duplicated supplemental text",
+)
+require(
+    'if (!tooltip.getString().isEmpty())' in source,
+    "Rows must not schedule an empty tooltip after duplicate lines are removed",
 )
 require(
     'target.append(Component.literal("\\n"));' in source,
