@@ -1,18 +1,18 @@
 # Smart Resource Multiplier compatibility notes
 
-Smart Resource Multiplier `1.3.1+mc1.21.1` targets Minecraft 1.21.1 on Fabric and NeoForge. Both builds share rule resolvers, safety budgets, schema 3 configuration, commands, and GUI; loader-specific adapters handle lifecycle, networking, fake-player detection, and placed-block storage. Minecraft 26.2 remains the newest/default release on `main`.
+Smart Resource Multiplier `1.3.2` targets Minecraft 1.21.6-1.21.8 on Fabric and NeoForge. Both builds share rule resolvers, safety budgets, schema 3 configuration, commands, and GUI; loader-specific adapters handle lifecycle, networking, fake-player detection, and placed-block storage. Minecraft 26.2 remains the newest/default release on `main`.
 
 Compatibility evidence is version- and loader-specific. This document does not claim compatibility with every mod, datapack, server stack, or newer Minecraft world.
 
-## Shearing boundary on Minecraft 1.21.1
+## Shearing boundary on Minecraft 1.21.6-1.21.8
 
-This backport multiplies vanilla Sheep output only. It recognizes a real server player inside `Player.interactOn` and the exact vanilla dispenser entity call inside `ShearsDispenseItemBehavior.tryShearLivingEntity`. Loader-recognized fake players, direct `Shearable.shear` calls, custom machines, and inference from `SoundSource.BLOCKS` remain unsupported vanilla `1x`.
+This backport recognizes a real server player inside `Player.interactOn` and the exact supported vanilla dispenser entity call. Loader-recognized fake players, unscoped direct shearing calls, custom machines, and inference from sound categories remain unsupported vanilla `1x`.
 
-Minecraft 1.21.1 has no generic final-output `LivingEntity.dropFromShearingLootTable` boundary. The implementation therefore wraps the final `Sheep.spawnAtLocation` calls and fails closed for every other entity type. Mooshroom, Snow Golem, and Bogged are special transformations and remain `1x`. Copper Golem does not exist on this target.
+Minecraft 1.21.6-1.21.8 exposes `LivingEntity.dropFromShearingLootTable`. The implementation wraps only that standard helper's final item consumer while an eligible shearing action is active. Mooshroom, Snow Golem, and Bogged remain protected special transformations at vanilla output.
 
-The `#smart_resource_drops:shearing/standard_resources` tag and existing schema 3 override keys are retained for configuration compatibility, but adding a custom type to that tag does not make it eligible on Minecraft 1.21.1. Validation reports such preserved overrides as inactive, and the GUI does not present an unsupported custom type as multiplied. This is intentionally stricter than later Minecraft targets.
+The `#smart_resource_drops:shearing/standard_resources` tag and schema 3 override keys remain the extension surface. A custom type must both opt into that tag and use the supported standard final-output helper; a tag alone cannot make direct or special output safe to multiply.
 
-Beehive honeycomb, leash removal, leaves, vines, cobwebs, and other blocks occur outside the wrapped Sheep output and remain governed by their normal block or vanilla rules.
+Beehive honeycomb, leash removal, leaves, vines, cobwebs, and other blocks occur outside the wrapped entity output and remain governed by their normal block or vanilla rules.
 
 ## Entity death-loot boundary
 
@@ -56,8 +56,8 @@ Before applying a block multiplier above `1x`, the mod preflights the complete f
 
 Mod Menu is an optional Fabric client integration and is not required on dedicated servers. With no active connection it opens the local editor. With a connection it requests the authoritative server snapshot and never substitutes local defaults. Non-operators receive the connected editor read-only; operators and the integrated-server owner may apply validated changes.
 
-Release evidence must come from target-native Minecraft 1.21.1 runs. The Fabric gates use a physical GUI smoke plus a separate real client/server authority test; NeoForge uses its loader-specific physical client and multiplayer gates. Historical Minecraft 26.2 or 1.21.11 results are not proof for this backport.
+Release evidence must come from target-native Minecraft 1.21.6-1.21.8 runs. The Fabric gates use a physical GUI smoke plus a separate real client/server authority test; NeoForge uses its loader-specific physical client and multiplayer gates. Historical Minecraft 26.2, 1.21.11, or 1.21.1 results are not proof for this backport.
 
 ## Integration API stance
 
-This version does not expose a supported public Java API. Packs and mods should use documented configuration, commands, category tags, and `#smart_resource_drops:protected_entity_loot`. The retained shearing tag is not a custom-shearable certification surface on Minecraft 1.21.1.
+This version does not expose a supported public Java API. Packs and mods should use documented configuration, commands, category tags, and `#smart_resource_drops:protected_entity_loot`. The shearing tag is an opt-in signal, not a guarantee: a custom entity must also use Minecraft's supported standard final-output helper.

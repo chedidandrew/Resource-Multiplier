@@ -263,9 +263,9 @@ Shearing resolution is fail-closed:
 known/tagged special safety > unknown/uncertified safety > master disabled > selected source disabled > exact entity > shearing default > global
 ```
 
-On Minecraft 1.21.1, adding an exact rule requires the live entity type to be vanilla Sheep. This target has no safe generic final-output hook for custom living-entity shearing, so extra members of `#smart_resource_drops:shearing/standard_resources` remain visible only as unsupported compatibility data and stay at vanilla `1x`. Unknown and special types also remain fixed at `1x`. Removing a rule with `inherit` remains allowed even when the entity is missing or unsupported.
+On Minecraft 1.21.6-1.21.8, adding an exact rule requires a live entity type that is accepted by the standard-resource shearing policy. A custom type must opt into `#smart_resource_drops:shearing/standard_resources` and emit through Minecraft's supported standard final-output helper; a tag or exact override alone cannot make direct or special output safe. Unknown and protected special types remain fixed at `1x`. Removing a rule with `inherit` remains allowed even when the entity is missing or unsupported.
 
-For eligible Sheep output within the whole-action safety budget, `0x` suppresses the emitted wool while the real shearing state transition, event/sound path, and tool behavior still happen once. An action exceeding the source-entry/materialized-legal-stack preflight falls back wholly to its original vanilla `1x` output. Smart Resource Multiplier never reruns the shearing action.
+For eligible standard output within the whole-action safety budget, `0x` suppresses the emitted items while the real shearing state transition, event/sound path, and tool behavior still happen once. An action exceeding the source-entry/materialized-legal-stack preflight falls back wholly to its original vanilla `1x` output. Smart Resource Multiplier never reruns the shearing action.
 
 ## Presets
 

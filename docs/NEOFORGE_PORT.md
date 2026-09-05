@@ -1,8 +1,8 @@
-# NeoForge 1.21.1 backport
+# NeoForge 1.21.6-1.21.8 backport
 
 ## Baseline and layout
 
-The NeoForge build targets Minecraft `1.21.1`, NeoForge `21.1.249`, ModDevGradle `2.0.146`, FML 4, and Java 21. It consumes the canonical common and client source trees while excluding Fabric adapters, then adds NeoForge entrypoints, networking, placement storage, mixins, metadata, and target-native tests under `neoforge/`.
+The NeoForge build uses two verified profiles: Minecraft `1.21.6` with NeoForge `21.6.20-beta`, and Minecraft `1.21.7-1.21.8` with NeoForge `21.7.25-beta`. Both use ModDevGradle `2.0.146`, FML 4, and Java 21. The build consumes the canonical common and client source trees while excluding Fabric adapters, then adds NeoForge entrypoints, networking, placement storage, mixins, metadata, and target-native tests under `neoforge/`.
 
 Both loaders preserve:
 
@@ -14,13 +14,13 @@ Both loaders preserve:
 ## Target-specific adapters
 
 - NeoForge lifecycle events install common commands, server ticks, configuration, and storage.
-- All six payload types register through NeoForge 21.1 payload handlers. Client handlers are installed behind physical-client indirection so dedicated servers do not link client classes.
+- All six payload types register through target-native NeoForge payload handlers. Client handlers are installed behind physical-client indirection so dedicated servers do not link client classes.
 - Placed-block provenance uses a nonsynced NeoForge data attachment with the stable logical identity.
 - Native `FakePlayer` detection keeps automated actors excluded from player-only attribution.
-- NeoForge-specific placement and shearing mixins use exact 1.21.1 method descriptors with required injection counts.
+- NeoForge-specific placement and shearing mixins use the verified 1.21.6-1.21.8 method descriptors with required injection counts.
 - The older RegisterGameTestsEvent API receives an exact 64-test suite through a loader-only generator and binary `data/smart_resource_drops_gametest/structure/wide.nbt` fixture.
 
-Minecraft 1.21.1 exposes a safe final-output boundary for Sheep, not a general living-entity shearing output boundary. The resolver, validator, GUI, and documentation therefore report only Sheep as multiplier-capable on this target. Special shearables stay 1x.
+Minecraft 1.21.6-1.21.8 exposes the standard living-entity shearing loot-table helper. The implementation wraps its final item consumer inside tightly scoped player or supported automation context. Special transformations remain independently protected and stay at vanilla output.
 
 ## World compatibility
 
@@ -37,4 +37,4 @@ Before publication, the final source commit must pass:
 - a clean packaged-JAR-only server and client test with no development source-set mod;
 - final JAR metadata, Java-21 bytecode, loader-isolation, fixture-isolation, icon, and license validation.
 
-The established filenames are `smart-resource-multiplier-1.3.1+mc1.21.1.jar` for Fabric and `smart-resource-multiplier-neoforge-1.3.1+mc1.21.1.jar` for NeoForge. Install only the file matching the chosen loader.
+The NeoForge filenames are `smart-resource-multiplier-neoforge-1.3.2+mc1.21.6.jar` for Minecraft 1.21.6 and `smart-resource-multiplier-neoforge-1.3.2+mc1.21.7-1.21.8.jar` for Minecraft 1.21.7-1.21.8. Install only the file matching the chosen loader and Minecraft version.

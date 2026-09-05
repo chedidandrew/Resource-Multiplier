@@ -149,7 +149,7 @@ public final class GameTestEntityFixtures {
         }
     }
 
-    /** Applies Fabric's 1.21.1 GameTest sentinels before production sees final output. */
+    /** Applies Fabric GameTest sentinels before production sees final output. */
     public static void acceptFabricFinalDrop(
             final ItemStack stack,
             final LootParams params,

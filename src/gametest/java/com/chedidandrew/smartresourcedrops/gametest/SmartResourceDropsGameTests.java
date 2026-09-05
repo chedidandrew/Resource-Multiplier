@@ -67,7 +67,7 @@ public final class SmartResourceDropsGameTests {
         helper.setBlock(support, Blocks.STONE);
         final ServerPlayer player = GameTestPlayers.survival(helper);
         final ItemStack door = new ItemStack(Items.OAK_DOOR);
-        // NeoForge's 1.21.1 placement hook reads the stack from the real hand.
+        // NeoForge's placement hook reads the stack from the real hand.
         player.setItemInHand(InteractionHand.MAIN_HAND, door);
         helper.placeAt(player, door, support, Direction.UP);
 

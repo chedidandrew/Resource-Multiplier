@@ -2,7 +2,7 @@
 
 ## Smart Resource Multiplier 1.3.2 — Minecraft 1.21.6-1.21.8 lane
 
-This branch prepares three unpublished Java 21 artifacts:
+This release commit prepares three Java 21 artifacts:
 
 - Fabric `1.3.2+mc1.21.6-1.21.8`, built against Minecraft 1.21.6,
   Fabric Loader 0.19.5, and Fabric API 0.128.2+1.21.6.
@@ -20,11 +20,14 @@ two loaders.
 ## Verification
 
 - Production compilation and JUnit pass on every declared loader/version
-  target (164 Fabric tests and 165 NeoForge tests).
+  target (167 Fabric tests and 168 NeoForge tests), including regression
+  coverage that prevents repeated structured-row tooltip and narration lines.
 - Fabric passes all 65 required GameTests and its physical client GUI smoke on
   1.21.6, 1.21.7, and 1.21.8.
 - NeoForge passes all 64 required GameTests and its physical client GUI smoke
   on 1.21.6, 1.21.7, and 1.21.8.
+- The user manually accepted the final NeoForge interfaces on Minecraft 1.21.6,
+  1.21.7, and 1.21.8 after the structured-tooltip correction.
 - Every candidate passes isolated exact-JAR server and client probes on every
   Minecraft version declared by its metadata. Shared-lane candidates retain
   identical SHA-256 bytes across all target launches.
@@ -32,7 +35,7 @@ two loaders.
 
 ## Publication state
 
-- Branch: `backport/1.21.6-1.21.8-compat`
-- Publication latch: `release_ready=false`
-- No commit, tag, push, or release was created by this compatibility pass.
+- Branch: `backport/1.21.6-1.21.8`
+- Publication latch: `release_ready=true`
+- Exact release tag: `v1.3.2+mc1.21.6-1.21.8`
 - Minecraft 26.2 remains the newest/default release line on `main`.

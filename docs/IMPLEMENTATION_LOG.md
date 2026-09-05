@@ -1,5 +1,9 @@
 # Implementation log
 
+## 2026-09-04, structured tooltip deduplication
+
+Structured configuration rows now compose clipped row text, supplemental hover guidance, and screen-reader narration one line at a time. A title, description, value, or action already represented by the row is emitted once instead of being repeated when the row's tooltip contains the same text. This is a presentation-only correction: gameplay, configuration schema and defaults, networking, persistence, permissions, and multiplier resolution are unchanged.
+
 ## 2026-09-01, Fabric and NeoForge 1.3.0 parity release
 
 Smart Resource Multiplier now builds separate native Fabric and NeoForge 26.2 JARs from one shared gameplay, configuration, commands, networking-policy, and GUI implementation. NeoForge-specific entrypoints, payload registration, configuration-screen registration, placement storage, migration, fake-player handling, and mixins remain isolated under `neoforge/`; the established Fabric artifact and adapter paths remain intact.

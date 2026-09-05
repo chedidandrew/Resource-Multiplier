@@ -1,6 +1,6 @@
 # Minecraft 1.21.6-1.21.8 compatibility lane
 
-This work is fully tested but remains unpublished. Fabric and NeoForge are
+This release lane is fully tested and authorized for publication. Fabric and NeoForge are
 separate artifacts because their entrypoints, networking, placement storage,
 and loader hooks are not binary-compatible.
 
@@ -14,7 +14,7 @@ claiming an untested cross-minor loader range.
 | Gate | Fabric 1.21.6 | Fabric 1.21.7 | Fabric 1.21.8 | NeoForge 1.21.6 | NeoForge 1.21.7 | NeoForge 1.21.8 |
 | --- | --- | --- | --- | --- | --- | --- |
 | Production compile | Pass | Pass | Pass | Pass | Pass | Pass |
-| JUnit suite | 164 pass | 164 pass | 164 pass | 165 pass | 165 pass | 165 pass |
+| JUnit suite | 167 pass | 167 pass | 167 pass | 168 pass | 168 pass | 168 pass |
 | Required gameplay GameTests | 65/65 | 65/65 | 65/65 | 64/64 | 64/64 | 64/64 |
 | Automated client GUI smoke | Pass | Pass | Pass | Pass | Pass | Pass |
 | Exact packaged-JAR server boot | Pass | Pass | Pass | Pass | Pass | Pass |
@@ -29,14 +29,15 @@ compares SHA-256 before and after each launch.
 ## Candidate artifacts
 
 - Fabric 1.21.6-1.21.8:
-  `731D313D3E2FAF8EE71AA50353DC7C407DCF481196B3EA9B57D49917F84F2456`
+  `8A610C0B6AD8F50470E00378078C7198A0AA3E22A9474CF37532E9383D6AA9C9`
 - NeoForge 1.21.6:
-  `6C0437BD8C48E0DB10B2DFA67919B0AD7BD8B45CFD83A79E489B5C611E0DA024`
+  `9DD8081477D89AB8BB277EF7CDEAB76064C230716E4A3C3AD5A4726829073838`
 - NeoForge 1.21.7-1.21.8:
-  `504503E6B106690E379009ADAA7CFBB1D0488955007977946717D95C858A4073`
+  `B04A087F9A6D11D520F1D98B4BA2AC09BE70F4611595E6384BEBC9A0C7FCB7CA`
 
 The JAR files are retained locally in `compat/candidates/` but intentionally
 ignored by Git. Release binaries belong on the release, not in source control.
 
-`release_ready=false` remains set. Publishing requires a separate reviewed
-release action.
+`release_ready=true` authorizes only the guarded
+`v1.3.2+mc1.21.6-1.21.8` release workflow. It verifies that the tag points to
+the exact `backport/1.21.6-1.21.8` tip and keeps Minecraft 26.2 marked Latest.

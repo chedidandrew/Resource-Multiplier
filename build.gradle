@@ -149,7 +149,7 @@ loom {
         }
         multiplayerServerSmoke {
             server()
-            name = 'Fabric 1.21.1 multiplayer authority server smoke'
+            name = 'Fabric 1.21.6-1.21.8 multiplayer authority server smoke'
             source clientTestSourceSet
             runDir 'build/fabric-multiplayer-smoke/server'
             property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
@@ -157,7 +157,7 @@ loom {
         }
         multiplayerClientSmoke {
             client()
-            name = 'Fabric 1.21.1 multiplayer authority client smoke'
+            name = 'Fabric 1.21.6-1.21.8 multiplayer authority client smoke'
             source clientTestSourceSet
             runDir 'build/fabric-multiplayer-smoke/client'
             property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
@@ -166,7 +166,7 @@ loom {
         }
         persistenceMarkServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence mark/save smoke'
+            name = 'Fabric 1.21.6-1.21.8 placement persistence mark/save smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'mark'
@@ -176,7 +176,7 @@ loom {
         }
         persistenceRemoveServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence remove/save smoke'
+            name = 'Fabric 1.21.6-1.21.8 placement persistence remove/save smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'remove'
@@ -186,7 +186,7 @@ loom {
         }
         persistenceVerifyAbsentServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence verify-absent smoke'
+            name = 'Fabric 1.21.6-1.21.8 placement persistence verify-absent smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'verify_absent'

@@ -184,7 +184,7 @@ require(
 )
 require("modCompileOnly \"com.terraformersmc:modmenu:${modMenuVersionValue}\"" in build, "Mod Menu must be compile-only")
 require("https://maven.terraformersmc.com/" in build, "Terraformers release repository is missing")
-require(re.search(r"^modmenu_version=11\.0\.4$", props, re.MULTILINE) is not None, "Expected Mod Menu 11.0.4 pin")
+require(re.search(r"^modmenu_version=15\.0\.2$", props, re.MULTILINE) is not None, "Expected Mod Menu 15.0.2 pin")
 require("implements ModMenuApi" in integration, "Integration must implement ModMenuApi")
 require("SmartDropsConfigScreens::create" in integration, "Mod Menu must use the shared config-screen route")
 require("SmartDropsConfigScreens.create" in client, "/smartdropsgui must use the same config-screen route")
@@ -674,7 +674,7 @@ require(
 )
 require(
     re.search(r"public\s+void\s+render\s*\(", structured_list) is not None,
-    "Structured list rows must render through the Minecraft 1.21.1 list-entry rendering hook",
+    "Structured list rows must render through the target Minecraft list-entry rendering hook",
 )
 require(re.search(r"\bmouseClicked\s*\(", structured_list) is not None, "Structured list rows must handle selection without child Buttons")
 for forbidden in ("import net.minecraft.client.gui.components.Button", "Button.builder(", "new Button("):
@@ -970,7 +970,7 @@ require(
     "A rate-limited tiny patch must not amplify into a full config snapshot response",
 )
 
-# Minecraft 1.21.1 interprets six-digit RGB literals as alpha=0. Check every editor
+# These Minecraft targets interpret six-digit RGB literals as alpha=0. Check every editor
 # rendering source so newly added child screens cannot silently reintroduce invisible text.
 render_sources = {
     "loading screen": loading,
@@ -1168,6 +1168,6 @@ all_resources = "\n".join(
     for path in (ROOT / "src/main/resources").rglob("*")
     if path.is_file() and path.suffix in {".json", ".mcmeta", ".txt"}
 )
-require("#minecraft:tall_flowers" not in all_resources, "Invalid Minecraft 1.21.1 tall_flower tag was reintroduced")
+require("#minecraft:tall_flowers" not in all_resources, "Invalid target tall_flowers tag was reintroduced")
 
 print("Hierarchical Mod Menu integration checks: PASS")

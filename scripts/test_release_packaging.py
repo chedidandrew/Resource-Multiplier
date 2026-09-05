@@ -64,6 +64,15 @@ require(package_release.PUBLIC_MOD_NAME == "Smart Resource Multiplier", "Public 
 require(package_release.PUBLIC_ARCHIVE_BASE == "SmartResourceMultiplier", "Release archive base changed")
 require(package_release.PLAYABLE_JAR_BASE == "smart-resource-multiplier", "Playable JAR base changed")
 require(
+    package_release.FABRIC_RELEASE_VERSION == "1.3.2+mc1.21.6-1.21.8",
+    "Fabric compatibility-lane release version changed",
+)
+require(
+    tuple(target["version"] for target in package_release.NEOFORGE_RELEASE_TARGETS)
+    == ("1.3.2+mc1.21.6", "1.3.2+mc1.21.7-1.21.8"),
+    "NeoForge compatibility-lane release targets changed",
+)
+require(
     package_release.EXPECTED_MODMENU_LINKS
     == {'smart_resource_drops.modmenu.link.kofi': 'https://ko-fi.com/andrewchedid', 'smart_resource_drops.modmenu.link.paypal': 'https://www.paypal.com/paypalme/chedidandrew', 'smart_resource_drops.modmenu.link.cash_app': 'https://cash.app/%24AndrewChedid'},
     "Mod Menu support-link contract changed",
@@ -111,11 +120,11 @@ def write_minimum_release_entries(
         "mixins": ["smart_resource_drops.mixins.json"],
         "depends": {
             "fabricloader": ">=0.19.5",
-            "minecraft": "1.21.1",
+            "minecraft": ">=1.21.6 <1.21.9",
             "java": ">=21",
-            "fabric-api": ">=0.116.17+1.21.1",
+            "fabric-api": ">=0.128.2+1.21.6",
         },
-        "suggests": {"modmenu": ">=11.0.4"},
+        "suggests": {"modmenu": ">=15.0.2"},
     }
     if metadata_overrides is not None:
         metadata.update(metadata_overrides)
@@ -212,7 +221,7 @@ for forbidden in (
     ".build/core-tests/Example.class",
     "run/config/smart_resource_drops.json",
     "logs/latest.log",
-    "dist/SmartResourceMultiplier-1.3.1+mc1.21.1-source.zip",
+    "dist/SmartResourceMultiplier-1.3.2+mc1.21.6-1.21.8-source.zip",
     "out/production/Example.class",
     ".idea/workspace.xml",
     ".vs/SmartResourceDrops/v17/.suo",
@@ -260,7 +269,7 @@ for missing_source in (
     "docs/PERFORMANCE.md",
     "docs/PUBLIC_RELEASE_CHECKLIST.md",
     "docs/releases/1.3.0.md",
-    "docs/releases/1.3.1+mc1.21.1.md",
+    "docs/releases/1.3.2+mc1.21.6-1.21.8.md",
     "docs/TESTING.md",
     "docs/images/general-config.webp",
     "docs/images/block-overrides.webp",
@@ -368,8 +377,21 @@ for required_build_input in (
 root_properties = package_release.parse_properties(ROOT / "gradle.properties")
 neoforge_properties = package_release.parse_properties(ROOT / "neoforge/gradle.properties")
 require(
-    root_properties["mod_version"] == neoforge_properties["mod_version"],
-    "Fabric and NeoForge release versions drifted",
+    root_properties["mod_version"] == package_release.FABRIC_RELEASE_VERSION,
+    "Fabric release version drifted",
+)
+require(
+    neoforge_properties["mod_version"] == package_release.NEOFORGE_RELEASE_TARGETS[-1]["version"],
+    "Default NeoForge release target drifted",
+)
+require(
+    set(package_release.expected_release_hashes())
+    == {
+        "smart-resource-multiplier-1.3.2+mc1.21.6-1.21.8.jar",
+        "smart-resource-multiplier-neoforge-1.3.2+mc1.21.6.jar",
+        "smart-resource-multiplier-neoforge-1.3.2+mc1.21.7-1.21.8.jar",
+    },
+    "Reviewed candidate checksum manifest does not map to the exact public release set",
 )
 
 with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-") as temp_dir:
@@ -456,7 +478,7 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
 
     for label, overrides in (
         ("empty", {"mixins": []}),
-        ("wrong_type", {"mixins": "SheepShearingLootMixin"}),
+        ("wrong_type", {"mixins": "LivingEntityShearingLootMixin"}),
         (
             "missing_core_hook",
             {"mixins": package_release.EXPECTED_PRODUCTION_MIXINS[1:]},
@@ -577,7 +599,7 @@ with tempfile.TemporaryDirectory(prefix="smart-resource-multiplier-source-test-"
         "data/smart_resource_drops/tags/entity_type/shearing/standard_resources.json",
         "data/smart_resource_drops/tags/entity_type/shearing/special.json",
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.class",
-        "com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.class",
+        "com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.class",
     ):
         incomplete_jar = temp_root / ("missing_" + missing_entry.replace("/", "_") + ".jar")
         with zipfile.ZipFile(incomplete_jar, "w") as archive:

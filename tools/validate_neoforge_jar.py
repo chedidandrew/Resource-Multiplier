@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
@@ -142,9 +143,15 @@ def validate_mixin_config(
         errors.append(f"mixin config {config_name!r} declares no mixins")
 
 
-def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
+def validate(
+    jar_path: Path,
+    expected_version: str,
+    expected_properties: dict[str, str] | None = None,
+) -> tuple[int, str]:
     errors: list[str] = []
-    expected_java_version = int(properties(ROOT / "neoforge/gradle.properties")["java_version"])
+    if expected_properties is None:
+        expected_properties = properties(ROOT / "neoforge/gradle.properties")
+    expected_java_version = int(expected_properties["java_version"])
     expected_class_major = expected_java_version + 44
     try:
         with zipfile.ZipFile(jar_path) as archive:
@@ -225,11 +232,10 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
             if metadata.get("loaderVersion") != "[4,)":
                 errors.append("NeoForge metadata must declare loaderVersion='[4,)'")
 
-            expected_properties = properties(ROOT / "neoforge/gradle.properties")
             dependencies = metadata.get("dependencies", {}).get(MOD_ID, []) \
                     if isinstance(metadata.get("dependencies"), dict) else []
             expected_dependencies = {
-                "neoforge": f"[{expected_properties['neo_version']},)",
+                "neoforge": expected_properties["neo_version_range"],
                 "minecraft": expected_properties["minecraft_version_range"],
             }
             actual_dependencies = {
@@ -239,7 +245,7 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
             } if isinstance(dependencies, list) else {}
             if actual_dependencies != expected_dependencies:
                 errors.append(
-                    "NeoForge metadata dependencies differ from the exact 1.21.1/21.1.249 target: "
+                    "NeoForge metadata dependencies differ from the selected release target: "
                     f"{actual_dependencies!r}"
                 )
             declared_mixins = metadata.get("mixins")
@@ -296,16 +302,31 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--jar", type=Path)
+    parser.add_argument("--expected-version")
+    parser.add_argument("--minecraft-version-range")
+    parser.add_argument("--neo-version-range")
+    parser.add_argument("--java-version")
+    args = parser.parse_args()
     try:
         config = properties(ROOT / "neoforge/gradle.properties")
-        expected_version = config["mod_version"]
-        jar_path = candidate_path(expected_version)
-        entries, digest = validate(jar_path, expected_version)
+        expected_version = args.expected_version or config["mod_version"]
+        jar_path = args.jar.resolve() if args.jar else candidate_path(expected_version)
+        expected_properties = dict(config)
+        for key, value in (
+            ("minecraft_version_range", args.minecraft_version_range),
+            ("neo_version_range", args.neo_version_range),
+            ("java_version", args.java_version),
+        ):
+            if value is not None:
+                expected_properties[key] = value
+        entries, digest = validate(jar_path, expected_version, expected_properties)
     except (KeyError, ValidationError) as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
         return 1
     print(
-        f"PASS: NeoForge playable JAR is loader-isolated, test-free, Java {config['java_version']}, "
+        f"PASS: NeoForge playable JAR is loader-isolated, test-free, Java {expected_properties['java_version']}, "
         f"and metadata-complete ({entries} entries, SHA-256 {digest})"
     )
     return 0

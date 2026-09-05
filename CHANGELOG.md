@@ -4,6 +4,33 @@ All notable changes are documented here.
 
 ## Unreleased
 
+## 1.3.2+mc1.21.6-1.21.8 - 2026-09-04
+
+### Added
+
+- Added one Fabric JAR for Minecraft 1.21.6-1.21.8, one NeoForge JAR for
+  Minecraft 1.21.6, and one NeoForge JAR for Minecraft 1.21.7-1.21.8.
+
+### Fixed
+
+- Prevented structured configuration tooltips and screen-reader narration from
+  repeating row titles, descriptions, values, or actions.
+
+### Verification
+
+- Passed production compilation, JUnit, GameTests, physical GUI checks, and
+  exact packaged-JAR server/client probes across the declared compatibility
+  matrix.
+- Confirmed NeoForge 1.21.6, 1.21.7, and 1.21.8 manually in game after the
+  tooltip correction.
+
+### Release status
+
+- Authorized guarded publication from `backport/1.21.6-1.21.8` under tag
+  `v1.3.2+mc1.21.6-1.21.8` with exactly three playable JAR assets.
+- Uses `make_latest: false`, keeping Minecraft 26.2 tag `v1.3.0` as GitHub's
+  **Latest** release.
+
 ## 1.3.1+mc1.21.1 - 2026-09-03
 
 ### Fixed

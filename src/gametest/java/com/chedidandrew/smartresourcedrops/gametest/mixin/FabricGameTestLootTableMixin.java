@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.function.Consumer;
 
-/** Final-output fixture adapter for the pre-final-drop-event Fabric API in 1.21.1. */
+/** Final-output fixture adapter for the target Fabric API's loot-table consumer boundary. */
 @Mixin(LootTable.class)
 abstract class FabricGameTestLootTableMixin {
     @WrapMethod(method = "getRandomItems(Lnet/minecraft/world/level/storage/loot/LootParams;JLjava/util/function/Consumer;)V")
