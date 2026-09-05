@@ -63,4 +63,4 @@ Both loaders preserve mod ID `smart_resource_drops`, `config/smart_resource_drop
 
 The NeoForge artifact is intentionally separate from 1.21.9 because Minecraft 1.21.10 adds the breaking tool-stack argument to `ServerPlayerGameMode#removeBlock`. The strict four-argument mixin descriptor is exact to this runtime and must not be advertised for 1.21.9.
 
-`release_ready` remains `false` until every release checklist gate passes.
+The repository-level `release_ready=true` latch authorizes only the guarded combined tag after every release checklist gate passed.

@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml"><img alt="Build and verify" src="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.9--1.21.10"></a>
+  <a href="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml"><img alt="Build and verify" src="https://github.com/chedidandrew/Resource-Multiplier/actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.10--neoforge"></a>
   <img alt="Minecraft 1.21.9-1.21.10" src="https://img.shields.io/badge/Minecraft-1.21.9--1.21.10-62B47A">
   <img alt="Fabric and NeoForge loaders" src="https://img.shields.io/badge/Loaders-Fabric%20%7C%20NeoForge-DBD0B4">
   <a href="https://www.curseforge.com/minecraft/mc-mods/resource-multiplier"><img alt="Download on CurseForge" src="https://img.shields.io/badge/Download-CurseForge-F16436?logo=curseforge&amp;logoColor=white"></a>
@@ -162,7 +162,7 @@ gradlew.bat clean build
 gradlew.bat -p neoforge clean build
 ```
 
-The parent backport source builds the shared Fabric file and exact NeoForge 1.21.9 file. The companion `backport/1.21.10-neoforge` branch builds the exact NeoForge 1.21.10 file. Gradle automatically selects an installed Java 21 toolchain—or downloads one when absent. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
+This combined release tip builds the shared Fabric file and exact NeoForge 1.21.10 file. Its merged `backport/1.21.9-1.21.10` parent builds the exact NeoForge 1.21.9 file used by the same release. Gradle automatically selects an installed Java 21 toolchain—or downloads one when absent. See [Testing and verification](docs/TESTING.md) for the full validator and GameTest sequence; the landing page intentionally does not duplicate the CI pipeline.
 
 ## Documentation
 

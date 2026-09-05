@@ -458,7 +458,7 @@ for marker in (
     '<h1 align="center">Smart Resource Multiplier</h1>',
     'src="src/main/resources/assets/smart_resource_drops/icon.png"',
     'alt="Smart Resource Multiplier icon"',
-    "actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.9--1.21.10",
+    "actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.10--neoforge",
     "Minecraft-1.21.9--1.21.10",
     "Loaders-Fabric%20%7C%20NeoForge",
     "Java-21",

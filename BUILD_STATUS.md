@@ -8,7 +8,7 @@ This exact child branch joins the verified shared Fabric lane for Minecraft 1.21
 - Fabric baseline/range: Minecraft `1.21.9`, `>=1.21.9 <1.21.11`
 - Parent NeoForge version: `1.3.2+mc1.21.9`, exact Minecraft `[1.21.9]`
 - Child NeoForge version: `1.3.2+mc1.21.10`, exact Minecraft `[1.21.10]`
-- Publication latch: `release_ready=false` until the final exact-child authorization commit
+- Publication latch: `release_ready=true` on this final exact-child authorization commit
 - Java: `21`
 - Mod/config identity: `smart_resource_drops`, `config/smart_resource_drops.json`, schema 3
 - Commands: `/smartdrops`, `/smartdropsgui`

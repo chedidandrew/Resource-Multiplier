@@ -136,8 +136,8 @@ Candidate:
 
 The artifact audit checked all 277 class files and 307 file entries, verified
 every class as Java class-file major 65, and found no Fabric platform,
-development-test, nested-JAR, source, or GameTest contamination. Publication
-remains locked with `release_ready=false`.
+development-test, nested-JAR, source, or GameTest contamination. Hands-on client
+acceptance passed and the final exact-child release latch is enabled.
 
 ## Why one 1.21.2-1.21.10 JAR is unsafe
 
