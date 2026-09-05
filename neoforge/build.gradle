@@ -51,6 +51,20 @@ def optionalChannelTestSourceSet = sourceSets.create('optionalchanneltest')
 optionalChannelTestSourceSet.java.setSrcDirs(['src/optionalchanneltest/java'])
 optionalChannelTestSourceSet.resources.setSrcDirs(['src/optionalchanneltest/resources'])
 
+// Keep the test-only probe installable on the same Minecraft/NeoForge range as
+// this backport. A stale hard-coded version makes the installation matrix fail
+// before it can exercise the production networking behavior.
+tasks.named('processOptionalchanneltestResources') {
+    inputs.property 'minecraft_version_range', minecraft_version_range
+    inputs.property 'neo_version_range', neo_version_range
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand(
+                minecraft_version_range: minecraft_version_range,
+                neo_version_range: neo_version_range
+        )
+    }
+}
+
 // This probe compiles against Minecraft/NeoForge only. Production classes must
 // be discovered exclusively from the copied final JAR in the clean mods folder.
 def packagedProbeSourceSet = sourceSets.create('packagedprobetest')
