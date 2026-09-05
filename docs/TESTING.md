@@ -1,8 +1,8 @@
 # Smart Resource Multiplier testing and verification
 
-## 1.3.1+mc1.21.1 Fabric and NeoForge backport
+## 1.3.2+mc1.21.5 Fabric and NeoForge release
 
-This branch provides separate Fabric and NeoForge artifacts for Minecraft 1.21.1 using Java 21. The loaders share gameplay, schema 3 configuration, commands, payload policy, and GUI, with loader-specific entrypoints, networking, fake-player handling, and placement storage. Minecraft 26.2 remains the newest/default release line on `main`. Keep `release_ready=false` until every final gate passes on one commit.
+This branch provides separate Fabric and NeoForge artifacts for Minecraft 1.21.5 using Java 21. The loaders share gameplay, schema 3 configuration, commands, payload policy, and GUI, with loader-specific entrypoints, networking, fake-player handling, and placement storage. Minecraft 26.2 remains the newest/default release line on `main`; this tested commit has `release_ready=true`.
 
 The General-screen labels **Multiply Block XP** and **Block XP Multiplier** now make their block-only scope explicit, while their tooltips point to the independent Mob XP controls under Entity Drops. This presentation-only clarification does not change configuration fields, defaults, or multiplier behavior and is shared by both loader builds.
 
@@ -26,11 +26,11 @@ bash tools/run_neoforge_optional_channel_smoke.sh
 bash tools/run_neoforge_oversized_wire_smoke.sh
 ```
 
-The Fabric server gate must discover and complete exactly 64 tests, including the target-native fake-player denial and Sheep-only shearing boundaries. Fabric API 0.116 predates its client GameTest API, so `runClientSmoke` is an explicit tick-driven physical-client harness rather than a claimed client-GameTest port. It verifies wording, child navigation, non-empty Entity Categories, target classifications, search/configure behavior, and shared dirty/apply/reset state. The three-fresh-JVM persistence chain proves Fabric's native chunk attachment survives a save/restart, removal/save, and final restart. The separate-process Fabric runner proves real server authority, revision changes, permission promotion, disconnect cleanup, and reconnect.
+The Fabric server gate must discover and complete exactly 64 tests, including target-native fake-player denial and shearing boundaries. `runClientSmoke` verifies wording, centered values, deduplicated tooltips, child navigation, non-empty Entity Categories, target classifications, search/configure behavior, and shared dirty/apply/reset state. The persistence runner proves save/restart behavior.
 
-NeoForge uses the 21.1 `RegisterGameTestsEvent` flow. A loader-only generator binds the shared tests to the binary `data/smart_resource_drops_gametest/structure/wide.nbt` template and must discover and execute exactly 64 tests. Release evidence must also include native attachment persistence across an actual save/restart, a production dedicated-server start, physical client/category checks, the real multiplayer/optional-installation/wire gates, and clean packaged-JAR-only server and client starts.
+NeoForge 21.5 binds the shared tests to the binary `data/smart_resource_drops_gametest/structure/wide.nbt` template and must discover and execute exactly 64 tests. Release evidence also includes attachment persistence, production client checks, and clean packaged-JAR-only server and client starts.
 
-Configuration files preserve their schema and identity. Minecraft world downgrades and cross-loader placed-block-data migration are unsupported on this backport; no newer-version fixture may be used as proof for 1.21.1. Back up worlds before changing versions or loaders.
+Configuration files preserve their schema and identity. Minecraft world downgrades and cross-loader placed-block-data migration are unsupported; back up worlds before changing versions or loaders.
 
 ## 1.2.3 stable icon and toolchain release
 

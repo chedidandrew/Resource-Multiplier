@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
@@ -170,6 +171,7 @@ public final class FabricClientSmokeTest implements ClientModInitializer {
         }
         if (this.entityParent == null) {
             this.entityParent = current;
+            assertStructuredTooltipComposition(row(current, "Entity Overrides"));
             if (!this.session.entityDropsEnabled()) {
                 row(current, "Entity Drops").action().run();
                 require(this.session.entityDropsEnabled(),
@@ -457,6 +459,55 @@ public final class FabricClientSmokeTest implements ClientModInitializer {
             require(buttons(screen).stream()
                             .anyMatch(button -> label.equals(button.getMessage().getString())),
                     "General screen omitted navigation: " + label);
+        }
+        assertMultiplierValueAreasCentered(screen);
+    }
+
+    private static void assertMultiplierValueAreasCentered(final Screen screen) {
+        final List<AbstractWidget> allWidgets = widgets(screen);
+        int checked = 0;
+        for (AbstractWidget widget : allWidgets) {
+            if (!(widget instanceof StringWidget valueWidget)
+                    || !valueWidget.getMessage().getString().matches("\\d+x")) {
+                continue;
+            }
+            final Button decrement = buttons(screen).stream()
+                    .filter(button -> "-".equals(button.getMessage().getString()))
+                    .filter(button -> button.getY() == valueWidget.getY() && button.getX() < valueWidget.getX())
+                    .max(java.util.Comparator.comparingInt(Button::getX))
+                    .orElseThrow(() -> new AssertionError("Multiplier value had no decrement button"));
+            final Button increment = buttons(screen).stream()
+                    .filter(button -> "+".equals(button.getMessage().getString()))
+                    .filter(button -> button.getY() == valueWidget.getY() && button.getX() > valueWidget.getX())
+                    .min(java.util.Comparator.comparingInt(Button::getX))
+                    .orElseThrow(() -> new AssertionError("Multiplier value had no increment button"));
+            final int valueCenterTwice = (2 * valueWidget.getX()) + valueWidget.getWidth();
+            final int gapCenterTwice = decrement.getX() + decrement.getWidth() + increment.getX();
+            require(valueCenterTwice == gapCenterTwice,
+                    "Multiplier value area was not centered between its buttons");
+            checked++;
+        }
+        require(checked >= 2, "General screen did not expose both centered multiplier values");
+    }
+
+    private static void assertStructuredTooltipComposition(final StructuredConfigList.Row row) {
+        final String truncated = StructuredConfigList.composeHoverText(row, true).getString();
+        final List<String> visibleFields = List.of(
+                        row.primary(), row.secondary(), row.leftDetail(), row.rightDetail())
+                .stream()
+                .map(Component::getString)
+                .filter(value -> !value.isEmpty())
+                .toList();
+        for (String field : visibleFields) {
+            require(truncated.lines().filter(field::equals).count() == 1,
+                    "Structured tooltip repeated visible row text: " + field);
+        }
+        require(StructuredConfigList.composeHoverText(row, false).getString().isEmpty(),
+                "Untruncated structured row retained duplicate-only tooltip text");
+        final String narration = StructuredConfigList.composeNarrationText(row).getString();
+        for (String field : visibleFields) {
+            require(narration.indexOf(field) == narration.lastIndexOf(field),
+                    "Structured-row narration repeated visible row text: " + field);
         }
     }
 

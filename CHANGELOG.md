@@ -4,6 +4,21 @@ All notable changes are documented here.
 
 ## Unreleased
 
+## 1.3.2+mc1.21.5 - 2026-09-04
+
+### Added
+
+- Added release-ready Fabric and NeoForge support for Minecraft 1.21.5.
+
+### Fixed
+
+- Centered multiplier values and removed duplicate structured tooltip and narration text.
+
+### Verification
+
+- Passed loader-native builds, unit suites, all 64 GameTests, packaged runtime, GUI, persistence, and manual checks.
+- The guarded backport release uses `make_latest: false`, keeping Minecraft 26.2 as GitHub's **Latest** release.
+
 ## 1.3.1+mc1.21.1 - 2026-09-03
 
 ### Fixed

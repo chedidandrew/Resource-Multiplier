@@ -12,14 +12,14 @@ body:
     id: smartdrops-version
     attributes:
       label: Smart Resource Multiplier version
-      placeholder: 1.3.1+mc1.21.1
+      placeholder: 1.3.2+mc1.21.5
     validations:
       required: true
   - type: input
     id: minecraft-version
     attributes:
       label: Minecraft version
-      placeholder: "1.21.1"
+      placeholder: "1.21.5"
     validations:
       required: true
   - type: dropdown
@@ -43,7 +43,7 @@ body:
     attributes:
       label: Loader-specific dependencies
       description: Fabric users should include the Fabric API version. NeoForge users may leave this blank unless another required dependency is installed.
-      placeholder: "Fabric API 0.116.17+1.21.1 (Fabric only)"
+      placeholder: "Fabric API 0.128.2+1.21.5 (Fabric only)"
   - type: input
     id: java-version
     attributes:

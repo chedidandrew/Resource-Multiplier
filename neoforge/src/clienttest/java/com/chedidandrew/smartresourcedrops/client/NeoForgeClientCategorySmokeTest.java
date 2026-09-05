@@ -11,7 +11,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -87,6 +89,7 @@ public final class NeoForgeClientCategorySmokeTest {
         if (minecraft.screen != this.root) {
             return;
         }
+        assertMultiplierValueAreasCentered(this.root);
         press(buttonWithLabel(this.root, "Entity Drops"));
         this.phase = 2;
     }
@@ -96,6 +99,7 @@ public final class NeoForgeClientCategorySmokeTest {
             return;
         }
         final StructuredConfigList list = onlyList(entityDrops);
+        assertStructuredTooltipComposition(rowWithPrimary(list, "Entity Overrides"));
         if (!this.session.entityDropsEnabled()) {
             rowWithPrimary(list, "Entity Drops").action().run();
             if (!this.session.entityDropsEnabled()) {
@@ -250,6 +254,67 @@ public final class NeoForgeClientCategorySmokeTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError(
                         screen.getClass().getSimpleName() + " omitted button " + label));
+    }
+
+    private static void assertMultiplierValueAreasCentered(final Screen screen) {
+        final List<AbstractWidget> widgets = screen.children().stream()
+                .filter(AbstractWidget.class::isInstance)
+                .map(AbstractWidget.class::cast)
+                .toList();
+        final List<Button> buttons = widgets.stream()
+                .filter(Button.class::isInstance)
+                .map(Button.class::cast)
+                .toList();
+        int checked = 0;
+        for (AbstractWidget widget : widgets) {
+            if (!(widget instanceof StringWidget valueWidget)
+                    || !valueWidget.getMessage().getString().matches("\\d+x")) {
+                continue;
+            }
+            final Button decrement = buttons.stream()
+                    .filter(button -> "-".equals(button.getMessage().getString()))
+                    .filter(button -> button.getY() == valueWidget.getY() && button.getX() < valueWidget.getX())
+                    .max(java.util.Comparator.comparingInt(Button::getX))
+                    .orElseThrow(() -> new AssertionError("Multiplier value had no decrement button"));
+            final Button increment = buttons.stream()
+                    .filter(button -> "+".equals(button.getMessage().getString()))
+                    .filter(button -> button.getY() == valueWidget.getY() && button.getX() > valueWidget.getX())
+                    .min(java.util.Comparator.comparingInt(Button::getX))
+                    .orElseThrow(() -> new AssertionError("Multiplier value had no increment button"));
+            final int valueCenterTwice = (2 * valueWidget.getX()) + valueWidget.getWidth();
+            final int gapCenterTwice = decrement.getX() + decrement.getWidth() + increment.getX();
+            if (valueCenterTwice != gapCenterTwice) {
+                throw new AssertionError("Multiplier value area was not centered between its buttons");
+            }
+            checked++;
+        }
+        if (checked < 2) {
+            throw new AssertionError("General screen did not expose both centered multiplier values");
+        }
+    }
+
+    private static void assertStructuredTooltipComposition(final StructuredConfigList.Row row) {
+        final String truncated = StructuredConfigList.composeHoverText(row, true).getString();
+        final List<String> visibleFields = List.of(
+                        row.primary(), row.secondary(), row.leftDetail(), row.rightDetail())
+                .stream()
+                .map(Component::getString)
+                .filter(value -> !value.isEmpty())
+                .toList();
+        for (String field : visibleFields) {
+            if (truncated.lines().filter(field::equals).count() != 1) {
+                throw new AssertionError("Structured tooltip repeated visible row text: " + field);
+            }
+        }
+        if (!StructuredConfigList.composeHoverText(row, false).getString().isEmpty()) {
+            throw new AssertionError("Untruncated structured row retained duplicate-only tooltip text");
+        }
+        final String narration = StructuredConfigList.composeNarrationText(row).getString();
+        for (String field : visibleFields) {
+            if (narration.indexOf(field) != narration.lastIndexOf(field)) {
+                throw new AssertionError("Structured-row narration repeated visible row text: " + field);
+            }
+        }
     }
 
     private static void press(final Button button) {

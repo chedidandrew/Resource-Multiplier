@@ -1,12 +1,12 @@
 # Smart Resource Multiplier roadmap
 
-## Current 1.21.1 backport status
+## Current 1.21.5 backport status
 
-The `backport/1.21.1` branch targets Fabric and NeoForge with the same schema 3 configuration, commands, GUI, and gameplay policy as the current dual-loader implementation. It deliberately makes no Minecraft world-downgrade or cross-loader placed-block-data migration promise. The target remains release-locked until the loader-native server, client, multiplayer-authority, persistence, packaged-JAR, and artifact-validation gates all pass.
+The release-ready `backport/1.21.5` branch targets Fabric and NeoForge with the same schema 3 configuration, commands, GUI, and gameplay policy as the current dual-loader implementation. Loader-native server, client, persistence, packaged-JAR, artifact-validation, and manual acceptance gates pass. Minecraft world downgrades and cross-loader placed-block-data migration remain unsupported.
 
 ## Historical Minecraft 26.2 / 1.3.0 status
 
-This section records the newer Minecraft 26.2 line from which the 1.21.1 backport was made. It is historical context on this branch, not a compatibility or migration claim for the 1.21.1 artifacts.
+This section records the newer Minecraft 26.2 line from which this backport was made. It is historical context, not a compatibility or migration claim for these artifacts.
 
 Smart Resource Multiplier `1.3.0` provides native Fabric and NeoForge 26.2 builds from one shared gameplay/configuration/GUI implementation. Both loader files preserve schema 3, commands, multiplayer authority, block/entity/shearing rules, safety budgets, and the `smart_resource_drops` compatibility namespace. The General screen labels block XP explicitly; mob XP remains an independent setting under Entity Drops.
 

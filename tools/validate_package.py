@@ -37,7 +37,7 @@ EXPECTED_ICON_SIZE = 512
 EXPECTED_ICON_SHA256 = "db216ccd6058404de18f797ebb5be87a313899a27c3f1971fdf086b8637dc190"
 EXPECTED_SOURCE_DEPENDS = {
     "fabricloader": ">=${loader_version}",
-    "minecraft": "${minecraft_version}",
+    "minecraft": "${minecraft_version_range}",
     "java": ">=21",
     "fabric-api": ">=${fabric_version}",
 }
@@ -100,7 +100,7 @@ required = [
     "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingOutputBudget.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingTags.java",
-    "src/main/java/com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.java",
+    "src/main/java/com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.java",
     "src/main/java/com/chedidandrew/smartresourcedrops/platform/PlatformPlayerSupport.java",
@@ -160,7 +160,7 @@ required = [
     "docs/BRANDING.md",
     "docs/NEOFORGE_PORT.md",
     "docs/releases/1.3.0.md",
-    "docs/releases/1.3.1+mc1.21.1.md",
+    "docs/releases/1.3.2+mc1.21.5.md",
     "docs/releases/1.2.2.md",
     "docs/releases/1.2.3.md",
     "docs/images/general-config.webp",
@@ -305,7 +305,7 @@ form_markers = {
         "id: loader",
         "Mod loader version",
         "Loader-specific dependencies",
-        "placeholder: 1.3.1+mc1.21.1",
+        "placeholder: 1.3.2+mc1.21.5",
         'placeholder: "21"',
         "NeoForge",
         "Java version",
@@ -370,12 +370,12 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
-    "mod_version": "1.3.1+mc1.21.1",
-    "minecraft_version": "1.21.1",
+    "mod_version": "1.3.2+mc1.21.5",
+    "minecraft_version": "1.21.5",
     "java_version": "21",
     "loader_version": "0.19.5",
     "loom_version": "1.17.20",
-    "fabric_version": "0.116.17+1.21.1",
+    "fabric_version": "0.128.2+1.21.5",
     "maven_group": "com.chedidandrew",
     "archives_base_name": "smart-resource-multiplier",
 }
@@ -397,9 +397,9 @@ if neoforge_properties.get("mod_version") != properties["mod_version"]:
         f"{properties['mod_version']!r} and {neoforge_properties.get('mod_version')!r}"
     )
 expected_neoforge_properties = {
-    "minecraft_version": "1.21.1",
+    "minecraft_version": "1.21.5",
     "java_version": "21",
-    "neo_version": "21.1.249",
+    "neo_version": "21.5.98",
     "moddev_version": "2.0.146",
     "mod_id": "smart_resource_drops",
     "mod_name": "Smart Resource Multiplier",
@@ -438,12 +438,12 @@ for marker in (
     '<h1 align="center">Smart Resource Multiplier</h1>',
     'src="src/main/resources/assets/smart_resource_drops/icon.png"',
     'alt="Smart Resource Multiplier icon"',
-    "actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.1",
-    "Minecraft-1.21.1",
+    "actions/workflows/build.yml/badge.svg?branch=backport%2F1.21.5",
+    "Minecraft-1.21.5",
     "Loaders-Fabric%20%7C%20NeoForge",
     "Java-21",
     "License-MIT",
-    "Status-1.3.0%2Bmc1.21.1-Testing",
+    "Status-1.3.2%2Bmc1.21.5-Stable",
     "> [!IMPORTANT]",
     "Current stable release:",
     "www.curseforge.com/minecraft/mc-mods/resource-multiplier",
@@ -662,8 +662,15 @@ for java_root in java_roots:
     for path in java_root.rglob("*.java"):
         source_text = path.read_text(encoding="utf-8")
         package_match = re.search(r"(?m)^package\s+([^;]+);", source_text)
-        if package_match is None or not package_match.group(1).startswith(
-            "com.chedidandrew.smartresourcedrops"
+        relative_path = path.relative_to(ROOT).as_posix()
+        allowed_test_shim = (
+            relative_path == "neoforge/src/gametest/java/net/fabricmc/fabric/api/gametest/v1/GameTest.java"
+            and package_match is not None
+            and package_match.group(1) == "net.fabricmc.fabric.api.gametest.v1"
+        )
+        if not allowed_test_shim and (
+            package_match is None
+            or not package_match.group(1).startswith("com.chedidandrew.smartresourcedrops")
         ):
             fail(f"Java package namespace changed in {path.relative_to(ROOT)}")
         if "com.chedidandrew.resourcemultiplier" in source_text:
@@ -684,7 +691,7 @@ if isinstance(mixin, dict):
         "LivingEntityDeathLootMixin",
         "PlayerShearingContextMixin",
         "ShearsDispenseItemBehaviorMixin",
-        "SheepShearingLootMixin",
+        "LivingEntityShearingLootMixin",
         "FallingBlockEntityMixin",
         "PistonMovingBlockEntityMixin",
         "BlockItemPlacementCaptureMixin",
@@ -693,7 +700,7 @@ if isinstance(mixin, dict):
     if isinstance(listed, list):
         if listed != expected_production_mixins:
             fail(
-                "Production mixin configuration must declare the exact audited 1.21.1 set: "
+                "Production mixin configuration must declare the exact audited 1.21.5 set: "
                 f"expected={expected_production_mixins}, actual={listed}"
             )
         for obsolete in ("BlockItemPlacementMixin", "LevelSetBlockMixin"):
@@ -848,9 +855,9 @@ if isinstance(plants_tag, dict):
         fail("Plants category tag values must be a list")
     else:
         if "#minecraft:tall_flowers" in plant_values:
-            fail("Plants category uses unavailable Minecraft 1.21.1 tag #minecraft:tall_flowers")
+            fail("Plants category uses unavailable tag #minecraft:tall_flowers")
         if "#minecraft:flowers" not in plant_values:
-            fail("Plants category must include the Minecraft 1.21.1 #minecraft:flowers tag")
+            fail("Plants category must include #minecraft:flowers")
 
 entity_categories = (
     "bosses",
@@ -938,7 +945,7 @@ if isinstance(special_shearing, dict):
         fail("Special shearing tag must remain datapack-extensible with replace=false")
     special_values = special_shearing.get("values")
     if not isinstance(special_values, list) or set(special_values) != expected_special_shearing:
-        fail("Production special shearing tag differs from the audited Minecraft 1.21.1 safety set")
+        fail("Production special shearing tag differs from the audited vanilla safety set")
     if any("gametest" in str(value) or "fixture" in str(value) for value in special_values):
         fail("Development-only shearing fixture leaked into the production special tag")
 
@@ -1004,7 +1011,7 @@ if (
     or "static ServerPlayer withGameMode" not in game_test_player_helper
     or '@SuppressWarnings("removal")' not in game_test_player_helper
 ):
-    fail("GameTests must centralize the Minecraft 1.21.1 server-player compatibility helper")
+    fail("GameTests must centralize the server-player compatibility helper")
 
 entity_game_tests = (
     ROOT
@@ -1026,7 +1033,7 @@ if isinstance(game_test_metadata, dict):
     if not isinstance(game_test_entrypoints, dict):
         fail("GameTest metadata must contain an entrypoints object")
     elif "fabric-client-gametest" in game_test_entrypoints:
-        fail("Fabric 1.21.1 GameTest metadata must not claim the unavailable client GameTest API")
+        fail("Fabric GameTest metadata must not claim the unused client GameTest API")
     elif (
         "com.chedidandrew.smartresourcedrops.gametest.fixture.FabricGameTestEntityFixtures"
         not in game_test_entrypoints.get("main", [])
@@ -1223,7 +1230,7 @@ neoforge_build = (ROOT / "neoforge/build.gradle").read_text(encoding="utf-8")
 for game_test_contract in (
     "gameTestServer {",
     "smart_resource_drops_gametest",
-    "Registered exactly 64 NeoForge 1.21.1 GameTests",
+    "Registered exactly 64 NeoForge 1.21.5 GameTests",
     "64 tests are now running",
     "64 GAME TESTS COMPLETE",
     "All 64 required tests passed",
@@ -1231,7 +1238,7 @@ for game_test_contract in (
     "client-category.success",
     "runPackagedServerTest",
     "runPackagedClientTest",
-    "Packaged NeoForge server candidate Smart Resource Multiplier 1.3.1+mc1.21.1",
+    "Packaged NeoForge server candidate Smart Resource Multiplier 1.3.2+mc1.21.5",
     "log.readLines().any { line -> line.contains('/ERROR]') }",
 ):
     if game_test_contract not in neoforge_build:
@@ -1244,16 +1251,16 @@ if "tags: ['v*']" not in release_workflow:
     fail("The release workflow must remain the sole v* tag workflow")
 if (
     "tools/package_release.py --output-dir dist" not in release_workflow
-    or "dist/smart-resource-multiplier-1.3.1+mc1.21.1.jar" not in release_workflow
-    or "dist/smart-resource-multiplier-neoforge-1.3.1+mc1.21.1.jar" not in release_workflow
+    or "dist/smart-resource-multiplier-1.3.2+mc1.21.5.jar" not in release_workflow
+    or "dist/smart-resource-multiplier-neoforge-1.3.2+mc1.21.5.jar" not in release_workflow
 ):
     fail("The release workflow must create and publish the validated deterministic release bundle")
 for required_release_gate in (
     '[[ "$GITHUB_REF" == refs/tags/* ]]',
-    "refs/tags/v1.3.1+mc1.21.1",
+    "refs/tags/v1.3.2+mc1.21.5",
     'test "$release_ready" = "true"',
     'test "$tag_commit" = "$branch_commit"',
-    "refs/remotes/origin/backport/1.21.1",
+    "refs/remotes/origin/backport/1.21.5",
     "fetch-depth: 0",
     "make_latest: false",
 ):
