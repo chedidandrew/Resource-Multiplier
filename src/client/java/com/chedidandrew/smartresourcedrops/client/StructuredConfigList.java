@@ -11,8 +11,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * A centered, responsive selection list for structured configuration rows.
@@ -199,11 +201,13 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
                     || leftDetail.truncated()
                     || rightDetail.truncated();
             if (hovered && (!row.tooltip().getString().isEmpty() || truncated)) {
-                Component tooltip = hoverText(truncated);
-                graphics.setTooltipForNextFrame(
-                        Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip),
-                        mouseX,
-                        mouseY);
+                Component tooltip = composeHoverText(row, truncated);
+                if (!tooltip.getString().isEmpty()) {
+                    graphics.setTooltipForNextFrame(
+                            Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip),
+                            mouseX,
+                            mouseY);
+                }
             }
         }
 
@@ -235,32 +239,73 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
             row.action().run();
         }
 
-        /**
-         * Builds hover text without hiding clipped row content behind a
-         * supplemental tooltip. When the row is truncated, every unclipped row
-         * field is shown first and supplemental details follow on new lines.
-         */
-        private Component hoverText(final boolean truncated) {
-            final MutableComponent text = Component.empty();
-            if (truncated) {
-                appendTooltipPart(text, row.primary());
-                appendTooltipPart(text, row.secondary());
-                appendTooltipPart(text, row.leftDetail());
-                appendTooltipPart(text, row.rightDetail());
-            }
-            appendTooltipPart(text, row.tooltip());
-            return text;
-        }
-
         private Component fullRowText() {
             MutableComponent text = Component.empty();
             appendNarrationPart(text, row.primary());
             appendNarrationPart(text, row.secondary());
             appendNarrationPart(text, row.leftDetail());
             appendNarrationPart(text, row.rightDetail());
-            appendNarrationPart(text, row.tooltip());
+            appendNarrationPart(text, uniqueSupplementalText(row));
             return text;
         }
+    }
+
+    /**
+     * Builds hover text without hiding clipped row content or repeating the
+     * title/description lines that many rows also carry in their supplemental
+     * tooltip. Package visibility lets the physical client suites lock this
+     * composition contract without exposing it as public API.
+     */
+    static Component composeHoverText(final Row row, final boolean truncated) {
+        Objects.requireNonNull(row, "row");
+        final MutableComponent text = Component.empty();
+        if (truncated) {
+            appendTooltipPart(text, row.primary());
+            appendTooltipPart(text, row.secondary());
+            appendTooltipPart(text, row.leftDetail());
+            appendTooltipPart(text, row.rightDetail());
+        }
+        appendTooltipPart(text, uniqueSupplementalText(row));
+        return text;
+    }
+
+    private static Component uniqueSupplementalText(final Row row) {
+        final String supplemental = row.tooltip().getString();
+        if (supplemental.isBlank()) {
+            return Component.empty();
+        }
+
+        final Set<String> representedLines = new LinkedHashSet<>();
+        collectTooltipLines(representedLines, row.primary());
+        collectTooltipLines(representedLines, row.secondary());
+        collectTooltipLines(representedLines, row.leftDetail());
+        collectTooltipLines(representedLines, row.rightDetail());
+
+        final List<String> sourceLines = supplemental.lines()
+                .map(String::strip)
+                .filter(line -> !line.isEmpty())
+                .toList();
+        final List<String> uniqueLines = sourceLines.stream()
+                .filter(representedLines::add)
+                .toList();
+        if (uniqueLines.size() == sourceLines.size()) {
+            return row.tooltip();
+        }
+        final MutableComponent unique = Component.empty();
+        for (String line : uniqueLines) {
+            appendTooltipPart(unique, Component.literal(line));
+        }
+        return unique;
+    }
+
+    private static void collectTooltipLines(
+            final Set<String> target,
+            final Component component
+    ) {
+        component.getString().lines()
+                .map(String::strip)
+                .filter(line -> !line.isEmpty())
+                .forEach(target::add);
     }
 
     private static void appendTooltipPart(final MutableComponent target, final Component part) {

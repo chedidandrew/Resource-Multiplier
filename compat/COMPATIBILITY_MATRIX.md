@@ -76,7 +76,7 @@ exact metadata ranges rather than claiming compatibility with 1.21.10.
 | --- | --- |
 | Clean production build and shared JUnit suite | Pass (170/170) |
 | Runtime GameTests | Pass (64/64) |
-| Automated physical-client GUI/category smoke, including Copper Golem classification | Pass |
+| Automated physical-client GUI/category smoke, including value centering, tooltip deduplication, and Copper Golem classification | Pass |
 | Three-restart native placement-persistence smoke | Pass |
 | Fabric provenance import and NeoForge-native restart smoke | Pass |
 | Separate-process multiplayer authority/reconnect smoke | Pass |
@@ -126,8 +126,8 @@ migration remain aligned with the other loader lanes.
 Candidate:
 
 - File: `smart-resource-multiplier-neoforge-1.3.2+mc1.21.10.jar`
-- Size: `964183` bytes
-- SHA-256: `B8F7DD054839EBFBD4B0ACB436EBB64A90BC5ECDF51664154CC9083B112EC61C`
+- Size: `965351` bytes
+- SHA-256: `AE51D8DFFC384A91521BECA059163BF3A94FAB7B233C7C62246D3D2C1E886FC2`
 - Metadata: mod version `1.3.2+mc1.21.10`, JavaFML `[4,)`, NeoForge
   `[21.10,21.11)`, Minecraft `[1.21.10]`, Java 21 bytecode
 

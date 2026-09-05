@@ -11,7 +11,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -81,6 +83,8 @@ public final class NeoForgeClientCategorySmokeTest {
         this.root = openedRoot;
         this.session = openedRoot.editorSession();
         minecraft.setScreen(openedRoot);
+        assertMultiplierValuesCentered(openedRoot);
+        assertStructuredTooltipComposition();
         this.phase = 1;
     }
 
@@ -253,6 +257,87 @@ public final class NeoForgeClientCategorySmokeTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError(
                         screen.getClass().getSimpleName() + " omitted button " + label));
+    }
+
+    private static void assertMultiplierValuesCentered(final Screen screen) {
+        final List<Button> buttons = screen.children().stream()
+                .filter(Button.class::isInstance)
+                .map(Button.class::cast)
+                .toList();
+        final List<StringWidget> values = screen.children().stream()
+                .filter(AbstractWidget.class::isInstance)
+                .map(AbstractWidget.class::cast)
+                .filter(StringWidget.class::isInstance)
+                .map(StringWidget.class::cast)
+                .filter(widget -> widget.getMessage().getString().matches("(?:Inherit|\\d+x)"))
+                .toList();
+        if (values.size() != 2) {
+            throw new AssertionError(
+                    "Root screen did not expose both multiplier value widgets: " + values.size());
+        }
+        for (StringWidget value : values) {
+            final Button decrement = buttons.stream()
+                    .filter(button -> button.getY() == value.getY())
+                    .filter(button -> "-".equals(button.getMessage().getString()))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Multiplier value omitted its decrement button"));
+            final Button increment = buttons.stream()
+                    .filter(button -> button.getY() == value.getY())
+                    .filter(button -> "+".equals(button.getMessage().getString()))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Multiplier value omitted its increment button"));
+            final int expectedX = (decrement.getX() + decrement.getWidth() + increment.getX()
+                    - Minecraft.getInstance().font.width(value.getMessage())) / 2;
+            if (value.getX() != expectedX) {
+                throw new AssertionError(
+                        "Multiplier value was not centered between its buttons: "
+                                + value.getX() + " != " + expectedX);
+            }
+        }
+    }
+
+    private static void assertStructuredTooltipComposition() {
+        final Component title = Component.literal("Entity Overrides");
+        final Component description = Component.literal("Search registered living entity types");
+        final Component action = Component.literal("View Details >");
+        final StructuredConfigList.Row row = new StructuredConfigList.Row(
+                title,
+                description,
+                Component.empty(),
+                action,
+                Component.empty()
+                        .append(title)
+                        .append("\n")
+                        .append(description)
+                        .append("\nAuthoritative category details"),
+                () -> { });
+        final String hover = StructuredConfigList.composeHoverText(row, true).getString();
+        assertOccurrenceCount(hover, title.getString(), 1);
+        assertOccurrenceCount(hover, description.getString(), 1);
+        assertOccurrenceCount(hover, action.getString(), 1);
+        assertOccurrenceCount(hover, "Authoritative category details", 1);
+        final String compactHover = StructuredConfigList.composeHoverText(row, false).getString();
+        if (!"Authoritative category details".equals(compactHover)) {
+            throw new AssertionError(
+                    "Untruncated tooltip did not remove visible duplicate lines: " + compactHover);
+        }
+    }
+
+    private static void assertOccurrenceCount(
+            final String text,
+            final String needle,
+            final int expected
+    ) {
+        int count = 0;
+        int offset = 0;
+        while ((offset = text.indexOf(needle, offset)) >= 0) {
+            count++;
+            offset += needle.length();
+        }
+        if (count != expected) {
+            throw new AssertionError(
+                    "Structured tooltip occurrence mismatch for " + needle + ": " + text);
+        }
     }
 
     private static void press(final Button button) {

@@ -298,10 +298,11 @@ public final class MultiplierControl implements LayoutElement {
 
         decrementButton.setPosition(controlX, y);
         int valueAreaX = controlX + BUTTON_WIDTH + GAP;
-        // StringWidget centers its text within its own width. Keep the widget
-        // anchored to the full value area rather than shifting that area by
-        // half of the unused text width.
-        valueWidget.setPosition(valueAreaX, y);
+        // Since Minecraft 1.21.9 StringWidget renders at its X coordinate
+        // instead of centering inside the constructor width. Center the actual
+        // rendered text explicitly within the fixed area between the buttons.
+        int renderedValueWidth = Math.min(VALUE_WIDTH, font.width(valueWidget.getMessage()));
+        valueWidget.setPosition(valueAreaX + (VALUE_WIDTH - renderedValueWidth) / 2, y);
         incrementButton.setPosition(valueAreaX + VALUE_WIDTH + GAP, y);
     }
 }

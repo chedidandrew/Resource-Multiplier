@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.input.KeyEvent;
@@ -129,6 +130,8 @@ public final class FabricClientSmokeTest implements ClientModInitializer {
         }
         assertGeneralRoot(this.root, true);
         assertBlockExperienceWording(this.root);
+        assertMultiplierValuesCentered(this.root);
+        assertStructuredTooltipComposition();
         assertEntityCatalog(this.session);
         this.navigationIndex = 0;
         press(this.root, ROOT_NAVIGATION.get(0).label());
@@ -561,6 +564,73 @@ public final class FabricClientSmokeTest implements ClientModInitializer {
                 .filter(Button.class::isInstance)
                 .map(Button.class::cast)
                 .toList();
+    }
+
+    private static void assertMultiplierValuesCentered(final Screen screen) {
+        final List<Button> buttons = buttons(screen);
+        final List<StringWidget> values = widgets(screen).stream()
+                .filter(StringWidget.class::isInstance)
+                .map(StringWidget.class::cast)
+                .filter(widget -> widget.getMessage().getString().matches("(?:Inherit|\\d+x)"))
+                .toList();
+        require(values.size() == 2,
+                "Root screen did not expose both multiplier value widgets: " + values.size());
+        for (StringWidget value : values) {
+            final Button decrement = buttons.stream()
+                    .filter(button -> button.getY() == value.getY())
+                    .filter(button -> "-".equals(button.getMessage().getString()))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Multiplier value omitted its decrement button"));
+            final Button increment = buttons.stream()
+                    .filter(button -> button.getY() == value.getY())
+                    .filter(button -> "+".equals(button.getMessage().getString()))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Multiplier value omitted its increment button"));
+            final int expectedX = (decrement.getX() + decrement.getWidth() + increment.getX()
+                    - Minecraft.getInstance().font.width(value.getMessage())) / 2;
+            require(value.getX() == expectedX,
+                    "Multiplier value was not centered between its buttons: "
+                            + value.getX() + " != " + expectedX);
+        }
+    }
+
+    private static void assertStructuredTooltipComposition() {
+        final Component title = Component.literal("Entity Overrides");
+        final Component description = Component.literal("Search registered living entity types");
+        final Component action = Component.literal("View Details >");
+        final StructuredConfigList.Row row = new StructuredConfigList.Row(
+                title,
+                description,
+                Component.empty(),
+                action,
+                Component.empty()
+                        .append(title)
+                        .append("\n")
+                        .append(description)
+                        .append("\nAuthoritative category details"),
+                () -> { });
+        final String hover = StructuredConfigList.composeHoverText(row, true).getString();
+        require(occurrences(hover, title.getString()) == 1,
+                "Structured tooltip duplicated its title: " + hover);
+        require(occurrences(hover, description.getString()) == 1,
+                "Structured tooltip duplicated its description: " + hover);
+        require(occurrences(hover, action.getString()) == 1,
+                "Structured tooltip duplicated its action: " + hover);
+        require(occurrences(hover, "Authoritative category details") == 1,
+                "Structured tooltip lost unique supplemental guidance: " + hover);
+        final String compactHover = StructuredConfigList.composeHoverText(row, false).getString();
+        require("Authoritative category details".equals(compactHover),
+                "Untruncated tooltip did not remove visible duplicate lines: " + compactHover);
+    }
+
+    private static int occurrences(final String text, final String needle) {
+        int count = 0;
+        int offset = 0;
+        while ((offset = text.indexOf(needle, offset)) >= 0) {
+            count++;
+            offset += needle.length();
+        }
+        return count;
     }
 
     private static void require(final boolean condition, final String message) {
