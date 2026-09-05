@@ -1209,6 +1209,23 @@ for required_optional_channel_contract in (
             f"{required_optional_channel_contract}"
         )
 
+optional_channel_metadata = (
+    ROOT / "neoforge/src/optionalchanneltest/resources/META-INF/neoforge.mods.toml"
+).read_text(encoding="utf-8")
+for required_optional_channel_range in (
+    'versionRange="${neo_version_range}"',
+    'versionRange="${minecraft_version_range}"',
+):
+    if required_optional_channel_range not in optional_channel_metadata:
+        fail(
+            "NeoForge optional-channel probe must inherit the active release runtime ranges: "
+            f"{required_optional_channel_range}"
+        )
+
+release_workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+if 'bash tools/run_neoforge_optional_channel_smoke.sh "${neo_args[@]}"' not in release_workflow:
+    fail("NeoForge 1.21.6 release profile must run the optional-channel installation matrix")
+
 oversized_wire_runner = (
     ROOT / "tools/run_neoforge_oversized_wire_smoke.sh"
 ).read_text(encoding="utf-8")
@@ -1227,6 +1244,7 @@ for required_oversized_wire_contract in (
 
 neoforge_build = (ROOT / "neoforge/build.gradle").read_text(encoding="utf-8")
 for game_test_contract in (
+    "processOptionalchanneltestResources",
     "gameTestServer {",
     "smart_resource_drops_gametest",
     "Registered exactly 64 NeoForge 1.21.6-1.21.8 GameTests",

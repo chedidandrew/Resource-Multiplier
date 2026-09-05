@@ -125,6 +125,7 @@ jobs:
           xvfb-run -a ./gradlew -p neoforge --no-daemon "${neo_args[@]}" runClientCategoryTest
           ./gradlew -p neoforge --no-daemon "${neo_args[@]}" runPackagedServerTest
           xvfb-run -a ./gradlew -p neoforge --no-daemon "${neo_args[@]}" runPackagedClientTest
+          bash tools/run_neoforge_optional_channel_smoke.sh "${neo_args[@]}"
           install -m 0644 \
             neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.2+mc1.21.6.jar \
             build/release-inputs/smart-resource-multiplier-neoforge-1.3.2+mc1.21.6.jar

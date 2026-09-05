@@ -10,6 +10,7 @@ readonly CLIENT_ONLY_CLIENT_MARKER='NeoForge optional-channel client passed: cli
 readonly CLIENT_ONLY_SERVER_MARKER='NeoForge optional-channel server probe passed: clientOnly installation and clean disconnect'
 readonly SERVER_ONLY_CLIENT_MARKER='NeoForge optional-channel client passed: production-unmodded client remained connected to the server-only installation'
 readonly SERVER_ONLY_SERVER_MARKER='NeoForge optional-channel server probe passed: serverOnly installation and clean disconnect'
+readonly -a GRADLE_ARGS=("$@")
 
 readonly REPOSITORY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly LOG_DIRECTORY="${REPOSITORY_ROOT}/neoforge/build/optional-channel-smoke-logs"
@@ -89,7 +90,7 @@ wait_for_server_readiness() {
 run_client_with_timeout() {
     local client_task="$1"
     setsid xvfb-run -a ./gradlew -p neoforge --no-daemon --console=plain \
-        "${client_task}" >"${CLIENT_CONSOLE_LOG}" 2>&1 &
+        "${GRADLE_ARGS[@]}" "${client_task}" >"${CLIENT_CONSOLE_LOG}" 2>&1 &
     ACTIVE_PID=$!
 
     local deadline=$((SECONDS + CLIENT_TIMEOUT_SECONDS))
@@ -148,7 +149,7 @@ run_pair() {
     : >"${CLIENT_CONSOLE_LOG}"
 
     setsid ./gradlew -p neoforge --no-daemon --console=plain \
-        "${server_task}" >"${SERVER_CONSOLE_LOG}" 2>&1 &
+        "${GRADLE_ARGS[@]}" "${server_task}" >"${SERVER_CONSOLE_LOG}" 2>&1 &
     SERVER_PID=$!
 
     if ! wait_for_server_readiness; then
@@ -192,7 +193,7 @@ command -v xvfb-run >/dev/null
 
 # Compile every participating source set before overlapping Gradle invocations.
 ./gradlew -p neoforge --no-daemon --console=plain \
-    compileClienttestJava compileOptionalchanneltestJava \
+    "${GRADLE_ARGS[@]}" compileClienttestJava compileOptionalchanneltestJava \
     2>&1 | tee "${PREFLIGHT_CONSOLE_LOG}"
 
 run_pair \
