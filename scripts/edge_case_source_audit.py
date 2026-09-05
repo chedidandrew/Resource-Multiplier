@@ -28,7 +28,7 @@ check(
     "entity shearing uses only scoped final-helper hooks",
     "PlayerShearingContextMixin" in all_text
     and "ShearsDispenseItemBehaviorMixin" in all_text
-    and "SheepShearingLootMixin" in all_text
+    and "LivingEntityShearingLootMixin" in all_text
     and "spawnAtLocation" in all_text,
 )
 check(
@@ -41,7 +41,7 @@ check(
     "KNOWN_VANILLA_SPECIAL_IDS" in all_text
     and "minecraft:mooshroom" in all_text
     and "minecraft:snow_golem" in all_text
-    and "minecraft:copper_golem" not in (
+    and "minecraft:copper_golem" in (
         ROOT / "src/main/resources/data/smart_resource_drops/tags/entity_type/shearing/special.json"
     ).read_text(encoding="utf-8"),
 )

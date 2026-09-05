@@ -77,7 +77,7 @@ def source_tests() -> None:
     assert "ShearingActionContext" in all_text
     assert "PlayerShearingContextMixin" in all_text
     assert "ShearsDispenseItemBehaviorMixin" in all_text
-    assert "SheepShearingLootMixin" in all_text
+    assert "LivingEntityShearingLootMixin" in all_text
 
     identifier_lines = "\n".join(
         line
@@ -96,7 +96,7 @@ def source_tests() -> None:
             if "ShearingActionContext" in all_text:
                 assert "PlayerShearingContextMixin" in joined
                 assert "ShearsDispenseItemBehaviorMixin" in joined
-                assert "SheepShearingLootMixin" in joined
+                assert "LivingEntityShearingLootMixin" in joined
 
     neoforge_mixins = json.loads((
         ROOT / "neoforge/src/main/resources/smart_resource_drops.neoforge.mixins.json"
@@ -117,6 +117,7 @@ def source_tests() -> None:
     assert standard_shearing == {"replace": False, "values": ["minecraft:sheep"]}
     assert set(special_shearing.get("values", [])) == {
         "minecraft:bogged",
+        "minecraft:copper_golem",
         "minecraft:mooshroom",
         "minecraft:snow_golem",
     }
