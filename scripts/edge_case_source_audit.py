@@ -25,11 +25,11 @@ check("canceled break does not obviously consume provenance in BEFORE",not bad,"
 # The source must mention block entity safety somewhere in policy/config/runtime.
 check("block entity safety is represented", "blockentity" in all_text.lower())
 check(
-    "entity shearing uses only scoped final-helper hooks",
+    "entity shearing uses only scoped final-loot hooks",
     "PlayerShearingContextMixin" in all_text
     and "ShearsDispenseItemBehaviorMixin" in all_text
-    and "SheepShearingLootMixin" in all_text
-    and "spawnAtLocation" in all_text,
+    and "LivingEntityShearingLootMixin" in all_text
+    and "wrapLootConsumer" in all_text,
 )
 check(
     "shearing output budget is independently bounded",

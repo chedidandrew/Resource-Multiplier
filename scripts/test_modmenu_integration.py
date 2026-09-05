@@ -184,7 +184,7 @@ require(
 )
 require("modCompileOnly \"com.terraformersmc:modmenu:${modMenuVersionValue}\"" in build, "Mod Menu must be compile-only")
 require("https://maven.terraformersmc.com/" in build, "Terraformers release repository is missing")
-require(re.search(r"^modmenu_version=11\.0\.4$", props, re.MULTILINE) is not None, "Expected Mod Menu 11.0.4 pin")
+require(re.search(r"^modmenu_version=13\.0\.4$", props, re.MULTILINE) is not None, "Expected Mod Menu 13.0.4 pin")
 require("implements ModMenuApi" in integration, "Integration must implement ModMenuApi")
 require("SmartDropsConfigScreens::create" in integration, "Mod Menu must use the shared config-screen route")
 require("SmartDropsConfigScreens.create" in client, "/smartdropsgui must use the same config-screen route")
