@@ -229,7 +229,7 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
             dependencies = metadata.get("dependencies", {}).get(MOD_ID, []) \
                     if isinstance(metadata.get("dependencies"), dict) else []
             expected_dependencies = {
-                "neoforge": f"[{expected_properties['neo_version']},)",
+                "neoforge": expected_properties["neo_version_range"],
                 "minecraft": expected_properties["minecraft_version_range"],
             }
             actual_dependencies = {
@@ -239,7 +239,7 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
             } if isinstance(dependencies, list) else {}
             if actual_dependencies != expected_dependencies:
                 errors.append(
-                    "NeoForge metadata dependencies differ from the exact 1.21.1/21.1.249 target: "
+                    "NeoForge metadata dependencies differ from the configured target ranges: "
                     f"{actual_dependencies!r}"
                 )
             declared_mixins = metadata.get("mixins")

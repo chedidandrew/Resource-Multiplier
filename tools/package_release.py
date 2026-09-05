@@ -49,7 +49,7 @@ EXPECTED_PRODUCTION_MIXINS = [
     "LivingEntityDeathLootMixin",
     "PlayerShearingContextMixin",
     "ShearsDispenseItemBehaviorMixin",
-    "SheepShearingLootMixin",
+    "LivingEntityShearingLootMixin",
     "FallingBlockEntityMixin",
     "PistonMovingBlockEntityMixin",
     "BlockItemPlacementCaptureMixin",
@@ -118,7 +118,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleTrace.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/core/shearing/ShearingTags.java",
-        "src/main/java/com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.java",
+        "src/main/java/com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.java",
         "src/main/java/com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.java",
         "src/client/java/com/chedidandrew/smartresourcedrops/client/ShearingDropsScreen.java",
@@ -174,7 +174,7 @@ REQUIRED_SOURCE_FILES = frozenset(
         "tools/validate_neoforge_jar.py",
         "docs/NEOFORGE_PORT.md",
         "docs/releases/1.3.0.md",
-        "docs/releases/1.3.1+mc1.21.1.md",
+        "docs/releases/1.3.2+mc1.21.2-1.21.3.md",
         "neoforge/build.gradle",
         "neoforge/gradle.properties",
         "neoforge/settings.gradle",
@@ -309,7 +309,7 @@ REQUIRED_RELEASE_JAR_ENTRIES = frozenset(
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleResolver.class",
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingRuleTrace.class",
         "com/chedidandrew/smartresourcedrops/core/shearing/ShearingTags.class",
-        "com/chedidandrew/smartresourcedrops/mixin/SheepShearingLootMixin.class",
+        "com/chedidandrew/smartresourcedrops/mixin/LivingEntityShearingLootMixin.class",
         "com/chedidandrew/smartresourcedrops/mixin/PlayerShearingContextMixin.class",
         "com/chedidandrew/smartresourcedrops/mixin/ShearsDispenseItemBehaviorMixin.class",
         "assets/smart_resource_drops/icon.png",
@@ -823,7 +823,7 @@ def validate_release_jar(
                         if mixin_config.get("mixins") != EXPECTED_PRODUCTION_MIXINS:
                             errors.append(
                                 f"declared mixin config {config_name!r} does not contain the "
-                                "exact audited 1.21.1 production mixin set"
+                                "exact audited 1.21.2-1.21.3 production mixin set"
                             )
                         for side in ("client", "server"):
                             if mixin_config.get(side, []) != []:
@@ -855,7 +855,7 @@ def validate_release_jar(
                 properties = parse_properties(ROOT / "gradle.properties")
                 expected_depends = {
                     "fabricloader": f">={properties['loader_version']}",
-                    "minecraft": properties["minecraft_version"],
+                    "minecraft": properties["minecraft_version_range"],
                     "java": f">={properties['java_version']}",
                     "fabric-api": f">={properties['fabric_version']}",
                 }
@@ -1016,6 +1016,7 @@ def main() -> None:
             f"{version!r} versus {neoforge_version!r}"
         )
     minecraft_version = properties["minecraft_version"]
+    minecraft_target = properties.get("minecraft_version_range", minecraft_version)
     prefix = f"{PUBLIC_ARCHIVE_BASE}-{version}"
     jar_name = f"{PLAYABLE_JAR_BASE}-{version}.jar"
     neoforge_jar_name = f"{NEOFORGE_PLAYABLE_JAR_BASE}-{version}.jar"
@@ -1090,6 +1091,10 @@ def main() -> None:
         raise SystemExit(f"Source package validation failed: {exc}") from exc
 
     package_readme = f"""Smart Resource Multiplier {version} package\n\nTarget: Minecraft Java {minecraft_version}, Java {properties['java_version']}. Choose exactly one loader-specific JAR.\n\nFiles:\n- {jar_name}: Fabric release JAR for Fabric Loader {properties['loader_version']} and Fabric API {properties['fabric_version']}.\n- {neoforge_jar_name}: NeoForge release JAR for NeoForge {neoforge_properties['neo_version']}.\n- {source_name}: Complete GitHub-ready dual-loader source, tests, documentation, Gradle builds, and GitHub Actions workflows.\n- {checksum_name}: SHA-256 hashes for both release JARs and the source archive.\n- {prefix}-BUILD_STATUS.md: Validation status and release evidence.\n\nInstallation:\nUpload the two JARs as separate CurseForge files with the correct Fabric or NeoForge loader selection. Never install both JARs in the same Minecraft instance. Back up a world before changing Minecraft versions or mod loaders; world downgrades and cross-loader placed-block-data migration are unsupported on this backport.\n"""
+    package_readme = package_readme.replace(
+        f"Target: Minecraft Java {minecraft_version},",
+        f"Target: Minecraft Java {minecraft_target},",
+    )
     package_readme_output.write_text(package_readme, encoding="utf-8", newline="\n")
 
     checksums = [jar_output, neoforge_jar_output, source_output]

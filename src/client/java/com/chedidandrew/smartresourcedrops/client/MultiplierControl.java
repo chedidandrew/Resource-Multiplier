@@ -133,7 +133,8 @@ public final class MultiplierControl implements LayoutElement {
         this.decrementButton = Button.builder(Component.literal("-"), button -> step(-1))
                 .size(BUTTON_WIDTH, HEIGHT)
                 .build();
-        this.valueWidget = new StringWidget(VALUE_WIDTH, HEIGHT, Component.empty(), font);
+        this.valueWidget = new StringWidget(VALUE_WIDTH, HEIGHT, Component.empty(), font)
+                .alignCenter();
         this.incrementButton = Button.builder(Component.literal("+"), button -> step(1))
                 .size(BUTTON_WIDTH, HEIGHT)
                 .build();
