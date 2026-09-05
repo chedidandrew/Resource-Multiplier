@@ -11,41 +11,67 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    # The serialized release verifies two loaders plus several real client/server
-    # pairs; retain every gate while allowing a cold NeoForm cache to initialize.
-    timeout-minutes: 240
+    timeout-minutes: 360
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Check out tagged release source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          path: release-tip
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Verify release authorization and provenance
+      - name: Check out canonical Fabric and NeoForge 1.21.9 parent
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: backport/1.21.9-1.21.10
+          path: release-parent
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out canonical exact NeoForge 1.21.10 child
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: backport/1.21.10-neoforge
+          path: release-exact
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify release authorization, branch tips, and ancestry
         shell: bash
         run: |
           [[ "$GITHUB_REF" == refs/tags/* ]] || {
             echo "Release publishing requires a tag ref; found $GITHUB_REF." >&2
             exit 1
           }
-          test "$GITHUB_REF" = 'refs/tags/v1.3.1+mc1.21.1' || {
-            echo "This workflow may publish only refs/tags/v1.3.1+mc1.21.1; found $GITHUB_REF." >&2
+          test "$GITHUB_REF" = 'refs/tags/v1.3.2+mc1.21.9-1.21.10' || {
+            echo "This workflow may publish only refs/tags/v1.3.2+mc1.21.9-1.21.10; found $GITHUB_REF." >&2
             exit 1
           }
 
-          release_ready="$(sed -n 's/^release_ready=//p' gradle.properties)"
+          release_ready="$(sed -n 's/^release_ready=//p' release-tip/gradle.properties)"
           test "$release_ready" = "true" || {
-            echo "Release publishing is locked: set release_ready=true only in the fully tested release commit." >&2
+            echo "Release publishing is locked at the tagged exact-child source." >&2
+            exit 1
+          }
+          parent_ready="$(sed -n 's/^release_ready=//p' release-parent/gradle.properties)"
+          test "$parent_ready" = "false" || {
+            echo "The parent branch must remain independently non-publishing." >&2
             exit 1
           }
 
-          tag_commit="$(git rev-parse "${GITHUB_REF}^{commit}")"
-          git rev-parse --verify 'refs/remotes/origin/backport/1.21.1^{commit}' >/dev/null || {
-            echo "origin/backport/1.21.1 is unavailable; refusing to publish." >&2
+          tag_commit="$(git -C release-tip rev-parse HEAD)"
+          parent_commit="$(git -C release-parent rev-parse HEAD)"
+          exact_commit="$(git -C release-exact rev-parse HEAD)"
+          test "$tag_commit" = "$exact_commit" || {
+            echo "Tagged commit $tag_commit is not the canonical backport/1.21.10-neoforge tip $exact_commit." >&2
             exit 1
           }
-          branch_commit="$(git rev-parse 'refs/remotes/origin/backport/1.21.1^{commit}')"
-          test "$tag_commit" = "$branch_commit" || {
-            echo "Tagged commit $tag_commit is not the tested origin/backport/1.21.1 tip $branch_commit; refusing to publish." >&2
+          git -C release-exact cat-file -e "${parent_commit}^{commit}" || {
+            echo "Canonical parent commit $parent_commit is absent from exact-child history." >&2
+            exit 1
+          }
+          git -C release-exact merge-base --is-ancestor "$parent_commit" "$exact_commit" || {
+            echo "Canonical parent tip $parent_commit is not an ancestor of exact-child tip $exact_commit." >&2
             exit 1
           }
 
@@ -57,22 +83,21 @@ jobs:
       - name: Cache Gradle data
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
 
-      - name: Verify tag matches mod version
+      - name: Verify exact release versions
         shell: bash
         run: |
           tag_version="${GITHUB_REF_NAME#v}"
-          mod_version="$(sed -n 's/^mod_version=//p' gradle.properties)"
-          neoforge_mod_version="$(sed -n 's/^mod_version=//p' neoforge/gradle.properties)"
-          test "$tag_version" = "$mod_version" || {
-            echo "Tag $GITHUB_REF_NAME does not match mod_version=$mod_version" >&2
-            exit 1
-          }
-          test "$neoforge_mod_version" = "$mod_version" || {
-            echo "NeoForge mod_version=$neoforge_mod_version does not match Fabric mod_version=$mod_version" >&2
-            exit 1
-          }
+          parent_fabric_version="$(sed -n 's/^mod_version=//p' release-parent/gradle.properties)"
+          tagged_fabric_version="$(sed -n 's/^mod_version=//p' release-tip/gradle.properties)"
+          parent_neoforge_version="$(sed -n 's/^mod_version=//p' release-parent/neoforge/gradle.properties)"
+          exact_neoforge_version="$(sed -n 's/^mod_version=//p' release-exact/neoforge/gradle.properties)"
+          test "$tag_version" = "$parent_fabric_version"
+          test "$tag_version" = "$tagged_fabric_version"
+          test "$parent_neoforge_version" = '1.3.2+mc1.21.9'
+          test "$exact_neoforge_version" = '1.3.2+mc1.21.10'
 
-      - name: Validate, test, and build Fabric release JAR
+      - name: Validate parent source and release policy
+        working-directory: release-parent
         run: |
           python3 tools/validate_package.py
           python3 scripts/test_release_packaging.py
@@ -81,58 +106,80 @@ jobs:
           python3 scripts/edge_case_source_audit.py
           python3 scripts/polish_regression_tests.py
           bash tools/run_core_tests.sh
+
+      - name: Build and test shared Fabric 1.21.9-1.21.10 source
+        working-directory: release-parent
+        run: |
           chmod +x ./gradlew
           ./gradlew --no-daemon clean test runGameTest build
+          xvfb-run -a ./gradlew --no-daemon runClientSmoke
+          ./gradlew --no-daemon runPersistenceVerifyAbsentServerSmoke
+          bash tools/run_fabric_multiplayer_smoke.sh
 
-      - name: Run client GUI and authority tests
-        run: xvfb-run -a ./gradlew --no-daemon runClientSmoke
-
-      - name: Verify Fabric native placement persistence across restarts
-        run: ./gradlew --no-daemon runPersistenceVerifyAbsentServerSmoke
-
-      - name: Run Fabric multiplayer authority parity gate
-        timeout-minutes: 15
-        run: bash tools/run_fabric_multiplayer_smoke.sh
-
-      - name: Validate, test, and build NeoForge release JAR
+      - name: Build and test exact NeoForge 1.21.9 source
+        working-directory: release-parent
         run: |
           ./gradlew -p neoforge --no-daemon clean build runGameTestServer
           python3 tools/validate_neoforge_jar.py
-
-      - name: Verify NeoForge native placement persistence across restarts
-        run: ./gradlew -p neoforge --no-daemon runPersistenceVerifyAbsentServerTest
-
-      - name: Run NeoForge physical-client category gate
-        run: xvfb-run -a ./gradlew -p neoforge --no-daemon runClientCategoryTest
-
-      - name: Run clean packaged-JAR-only NeoForge server and client gates
-        run: |
+          ./gradlew -p neoforge --no-daemon runPersistenceVerifyAbsentServerTest
+          xvfb-run -a ./gradlew -p neoforge --no-daemon runClientCategoryTest
           ./gradlew -p neoforge --no-daemon runPackagedServerTest
           xvfb-run -a ./gradlew -p neoforge --no-daemon runPackagedClientTest
+          bash tools/run_neoforge_multiplayer_smoke.sh
+          bash tools/run_neoforge_optional_channel_smoke.sh
+          bash tools/run_neoforge_oversized_wire_smoke.sh
 
-      - name: Run NeoForge multiplayer parity gate
-        timeout-minutes: 15
-        run: bash tools/run_neoforge_multiplayer_smoke.sh
+      - name: Validate exact NeoForge 1.21.10 source and policy
+        working-directory: release-exact
+        run: |
+          python3 tools/validate_package.py
+          python3 scripts/test_release_packaging.py
+          python3 scripts/test_modmenu_integration.py
+          python3 scripts/test_structured_tooltip_composition.py
+          python3 scripts/edge_case_source_audit.py
+          python3 scripts/polish_regression_tests.py
+          bash tools/run_core_tests.sh
 
-      - name: Run NeoForge optional-channel installation matrix
-        timeout-minutes: 15
-        run: bash tools/run_neoforge_optional_channel_smoke.sh
+      - name: Build and test exact NeoForge 1.21.10 source
+        working-directory: release-exact
+        run: |
+          chmod +x ./gradlew
+          ./gradlew -p neoforge --no-daemon clean build runGameTestServer
+          python3 tools/validate_neoforge_jar.py
+          ./gradlew -p neoforge --no-daemon runPersistenceVerifyAbsentServerTest
+          xvfb-run -a ./gradlew -p neoforge --no-daemon runClientCategoryTest
+          ./gradlew -p neoforge --no-daemon runPackagedServerTest
+          xvfb-run -a ./gradlew -p neoforge --no-daemon runPackagedClientTest
+          bash tools/run_neoforge_multiplayer_smoke.sh
+          bash tools/run_neoforge_optional_channel_smoke.sh
+          bash tools/run_neoforge_oversized_wire_smoke.sh
 
-      - name: Run NeoForge malicious oversized-wire gate
-        timeout-minutes: 12
-        run: bash tools/run_neoforge_oversized_wire_smoke.sh
-
-      - name: Create deterministic dual-loader release bundle
-        run: python3 tools/package_release.py --output-dir dist
+      - name: Stage exactly three validated release assets
+        shell: bash
+        run: |
+          python3 release-parent/tools/package_release.py --output-dir "$GITHUB_WORKSPACE/release-parent-dist"
+          mkdir "$GITHUB_WORKSPACE/release-assets"
+          install -m 0644 \
+            "$GITHUB_WORKSPACE/release-parent-dist/smart-resource-multiplier-1.3.2+mc1.21.9-1.21.10.jar" \
+            "$GITHUB_WORKSPACE/release-assets/smart-resource-multiplier-1.3.2+mc1.21.9-1.21.10.jar"
+          install -m 0644 \
+            "$GITHUB_WORKSPACE/release-parent-dist/smart-resource-multiplier-neoforge-1.3.2+mc1.21.9.jar" \
+            "$GITHUB_WORKSPACE/release-assets/smart-resource-multiplier-neoforge-1.3.2+mc1.21.9.jar"
+          install -m 0644 \
+            "$GITHUB_WORKSPACE/release-exact/neoforge/build/libs/smart-resource-multiplier-neoforge-1.3.2+mc1.21.10.jar" \
+            "$GITHUB_WORKSPACE/release-assets/smart-resource-multiplier-neoforge-1.3.2+mc1.21.10.jar"
+          test "$(find "$GITHUB_WORKSPACE/release-assets" -maxdepth 1 -type f -name '*.jar' | wc -l)" -eq 3
+          sha256sum "$GITHUB_WORKSPACE"/release-assets/*.jar
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
-          name: Smart Resource Multiplier 1.3.1 — Minecraft 1.21.1 (Fabric + NeoForge)
-          body_path: docs/releases/1.3.1+mc1.21.1.md
+          name: Smart Resource Multiplier 1.3.2 — Minecraft 1.21.9-1.21.10
+          body_path: release-tip/docs/releases/1.3.2+mc1.21.9-1.21.10.md
           files: |
-            dist/smart-resource-multiplier-1.3.1+mc1.21.1.jar
-            dist/smart-resource-multiplier-neoforge-1.3.1+mc1.21.1.jar
+            release-assets/smart-resource-multiplier-1.3.2+mc1.21.9-1.21.10.jar
+            release-assets/smart-resource-multiplier-neoforge-1.3.2+mc1.21.9.jar
+            release-assets/smart-resource-multiplier-neoforge-1.3.2+mc1.21.10.jar
           fail_on_unmatched_files: true
           prerelease: false
           make_latest: false

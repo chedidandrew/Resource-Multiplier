@@ -1,6 +1,6 @@
-# Minecraft 1.21.2-1.21.10 compatibility experiment
+# Minecraft 1.21.2-1.21.10 compatibility matrix
 
-This work is experimental and has not been published. Fabric and NeoForge remain
+Fabric and NeoForge remain
 separate artifacts because their entrypoints, networking, placement storage, and
 loader hooks are not binary-compatible.
 
@@ -45,7 +45,7 @@ with Fabric API `0.134.1+1.21.9` on Minecraft 1.21.9 and Fabric API
 | Production and client-test compile | Pass | Pass |
 | Shared JUnit suite | 164/164 | 164/164 |
 | Runtime GameTests (64 project + 1 Fabric API runner) | 65/65 | 65/65 |
-| Automated client GUI/authority smoke | Pass | Pass |
+| Automated client GUI/authority smoke, including value centering and tooltip deduplication | Pass | Pass |
 | Three-restart placement-persistence smoke | Pass | Pass |
 | Separate-process multiplayer authority/reconnect smoke | Pass | Pass |
 | Exact packaged-JAR dedicated-server boot | Pass | Pass |
@@ -54,16 +54,17 @@ with Fabric API `0.134.1+1.21.9` on Minecraft 1.21.9 and Fabric API
 Candidate:
 
 - File: `smart-resource-multiplier-fabric-1.3.2+mc1.21.9-1.21.10.jar`
-- Size: `967231` bytes
-- SHA-256: `9D67F48CB7AF50D2712CB8EEC7674B12759B61341879FC65303236611BA430C9`
+- Size: `968433` bytes
+- SHA-256: `6B27365B16EBA57D12C681154468ACE21A3B217A81C6AD2CA5B9DE30298C8106`
 - Metadata: mod version `1.3.2+mc1.21.9-1.21.10`, Fabric Loader
   `>=0.19.5`, Fabric API `>=0.134.1+1.21.9`, Java `>=21`
 
 The artifact audit checked all 272 class files at Java class-file major 65,
 verified the metadata and audited mixin/tag set, and found no GameTest, client
 smoke, fixture, source, nested-JAR, Fabric Loader, or Minecraft classes bundled
-inside the candidate. Publication remains locked with `release_ready=false`
-until manual testing and the other loader lanes are complete.
+inside the candidate. Hands-on client acceptance also passed on both declared
+Minecraft versions. Publication is deliberately delegated to the exact 1.21.10
+NeoForge child branch so all three release assets share one guarded tag.
 
 ## Verified NeoForge lane: Minecraft 1.21.9
 
@@ -89,8 +90,8 @@ exact metadata ranges rather than claiming compatibility with 1.21.10.
 Candidate:
 
 - File: `smart-resource-multiplier-neoforge-1.3.2+mc1.21.9.jar`
-- Size: `964156` bytes
-- SHA-256: `30FD6BA53D31A3BCED760AD1FEBDCFA4482DD818DC50D0EE0B22F313D89882B8`
+- Size: `965324` bytes
+- SHA-256: `614D57CC846F1C34B8240938F9667D05D2B88D8A5031B9609DFAC3234879634C`
 - Metadata: mod version `1.3.2+mc1.21.9`, JavaFML `[4,)`, NeoForge
   `[21.9,21.10)`, Minecraft `[1.21.9]`, Java 21 bytecode
 
@@ -99,7 +100,9 @@ verified every class as Java class-file major 65, and found no Fabric platform,
 development-test, nested-JAR, source, or GameTest contamination. The Fabric
 provenance importer gives same-version Fabric-to-NeoForge world moves a tested
 one-way migration path while native NeoForge attachment data remains
-authoritative. Publication remains locked with `release_ready=false`.
+authoritative. Hands-on client acceptance passed. The parent branch remains
+locked because the combined release tag must live on the exact 1.21.10 NeoForge
+child tip.
 
 ## Verified NeoForge lane: Minecraft 1.21.10
 

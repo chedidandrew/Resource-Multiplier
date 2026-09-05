@@ -1,6 +1,6 @@
 # GitHub publication guide
 
-The canonical public source repository is [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier). User downloads are published on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier), and ordinary bug or compatibility reports are handled through [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues). Minecraft 26.2 remains the newest/default line on `main`; the maintained `backport/1.21.1` branch provides separate Fabric and NeoForge `1.3.1+mc1.21.1` files.
+The canonical public source repository is [chedidandrew/Resource-Multiplier](https://github.com/chedidandrew/Resource-Multiplier). User downloads are published on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/resource-multiplier), and ordinary bug or compatibility reports are handled through [GitHub Issues](https://github.com/chedidandrew/Resource-Multiplier/issues). Minecraft 26.2 remains the newest/default line on `main`; the maintained high backport uses `backport/1.21.9-1.21.10` plus the exact `backport/1.21.10-neoforge` child.
 
 ## Clone and contribute
 
@@ -21,7 +21,7 @@ git push -u origin your-change
 
 Always rebuild both versioned JARs from source. Renaming an older JAR does not update embedded loader metadata, manifests, package records, or checksums.
 
-A stable source commit must set the same `mod_version` in both Gradle property files and set `release_ready=true`. The 1.21.1 source remains on `backport/1.21.1`; it is never merged into `main`. Tag `v1.3.1+mc1.21.1` invokes the guarded release workflow, which verifies the latch, version equality, backport-branch ancestry, full dual-loader test chain, and deterministic package before publishing. The workflow explicitly uses `make_latest: false`, so the Minecraft 26.2 `v1.3.0` release remains GitHub's **Latest** release.
+The parent branch remains at `release_ready=false`. The exact child merges the tested parent, sets `release_ready=true`, and receives tag `v1.3.2+mc1.21.9-1.21.10`. The guarded workflow requires that tag to equal the canonical exact-child tip and requires the canonical parent tip to be its ancestor. It rebuilds the shared Fabric 1.21.9-1.21.10 JAR and exact NeoForge 1.21.9 JAR from the parent, then the exact NeoForge 1.21.10 JAR from the child. It publishes exactly those three assets with `make_latest: false`, so Minecraft 26.2 tag `v1.3.0` remains GitHub's **Latest** release.
 
 ## Public links
 
