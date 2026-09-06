@@ -1,12 +1,14 @@
 <p align="center">
   <img
-    src="src/main/resources/assets/smart_resource_drops/icon.png"
+    src="src/legacy/resources/assets/smart_resource_drops/icon.png"
     width="180"
     alt="Smart Resource Multiplier icon"
   >
 </p>
 
 <h1 align="center">Smart Resource Multiplier</h1>
+
+> **Branch release:** This source snapshot builds Smart Resource Multiplier `1.3.2` for Minecraft `1.7.10` on Forge. Minecraft `26.2` remains the newest release and the default `main` branch. See [legacy port status](LEGACY_PORT_STATUS.md) for target-specific details.
 
 <p align="center">
   Configurable multipliers for block drops, mob loot, and supported shearing,<br>

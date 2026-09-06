@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "smart_resource_drops",
+    "name": "Smart Resource Multiplier",
+    "description": "Configurable block, entity death-loot, XP, and shearing multipliers with persistent player-placement protection.",
+    "version": "${version}",
+    "mcversion": "1.7.10",
+    "url": "https://www.curseforge.com/minecraft/mc-mods/resource-multiplier",
+    "updateUrl": "",
+    "authorList": ["Andrew Chedid"],
+    "credits": "",
+    "logoFile": "assets/smart_resource_drops/icon.png",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
