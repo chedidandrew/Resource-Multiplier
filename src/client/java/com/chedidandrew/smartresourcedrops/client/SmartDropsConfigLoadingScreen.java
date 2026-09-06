@@ -4,7 +4,7 @@ import com.chedidandrew.smartresourcedrops.config.ConfigPatch;
 import com.chedidandrew.smartresourcedrops.config.ConfigRequestLifecycle;
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
 
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -74,14 +74,14 @@ public final class SmartDropsConfigLoadingScreen extends Screen {
         final int left = (this.width - panelWidth) / 2;
         final int buttonY = Math.min(this.height - 24, this.height / 2 + 48);
 
-        this.retryButton = this.addRenderableWidget(Button.builder(
+        this.retryButton = this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.retry"),
                         button -> this.beginRequest())
                 .bounds(left, buttonY, buttonWidth, 20)
                 .build());
         this.retryButton.active = this.state == State.ERROR;
 
-        this.cancelButton = this.addRenderableWidget(Button.builder(
+        this.cancelButton = this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable(this.operation == Operation.RESET
                                 ? "smart_resource_drops.gui.reload_current"
                                 : "smart_resource_drops.gui.cancel"),
@@ -193,12 +193,14 @@ public final class SmartDropsConfigLoadingScreen extends Screen {
 
     @Override
     public void render(
-            final GuiGraphics graphics,
+            final PoseStack poseStack,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.render(graphics, mouseX, mouseY, partialTick);
+        ConfigScreenBackground.renderIfNeeded(this, poseStack, this.minecraft);
+        super.render(poseStack, mouseX, mouseY, partialTick);
+        final LegacyGuiGraphics graphics = new LegacyGuiGraphics(poseStack);
         final int centerX = this.width / 2;
         final int centerY = this.height / 2;
 

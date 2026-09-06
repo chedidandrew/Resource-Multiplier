@@ -1,6 +1,6 @@
 package com.chedidandrew.smartresourcedrops.client;
 
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -69,7 +69,7 @@ public abstract class SmartDropsSubScreen extends Screen {
 
     protected final Button addBackButton() {
         final int buttonWidth = Math.min(200, this.contentWidth());
-        return this.addRenderableWidget(Button.builder(
+        return this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.back"),
                         button -> this.onClose())
                 .bounds((this.width - buttonWidth) / 2, this.footerY(), buttonWidth, 20)
@@ -118,20 +118,23 @@ public abstract class SmartDropsSubScreen extends Screen {
 
     @Override
     public void render(
-            final GuiGraphics graphics,
+            final PoseStack graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
+        ConfigScreenBackground.renderIfNeeded(this, graphics, this.minecraft);
         super.render(graphics, mouseX, mouseY, partialTick);
-        graphics.drawCenteredString(
+        net.minecraft.client.gui.GuiComponent.drawCenteredString(
+                graphics,
                 this.font,
                 ConfigUiText.fitted(this.font, this.title, Math.max(1, this.width - 24)),
                 this.width / 2,
                 this.titleY(),
                 0xFFFFFFFF);
         if (this.session.serverRevisionStale()) {
-            graphics.drawCenteredString(
+            net.minecraft.client.gui.GuiComponent.drawCenteredString(
+                    graphics,
                     this.font,
                     ConfigUiText.fitted(
                             this.font,
@@ -145,7 +148,8 @@ public abstract class SmartDropsSubScreen extends Screen {
         }
         if (this.unsavedChangesIndicatorVisible()) {
             final UnsavedChangesIndicatorLayout layout = this.unsavedChangesIndicatorLayout();
-            graphics.drawString(
+            net.minecraft.client.gui.GuiComponent.drawString(
+                    graphics,
                     this.font,
                     this.unsavedChangesIndicatorText(),
                     layout.x(),

@@ -31,6 +31,7 @@ MOD_ID = "smart_resource_drops"
 PUBLIC_NAME = "Smart Resource Multiplier"
 METADATA = "META-INF/mods.toml"
 ICON = "assets/smart_resource_drops/icon.png"
+LOGO = "smart_resource_drops.png"
 LICENSE = "LICENSE_smart-resource-multiplier-neoforge"
 REFMAP = "smart_resource_drops.refmap.json"
 PACK_METADATA = "pack.mcmeta"
@@ -269,7 +270,8 @@ def validate(path: Path, version: str) -> tuple[int, str]:
                 errors.append(f"case-colliding members: {collision!r}")
 
         required = REQUIRED_CLASSES | EXPECTED_PRODUCTION_CLASSES | PRODUCTION_RESOURCES | MIXINS | {
-            METADATA, PACK_METADATA, ICON, LICENSE, REFMAP, MIXINEXTRAS_PATH, JARJAR_METADATA
+            METADATA, PACK_METADATA, ICON, LOGO, LICENSE, REFMAP, MIXINEXTRAS_PATH,
+            JARJAR_METADATA
         }
         missing = sorted(required - names)
         if missing:
@@ -350,13 +352,16 @@ def validate(path: Path, version: str) -> tuple[int, str]:
                 "version": version,
                 "displayName": PUBLIC_NAME,
                 "displayTest": "NONE",
-                "logoFile": ICON,
+                "logoFile": LOGO,
             }
             for key, expected in expected_mod.items():
                 if mod.get(key) != expected:
                     errors.append(f"mods.toml {key} must be {expected!r}, found {mod.get(key)!r}")
             if "iconFile" in mod:
                 errors.append("legacy mods.toml must use logoFile, not iconFile")
+            logo_file = mod.get("logoFile")
+            if isinstance(logo_file, str) and ("/" in logo_file or "\\" in logo_file):
+                errors.append("Forge 1.19.2 logoFile must be a root filename, not a path")
         dependencies = metadata.get("dependencies", {}).get(MOD_ID, [])
         compact_dependencies = {
             (
@@ -409,8 +414,11 @@ def validate(path: Path, version: str) -> tuple[int, str]:
             if name.endswith(".class") and len(archive.read(name)) >= 8
         ):
             errors.append("one or more production classes are not class-major 61")
-        if archive.read(ICON) != (ROOT / "src/main/resources/assets/smart_resource_drops/icon.png").read_bytes():
-            errors.append("embedded icon differs from source")
+        source_icon = (ROOT / "src/main/resources/assets/smart_resource_drops/icon.png").read_bytes()
+        if archive.read(ICON) != source_icon:
+            errors.append("embedded canonical icon differs from source")
+        if archive.read(LOGO) != source_icon:
+            errors.append("embedded root Mods-screen logo differs from source")
         if archive.read(LICENSE) != (ROOT / "LICENSE").read_bytes():
             errors.append("embedded license differs from source")
 

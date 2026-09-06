@@ -41,6 +41,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Locale;
 import java.util.Map;
@@ -604,7 +605,7 @@ public final class SmartDropsCommands {
                 ConfigManager.validationSnapshot(),
                 LiveConfigRegistryView.from(source));
         for (Component line : ConfigValidationFormatter.format(report, verbose)) {
-            source.sendSuccess(() -> line, false);
+            source.sendSuccess(line, false);
         }
         return 1;
     }
@@ -613,14 +614,14 @@ public final class SmartDropsCommands {
         ServerPlayer player = source.getPlayer();
         if (player == null) {
             source.sendFailure(Component.literal("A player target is required for block inspection."));
-            source.sendSuccess(() -> Component.literal(
+            source.sendSuccess(Component.literal(
                     "Run /smartdrops inspect as a player while looking at a block."), false);
             return 0;
         }
 
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.getLevel();
         HitResult hit = player.pick(5.0D, 1.0F, false);
-        if (player.level() != level) {
+        if (player.getLevel() != level) {
             source.sendFailure(Component.literal("Your dimension changed during inspection."));
             return 0;
         }
@@ -647,15 +648,15 @@ public final class SmartDropsCommands {
                 DropSource.PLAYER,
                 player);
 
-        if (player.level() != level || !level.isLoaded(pos) || !level.getBlockState(pos).equals(state)) {
+        if (player.getLevel() != level || !level.isLoaded(pos) || !level.getBlockState(pos).equals(state)) {
             source.sendFailure(Component.literal("The targeted block changed during inspection."));
-            source.sendSuccess(() -> Component.literal(
+            source.sendSuccess(Component.literal(
                     "Look at the block and run /smartdrops inspect again."), false);
             return 0;
         }
 
         for (Component line : BlockInspectionFormatter.format(state, pos, trace, verbose)) {
-            source.sendSuccess(() -> line, false);
+            source.sendSuccess(line, false);
         }
         return 1;
     }
@@ -664,20 +665,26 @@ public final class SmartDropsCommands {
         final ServerPlayer player = source.getPlayer();
         if (player == null) {
             source.sendFailure(Component.literal("A player target is required for entity inspection."));
-            source.sendSuccess(() -> Component.literal(
+            source.sendSuccess(Component.literal(
                     "Run /smartdrops inspect entity as a player while looking at a living entity."), false);
             return 0;
         }
 
-        final ServerLevel level = player.serverLevel();
+        final ServerLevel level = player.getLevel();
         final double range = 5.0D;
-        final HitResult hit = ProjectileUtil.getHitResultOnViewVector(
+        final Vec3 start = player.getEyePosition();
+        final Vec3 view = player.getViewVector(1.0F);
+        final Vec3 end = start.add(view.scale(range));
+        final HitResult hit = ProjectileUtil.getEntityHitResult(
                 player,
+                start,
+                end,
+                player.getBoundingBox().expandTowards(view.scale(range)).inflate(1.0D),
                 EntitySelector.NO_SPECTATORS
                         .and(net.minecraft.world.entity.Entity::isPickable)
                         .and(entity -> entity instanceof LivingEntity && !(entity instanceof Player)),
-                range);
-        if (player.level() != level) {
+                range * range);
+        if (player.getLevel() != level) {
             source.sendFailure(Component.literal("Your dimension changed during entity inspection."));
             return 0;
         }
@@ -686,11 +693,11 @@ public final class SmartDropsCommands {
                 || target instanceof Player) {
             return noEntityTarget(source);
         }
-        if (target.level() != level
+        if (target.getLevel() != level
                 || target.isRemoved()
                 || player.distanceToSqr(target) > range * range) {
             source.sendFailure(Component.literal("The targeted entity moved or disappeared during inspection."));
-            source.sendSuccess(() -> Component.literal(
+            source.sendSuccess(Component.literal(
                     "Look at the entity and run /smartdrops inspect entity again."), false);
             return 0;
         }
@@ -708,14 +715,14 @@ public final class SmartDropsCommands {
                 shearingConfig,
                 target.getType(),
                 ShearingSource.VANILLA_DISPENSER);
-        if (player.level() != level
-                || target.level() != level
+        if (player.getLevel() != level
+                || target.getLevel() != level
                 || target.isRemoved()
                 || target.getId() != entityId
                 || !target.getUUID().equals(entityUuid)
                 || player.distanceToSqr(target) > range * range) {
             source.sendFailure(Component.literal("The targeted entity changed during inspection."));
-            source.sendSuccess(() -> Component.literal(
+            source.sendSuccess(Component.literal(
                     "Look at the entity and run /smartdrops inspect entity again."), false);
             return 0;
         }
@@ -727,21 +734,21 @@ public final class SmartDropsCommands {
                 manualShearing,
                 automatedShearing,
                 verbose)) {
-            source.sendSuccess(() -> line, false);
+            source.sendSuccess(line, false);
         }
         return 1;
     }
 
     private static int noTarget(CommandSourceStack source) {
         source.sendFailure(Component.literal("No block is currently targeted."));
-        source.sendSuccess(() -> Component.literal(
+        source.sendSuccess(Component.literal(
                 "Look at a block within interaction range and run /smartdrops inspect again."), false);
         return 0;
     }
 
     private static int noEntityTarget(final CommandSourceStack source) {
         source.sendFailure(Component.literal("No living entity is currently targeted."));
-        source.sendSuccess(() -> Component.literal(
+        source.sendSuccess(Component.literal(
                 "Look at a non-player living entity within interaction range and run "
                         + "/smartdrops inspect entity again."), false);
         return 0;
@@ -752,7 +759,7 @@ public final class SmartDropsCommands {
     }
 
     private static int message(CommandSourceStack source, String text) {
-        source.sendSuccess(() -> Component.literal(text), false);
+        source.sendSuccess(Component.literal(text), false);
         return 1;
     }
 

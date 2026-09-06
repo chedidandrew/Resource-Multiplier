@@ -117,7 +117,7 @@ public final class NeoForgeMultiplayerServerSmokeTest {
         if (this.player == null || event.getEntity() != this.player) {
             return;
         }
-        final MinecraftServer server = this.player.level().getServer();
+        final MinecraftServer server = this.player.getLevel().getServer();
         if (!this.promoted
                 || !this.sawConnectedGuiPatch
                 || !this.sawNearLimitPatch

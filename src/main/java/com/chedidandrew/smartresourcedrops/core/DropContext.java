@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
 
@@ -97,14 +97,14 @@ public final class DropContext {
 
     public static List<ItemStack> applyDrops(
             final List<ItemStack> original,
-            final LootParams.Builder params,
+            final LootContext.Builder params,
             final BlockState state
     ) {
         final Session session = SESSIONS.get().peek();
         final Vec3 origin = params.getOptionalParameter(LootContextParams.ORIGIN);
         if (session == null
                 || origin == null
-                || !session.target.claim(params.getLevel(), BlockPos.containing(origin).asLong(), state)) {
+                || !session.target.claim(params.getLevel(), new BlockPos(origin).asLong(), state)) {
             return original;
         }
 
@@ -119,7 +119,7 @@ public final class DropContext {
             SmartDropsStats.recordBlockBudgetFallback(result.originalItemCount());
             BlockLootBudgetWarnings.warn(
                     params.getLevel(),
-                    BlockPos.containing(origin),
+                    new BlockPos(origin),
                     state,
                     multiplier,
                     result);
@@ -133,7 +133,7 @@ public final class DropContext {
         final Session session = SESSIONS.get().peek();
         final SmartDropsConfig config = ConfigManager.get();
         if (session == null
-                || !session.target.matchesPosition(level, BlockPos.containing(pos).asLong())
+                || !session.target.matchesPosition(level, new BlockPos(pos).asLong())
                 || !config.multiplyExperience
                 || amount <= 0
                 || !session.decision.eligible()) {

@@ -13,13 +13,16 @@ import java.util.Set;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.client.gui.ModListScreen;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 
 /** Test-run-only check for NeoForge resource discovery and the formerly blank category screen. */
@@ -30,9 +33,13 @@ public final class NeoForgeClientCategorySmokeTest {
     private int ticks;
     private int phase;
     private SmartDropsConfigScreen rootScreen;
+    private Screen initialMenu;
+    private ModListScreen modsScreen;
     private EntityDropsScreen entityDropsScreen;
     private EntityCategoryScreen categoryScreen;
     private ConfigEditorSession session;
+    private int wideRootFramePhase;
+    private boolean searchableListVerified;
 
     private NeoForgeClientCategorySmokeTest() {
     }
@@ -55,20 +62,40 @@ public final class NeoForgeClientCategorySmokeTest {
                 throw new AssertionError("Timed out waiting for the NeoForge category smoke test");
             }
             if (this.rootScreen == null) {
-                final Screen initialMenu = minecraft.screen;
-                if (!(initialMenu instanceof TitleScreen)
-                        && !(initialMenu instanceof AccessibilityOnboardingScreen)) {
+                if (this.modsScreen == null) {
+                    if (!(minecraft.screen instanceof TitleScreen)) {
+                        return;
+                    }
+                    this.initialMenu = minecraft.screen;
+                    minecraft.getWindow().setWindowed(320, 180);
+                    minecraft.resizeDisplay();
+                    verifyPackagedResources();
+                    this.modsScreen = new ModListScreen(this.initialMenu);
+                    minecraft.setScreen(this.modsScreen);
                     return;
                 }
-                minecraft.getWindow().setWindowed(320, 180);
-                minecraft.resizeDisplay();
-                verifyPackagedResources();
-                final Screen routed = SmartDropsConfigScreens.create(initialMenu);
+                if (minecraft.screen != this.modsScreen) {
+                    return;
+                }
+                final var modInfo = ModList.get()
+                        .getModContainerById(SmartResourceDrops.MOD_ID)
+                        .orElseThrow(() -> new AssertionError("Production mod container was absent"))
+                        .getModInfo();
+                final var factory = ConfigScreenHandler.getScreenFactoryFor(modInfo)
+                        .orElseThrow(() -> new AssertionError(
+                                "Forge Mods screen did not find the registered config factory"));
+                final Screen routed = factory.apply(minecraft, this.modsScreen);
                 if (!(routed instanceof SmartDropsConfigScreen root)) {
-                    throw new AssertionError("Initial-menu config route did not open local defaults");
+                    throw new AssertionError("Forge Mods-screen config route did not open local defaults");
                 }
                 this.rootScreen = root;
                 this.session = root.editorSession();
+                if (this.session.originalParent() != this.modsScreen) {
+                    throw new AssertionError("Config route did not retain the Forge Mods screen parent");
+                }
+                if (!ConfigScreenBackground.shouldObscureParent(root.isInGameUi())) {
+                    throw new AssertionError("Mods-screen config route would leave its parent visible");
+                }
                 minecraft.setScreen(root);
                 // Forge 47/GLFW clamps the physical Linux test window to 854x480.
                 // Resize the real screen itself so the layout is still exercised at
@@ -86,6 +113,7 @@ public final class NeoForgeClientCategorySmokeTest {
                 case 6 -> this.returnFromEntityDrops(minecraft);
                 case 7 -> this.applyFromRoot(minecraft);
                 case 8 -> this.verifyAppliedAndFinish(minecraft);
+                case 9 -> this.verifySearchableListAndReturn(minecraft);
                 default -> throw new AssertionError("Unexpected category smoke phase " + this.phase);
             }
         } catch (Throwable failure) {
@@ -100,10 +128,25 @@ public final class NeoForgeClientCategorySmokeTest {
         if (minecraft.screen != this.rootScreen) {
             return;
         }
+        if (this.wideRootFramePhase == 1) {
+            if (this.rootScreen.width != 640 || this.rootScreen.height != 360) {
+                throw new AssertionError(
+                        "Wide legacy GUI was not retained for a rendered client frame");
+            }
+            assertLegacyWideButtonGeometry(this.rootScreen);
+            this.rootScreen.resize(minecraft, 320, 180);
+            this.wideRootFramePhase = 2;
+        }
         if (this.rootScreen.width != 320 || this.rootScreen.height != 180) {
             throw new AssertionError(
                     "Compact physical GUI did not initialize at 320x180: "
                             + this.rootScreen.width + "x" + this.rootScreen.height);
+        }
+        if (this.wideRootFramePhase == 0) {
+            this.rootScreen.resize(minecraft, 640, 360);
+            assertLegacyWideButtonGeometry(this.rootScreen);
+            this.wideRootFramePhase = 1;
+            return;
         }
         final List<String> labels = widgets(this.rootScreen).stream()
                 .map(widget -> widget.getMessage().getString())
@@ -120,8 +163,102 @@ public final class NeoForgeClientCategorySmokeTest {
         if (this.session.entityInfo("minecraft:copper_golem").isPresent()) {
             throw new AssertionError("1.20.1 catalog unexpectedly exposed copper_golem");
         }
+        if (!this.searchableListVerified) {
+            press(this.rootScreen, "Block Categories");
+            this.phase = 9;
+            return;
+        }
         press(this.rootScreen, "Entity Drops");
         this.phase = 1;
+    }
+
+    private void verifySearchableListAndReturn(final Minecraft minecraft) {
+        if (!(minecraft.screen instanceof RuleListScreen current)) {
+            return;
+        }
+        final StructuredConfigList list = onlyList(current);
+        if (!list.legacyExteriorOverlaySuppressed()) {
+            throw new AssertionError(
+                    "Block Categories retained the 1.19.2 overlay that covers its search field");
+        }
+        if (list.viewportTop() < current.contentTop()
+                || list.viewportBottom() > current.contentBottom()) {
+            throw new AssertionError("Block Categories list escaped its content viewport");
+        }
+        final EditBox search = current.children().stream()
+                .filter(EditBox.class::isInstance)
+                .map(EditBox.class::cast)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Block Categories omitted its search field"));
+        if (!(search instanceof LegacySearchBox legacySearch)) {
+            throw new AssertionError(
+                    "Block Categories did not use the legacy empty-only search hint adapter");
+        }
+        final int initialRowCount = list.rowCount();
+        legacySearch.setValue("");
+        if (!legacySearch.emptyHint().equals(legacySearch.activeSuggestion())) {
+            throw new AssertionError("Block Categories omitted its empty search hint");
+        }
+        legacySearch.setValue("logs");
+        if (legacySearch.activeSuggestion() != null) {
+            throw new AssertionError("Block Categories appended its hint after typed text");
+        }
+        legacySearch.setValue("unlikely no match phrase");
+        if (list.rowCount() != 0) {
+            throw new AssertionError("Block Categories search responder did not filter rows");
+        }
+        legacySearch.setValue("");
+        if (!legacySearch.emptyHint().equals(legacySearch.activeSuggestion())) {
+            throw new AssertionError("Block Categories did not restore its cleared search hint");
+        }
+        if (list.rowCount() != initialRowCount) {
+            throw new AssertionError("Block Categories did not restore rows after clearing search");
+        }
+        int firstHitY = -1;
+        int lastHitY = -1;
+        for (int y = 0; y < current.height; y++) {
+            if (search.isMouseOver(current.width / 2.0, y + 0.5)) {
+                if (firstHitY < 0) {
+                    firstHitY = y;
+                }
+                lastHitY = y;
+            }
+        }
+        if (!search.visible
+                || firstHitY < current.contentTop()
+                || lastHitY >= list.viewportTop()) {
+            throw new AssertionError(
+                    "Block Categories search field was not fully above its clipped list viewport");
+        }
+        press(current, "Back");
+        this.searchableListVerified = true;
+        this.phase = 0;
+    }
+
+    private static void assertLegacyWideButtonGeometry(final SmartDropsConfigScreen screen) {
+        if (screen.width != 640 || screen.height != 360) {
+            throw new AssertionError("Wide legacy GUI geometry did not initialize at 640x360");
+        }
+        final LegacyButton resetButton = (LegacyButton) screen.resetButton();
+        if (resetButton.getWidth() != 500
+                || resetButton.left() != (screen.width - resetButton.getWidth()) / 2) {
+            throw new AssertionError(
+                    "Reset All Settings did not retain its centered 500px root width");
+        }
+        if (!LegacyButton.requiresWideTexture(resetButton.getWidth())) {
+            throw new AssertionError(
+                    "Reset All Settings did not select the safe wide-texture renderer");
+        }
+        final double insideY = resetButton.top() + resetButton.getHeight() / 2.0;
+        if (!resetButton.isMouseOver(resetButton.left() + 1, insideY)
+                || !resetButton.isMouseOver(
+                resetButton.left() + resetButton.getWidth() - 1, insideY)
+                || resetButton.isMouseOver(resetButton.left() - 1, insideY)
+                || resetButton.isMouseOver(
+                resetButton.left() + resetButton.getWidth(), insideY)) {
+            throw new AssertionError(
+                    "Reset All Settings hitbox did not match its full rendered width");
+        }
     }
 
     private void enableEntityDrops(final Minecraft minecraft) {
@@ -153,6 +290,10 @@ public final class NeoForgeClientCategorySmokeTest {
         }
         this.categoryScreen = current;
         final StructuredConfigList list = onlyList(current);
+        if (!list.legacyExteriorOverlaySuppressed()
+                || list.viewportBottom() > current.contentBottom()) {
+            throw new AssertionError("Entity Categories list was not clipped above its footer");
+        }
         if (list.rowCount() != EntityCategory.values().length) {
             throw new AssertionError(
                     "Expected " + EntityCategory.values().length

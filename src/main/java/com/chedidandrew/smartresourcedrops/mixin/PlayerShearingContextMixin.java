@@ -23,7 +23,7 @@ abstract class PlayerShearingContextMixin {
             Operation<InteractionResult> original
     ) {
         Player self = (Player) (Object) this;
-        if (!(self.level() instanceof ServerLevel level)
+        if (!(self.getLevel() instanceof ServerLevel level)
                 || !(entity instanceof LivingEntity target)
                 || !(entity instanceof Shearable)) {
             return original.call(entity, hand);

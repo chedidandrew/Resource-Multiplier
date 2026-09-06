@@ -1,10 +1,9 @@
 package com.chedidandrew.smartresourcedrops.client;
 
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -46,7 +45,7 @@ final class EntityFilterScreen extends SmartDropsSubScreen {
         final int left = this.contentLeft();
         final int top = this.contentTop();
         final int modeWidth = Math.min(170, Math.max(104, this.contentWidth() / 3));
-        this.modeButton = this.addRenderableWidget(Button.builder(
+        this.modeButton = this.addRenderableWidget(LegacyButton.builder(
                         this.modeLabel(),
                         button -> {
                             this.session.setEntityFilterMode(this.session.entityFilterMode()
@@ -56,20 +55,19 @@ final class EntityFilterScreen extends SmartDropsSubScreen {
                             this.refreshMode();
                             this.refreshRows();
                         })
-                .tooltip(Tooltip.create(this.modeTooltip()))
+                .tooltip(this.modeTooltip())
                 .bounds(left, top, modeWidth, 20)
                 .build());
         this.modeButton.active = this.canEditRules();
 
         final int searchY = top + 26;
-        this.search = this.addRenderableWidget(new EditBox(
+        this.search = this.addRenderableWidget(new LegacySearchBox(
                 this.font,
                 left,
                 searchY,
                 this.contentWidth(),
                 20,
                 Component.translatable("smart_resource_drops.gui.entity_filters_search")));
-        this.search.setHint(Component.translatable("smart_resource_drops.gui.entity_filters_search"));
         this.search.setMaxLength(128);
 
         final int listY = searchY + 25;
@@ -90,7 +88,7 @@ final class EntityFilterScreen extends SmartDropsSubScreen {
 
     private void refreshMode() {
         this.modeButton.setMessage(this.modeLabel());
-        this.modeButton.setTooltip(Tooltip.create(this.modeTooltip()));
+        ((LegacyButton) this.modeButton).setTooltip(this.modeTooltip());
         this.modeButton.active = this.canEditRules();
     }
 
@@ -217,7 +215,7 @@ final class EntityFilterScreen extends SmartDropsSubScreen {
 
     @Override
     public void render(
-            final GuiGraphics graphics,
+            final PoseStack graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
@@ -229,7 +227,8 @@ final class EntityFilterScreen extends SmartDropsSubScreen {
                 : "smart_resource_drops.gui.entity_filter_whitelist_explanation");
         final int left = this.contentLeft();
         final int modeWidth = Math.min(170, Math.max(104, this.contentWidth() / 3));
-        graphics.drawString(
+        net.minecraft.client.gui.GuiComponent.drawString(
+                graphics,
                 this.font,
                 ConfigUiText.fitted(
                         this.font,
@@ -239,14 +238,16 @@ final class EntityFilterScreen extends SmartDropsSubScreen {
                 this.contentTop() + 6,
                 0xFFA0A0A0);
         if (!this.session.entityDropsEnabled() && !this.session.multiplyMobExperience()) {
-            graphics.drawCenteredString(
+            net.minecraft.client.gui.GuiComponent.drawCenteredString(
+                    graphics,
                     this.font,
                     Component.translatable("smart_resource_drops.gui.control_inactive"),
                     this.width / 2,
                     this.contentTop() + 48,
                     0xFFB08080);
         } else if (this.totalRows > this.shownRows) {
-            graphics.drawCenteredString(
+            net.minecraft.client.gui.GuiComponent.drawCenteredString(
+                    graphics,
                     this.font,
                     Component.translatable(
                             "smart_resource_drops.gui.entities_result_limit",
@@ -255,7 +256,8 @@ final class EntityFilterScreen extends SmartDropsSubScreen {
                     this.contentTop() + 48,
                     0xFFFFFF80);
         } else if (this.totalRows == 0) {
-            graphics.drawCenteredString(
+            net.minecraft.client.gui.GuiComponent.drawCenteredString(
+                    graphics,
                     this.font,
                     Component.translatable("smart_resource_drops.gui.entity_filter_none"),
                     this.width / 2,

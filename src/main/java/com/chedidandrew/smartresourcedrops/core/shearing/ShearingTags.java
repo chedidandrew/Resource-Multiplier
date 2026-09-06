@@ -1,7 +1,7 @@
 package com.chedidandrew.smartresourcedrops.core.shearing;
 
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.core.Registry;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 
@@ -14,10 +14,10 @@ public final class ShearingTags {
             "minecraft:mooshroom",
             "minecraft:snow_golem");
     public static final TagKey<EntityType<?>> STANDARD_RESOURCES = TagKey.create(
-            Registries.ENTITY_TYPE,
+            Registry.ENTITY_TYPE_REGISTRY,
             SmartResourceDrops.id("shearing/standard_resources"));
     public static final TagKey<EntityType<?>> SPECIAL = TagKey.create(
-            Registries.ENTITY_TYPE,
+            Registry.ENTITY_TYPE_REGISTRY,
             SmartResourceDrops.id("shearing/special"));
 
     private ShearingTags() {

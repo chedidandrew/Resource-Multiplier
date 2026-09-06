@@ -2,7 +2,7 @@ package com.chedidandrew.smartresourcedrops.config;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.Registry;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -32,8 +32,8 @@ public final class LiveConfigRegistryView implements ConfigRegistryView {
 
     public static LiveConfigRegistryView from(final CommandSourceStack source) {
         return new LiveConfigRegistryView(
-                source.registryAccess().registryOrThrow(Registries.BLOCK),
-                source.registryAccess().registryOrThrow(Registries.ENTITY_TYPE),
+                source.registryAccess().registryOrThrow(Registry.BLOCK_REGISTRY),
+                source.registryAccess().registryOrThrow(Registry.ENTITY_TYPE_REGISTRY),
                 source.getServer());
     }
 
@@ -52,19 +52,19 @@ public final class LiveConfigRegistryView implements ConfigRegistryView {
     @Override
     public boolean dimensionExists(final String identifier) {
         final ResourceLocation id = ResourceLocation.tryParse(identifier);
-        return id != null && server.getLevel(ResourceKey.create(Registries.DIMENSION, id)) != null;
+        return id != null && server.getLevel(ResourceKey.create(Registry.DIMENSION_REGISTRY, id)) != null;
     }
 
     @Override
     public boolean blockTagBound(final String identifier) {
         final ResourceLocation id = ResourceLocation.tryParse(identifier);
-        return id != null && blocks.getTag(TagKey.create(Registries.BLOCK, id)).isPresent();
+        return id != null && blocks.getTag(TagKey.create(Registry.BLOCK_REGISTRY, id)).isPresent();
     }
 
     @Override
     public boolean entityTagBound(final String identifier) {
         final ResourceLocation id = ResourceLocation.tryParse(identifier);
-        return id != null && entityTypes.getTag(TagKey.create(Registries.ENTITY_TYPE, id)).isPresent();
+        return id != null && entityTypes.getTag(TagKey.create(Registry.ENTITY_TYPE_REGISTRY, id)).isPresent();
     }
 
     @Override
@@ -74,7 +74,7 @@ public final class LiveConfigRegistryView implements ConfigRegistryView {
             return Set.of();
         }
         final LinkedHashSet<String> members = new LinkedHashSet<>();
-        entityTypes.getTag(TagKey.create(Registries.ENTITY_TYPE, id)).ifPresent(tag -> tag.stream()
+        entityTypes.getTag(TagKey.create(Registry.ENTITY_TYPE_REGISTRY, id)).ifPresent(tag -> tag.stream()
                 .map(holder -> EntityType.getKey(holder.value()))
                 .filter(java.util.Objects::nonNull)
                 .map(ResourceLocation::toString)

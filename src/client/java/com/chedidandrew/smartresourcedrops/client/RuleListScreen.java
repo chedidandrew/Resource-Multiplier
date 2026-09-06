@@ -46,7 +46,7 @@ final class RuleListScreen extends SmartDropsSubScreen {
         }
         final int left = this.contentLeft();
         final int top = this.contentTop();
-        this.search = this.addRenderableWidget(new EditBox(
+        this.search = this.addRenderableWidget(new LegacySearchBox(
                 this.font,
                 left,
                 top,
@@ -55,9 +55,6 @@ final class RuleListScreen extends SmartDropsSubScreen {
                 Component.translatable(kind == Kind.CATEGORY
                         ? "smart_resource_drops.gui.categories_search"
                         : "smart_resource_drops.gui.dimensions_search")));
-        this.search.setHint(Component.translatable(kind == Kind.CATEGORY
-                ? "smart_resource_drops.gui.categories_search"
-                : "smart_resource_drops.gui.dimensions_search"));
         this.search.setMaxLength(128);
 
         final int listY = top + 26;

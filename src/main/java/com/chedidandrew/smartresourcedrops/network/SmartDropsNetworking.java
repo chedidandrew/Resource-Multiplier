@@ -92,7 +92,7 @@ public final class SmartDropsNetworking {
                     ConfigSnapshotPayload.PatchResult.UNAUTHORIZED);
             return;
         }
-        final long now = player.level().getGameTime();
+        final long now = player.getLevel().getGameTime();
         final ConfigTransferAssembler.Complete<PatchMetadata> complete;
         synchronized (LAST_PATCH_TICK) {
             ConfigTransferAssembler<PatchMetadata> assembler = PATCH_TRANSFERS.get(player);
@@ -222,7 +222,7 @@ public final class SmartDropsNetworking {
                     iterator.remove();
                     continue;
                 }
-                final long now = player.level().getGameTime();
+                final long now = player.getLevel().getGameTime();
                 final PendingPatchDecode pending = entry.getValue();
                 if (now < pending.eligibleTick()) {
                     continue;
@@ -254,7 +254,7 @@ public final class SmartDropsNetworking {
                 "Received config request #{} from {}",
                 payload.requestId(),
                 player.getScoreboardName());
-        final long now = player.level().getGameTime();
+        final long now = player.getLevel().getGameTime();
         synchronized (LAST_REQUEST_TICK) {
             final Long previous = LAST_REQUEST_TICK.get(player);
             if (previous != null && now >= previous && now - previous < REQUEST_COOLDOWN_TICKS) {
@@ -324,7 +324,7 @@ public final class SmartDropsNetworking {
                     continue;
                 }
 
-                final long now = player.level().getGameTime();
+                final long now = player.getLevel().getGameTime();
                 final PendingRequest pending = entry.getValue();
                 if (now < pending.eligibleTick()) {
                     continue;
@@ -348,7 +348,7 @@ public final class SmartDropsNetworking {
                     iterator.remove();
                     continue;
                 }
-                entry.getValue().expire(player.level().getGameTime(), TRANSFER_TIMEOUT_TICKS);
+                entry.getValue().expire(player.getLevel().getGameTime(), TRANSFER_TIMEOUT_TICKS);
                 if (!entry.getValue().active()) {
                     iterator.remove();
                 }
@@ -369,7 +369,7 @@ public final class SmartDropsNetworking {
             final ConfigPatchPayload payload,
             final boolean editableAtReceipt
     ) {
-        final long now = player.level().getGameTime();
+        final long now = player.getLevel().getGameTime();
         synchronized (LAST_PATCH_TICK) {
             final Long previous = LAST_PATCH_TICK.get(player);
             if (previous != null && now >= previous && now - previous < PATCH_COOLDOWN_TICKS) {
@@ -408,7 +408,7 @@ public final class SmartDropsNetworking {
                     continue;
                 }
 
-                final long now = player.level().getGameTime();
+                final long now = player.getLevel().getGameTime();
                 final PendingPatch pending = entry.getValue();
                 if (now < pending.eligibleTick()) {
                     continue;
@@ -481,7 +481,7 @@ public final class SmartDropsNetworking {
 
     /** Destructive resets are never queued; repeated requests are rejected during a short cooldown. */
     private static boolean acceptReset(final ServerPlayer player) {
-        final long now = player.level().getGameTime();
+        final long now = player.getLevel().getGameTime();
         synchronized (LAST_RESET_TICK) {
             final Long previous = LAST_RESET_TICK.get(player);
             if (previous != null && now >= previous && now - previous < RESET_COOLDOWN_TICKS) {
@@ -603,7 +603,7 @@ public final class SmartDropsNetworking {
     }
 
     static boolean canEditConfiguration(final ServerPlayer player) {
-        return player.level().getServer().isSingleplayerOwner(player.getGameProfile())
+        return player.getLevel().getServer().isSingleplayerOwner(player.getGameProfile())
                 || player.hasPermissions(2);
     }
 

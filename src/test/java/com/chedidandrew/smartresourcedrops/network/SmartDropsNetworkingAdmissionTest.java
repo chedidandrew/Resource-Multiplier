@@ -215,7 +215,7 @@ final class SmartDropsNetworkingAdmissionTest {
         final ServerPlayer player = mock(ServerPlayer.class);
         when(level.getServer()).thenReturn(server);
         when(level.getGameTime()).thenAnswer(invocation -> tick.get());
-        when(player.level()).thenReturn(level);
+        when(player.getLevel()).thenReturn(level);
         when(player.hasPermissions(2)).thenAnswer(invocation -> authorized.get());
         when(player.hasDisconnected()).thenAnswer(invocation -> disconnected.get());
         when(player.isRemoved()).thenAnswer(invocation -> disconnected.get());

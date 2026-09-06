@@ -107,7 +107,9 @@ public final class ClientCommandQueue {
         }
         for (String command : dueCommands) {
             try {
-                connection.sendCommand(command);
+                if (client.player == null || !client.player.commandUnsigned(command)) {
+                    throw new IllegalStateException("Client player could not send command");
+                }
             } catch (RuntimeException exception) {
                 SmartResourceDrops.LOGGER.warn("Could not send queued client command", exception);
             }

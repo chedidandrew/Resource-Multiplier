@@ -1,8 +1,7 @@
 package com.chedidandrew.smartresourcedrops.core.entity;
 
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.core.Registry;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 
@@ -19,7 +18,7 @@ public final class EntityDropTags {
     static {
         for (EntityCategory category : EntityCategory.values()) {
             CATEGORY_TAGS.put(category, TagKey.create(
-                    Registries.ENTITY_TYPE,
+                    Registry.ENTITY_TYPE_REGISTRY,
                     SmartResourceDrops.id("categories/" + category.key())));
         }
     }
@@ -33,7 +32,7 @@ public final class EntityDropTags {
 
     public static Set<String> runtimeTags(EntityType<?> type) {
         LinkedHashSet<String> tags = new LinkedHashSet<>();
-        BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(type).tags()
+        type.builtInRegistryHolder().tags()
                 .map(tag -> tag.location().toString())
                 .sorted()
                 .forEach(tags::add);

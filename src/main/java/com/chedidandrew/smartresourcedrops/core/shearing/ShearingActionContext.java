@@ -116,7 +116,7 @@ public final class ShearingActionContext {
     ) {
         Objects.requireNonNull(target, "target");
         Objects.requireNonNull(level, "level");
-        if (!(target instanceof Shearable) || target.level() != level) {
+        if (!(target instanceof Shearable) || target.getLevel() != level) {
             return Scope.NOOP;
         }
         ShearingRuleTrace trace = ShearingRuleResolver.trace(ConfigManager.get(), target.getType(), source);

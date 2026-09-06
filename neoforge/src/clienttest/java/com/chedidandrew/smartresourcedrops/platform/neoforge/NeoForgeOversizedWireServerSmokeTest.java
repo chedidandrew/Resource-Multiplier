@@ -58,7 +58,7 @@ public final class NeoForgeOversizedWireServerSmokeTest {
         final ConfigManager.ClientSnapshot baseline = ConfigManager.clientSnapshot();
         this.baselineJson = baseline.json();
         this.baselineRevision = baseline.revision();
-        final MinecraftServer server = player.level().getServer();
+        final MinecraftServer server = player.getLevel().getServer();
         server.getCommands().performPrefixedCommand(
                 server.createCommandSourceStack(),
                 "op " + player.getScoreboardName());

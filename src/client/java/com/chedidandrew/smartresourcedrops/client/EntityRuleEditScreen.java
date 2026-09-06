@@ -1,7 +1,7 @@
 package com.chedidandrew.smartresourcedrops.client;
 
 import com.chedidandrew.smartresourcedrops.core.entity.EntityCategory;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -62,7 +62,7 @@ final class EntityRuleEditScreen extends SmartDropsSubScreen {
         }
 
         final int buttonWidth = Math.min(240, this.contentWidth());
-        this.resetButton = this.addRenderableWidget(Button.builder(
+        this.resetButton = this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.reset_override"),
                         button -> {
                             this.setConfiguredValue(null);
@@ -123,12 +123,13 @@ final class EntityRuleEditScreen extends SmartDropsSubScreen {
 
     @Override
     public void render(
-            final GuiGraphics graphics,
+            final PoseStack poseStack,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.render(graphics, mouseX, mouseY, partialTick);
+        super.render(poseStack, mouseX, mouseY, partialTick);
+        final LegacyGuiGraphics graphics = new LegacyGuiGraphics(poseStack);
         final int left = this.contentLeft();
         final int top = this.contentTop();
         if (this.kind == Kind.ENTITY) {

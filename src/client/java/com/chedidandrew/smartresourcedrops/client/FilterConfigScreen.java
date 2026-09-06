@@ -4,10 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 
 /** Focused exact-block filter editor with read-only visibility for configured tag rules. */
@@ -44,7 +43,7 @@ final class FilterConfigScreen extends SmartDropsSubScreen {
         final int left = this.contentLeft();
         final int top = this.contentTop();
         final int modeWidth = Math.min(150, Math.max(92, this.contentWidth() / 3));
-        this.modeButton = this.addRenderableWidget(Button.builder(
+        this.modeButton = this.addRenderableWidget(LegacyButton.builder(
                         this.modeLabel(),
                         button -> {
                             this.session.setFilterMode(this.session.filterMode()
@@ -54,20 +53,19 @@ final class FilterConfigScreen extends SmartDropsSubScreen {
                             this.refreshMode();
                             this.refreshRows();
                         })
-                .tooltip(Tooltip.create(this.modeTooltip()))
+                .tooltip(this.modeTooltip())
                 .bounds(left, top, modeWidth, 20)
                 .build());
         this.modeButton.active = this.session.editable();
 
         final int searchY = top + 26;
-        this.search = this.addRenderableWidget(new EditBox(
+        this.search = this.addRenderableWidget(new LegacySearchBox(
                 this.font,
                 left,
                 searchY,
                 this.contentWidth(),
                 20,
                 Component.translatable("smart_resource_drops.gui.filters_search")));
-        this.search.setHint(Component.translatable("smart_resource_drops.gui.filters_search"));
         this.search.setMaxLength(128);
 
         final int listY = searchY + 25;
@@ -88,7 +86,7 @@ final class FilterConfigScreen extends SmartDropsSubScreen {
 
     private void refreshMode() {
         this.modeButton.setMessage(this.modeLabel());
-        this.modeButton.setTooltip(Tooltip.create(this.modeTooltip()));
+        ((LegacyButton) this.modeButton).setTooltip(this.modeTooltip());
     }
 
     private void refreshRows() {
@@ -198,7 +196,7 @@ final class FilterConfigScreen extends SmartDropsSubScreen {
 
     @Override
     public void render(
-            final GuiGraphics graphics,
+            final PoseStack graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
@@ -210,7 +208,8 @@ final class FilterConfigScreen extends SmartDropsSubScreen {
                         : "smart_resource_drops.gui.filter_whitelist_explanation");
         final int left = this.contentLeft();
         final int modeWidth = Math.min(150, Math.max(92, this.contentWidth() / 3));
-        graphics.drawString(
+        net.minecraft.client.gui.GuiComponent.drawString(
+                graphics,
                 this.font,
                 ConfigUiText.fitted(
                         this.font,
@@ -221,7 +220,8 @@ final class FilterConfigScreen extends SmartDropsSubScreen {
                 0xFFA0A0A0);
 
         if (this.totalRows > this.shownRows) {
-            graphics.drawCenteredString(
+            net.minecraft.client.gui.GuiComponent.drawCenteredString(
+                    graphics,
                     this.font,
                     Component.translatable(
                             "smart_resource_drops.gui.blocks_result_limit",
@@ -230,7 +230,8 @@ final class FilterConfigScreen extends SmartDropsSubScreen {
                     this.contentTop() + 48,
                     0xFFFFFF80);
         } else if (this.totalRows == 0) {
-            graphics.drawCenteredString(
+            net.minecraft.client.gui.GuiComponent.drawCenteredString(
+                    graphics,
                     this.font,
                     Component.translatable("smart_resource_drops.gui.filter_none"),
                     this.width / 2,

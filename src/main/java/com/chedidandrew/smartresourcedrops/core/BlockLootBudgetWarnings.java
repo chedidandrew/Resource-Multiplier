@@ -5,7 +5,7 @@ import com.chedidandrew.smartresourcedrops.core.util.BlockLootOutputBudget;
 import com.chedidandrew.smartresourcedrops.core.util.BoundedRateLimiter;
 import com.chedidandrew.smartresourcedrops.core.util.LootOutputBudget;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -29,7 +29,7 @@ final class BlockLootBudgetWarnings {
             final int multiplier,
             final BlockLootOutputBudget.Result result
     ) {
-        final String blockId = bounded(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+        final String blockId = bounded(Registry.BLOCK.getKey(state.getBlock()).toString());
         final String dimensionId = bounded(level.dimension().location().toString());
         final String reason = result.outcome().name();
         if (!LIMITER.tryAcquire(blockId + '|' + reason, System.nanoTime())) {

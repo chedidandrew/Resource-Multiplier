@@ -4,7 +4,7 @@ import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
 import com.chedidandrew.smartresourcedrops.provenance.PlacementTracker;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -54,7 +54,7 @@ public final class MultiplierResolver {
             boolean readOnly
     ) {
         SmartDropsConfig config = ConfigManager.get();
-        String blockId = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
+        String blockId = Registry.BLOCK.getKey(state.getBlock()).toString();
         String dimensionId = level.dimension().location().toString();
         LinkedHashSet<Category> categories = SmartDropTags.categoriesFor(state);
         boolean playerPlaced = readOnly

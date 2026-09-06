@@ -16,6 +16,12 @@ public final class StackConsolidator {
     private StackConsolidator() {
     }
 
+    private static ItemStack copyWithCount(final ItemStack source, final int count) {
+        final ItemStack copy = source.copy();
+        copy.setCount(count);
+        return copy;
+    }
+
     public static List<ItemStack> multiply(final List<ItemStack> source, final int copies) {
         Objects.requireNonNull(source, "source");
         if (copies <= 0) {
@@ -141,7 +147,7 @@ public final class StackConsolidator {
         private final int hash;
 
         private StackKey(final ItemStack prototype, final boolean retain) {
-            this.prototype = retain ? prototype.copyWithCount(1) : prototype;
+            this.prototype = retain ? copyWithCount(prototype, 1) : prototype;
             this.hash = Objects.hash(this.prototype.getItem(), this.prototype.getTag());
         }
 
@@ -279,7 +285,7 @@ public final class StackConsolidator {
                 final int maximumStackSize = Math.max(1, group.prototype.getMaxStackSize());
                 while (remaining > 0L) {
                     final int amount = (int) Math.min((long) maximumStackSize, remaining);
-                    result.add(group.prototype.copyWithCount(amount));
+                    result.add(copyWithCount(group.prototype, amount));
                     remaining -= amount;
                 }
             }

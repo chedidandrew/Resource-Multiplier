@@ -1,7 +1,7 @@
 package com.chedidandrew.smartresourcedrops.core;
 
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.core.Registry;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -19,7 +19,7 @@ public final class SmartDropTags {
         for (Category category : Category.values()) {
             if (category != Category.MISCELLANEOUS) {
                 CATEGORY_TAGS.put(category, TagKey.create(
-                        Registries.BLOCK,
+                        Registry.BLOCK_REGISTRY,
                         SmartResourceDrops.id("categories/" + category.key())));
             }
         }

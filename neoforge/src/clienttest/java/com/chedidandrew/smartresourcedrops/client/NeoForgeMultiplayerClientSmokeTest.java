@@ -278,8 +278,7 @@ public final class NeoForgeMultiplayerClientSmokeTest {
                 new TitleScreen(),
                 minecraft,
                 ServerAddress.parseString(address),
-                new ServerData("Smart Resource Multiplier reconnect smoke", address, false),
-                false);
+                new ServerData("Smart Resource Multiplier reconnect smoke", address, false));
         transition(Phase.WAIT_RECONNECT);
     }
 

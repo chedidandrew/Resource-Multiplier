@@ -2,7 +2,7 @@ package com.chedidandrew.smartresourcedrops.client;
 
 import java.util.stream.Collectors;
 
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -75,7 +75,7 @@ final class RuleEditScreen extends SmartDropsSubScreen {
                 ? left
                 : (this.width - actionWidth) / 2;
         if (hasCategoryView) {
-            this.addRenderableWidget(Button.builder(
+            this.addRenderableWidget(LegacyButton.builder(
                             Component.translatable("smart_resource_drops.gui.view_category_blocks"),
                             button -> this.minecraft.setScreen(new BlockOverridesScreen(
                                     this.root,
@@ -85,7 +85,7 @@ final class RuleEditScreen extends SmartDropsSubScreen {
                     .bounds(actionLeft, actionY, actionWidth, 20)
                     .build());
         }
-        this.resetButton = this.addRenderableWidget(Button.builder(
+        this.resetButton = this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.reset_override"),
                         button -> {
                             this.setConfiguredValue(null);
@@ -145,12 +145,13 @@ final class RuleEditScreen extends SmartDropsSubScreen {
 
     @Override
     public void render(
-            final GuiGraphics graphics,
+            final PoseStack poseStack,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.render(graphics, mouseX, mouseY, partialTick);
+        super.render(poseStack, mouseX, mouseY, partialTick);
+        final LegacyGuiGraphics graphics = new LegacyGuiGraphics(poseStack);
         final int left = this.contentLeft();
         final int top = this.contentTop();
         final boolean compact = this.height < 220;

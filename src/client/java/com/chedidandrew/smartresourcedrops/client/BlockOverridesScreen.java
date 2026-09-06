@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Locale;
 
 import com.chedidandrew.smartresourcedrops.core.Category;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -60,14 +60,13 @@ final class BlockOverridesScreen extends SmartDropsSubScreen {
         }
         final int left = this.contentLeft();
         final int top = this.contentTop();
-        this.search = this.addRenderableWidget(new EditBox(
+        this.search = this.addRenderableWidget(new LegacySearchBox(
                 this.font,
                 left,
                 top,
                 this.contentWidth(),
                 20,
                 Component.translatable("smart_resource_drops.gui.blocks_search")));
-        this.search.setHint(Component.translatable("smart_resource_drops.gui.blocks_search"));
         this.search.setMaxLength(128);
 
         final int explanationHeight = this.height < 220 ? 11 : 22;
@@ -146,7 +145,7 @@ final class BlockOverridesScreen extends SmartDropsSubScreen {
 
     @Override
     public void render(
-            final GuiGraphics graphics,
+            final PoseStack graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
@@ -171,7 +170,8 @@ final class BlockOverridesScreen extends SmartDropsSubScreen {
         } else {
             hint = Component.literal(this.totalMatches + " results");
         }
-        graphics.drawCenteredString(
+        net.minecraft.client.gui.GuiComponent.drawCenteredString(
+                graphics,
                 this.font,
                 ConfigUiText.fitted(this.font, hint, this.contentWidth()),
                 this.width / 2,
@@ -180,13 +180,15 @@ final class BlockOverridesScreen extends SmartDropsSubScreen {
 
         if (this.totalMatches == 0) {
             final int centerY = Math.min(this.contentBottom() - 24, y + 42);
-            graphics.drawCenteredString(
+            net.minecraft.client.gui.GuiComponent.drawCenteredString(
+                    graphics,
                     this.font,
                     Component.translatable("smart_resource_drops.gui.blocks_empty"),
                     this.width / 2,
                     centerY,
                     0xFFE0E0E0);
-            graphics.drawCenteredString(
+            net.minecraft.client.gui.GuiComponent.drawCenteredString(
+                    graphics,
                     this.font,
                     Component.translatable("smart_resource_drops.gui.blocks_empty_help"),
                     this.width / 2,

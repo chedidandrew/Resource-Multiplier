@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "smart_resource_drops_gametest",
+  "version": "${version}",
+  "name": "Smart Resource Multiplier 1.19.2 GameTests",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.chedidandrew.smartresourcedrops.gametest.Fabric119GameTests"
+    ],
+    "fabric-gametest": [
+      "com.chedidandrew.smartresourcedrops.gametest.Fabric119GameTests"
+    ]
+  },
+  "depends": {
+    "fabricloader": "*",
+    "minecraft": "1.19.2",
+    "fabric-gametest-api-v1": "*",
+    "smart_resource_drops": "*"
+  }
+}

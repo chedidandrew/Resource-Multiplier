@@ -1,7 +1,7 @@
 package com.chedidandrew.smartresourcedrops.core.entity;
 
 import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
@@ -37,8 +37,8 @@ public final class EntityClassifier {
 
     public static EntityClassification classify(LivingEntity entity) {
         EntityType<?> type = entity.getType();
-        Holder<EntityType<?>> typeHolder = BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(type);
-        String entityId = BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
+        Holder<EntityType<?>> typeHolder = type.builtInRegistryHolder();
+        String entityId = Registry.ENTITY_TYPE.getKey(type).toString();
         EnumMap<EntityCategory, Set<EntityClassification.MatchSource>> evidence =
                 new EnumMap<>(EntityCategory.class);
 

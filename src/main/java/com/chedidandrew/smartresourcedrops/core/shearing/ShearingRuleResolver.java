@@ -3,7 +3,7 @@ package com.chedidandrew.smartresourcedrops.core.shearing;
 import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
 import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 
@@ -28,10 +28,10 @@ public final class ShearingRuleResolver {
         Objects.requireNonNull(type, "type");
         Objects.requireNonNull(source, "source");
 
-        Holder<EntityType<?>> holder = BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(type);
+        Holder<EntityType<?>> holder = type.builtInRegistryHolder();
         boolean standardTagged = holder.is(ShearingTags.STANDARD_RESOURCES);
         boolean specialTagged = holder.is(ShearingTags.SPECIAL);
-        ResourceLocation identifier = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        ResourceLocation identifier = Registry.ENTITY_TYPE.getKey(type);
         String entityId = identifier == null ? "minecraft:unregistered" : identifier.toString();
         return trace(config, entityId, standardTagged, specialTagged, source);
     }

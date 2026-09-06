@@ -20,6 +20,12 @@ public final class ShearingOutputBudget {
     private ShearingOutputBudget() {
     }
 
+    private static ItemStack copyWithCount(ItemStack source, int count) {
+        ItemStack copy = source.copy();
+        copy.setCount(count);
+        return copy;
+    }
+
     public static Result plan(List<? extends List<ItemStack>> sourceBatches, int multiplier) {
         Objects.requireNonNull(sourceBatches, "sourceBatches");
         int safeMultiplier = Math.max(0, multiplier);
@@ -212,7 +218,7 @@ public final class ShearingOutputBudget {
                 int maximumStackSize = Math.max(1, group.prototype.getMaxStackSize());
                 while (remaining > 0L) {
                     int amount = (int) Math.min((long) maximumStackSize, remaining);
-                    output.add(group.prototype.copyWithCount(amount));
+                    output.add(copyWithCount(group.prototype, amount));
                     remaining -= amount;
                 }
             }
@@ -234,7 +240,7 @@ public final class ShearingOutputBudget {
         private final int hash;
 
         private StackKey(ItemStack prototype, boolean retain) {
-            this.prototype = retain ? prototype.copyWithCount(1) : prototype;
+            this.prototype = retain ? copyWithCount(prototype, 1) : prototype;
             this.hash = Objects.hash(this.prototype.getItem(), this.prototype.getTag());
         }
 

@@ -1,15 +1,18 @@
 package com.chedidandrew.smartresourcedrops.client;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * A centered, responsive selection list for structured configuration rows.
@@ -32,6 +35,7 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
     private static final int DETAIL_COLOR = 0xFFC0C0C0;
 
     private int preferredRowWidth;
+    private final boolean legacyExteriorOverlaySuppressed;
     private List<Row> rows = List.of();
     private Component deferredTooltip;
     private int deferredTooltipX;
@@ -62,6 +66,12 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
     ) {
         super(minecraft, screenWidth, height, y, y + height, DEFAULT_ROW_HEIGHT);
         this.preferredRowWidth = Math.max(1, preferredRowWidth);
+        // In 1.19.2 the vanilla selection-list renderer paints opaque dirt
+        // strips above and below the list after sibling widgets have rendered.
+        // That legacy chrome would cover search fields positioned above this
+        // list, so screens render their own background outside the viewport.
+        setRenderTopAndBottom(false);
+        this.legacyExteriorOverlaySuppressed = true;
         updateResponsiveBounds(screenWidth, height, y);
     }
 
@@ -93,28 +103,88 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
     @Override
     public void render(
-            final GuiGraphics graphics,
+            final PoseStack graphics,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
         deferredTooltip = null;
-        super.render(graphics, mouseX, mouseY, partialTick);
+        final ScissorBounds scissor = framebufferScissor(
+                this.x0,
+                this.y0,
+                this.x1,
+                this.y1,
+                this.minecraft.getWindow().getGuiScale(),
+                this.minecraft.getWindow().getHeight());
+        RenderSystem.enableScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+        try {
+            // 1.19.2 renders a row in full when even one pixel intersects the
+            // viewport. Scissoring prevents the last partial row from painting
+            // its text, separator, or hover state into the footer.
+            super.render(graphics, mouseX, mouseY, partialTick);
+        } finally {
+            RenderSystem.disableScissor();
+        }
+    }
+
+    /** Converts top-origin GUI coordinates into bottom-origin framebuffer pixels. */
+    static ScissorBounds framebufferScissor(
+            final int left,
+            final int top,
+            final int right,
+            final int bottom,
+            final double guiScale,
+            final int framebufferHeight
+    ) {
+        if (!(guiScale > 0.0) || !Double.isFinite(guiScale)) {
+            throw new IllegalArgumentException("guiScale must be finite and positive");
+        }
+        final int pixelLeft = (int) Math.floor(left * guiScale);
+        final int pixelRight = (int) Math.ceil(right * guiScale);
+        final int pixelTop = (int) Math.floor(top * guiScale);
+        final int pixelBottom = (int) Math.ceil(bottom * guiScale);
+        return new ScissorBounds(
+                pixelLeft,
+                framebufferHeight - pixelBottom,
+                Math.max(0, pixelRight - pixelLeft),
+                Math.max(0, pixelBottom - pixelTop));
+    }
+
+    int viewportLeft() {
+        return this.x0;
+    }
+
+    int viewportTop() {
+        return this.y0;
+    }
+
+    int viewportRight() {
+        return this.x1;
+    }
+
+    int viewportBottom() {
+        return this.y1;
+    }
+
+    boolean legacyExteriorOverlaySuppressed() {
+        return this.legacyExteriorOverlaySuppressed;
     }
 
     /** Draws the hovered row tooltip after every screen widget has rendered. */
-    public void renderDeferredTooltip(final GuiGraphics graphics) {
+    public void renderDeferredTooltip(final PoseStack graphics) {
         if (deferredTooltip == null) {
             return;
         }
         final Font font = this.minecraft.font;
-        graphics.renderTooltip(
-                font,
-                font.split(
-                        deferredTooltip,
-                        Math.max(1, Math.min(320, this.width - 16))),
-                deferredTooltipX,
-                deferredTooltipY);
+        if (this.minecraft.screen != null) {
+            this.minecraft.screen.renderTooltip(
+                    graphics,
+                    font.split(
+                            deferredTooltip,
+                            Math.max(1, Math.min(320, this.width - 16))),
+                    deferredTooltipX,
+                    deferredTooltipY);
+        }
     }
 
     /**
@@ -194,7 +264,7 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
         @Override
         public void render(
-                final GuiGraphics graphics,
+                final PoseStack graphics,
                 final int index,
                 final int rowTop,
                 final int rowLeft,
@@ -206,14 +276,16 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
                 final float partialTick
         ) {
             if (hovered) {
-                graphics.fill(
+                net.minecraft.client.gui.GuiComponent.fill(
+                        graphics,
                         rowLeft + 1,
                         rowTop + 1,
                         rowLeft + rowWidth - 1,
                         rowTop + rowHeight - 1,
                         HOVER_BACKGROUND);
             }
-            graphics.fill(
+            net.minecraft.client.gui.GuiComponent.fill(
+                    graphics,
                     rowLeft + 1,
                     rowTop + rowHeight - 1,
                     rowLeft + rowWidth - 1,
@@ -228,8 +300,8 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
             ClippedText primary = clip(font, row.primary(), availableWidth);
             ClippedText secondary = clip(font, row.secondary(), availableWidth);
-            graphics.drawString(font, primary.text(), left, lineY, PRIMARY_COLOR);
-            graphics.drawString(font, secondary.text(), left, lineY + 10, SECONDARY_COLOR);
+            net.minecraft.client.gui.GuiComponent.drawString(graphics, font, primary.text(), left, lineY, PRIMARY_COLOR);
+            net.minecraft.client.gui.GuiComponent.drawString(graphics, font, secondary.text(), left, lineY + 10, SECONDARY_COLOR);
 
             int detailWidth = row.leftDetail().getString().isEmpty() || row.rightDetail().getString().isEmpty()
                     ? availableWidth
@@ -237,18 +309,21 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
             ClippedText leftDetail = clip(font, row.leftDetail(), detailWidth);
             ClippedText rightDetail = clip(font, row.rightDetail(), detailWidth);
             int detailY = lineY + 20;
-            graphics.drawString(font, leftDetail.text(), left, detailY, DETAIL_COLOR);
+            net.minecraft.client.gui.GuiComponent.drawString(graphics, font, leftDetail.text(), left, detailY, DETAIL_COLOR);
             int rightDetailX = right - font.width(rightDetail.text());
-            graphics.drawString(font, rightDetail.text(), rightDetailX, detailY, DETAIL_COLOR);
+            net.minecraft.client.gui.GuiComponent.drawString(graphics, font, rightDetail.text(), rightDetailX, detailY, DETAIL_COLOR);
 
             boolean truncated = primary.truncated()
                     || secondary.truncated()
                     || leftDetail.truncated()
                     || rightDetail.truncated();
             if (hovered && (!row.tooltip().getString().isEmpty() || truncated)) {
-                StructuredConfigList.this.deferredTooltip = hoverText(truncated);
-                StructuredConfigList.this.deferredTooltipX = mouseX;
-                StructuredConfigList.this.deferredTooltipY = mouseY;
+                final Component tooltip = hoverText(truncated);
+                if (!tooltip.getString().isEmpty()) {
+                    StructuredConfigList.this.deferredTooltip = tooltip;
+                    StructuredConfigList.this.deferredTooltipX = mouseX;
+                    StructuredConfigList.this.deferredTooltipY = mouseY;
+                }
             }
         }
 
@@ -286,46 +361,65 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
          * field is shown first and supplemental details follow on new lines.
          */
         private Component hoverText(final boolean truncated) {
-            final MutableComponent text = Component.empty();
-            if (truncated) {
-                appendTooltipPart(text, row.primary());
-                appendTooltipPart(text, row.secondary());
-                appendTooltipPart(text, row.leftDetail());
-                appendTooltipPart(text, row.rightDetail());
-            }
-            appendTooltipPart(text, row.tooltip());
-            return text;
+            return composeHoverText(row, truncated);
         }
 
         private Component fullRowText() {
-            MutableComponent text = Component.empty();
-            appendNarrationPart(text, row.primary());
-            appendNarrationPart(text, row.secondary());
-            appendNarrationPart(text, row.leftDetail());
-            appendNarrationPart(text, row.rightDetail());
-            appendNarrationPart(text, row.tooltip());
-            return text;
+            return composeNarrationText(row);
         }
     }
 
-    private static void appendTooltipPart(final MutableComponent target, final Component part) {
-        if (part.getString().isEmpty()) {
-            return;
+    static Component composeHoverText(final Row row, final boolean truncated) {
+        final MutableComponent text = Component.empty();
+        final Set<String> seen = new HashSet<>();
+        if (truncated) {
+            appendUniquePart(text, seen, row.primary(), "\n");
+            appendUniquePart(text, seen, row.secondary(), "\n");
+            appendUniquePart(text, seen, row.leftDetail(), "\n");
+            appendUniquePart(text, seen, row.rightDetail(), "\n");
+        } else {
+            rememberPart(seen, row.primary());
+            rememberPart(seen, row.secondary());
+            rememberPart(seen, row.leftDetail());
+            rememberPart(seen, row.rightDetail());
         }
-        if (!target.getString().isEmpty()) {
-            target.append(Component.literal("\n"));
-        }
-        target.append(part);
+        appendUniquePart(text, seen, row.tooltip(), "\n");
+        return text;
     }
 
-    private static void appendNarrationPart(final MutableComponent target, final Component part) {
-        if (part.getString().isEmpty()) {
-            return;
+    static Component composeNarrationText(final Row row) {
+        final MutableComponent text = Component.empty();
+        final Set<String> seen = new HashSet<>();
+        appendUniquePart(text, seen, row.primary(), ", ");
+        appendUniquePart(text, seen, row.secondary(), ", ");
+        appendUniquePart(text, seen, row.leftDetail(), ", ");
+        appendUniquePart(text, seen, row.rightDetail(), ", ");
+        appendUniquePart(text, seen, row.tooltip(), ", ");
+        return text;
+    }
+
+    private static void rememberPart(final Set<String> seen, final Component part) {
+        part.getString().lines()
+                .map(String::strip)
+                .filter(line -> !line.isEmpty())
+                .forEach(seen::add);
+    }
+
+    private static void appendUniquePart(
+            final MutableComponent target,
+            final Set<String> seen,
+            final Component part,
+            final String separator
+    ) {
+        for (String line : part.getString().lines().map(String::strip).filter(value -> !value.isEmpty()).toList()) {
+            if (!seen.add(line)) {
+                continue;
+            }
+            if (!target.getString().isEmpty()) {
+                target.append(Component.literal(separator));
+            }
+            target.append(Component.literal(line));
         }
-        if (!target.getString().isEmpty()) {
-            target.append(Component.literal(", "));
-        }
-        target.append(part);
     }
 
     private static ClippedText clip(final Font font, final Component component, final int maximumWidth) {
@@ -347,5 +441,8 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
     }
 
     private record ClippedText(String text, boolean truncated) {
+    }
+
+    record ScissorBounds(int x, int y, int width, int height) {
     }
 }

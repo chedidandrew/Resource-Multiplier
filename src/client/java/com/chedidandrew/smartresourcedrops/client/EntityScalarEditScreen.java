@@ -1,6 +1,6 @@
 package com.chedidandrew.smartresourcedrops.client;
 
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -68,7 +68,7 @@ final class EntityScalarEditScreen extends SmartDropsSubScreen {
         }
 
         final int buttonWidth = Math.min(240, this.contentWidth());
-        this.resetButton = this.addRenderableWidget(Button.builder(
+        this.resetButton = this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.reset_override"),
                         button -> {
                             if (defaultMultiplier) {
@@ -105,12 +105,13 @@ final class EntityScalarEditScreen extends SmartDropsSubScreen {
 
     @Override
     public void render(
-            final GuiGraphics graphics,
+            final PoseStack poseStack,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.render(graphics, mouseX, mouseY, partialTick);
+        super.render(poseStack, mouseX, mouseY, partialTick);
+        final LegacyGuiGraphics graphics = new LegacyGuiGraphics(poseStack);
         final boolean defaultMultiplier = this.kind == Kind.DEFAULT_MULTIPLIER;
         final boolean dependencyEnabled = defaultMultiplier
                 ? this.session.entityDropsEnabled()

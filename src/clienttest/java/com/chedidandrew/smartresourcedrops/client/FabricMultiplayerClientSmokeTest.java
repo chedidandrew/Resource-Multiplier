@@ -294,8 +294,7 @@ public final class FabricMultiplayerClientSmokeTest implements ClientModInitiali
                 new ServerData(
                         "Smart Resource Multiplier Fabric reconnect smoke",
                         address,
-                        false),
-                false);
+                        false));
         transition(Phase.WAIT_RECONNECT);
     }
 

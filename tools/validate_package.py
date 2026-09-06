@@ -208,7 +208,7 @@ require(
         'loaderVersion="[47,)"',
         'modId="${mod_id}"',
         'displayTest="NONE"',
-        'logoFile="assets/smart_resource_drops/icon.png"',
+        'logoFile="smart_resource_drops.png"',
         'modId="forge"',
         'versionRange="[47.1.106,)"',
         'modId="minecraft"',
@@ -232,6 +232,8 @@ require(
         "mixinextras-forge:0.5.4",
         "jarJar(implementation",
         "gametestRuntimeOnly 'io.github.llamalad7:mixinextras-forge:0.5.4'",
+        "rename { 'smart_resource_drops.png' }",
+        "verifyForgeReleaseJar",
     ],
     "NeoForge build",
 )

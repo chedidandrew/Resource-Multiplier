@@ -5,10 +5,9 @@ import com.chedidandrew.smartresourcedrops.config.ConfigPatch;
 import com.chedidandrew.smartresourcedrops.config.ConfigScreenLayout;
 import com.chedidandrew.smartresourcedrops.config.ConfigScreenOpenPolicy;
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -18,12 +17,12 @@ public final class SmartDropsConfigScreen extends Screen {
     private ConfigScreenLayout layout;
     private MultiplierControl globalMultiplier;
     private MultiplierControl experienceMultiplier;
-    private Button protectionButton;
-    private Button sourceButton;
-    private Button experienceButton;
-    private Button resetButton;
-    private Button applyButton;
-    private Button doneButton;
+    private LegacyButton protectionButton;
+    private LegacyButton sourceButton;
+    private LegacyButton experienceButton;
+    private LegacyButton resetButton;
+    private LegacyButton applyButton;
+    private LegacyButton doneButton;
     private int generalLabelY;
     private int configurationLabelY;
     private int authorityY;
@@ -163,34 +162,34 @@ public final class SmartDropsConfigScreen extends Screen {
         final int gap = this.layout.columnGap();
         final int leftWidth = this.layout.leftColumnWidth();
         final int rightX = left + leftWidth + gap;
-        this.protectionButton = this.addRenderableWidget(Button.builder(
+        this.protectionButton = this.addRenderableWidget(LegacyButton.builder(
                         this.protectionLabel(),
                         button -> {
                             this.session.setSmartPlacementProtection(
                                     !this.session.smartPlacementProtection());
                             this.refreshControlState();
                         })
-                .tooltip(Tooltip.create(Component.translatable(
-                        "smart_resource_drops.gui.placement_protection_tooltip")))
+                .tooltip(Component.translatable(
+                        "smart_resource_drops.gui.placement_protection_tooltip"))
                 .bounds(left, y, leftWidth, 20)
                 .build());
-        this.sourceButton = this.addRenderableWidget(Button.builder(
+        this.sourceButton = this.addRenderableWidget(LegacyButton.builder(
                         this.sourceLabel(),
                         button -> {
                             this.session.setSourceMode(nextSource(this.session.sourceMode()));
                             this.refreshControlState();
                         })
-                .tooltip(Tooltip.create(this.sourceTooltip()))
+                .tooltip(this.sourceTooltip())
                 .bounds(rightX, y, this.layout.rightColumnWidth(), 20)
                 .build());
-        this.experienceButton = this.addRenderableWidget(Button.builder(
+        this.experienceButton = this.addRenderableWidget(LegacyButton.builder(
                         this.experienceLabel(),
                         button -> {
                             this.session.setMultiplyExperience(!this.session.multiplyExperience());
                             this.refreshControlState();
                         })
-                .tooltip(Tooltip.create(Component.translatable(
-                        "smart_resource_drops.gui.multiply_xp_tooltip")))
+                .tooltip(Component.translatable(
+                        "smart_resource_drops.gui.multiply_xp_tooltip"))
                 .bounds(left, y + rowPitch, leftWidth, 20)
                 .build());
         this.experienceMultiplier = this.createExperienceControl(
@@ -205,34 +204,34 @@ public final class SmartDropsConfigScreen extends Screen {
             final int y,
             final int rowPitch
     ) {
-        this.protectionButton = this.addRenderableWidget(Button.builder(
+        this.protectionButton = this.addRenderableWidget(LegacyButton.builder(
                         this.protectionLabel(),
                         button -> {
                             this.session.setSmartPlacementProtection(
                                     !this.session.smartPlacementProtection());
                             this.refreshControlState();
                         })
-                .tooltip(Tooltip.create(Component.translatable(
-                        "smart_resource_drops.gui.placement_protection_tooltip")))
+                .tooltip(Component.translatable(
+                        "smart_resource_drops.gui.placement_protection_tooltip"))
                 .bounds(left, y, contentWidth, 20)
                 .build());
-        this.sourceButton = this.addRenderableWidget(Button.builder(
+        this.sourceButton = this.addRenderableWidget(LegacyButton.builder(
                         this.sourceLabel(),
                         button -> {
                             this.session.setSourceMode(nextSource(this.session.sourceMode()));
                             this.refreshControlState();
                         })
-                .tooltip(Tooltip.create(this.sourceTooltip()))
+                .tooltip(this.sourceTooltip())
                 .bounds(left, y + rowPitch, contentWidth, 20)
                 .build());
-        this.experienceButton = this.addRenderableWidget(Button.builder(
+        this.experienceButton = this.addRenderableWidget(LegacyButton.builder(
                         this.experienceLabel(),
                         button -> {
                             this.session.setMultiplyExperience(!this.session.multiplyExperience());
                             this.refreshControlState();
                         })
-                .tooltip(Tooltip.create(Component.translatable(
-                        "smart_resource_drops.gui.multiply_xp_tooltip")))
+                .tooltip(Component.translatable(
+                        "smart_resource_drops.gui.multiply_xp_tooltip"))
                 .bounds(left, y + rowPitch * 2, contentWidth, 20)
                 .build());
         this.experienceMultiplier = this.createExperienceControl(
@@ -269,37 +268,37 @@ public final class SmartDropsConfigScreen extends Screen {
         final int second = left + columnWidth + gap;
         final int third = second + columnWidth + gap;
         final int secondRow = y + buttonHeight + 2;
-        this.addRenderableWidget(Button.builder(
+        this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.root_block_categories"),
                         button -> this.minecraft.setScreen(new RuleListScreen(
                                 this, this.session, RuleListScreen.Kind.CATEGORY)))
                 .bounds(left, y, columnWidth, buttonHeight).build());
-        this.addRenderableWidget(Button.builder(
+        this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.block_overrides"),
                         button -> this.minecraft.setScreen(new BlockOverridesScreen(this, this.session)))
                 .bounds(second, y, columnWidth, buttonHeight).build());
-        this.addRenderableWidget(Button.builder(
+        this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.dimensions"),
                         button -> this.minecraft.setScreen(new RuleListScreen(
                                 this, this.session, RuleListScreen.Kind.DIMENSION)))
-                .tooltip(Tooltip.create(Component.translatable(
-                        "smart_resource_drops.gui.root_dimensions_tooltip")))
+                .tooltip(Component.translatable(
+                        "smart_resource_drops.gui.root_dimensions_tooltip"))
                 .bounds(third, y, columnWidth, buttonHeight).build());
-        this.addRenderableWidget(Button.builder(
+        this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.root_block_filters"),
                         button -> this.minecraft.setScreen(new FilterConfigScreen(this, this.session)))
                 .bounds(left, secondRow, columnWidth, buttonHeight).build());
-        this.addRenderableWidget(Button.builder(
+        this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.advanced"),
                         button -> this.minecraft.setScreen(new AdvancedConfigScreen(this, this.session)))
-                .tooltip(Tooltip.create(Component.translatable(
-                        "smart_resource_drops.gui.root_advanced_tooltip")))
+                .tooltip(Component.translatable(
+                        "smart_resource_drops.gui.root_advanced_tooltip"))
                 .bounds(second, secondRow, columnWidth, buttonHeight).build());
-        this.addRenderableWidget(Button.builder(
+        this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.entity_drops"),
                         button -> this.minecraft.setScreen(new EntityDropsScreen(this, this.session)))
-                .tooltip(Tooltip.create(Component.translatable(
-                        "smart_resource_drops.gui.root_entity_drops_tooltip")))
+                .tooltip(Component.translatable(
+                        "smart_resource_drops.gui.root_entity_drops_tooltip"))
                 .bounds(third, secondRow, columnWidth, buttonHeight).build());
     }
 
@@ -308,21 +307,21 @@ public final class SmartDropsConfigScreen extends Screen {
                 + Math.max(0, (this.layout.footerBounds().height() - 20) / 2);
         final int leftWidth = this.layout.leftColumnWidth();
         final int resetY = y - (this.height < 220 ? 22 : 24);
-        this.resetButton = this.addRenderableWidget(Button.builder(
+        this.resetButton = this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.reset_all"),
                         button -> this.openResetConfirmation())
-                .tooltip(Tooltip.create(Component.translatable(
-                        "smart_resource_drops.gui.reset_all_tooltip")))
+                .tooltip(Component.translatable(
+                        "smart_resource_drops.gui.reset_all_tooltip"))
                 .bounds(left, resetY, this.layout.contentWidth(), 20)
                 .build());
-        this.applyButton = this.addRenderableWidget(Button.builder(
+        this.applyButton = this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable(this.session.authority()
                                 == ConfigScreenOpenPolicy.Authority.LOCAL_DEFAULTS
                                 ? "smart_resource_drops.gui.apply_local"
                                 : "smart_resource_drops.gui.apply"),
                         button -> this.applyChanges())
                 .bounds(left, y, leftWidth, 20).build());
-        this.doneButton = this.addRenderableWidget(Button.builder(
+        this.doneButton = this.addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.done"),
                         button -> this.exitFlow())
                 .bounds(
@@ -345,7 +344,7 @@ public final class SmartDropsConfigScreen extends Screen {
         }
         this.protectionButton.setMessage(this.protectionLabel());
         this.sourceButton.setMessage(this.sourceLabel());
-        this.sourceButton.setTooltip(Tooltip.create(this.sourceTooltip()));
+        this.sourceButton.setTooltip(this.sourceTooltip());
         this.experienceButton.setMessage(this.experienceLabel());
         final boolean editable = this.session.editable();
         this.globalMultiplier.setEditable(editable);
@@ -356,9 +355,9 @@ public final class SmartDropsConfigScreen extends Screen {
         this.experienceMultiplier.setEditable(editable && this.session.multiplyExperience());
         this.experienceMultiplier.setValueSilently(this.session.experienceMultiplier());
         this.resetButton.active = editable;
-        this.resetButton.setTooltip(Tooltip.create(Component.translatable(editable
+        this.resetButton.setTooltip(Component.translatable(editable
                 ? "smart_resource_drops.gui.reset_all_tooltip"
-                : "smart_resource_drops.gui.reset_no_permission")));
+                : "smart_resource_drops.gui.reset_no_permission"));
         this.applyButton.active = editable && this.session.isDirty();
         this.doneButton.setMessage(Component.translatable(this.session.isDirty()
                 ? "smart_resource_drops.gui.discard_changes"
@@ -534,12 +533,14 @@ public final class SmartDropsConfigScreen extends Screen {
 
     @Override
     public void render(
-            final GuiGraphics graphics,
+            final PoseStack poseStack,
             final int mouseX,
             final int mouseY,
             final float partialTick
     ) {
-        super.render(graphics, mouseX, mouseY, partialTick);
+        ConfigScreenBackground.renderIfNeeded(this, poseStack, this.minecraft);
+        super.render(poseStack, mouseX, mouseY, partialTick);
+        final LegacyGuiGraphics graphics = new LegacyGuiGraphics(poseStack);
         graphics.drawCenteredString(
                 this.font,
                 this.title,

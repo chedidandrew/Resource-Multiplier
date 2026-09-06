@@ -58,7 +58,7 @@ abstract class ShearsDispenseItemBehaviorMixin {
             original.call(shearable, soundSource);
             return;
         }
-        ServerLevel level = (ServerLevel) target.level();
+        ServerLevel level = (ServerLevel) target.getLevel();
 
         try (ShearingActionContext.Scope scope =
                      ShearingActionContext.beginDispenser(target, level)) {

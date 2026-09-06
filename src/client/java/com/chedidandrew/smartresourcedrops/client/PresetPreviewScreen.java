@@ -3,8 +3,6 @@ package com.chedidandrew.smartresourcedrops.client;
 import com.chedidandrew.smartresourcedrops.config.SmartDropsConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.FittingMultiLineTextWidget;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -46,7 +44,7 @@ final class PresetPreviewScreen extends SmartDropsSubScreen {
                 .append(warning);
 
         int textHeight = Math.max(20, contentBottom() - contentTop() - 4);
-        addRenderableWidget(new FittingMultiLineTextWidget(
+        addRenderableWidget(new LegacyMultiLineTextWidget(
                 contentLeft(),
                 contentTop(),
                 contentWidth(),
@@ -58,14 +56,14 @@ final class PresetPreviewScreen extends SmartDropsSubScreen {
         int buttonWidth = Math.min(200, Math.max(1, (contentWidth() - gap) / 2));
         int buttonsWidth = buttonWidth * 2 + gap;
         int buttonLeft = (width - buttonsWidth) / 2;
-        stageButton = addRenderableWidget(Button.builder(
+        stageButton = addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.stage_preset"),
                         button -> stagePreset())
                 .bounds(buttonLeft, footerY(), buttonWidth, 20)
-                .tooltip(Tooltip.create(warning))
+                .tooltip(warning)
                 .build());
         stageButton.active = session.editable();
-        backButton = addRenderableWidget(Button.builder(
+        backButton = addRenderableWidget(LegacyButton.builder(
                         Component.translatable("smart_resource_drops.gui.back"),
                         button -> onClose())
                 .bounds(buttonLeft + buttonWidth + gap, footerY(), buttonWidth, 20)

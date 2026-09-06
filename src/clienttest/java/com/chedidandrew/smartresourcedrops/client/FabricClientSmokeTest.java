@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
@@ -60,6 +61,7 @@ public final class FabricClientSmokeTest implements ClientModInitializer {
     private ConfigEditorSession session;
     private EntityDropsScreen entityParent;
     private int appliedGlobal;
+    private int wideRootFramePhase;
     private boolean stopped;
 
     @Override
@@ -129,9 +131,23 @@ public final class FabricClientSmokeTest implements ClientModInitializer {
         if (minecraft.screen != this.root) {
             return;
         }
+        if (this.wideRootFramePhase == 1) {
+            require(this.root.width == 640 && this.root.height == 360,
+                    "Wide legacy GUI was not retained for a rendered client frame");
+            assertLegacyWideButtonGeometry(this.root);
+            this.root.resize(minecraft, 320, 180);
+            this.wideRootFramePhase = 2;
+        }
         require(this.root.width == 320 && this.root.height == 180,
                 "Compact physical GUI did not initialize at 320x180: "
                         + this.root.width + "x" + this.root.height);
+        assertGeneralRoot(this.root, true);
+        if (this.wideRootFramePhase == 0) {
+            this.root.resize(minecraft, 640, 360);
+            assertLegacyWideButtonGeometry(this.root);
+            this.wideRootFramePhase = 1;
+            return;
+        }
         assertGeneralRoot(this.root, true);
         assertBlockExperienceWording(this.root);
         assertEntityCatalog(this.session);
@@ -457,6 +473,29 @@ public final class FabricClientSmokeTest implements ClientModInitializer {
         }
     }
 
+    private static void assertLegacyWideButtonGeometry(final SmartDropsConfigScreen screen) {
+        require(screen.width == 640 && screen.height == 360,
+                "Wide legacy GUI geometry test did not initialize at 640x360");
+        final LegacyButton resetButton = (LegacyButton) screen.resetButton();
+        require(resetButton.getWidth() == 500,
+                "Reset All Settings did not retain the full root content width");
+        require(resetButton.left() == (screen.width - resetButton.getWidth()) / 2,
+                "Reset All Settings was not centered in the root content area");
+        require(LegacyButton.requiresWideTexture(resetButton.getWidth()),
+                "Reset All Settings did not select the safe wide-texture renderer");
+        final double insideY = resetButton.top() + resetButton.getHeight() / 2.0;
+        require(resetButton.isMouseOver(resetButton.left() + 1, insideY)
+                        && resetButton.isMouseOver(
+                        resetButton.left() + resetButton.getWidth() - 1,
+                        insideY),
+                "Reset All Settings lost part of its full-width hitbox");
+        require(!resetButton.isMouseOver(resetButton.left() - 1, insideY)
+                        && !resetButton.isMouseOver(
+                        resetButton.left() + resetButton.getWidth(),
+                        insideY),
+                "Reset All Settings hitbox extends beyond its rendered bounds");
+    }
+
     private static void assertBlockExperienceWording(final Screen screen) {
         final List<String> labels = widgets(screen).stream()
                 .map(widget -> widget.getMessage().getString())
@@ -514,6 +553,71 @@ public final class FabricClientSmokeTest implements ClientModInitializer {
         require(child.root == root && child.session == session,
                 route + " did not retain the exact root/session");
         require(hasWidgetLabel(screen, "Back"), route + " omitted Back navigation");
+        assertLegacyListViewport(screen, child, route);
+    }
+
+    private static void assertLegacyListViewport(
+            final Screen screen,
+            final SmartDropsSubScreen child,
+            final String route
+    ) {
+        final List<StructuredConfigList> lists = screen.children().stream()
+                .filter(StructuredConfigList.class::isInstance)
+                .map(StructuredConfigList.class::cast)
+                .toList();
+        if (lists.isEmpty()) {
+            return;
+        }
+        require(lists.size() == 1, route + " exposed more than one structured list");
+        final StructuredConfigList list = lists.get(0);
+        require(list.legacyExteriorOverlaySuppressed(),
+                route + " retained the 1.19.2 list overlay that covers search controls");
+        require(list.viewportTop() >= child.contentTop()
+                        && list.viewportBottom() <= child.contentBottom(),
+                route + " list viewport escaped the screen content area");
+
+        final List<EditBox> searches = screen.children().stream()
+                .filter(EditBox.class::isInstance)
+                .map(EditBox.class::cast)
+                .toList();
+        for (EditBox search : searches) {
+            require(search.visible, route + " search field was not visible");
+            require(search instanceof LegacySearchBox,
+                    route + " did not use the legacy empty-only search hint adapter");
+            final LegacySearchBox legacySearch = (LegacySearchBox) search;
+            final int initialRowCount = list.rowCount();
+            legacySearch.setValue("");
+            require(legacySearch.emptyHint().equals(legacySearch.activeSuggestion()),
+                    route + " did not show its hint while the search field was empty");
+            legacySearch.setValue("logs");
+            require(legacySearch.activeSuggestion() == null,
+                    route + " appended its hint after typed search text");
+            legacySearch.setValue("unlikely no match phrase");
+            require(list.rowCount() == 0,
+                    route + " search responder did not filter a no-match query");
+            if (initialRowCount == 0) {
+                legacySearch.setValue("minecraft:");
+                require(list.rowCount() > 0,
+                        route + " search responder did not reveal matching registry entries");
+            }
+            legacySearch.setValue("");
+            require(legacySearch.emptyHint().equals(legacySearch.activeSuggestion()),
+                    route + " did not restore its hint after the search field was cleared");
+            require(list.rowCount() == initialRowCount,
+                    route + " did not restore its original rows after clearing search");
+            int firstHitY = -1;
+            int lastHitY = -1;
+            for (int y = 0; y < screen.height; y++) {
+                if (search.isMouseOver(screen.width / 2.0, y + 0.5)) {
+                    if (firstHitY < 0) {
+                        firstHitY = y;
+                    }
+                    lastHitY = y;
+                }
+            }
+            require(firstHitY >= child.contentTop() && lastHitY < list.viewportTop(),
+                    route + " search field did not remain fully above the clipped list viewport");
+        }
     }
 
     private static StructuredConfigList onlyList(final Screen screen) {

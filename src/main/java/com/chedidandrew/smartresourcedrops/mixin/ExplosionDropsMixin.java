@@ -12,7 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,10 +27,10 @@ abstract class ExplosionDropsMixin {
             method = "finalizeExplosion(Z)V",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/block/state/BlockState;getDrops(Lnet/minecraft/world/level/storage/loot/LootParams$Builder;)Ljava/util/List;"))
+                    target = "Lnet/minecraft/world/level/block/state/BlockState;getDrops(Lnet/minecraft/world/level/storage/loot/LootContext$Builder;)Ljava/util/List;"))
     private List<ItemStack> smartResourceDrops$scopeExplosionLoot(
             BlockState state,
-            LootParams.Builder params,
+            LootContext.Builder params,
             Operation<List<ItemStack>> original
     ) {
         ServerLevel level = params.getLevel();
@@ -38,9 +38,9 @@ abstract class ExplosionDropsMixin {
         if (origin == null) {
             return original.call(state, params);
         }
-        BlockPos pos = BlockPos.containing(origin);
+        BlockPos pos = new BlockPos(origin);
         BlockEntity blockEntity = state.hasBlockEntity() ? level.getBlockEntity(pos) : null;
-        Entity actor = ((Explosion) (Object) this).getIndirectSourceEntity();
+        Entity actor = ((Explosion) (Object) this).getSourceMob();
         DropContext.beginExplosion(level, pos, state, blockEntity, actor);
         try {
             List<ItemStack> drops = original.call(state, params);

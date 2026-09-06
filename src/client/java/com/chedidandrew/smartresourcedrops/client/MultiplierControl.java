@@ -3,9 +3,6 @@ package com.chedidandrew.smartresourcedrops.client;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.StringWidget;
-import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.layouts.LayoutElement;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
@@ -19,7 +16,7 @@ import java.util.function.IntFunction;
  * vanilla widgets. A nullable value represents inheritance; integer zero is
  * always treated as an ordinary value.
  */
-public final class MultiplierControl implements LayoutElement {
+public final class MultiplierControl {
     private static final int HEIGHT = Button.DEFAULT_HEIGHT;
     private static final int BUTTON_WIDTH = 20;
     private static final int VALUE_WIDTH = 48;
@@ -34,10 +31,10 @@ public final class MultiplierControl implements LayoutElement {
     private final Component inheritLabel;
     private final IntFunction<Component> valueFormatter;
     private final Consumer<Integer> onChanged;
-    private final StringWidget labelWidget;
-    private final Button decrementButton;
-    private final StringWidget valueWidget;
-    private final Button incrementButton;
+    private final LegacyTextWidget labelWidget;
+    private final LegacyButton decrementButton;
+    private final LegacyTextWidget valueWidget;
+    private final LegacyButton incrementButton;
     private final List<AbstractWidget> widgets;
 
     private @Nullable Integer value;
@@ -129,12 +126,12 @@ public final class MultiplierControl implements LayoutElement {
         this.onChanged = Objects.requireNonNull(onChanged, "onChanged");
         this.value = normalize(initialValue);
 
-        this.labelWidget = new StringWidget(Objects.requireNonNull(label, "label"), font);
-        this.decrementButton = Button.builder(Component.literal("-"), button -> step(-1))
+        this.labelWidget = new LegacyTextWidget(Objects.requireNonNull(label, "label"), font);
+        this.decrementButton = LegacyButton.builder(Component.literal("-"), button -> step(-1))
                 .size(BUTTON_WIDTH, HEIGHT)
                 .build();
-        this.valueWidget = new StringWidget(VALUE_WIDTH, HEIGHT, Component.empty(), font);
-        this.incrementButton = Button.builder(Component.literal("+"), button -> step(1))
+        this.valueWidget = new LegacyTextWidget(VALUE_WIDTH, HEIGHT, Component.empty(), font);
+        this.incrementButton = LegacyButton.builder(Component.literal("+"), button -> step(1))
                 .size(BUTTON_WIDTH, HEIGHT)
                 .build();
         this.widgets = List.of(labelWidget, decrementButton, valueWidget, incrementButton);
@@ -180,10 +177,10 @@ public final class MultiplierControl implements LayoutElement {
 
     /** Applies one tooltip to the label, value, and both adjustment buttons. */
     public void setTooltip(final @Nullable Component message) {
-        Tooltip tooltip = message == null ? null : Tooltip.create(message);
-        for (AbstractWidget widget : widgets) {
-            widget.setTooltip(tooltip);
-        }
+        labelWidget.setTooltip(message);
+        decrementButton.setTooltip(message);
+        valueWidget.setTooltip(message);
+        incrementButton.setTooltip(message);
     }
 
     /** Returns the vanilla widgets in keyboard traversal order. */
@@ -204,39 +201,32 @@ public final class MultiplierControl implements LayoutElement {
         repositionWidgets();
     }
 
-    @Override
     public void setX(final int x) {
         this.x = x;
         repositionWidgets();
     }
 
-    @Override
     public void setY(final int y) {
         this.y = y;
         repositionWidgets();
     }
 
-    @Override
     public int getX() {
         return x;
     }
 
-    @Override
     public int getY() {
         return y;
     }
 
-    @Override
     public int getWidth() {
         return width;
     }
 
-    @Override
     public int getHeight() {
         return HEIGHT;
     }
 
-    @Override
     public void visitWidgets(final Consumer<AbstractWidget> widgetVisitor) {
         widgets.forEach(widgetVisitor);
     }

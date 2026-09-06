@@ -8,6 +8,7 @@ import com.chedidandrew.smartresourcedrops.core.entity.EntityMultiplierResolver;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.ExperienceOrb;
@@ -15,7 +16,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,7 +41,7 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
             Operation<Void> original
     ) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self.level() instanceof ServerLevel level)) {
+        if (!(self.getLevel() instanceof ServerLevel level)) {
             original.call(source);
             return;
         }
@@ -53,19 +54,43 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
             method = "dropFromLootTable(Lnet/minecraft/world/damagesource/DamageSource;Z)V",
              at = @At(
                      value = "INVOKE",
-                     target = "Lnet/minecraft/world/level/storage/loot/LootTable;getRandomItems(Lnet/minecraft/world/level/storage/loot/LootParams;JLjava/util/function/Consumer;)V"),
-             require = 1,
-             expect = 1)
+                     target = "Lnet/minecraft/world/level/storage/loot/LootTable;getRandomItems(Lnet/minecraft/world/level/storage/loot/LootContext;Ljava/util/function/Consumer;)V"),
+             require = 0)
     private void smartResourceDrops$wrapOnlyStandardLootConsumer(
             LootTable table,
-            LootParams params,
-            long seed,
+            LootContext params,
             Consumer<ItemStack> consumer,
             Operation<Void> original
     ) {
         LivingEntity self = (LivingEntity) (Object) this;
         Consumer<ItemStack> multiplied = EntityDeathContext.wrapStandardLootConsumer(self, consumer);
-        original.call(table, params, seed, multiplied);
+        original.call(table, params, multiplied);
+    }
+
+    /**
+     * Forge 43 patches the same vanilla death-loot site to use the list-returning
+     * LootTable overload before forwarding each stack to the entity consumer.
+     * Supporting both call shapes keeps the common policy identical on Fabric
+     * and Forge without multiplying Forge's post-hook custom drops.
+     */
+    @WrapOperation(
+            method = "dropFromLootTable(Lnet/minecraft/world/damagesource/DamageSource;Z)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/level/storage/loot/LootTable;getRandomItems(Lnet/minecraft/world/level/storage/loot/LootContext;)Lit/unimi/dsi/fastutil/objects/ObjectArrayList;"),
+            require = 0)
+    private ObjectArrayList<ItemStack> smartResourceDrops$wrapForgeStandardLootList(
+            final LootTable table,
+            final LootContext params,
+            final Operation<ObjectArrayList<ItemStack>> original
+    ) {
+        final ObjectArrayList<ItemStack> generated = original.call(table, params);
+        final ObjectArrayList<ItemStack> multiplied = new ObjectArrayList<>();
+        final LivingEntity self = (LivingEntity) (Object) this;
+        final Consumer<ItemStack> multiplier =
+                EntityDeathContext.wrapStandardLootConsumer(self, multiplied::add);
+        generated.forEach(multiplier);
+        return multiplied;
     }
 
     @WrapOperation(

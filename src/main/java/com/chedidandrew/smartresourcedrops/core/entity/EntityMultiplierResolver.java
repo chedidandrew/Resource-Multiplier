@@ -122,10 +122,10 @@ public final class EntityMultiplierResolver {
         if (entity instanceof TamableAnimal tamable && !tamable.isTame()) {
             return null;
         }
-        LivingEntity rootOwner = ownable.getOwner();
-        Set<LivingEntity> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+        Entity rootOwner = ownable.getOwner();
+        Set<Entity> visited = Collections.newSetFromMap(new IdentityHashMap<>());
         while (rootOwner instanceof OwnableEntity nested && visited.add(rootOwner)) {
-            LivingEntity next = nested.getOwner();
+            Entity next = nested.getOwner();
             if (next == null) {
                 break;
             }
