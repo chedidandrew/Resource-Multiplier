@@ -1,7 +1,6 @@
 {
   "replace": false,
   "values": [
-    "minecraft:bogged",
     "minecraft:mooshroom",
     "minecraft:snow_golem"
   ]

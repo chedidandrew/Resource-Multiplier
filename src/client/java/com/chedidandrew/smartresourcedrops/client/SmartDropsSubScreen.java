@@ -152,6 +152,11 @@ public abstract class SmartDropsSubScreen extends Screen {
                     layout.y(),
                     0xFFD6B85C);
         }
+        // Tooltips render last so rows, scrollbars, and footer buttons cannot paint over them.
+        this.children().stream()
+                .filter(StructuredConfigList.class::isInstance)
+                .map(StructuredConfigList.class::cast)
+                .forEach(list -> list.renderDeferredTooltip(graphics));
     }
 
     @Override

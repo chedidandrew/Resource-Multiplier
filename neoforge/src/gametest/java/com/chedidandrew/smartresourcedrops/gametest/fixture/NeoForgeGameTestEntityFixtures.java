@@ -1,7 +1,7 @@
 package com.chedidandrew.smartresourcedrops.gametest.fixture;
 
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
-import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.core.registries.Registries;
@@ -19,7 +19,7 @@ import net.minecraft.world.level.storage.loot.functions.LootItemFunctionType;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
 import net.neoforged.neoforge.common.loot.LootModifier;
 import net.neoforged.neoforge.event.LootTableLoadEvent;
@@ -28,7 +28,9 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 /** NeoForge registration and final-loot adapters for the shared entity GameTest fixtures. */
-@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@Mod.EventBusSubscriber(
+        modid = SmartResourceDrops.MOD_ID,
+        bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class NeoForgeGameTestEntityFixtures {
     private NeoForgeGameTestEntityFixtures() {
     }
@@ -56,14 +58,16 @@ public final class NeoForgeGameTestEntityFixtures {
         }
     }
 
-    @EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
+    @Mod.EventBusSubscriber(
+            modid = SmartResourceDrops.MOD_ID,
+            bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static final class GameBusEvents {
         private GameBusEvents() {
         }
 
         @SubscribeEvent
         public static void lootTableLoad(final LootTableLoadEvent event) {
-            if (!event.getKey().equals(GameTestEntityFixtures.EXCEPTION_LOOT)) {
+            if (!event.getName().equals(GameTestEntityFixtures.EXCEPTION_LOOT)) {
                 return;
             }
             event.getTable().addPool(LootPool.lootPool()
@@ -76,8 +80,8 @@ public final class NeoForgeGameTestEntityFixtures {
     }
 
     public static final class FinalLootModifier extends LootModifier {
-        public static final MapCodec<FinalLootModifier> CODEC =
-                RecordCodecBuilder.mapCodec(instance -> codecStart(instance)
+        public static final Codec<FinalLootModifier> CODEC =
+                RecordCodecBuilder.create(instance -> codecStart(instance)
                         .apply(instance, FinalLootModifier::new));
 
         public FinalLootModifier(final LootItemCondition[] conditions) {
@@ -91,24 +95,23 @@ public final class NeoForgeGameTestEntityFixtures {
         ) {
             final ResourceLocation id = context.getQueriedLootTableId();
             GameTestEntityFixtures.applyFinalDropFixtures(
-                    id.equals(GameTestEntityFixtures.COMPONENT_RICH_LOOT.location()),
-                    id.equals(GameTestEntityFixtures.NESTED_OUTER_LOOT.location()),
+                    id.equals(GameTestEntityFixtures.COMPONENT_RICH_LOOT),
+                    id.equals(GameTestEntityFixtures.NESTED_OUTER_LOOT),
                     context,
                     loot);
             return loot;
         }
 
         @Override
-        public MapCodec<? extends IGlobalLootModifier> codec() {
+        public Codec<? extends IGlobalLootModifier> codec() {
             return CODEC;
         }
     }
 
     private static final class ExceptionTrigger implements LootItemFunction {
         private static final ExceptionTrigger INSTANCE = new ExceptionTrigger();
-        private static final MapCodec<ExceptionTrigger> CODEC = MapCodec.unit(INSTANCE);
-        private static final LootItemFunctionType<ExceptionTrigger> TYPE =
-                new LootItemFunctionType<>(CODEC);
+        private static final LootItemFunctionType TYPE =
+                new LootItemFunctionType(Codec.unit(INSTANCE));
 
         @Override
         public ItemStack apply(final ItemStack stack, final LootContext context) {
@@ -117,7 +120,7 @@ public final class NeoForgeGameTestEntityFixtures {
         }
 
         @Override
-        public LootItemFunctionType<? extends LootItemFunction> getType() {
+        public LootItemFunctionType getType() {
             return TYPE;
         }
     }

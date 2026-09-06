@@ -13,7 +13,7 @@
               "count": 4.0
             },
             {
-              "function": "minecraft:enchanted_count_increase",
+              "function": "minecraft:looting_enchant",
               "enchantment": "minecraft:looting",
               "count": 1.0
             }

@@ -1,7 +1,6 @@
 package com.chedidandrew.smartresourcedrops.core.util;
 
 import net.minecraft.SharedConstants;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.ItemStack;
@@ -42,7 +41,7 @@ final class BlockLootOutputBudgetTest {
         final BlockLootOutputBudget.Result identity = BlockLootOutputBudget.multiply(source, 1);
         assertEquals(BlockLootOutputBudget.Outcome.IDENTITY, identity.outcome());
         assertSame(source, identity.output());
-        assertSame(sourceStack, identity.output().getFirst());
+        assertSame(sourceStack, identity.output().get(0));
     }
 
     @Test
@@ -85,7 +84,7 @@ final class BlockLootOutputBudgetTest {
         assertEquals(BlockLootOutputBudget.Outcome.FALLBACK_ITEM_LIMIT, result.outcome());
         assertTrue(result.fellBackToVanilla());
         assertSame(source, result.output());
-        assertSame(sourceStack, result.output().getFirst());
+        assertSame(sourceStack, result.output().get(0));
         assertEquals(4_097, sourceStack.getCount());
     }
 
@@ -125,8 +124,8 @@ final class BlockLootOutputBudgetTest {
     void componentDifferencesNeverMergeAndInputsRemainUntouched() {
         final ItemStack first = stack(32, 64);
         final ItemStack second = stack(32, 64);
-        first.set(DataComponents.CUSTOM_NAME, Component.literal("first"));
-        second.set(DataComponents.CUSTOM_NAME, Component.literal("second"));
+        first.setHoverName(Component.literal("first"));
+        second.setHoverName(Component.literal("second"));
 
         final BlockLootOutputBudget.Result result = BlockLootOutputBudget.multiply(
                 List.of(first, second),
@@ -135,19 +134,19 @@ final class BlockLootOutputBudgetTest {
         assertEquals(BlockLootOutputBudget.Outcome.MULTIPLIED, result.outcome());
         assertEquals(2, result.output().size());
         assertEquals(List.of("first", "second"), result.output().stream()
-                .map(stack -> stack.get(DataComponents.CUSTOM_NAME).getString())
+                .map(stack -> stack.getHoverName().getString())
                 .toList());
         assertEquals(32, first.getCount());
         assertEquals(32, second.getCount());
-        assertFalse(ItemStack.isSameItemSameComponents(result.output().get(0), result.output().get(1)));
+        assertFalse(ItemStack.isSameItemSameTags(result.output().get(0), result.output().get(1)));
     }
 
     @Test
     void equalComponentRichEntriesUseTheSameHashGroup() {
         final ItemStack first = stack(20, 64);
         final ItemStack second = stack(20, 64);
-        first.set(DataComponents.CUSTOM_NAME, Component.literal("same-rich-stack"));
-        second.set(DataComponents.CUSTOM_NAME, Component.literal("same-rich-stack"));
+        first.setHoverName(Component.literal("same-rich-stack"));
+        second.setHoverName(Component.literal("same-rich-stack"));
 
         final BlockLootOutputBudget.Result result = BlockLootOutputBudget.multiply(
                 List.of(first, second),
@@ -156,7 +155,7 @@ final class BlockLootOutputBudgetTest {
         assertEquals(BlockLootOutputBudget.Outcome.MULTIPLIED, result.outcome());
         assertEquals(List.of(64, 16), result.output().stream().map(ItemStack::getCount).toList());
         assertTrue(result.output().stream().allMatch(stack ->
-                ItemStack.isSameItemSameComponents(first, stack)));
+                ItemStack.isSameItemSameTags(first, stack)));
     }
 
     @Test
@@ -164,7 +163,7 @@ final class BlockLootOutputBudgetTest {
         final List<ItemStack> source = new ArrayList<>();
         for (int index = 0; index <= LootOutputBudget.MAX_MULTIPLIED_STACKS; index++) {
             final ItemStack stack = stack(1, 64);
-            stack.set(DataComponents.CUSTOM_NAME, Component.literal("distinct-" + index));
+            stack.setHoverName(Component.literal("distinct-" + index));
             source.add(stack);
         }
 
@@ -194,7 +193,7 @@ final class BlockLootOutputBudgetTest {
                 () -> BlockLootOutputBudget.multiply(mixed, 2));
         assertEquals(6, multiplied.multipliedItemEstimate());
         assertEquals(1, multiplied.output().size());
-        assertEquals(6, multiplied.output().getFirst().getCount());
+        assertEquals(6, multiplied.output().get(0).getCount());
         assertEquals(3, valid.getCount());
     }
 
@@ -217,8 +216,6 @@ final class BlockLootOutputBudgetTest {
     }
 
     private static ItemStack stack(final int count, final int maximumStackSize) {
-        final ItemStack stack = new ItemStack(Items.DIAMOND, count);
-        stack.set(DataComponents.MAX_STACK_SIZE, maximumStackSize);
-        return stack;
+        return new ItemStack(maximumStackSize == 1 ? Items.DIAMOND_SWORD : Items.DIAMOND, count);
     }
 }

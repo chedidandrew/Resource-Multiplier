@@ -2,7 +2,6 @@
   "replace": false,
   "values": [
     "minecraft:allay",
-    "minecraft:armadillo",
     "minecraft:axolotl",
     "minecraft:cow",
     "minecraft:chicken",
@@ -15,6 +14,7 @@
     "minecraft:rabbit",
     "minecraft:sheep",
     "minecraft:sniffer",
-    "minecraft:turtle"
+    "minecraft:turtle",
+    "smart_resource_drops_gametest:category_only"
   ]
 }

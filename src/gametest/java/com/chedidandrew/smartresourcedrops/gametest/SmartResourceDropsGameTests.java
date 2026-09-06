@@ -67,7 +67,7 @@ public final class SmartResourceDropsGameTests {
         helper.setBlock(support, Blocks.STONE);
         final ServerPlayer player = GameTestPlayers.survival(helper);
         final ItemStack door = new ItemStack(Items.OAK_DOOR);
-        // NeoForge's 1.21.1 placement hook reads the stack from the real hand.
+        // NeoForge's 1.20.4 placement hook reads the stack from the real hand.
         player.setItemInHand(InteractionHand.MAIN_HAND, door);
         helper.placeAt(player, door, support, Direction.UP);
 
@@ -260,9 +260,9 @@ public final class SmartResourceDropsGameTests {
         final double horizontal = Math.sqrt(xDelta * xDelta + zDelta * zDelta);
         final float yaw = (float) Math.toDegrees(Math.atan2(target.z - eye.z, target.x - eye.x)) - 90.0F;
         final float pitch = (float) -Math.toDegrees(Math.atan2(target.y - eye.y, horizontal));
-        player.absRotateTo(yaw, pitch);
+        player.absMoveTo(player.getX(), player.getY(), player.getZ(), yaw, pitch);
 
-        final HitResult targetHit = player.pick(player.blockInteractionRange(), 1.0F, false);
+        final HitResult targetHit = player.pick(5.0D, 1.0F, false);
         helper.assertTrue(targetHit.getType() == HitResult.Type.BLOCK,
                 "The server-side inspection raycast did not acquire the looked-at block");
         helper.assertTrue(((BlockHitResult) targetHit).getBlockPos().equals(targetPos),
@@ -278,9 +278,9 @@ public final class SmartResourceDropsGameTests {
                 "The successful command did not emit the expected inspection components");
 
         player.setPos(targetPos.getX() + 0.5, targetPos.getY() + 10.0, targetPos.getZ() + 0.5);
-        player.absRotateTo(player.getYRot(), -90.0F);
+        player.absMoveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), -90.0F);
         helper.assertTrue(
-                player.pick(player.blockInteractionRange(), 1.0F, false).getType() == HitResult.Type.MISS,
+                player.pick(5.0D, 1.0F, false).getType() == HitResult.Type.MISS,
                 "The no-target command check unexpectedly hit a block");
         final CapturingCommandSource noTargetMessages = new CapturingCommandSource();
         helper.assertTrue(executeCommand(

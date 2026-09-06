@@ -24,27 +24,28 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.objectweb.asm.Opcodes;
 
 import java.util.function.Consumer;
 
 @Mixin(LivingEntity.class)
 abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
-    @Shadow protected int lastHurtByPlayerTime;
-    @Shadow protected Player lastHurtByPlayer;
-
     @Unique
     private EntityKillAttribution.Kind smartResourceDrops$rememberedKillOrigin =
             EntityKillAttribution.Kind.NONE;
 
-    @WrapMethod(method = "dropAllDeathLoot(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;)V")
+    @WrapMethod(method = "dropAllDeathLoot(Lnet/minecraft/world/damagesource/DamageSource;)V")
     private void smartResourceDrops$scopeStandardDeathLoot(
-            final ServerLevel level,
             final DamageSource source,
             final Operation<Void> original
     ) {
         final LivingEntity self = (LivingEntity) (Object) this;
+        if (!(self.level() instanceof ServerLevel level)) {
+            original.call(source);
+            return;
+        }
         try (EntityDeathContext.Scope ignored = EntityDeathContext.begin(self, level, source)) {
-            original.call(level, source);
+            original.call(source);
         }
     }
 
@@ -66,7 +67,7 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
     }
 
     @WrapOperation(
-            method = "dropExperience(Lnet/minecraft/world/entity/Entity;)V",
+            method = "dropExperience()V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V"),
             require = 1,
             expect = 1)
@@ -85,41 +86,30 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
     }
 
     @Inject(
-            method = "setLastHurtByPlayer(Lnet/minecraft/world/entity/player/Player;)V",
-            at = @At("TAIL"),
-            require = 1,
-            expect = 1)
-    private void smartResourceDrops$rememberDirectPlayer(
-            final Player player,
-            final CallbackInfo callback
-    ) {
-        smartResourceDrops$rememberedKillOrigin = smartResourceDrops$trackingEnabled()
-                && EntityMultiplierResolver.isRealPlayer(player)
-                ? EntityKillAttribution.Kind.DIRECT_PLAYER
-                : EntityKillAttribution.Kind.NONE;
-    }
-
-    @Inject(
             method = "hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z",
-            at = @At("RETURN"),
-            require = 1,
-            expect = 1)
-    private void smartResourceDrops$rememberSuccessfulDamageOrigin(
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/world/entity/LivingEntity;lastHurtByPlayerTime:I",
+                    opcode = Opcodes.PUTFIELD,
+                    shift = At.Shift.AFTER),
+            require = 2,
+            expect = 2)
+    private void smartResourceDrops$rememberVanillaAttributionOriginWhenVanillaCreditsPlayer(
             final DamageSource source,
             final float amount,
             final CallbackInfoReturnable<Boolean> callback
     ) {
-        if (!callback.getReturnValueZ()) {
-            return;
-        }
-        if (source.getEntity() instanceof Player player) {
-            smartResourceDrops$rememberedKillOrigin = smartResourceDrops$trackingEnabled()
-                    && EntityMultiplierResolver.isRealPlayer(player)
+        if (!smartResourceDrops$trackingEnabled()) {
+            if (source.getEntity() instanceof Player
+                    || source.getEntity() instanceof Wolf wolf && wolf.isTame()) {
+                smartResourceDrops$rememberedKillOrigin = EntityKillAttribution.Kind.NONE;
+            }
+        } else if (source.getEntity() instanceof Player player) {
+            smartResourceDrops$rememberedKillOrigin = EntityMultiplierResolver.isRealPlayer(player)
                     ? EntityKillAttribution.Kind.DIRECT_PLAYER
                     : EntityKillAttribution.Kind.NONE;
         } else if (source.getEntity() instanceof Wolf wolf && wolf.isTame()) {
-            smartResourceDrops$rememberedKillOrigin = smartResourceDrops$trackingEnabled()
-                    && EntityMultiplierResolver.resolvedTamedOwner(wolf) != null
+            smartResourceDrops$rememberedKillOrigin = EntityMultiplierResolver.resolvedTamedOwner(wolf) != null
                     ? EntityKillAttribution.Kind.TAMED_ENTITY
                     : EntityKillAttribution.Kind.NONE;
         }
@@ -127,19 +117,25 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
 
     @Override
     public EntityKillAttribution.Kind smartResourceDrops$rememberedKillOrigin() {
-        return lastHurtByPlayerTime > 0
+        return smartResourceDrops$currentCreditedPlayer() != null
                 ? smartResourceDrops$rememberedKillOrigin
                 : EntityKillAttribution.Kind.NONE;
     }
 
     @Override
     public boolean smartResourceDrops$hasRememberedPlayerKill() {
-        return lastHurtByPlayerTime > 0 && lastHurtByPlayer != null;
+        return smartResourceDrops$currentCreditedPlayer() != null;
     }
 
     @Override
     public Player smartResourceDrops$rememberedPlayer() {
-        return lastHurtByPlayerTime > 0 ? lastHurtByPlayer : null;
+        return smartResourceDrops$currentCreditedPlayer();
+    }
+
+    @Unique
+    private Player smartResourceDrops$currentCreditedPlayer() {
+        final LivingEntity killCredit = ((LivingEntity) (Object) this).getKillCredit();
+        return killCredit instanceof Player player ? player : null;
     }
 
     @Unique

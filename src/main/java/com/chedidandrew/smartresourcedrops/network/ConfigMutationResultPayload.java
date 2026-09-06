@@ -1,9 +1,8 @@
 package com.chedidandrew.smartresourcedrops.network;
 
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Compact rejection/authorization response. Successful mutations still receive a complete
@@ -14,24 +13,29 @@ public record ConfigMutationResultPayload(
         long revision,
         boolean editable,
         ConfigSnapshotPayload.PatchResult result
-) implements CustomPacketPayload {
-    public static final Type<ConfigMutationResultPayload> TYPE =
-            new Type<>(SmartResourceDrops.id("config_mutation_result"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, ConfigMutationResultPayload> CODEC = StreamCodec.of(
-            (buffer, payload) -> {
-                buffer.writeVarInt(payload.requestId());
-                buffer.writeVarLong(payload.revision());
-                buffer.writeBoolean(payload.editable());
-                buffer.writeVarInt(payload.result().ordinal());
-            },
-            buffer -> new ConfigMutationResultPayload(
-                    buffer.readVarInt(),
-                    buffer.readVarLong(),
-                    buffer.readBoolean(),
-                    ConfigSnapshotPayload.PatchResult.fromOrdinal(buffer.readVarInt())));
+) implements ConfigPayload {
+    public static final ResourceLocation TYPE = SmartResourceDrops.id("config_mutation_result");
+
+    public static ConfigMutationResultPayload read(final FriendlyByteBuf buffer) {
+        final ConfigMutationResultPayload payload = new ConfigMutationResultPayload(
+                buffer.readVarInt(),
+                buffer.readVarLong(),
+                buffer.readBoolean(),
+                ConfigSnapshotPayload.PatchResult.fromOrdinal(buffer.readVarInt()));
+        ConfigPayload.requireFullyRead(buffer, "config mutation result");
+        return payload;
+    }
 
     @Override
-    public Type<ConfigMutationResultPayload> type() {
+    public ResourceLocation id() {
         return TYPE;
+    }
+
+    @Override
+    public void write(final FriendlyByteBuf buffer) {
+        buffer.writeVarInt(requestId);
+        buffer.writeVarLong(revision);
+        buffer.writeBoolean(editable);
+        buffer.writeVarInt(result.ordinal());
     }
 }

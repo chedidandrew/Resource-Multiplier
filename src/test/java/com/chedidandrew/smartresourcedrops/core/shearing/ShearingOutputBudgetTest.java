@@ -1,14 +1,12 @@
 package com.chedidandrew.smartresourcedrops.core.shearing;
 
 import net.minecraft.SharedConstants;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.CustomData;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -29,14 +27,13 @@ final class ShearingOutputBudgetTest {
 
     @Test
     void preservesComponentsAndConsumerBatchBoundaries() {
-        ItemStack first = stack(Items.DIAMOND, 3);
+        ItemStack first = stack(Items.SNOWBALL, 3);
         CompoundTag custom = new CompoundTag();
         custom.putString("marker", "preserved");
-        first.set(DataComponents.CUSTOM_NAME, Component.literal("preserved"));
-        first.set(DataComponents.CUSTOM_DATA, CustomData.of(custom));
-        first.set(DataComponents.MAX_STACK_SIZE, 16);
-        ItemStack second = stack(Items.DIAMOND, 2);
-        second.applyComponents(first.getComponents());
+        first.setTag(custom);
+        first.setHoverName(Component.literal("preserved"));
+        ItemStack second = stack(Items.SNOWBALL, 2);
+        second.setTag(first.getTag().copy());
 
         ShearingOutputBudget.Result result = ShearingOutputBudget.plan(
                 List.of(List.of(first, second), List.of(first)),
@@ -45,13 +42,13 @@ final class ShearingOutputBudgetTest {
         assertTrue(result.fits());
         assertEquals(80, result.multipliedItems());
         assertEquals(List.of(16, 16, 16, 2),
-                result.outputBatches().getFirst().stream().map(ItemStack::getCount).toList());
+                result.outputBatches().get(0).stream().map(ItemStack::getCount).toList());
         assertEquals(List.of(16, 14),
                 result.outputBatches().get(1).stream().map(ItemStack::getCount).toList());
         for (List<ItemStack> batch : result.outputBatches()) {
             for (ItemStack output : batch) {
                 assertNotSame(first, output);
-                assertTrue(ItemStack.isSameItemSameComponents(first, output));
+                assertTrue(ItemStack.isSameItemSameTags(first, output));
             }
         }
     }
@@ -87,8 +84,7 @@ final class ShearingOutputBudgetTest {
 
     @Test
     void materializedStackLimitFallsBackForUnstackableOutput() {
-        ItemStack source = stack(Items.DIAMOND, 5);
-        source.set(DataComponents.MAX_STACK_SIZE, 1);
+        ItemStack source = stack(Items.DIAMOND_SWORD, 5);
 
         ShearingOutputBudget.Result result = ShearingOutputBudget.plan(
                 List.of(List.of(source)),
@@ -109,12 +105,10 @@ final class ShearingOutputBudgetTest {
         assertTrue(result.fits());
         assertEquals(0, result.multipliedItems());
         assertEquals(0, result.materializedStacks());
-        assertTrue(result.outputBatches().getFirst().isEmpty());
+        assertTrue(result.outputBatches().get(0).isEmpty());
     }
 
     private static ItemStack stack(Item item, int count) {
-        ItemStack stack = new ItemStack(item, count);
-        stack.set(DataComponents.MAX_STACK_SIZE, 64);
-        return stack;
+        return new ItemStack(item, count);
     }
 }

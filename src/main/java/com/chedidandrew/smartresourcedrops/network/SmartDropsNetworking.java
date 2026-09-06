@@ -13,7 +13,7 @@ import java.util.function.BooleanSupplier;
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
 import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -397,9 +397,9 @@ public final class SmartDropsNetworking {
 
     /** Loader adapter for negotiated server-to-client play payloads. */
     public interface Transport {
-        boolean canSend(ServerPlayer player, CustomPacketPayload.Type<?> type);
+        boolean canSend(ServerPlayer player, ResourceLocation type);
 
-        void send(ServerPlayer player, CustomPacketPayload payload);
+        void send(ServerPlayer player, ConfigPayload payload);
     }
 
     private record PendingRequest(int requestId, long eligibleTick) {

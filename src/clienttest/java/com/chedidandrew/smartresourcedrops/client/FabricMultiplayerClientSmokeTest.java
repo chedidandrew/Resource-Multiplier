@@ -223,7 +223,7 @@ public final class FabricMultiplayerClientSmokeTest implements ClientModInitiali
         require(this.firstConnectionIdentity != null,
                 "First connection identity disappeared before disconnect");
         minecraft.setScreen(new SmartDropsConfigLoadingScreen(root));
-        minecraft.disconnect(new TitleScreen(), false);
+        minecraft.disconnect(new TitleScreen());
         transition(Phase.WAIT_DISCONNECT);
     }
 
@@ -245,8 +245,7 @@ public final class FabricMultiplayerClientSmokeTest implements ClientModInitiali
                         "Smart Resource Multiplier Fabric reconnect smoke",
                         address,
                         ServerData.Type.OTHER),
-                false,
-                null);
+                false);
         transition(Phase.WAIT_RECONNECT);
     }
 

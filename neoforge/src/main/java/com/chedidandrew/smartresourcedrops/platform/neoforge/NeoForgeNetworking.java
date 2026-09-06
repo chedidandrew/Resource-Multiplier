@@ -1,7 +1,9 @@
 package com.chedidandrew.smartresourcedrops.platform.neoforge;
 
+import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
 import com.chedidandrew.smartresourcedrops.network.ConfigInvalidationPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigMutationResultPayload;
+import com.chedidandrew.smartresourcedrops.network.ConfigPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigPatchPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigRequestPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigResetPayload;
@@ -12,11 +14,13 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
+import net.neoforged.neoforge.network.registration.IPayloadRegistrar;
+import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
 /** NeoForge registration and transport for the shared config protocol. */
 final class NeoForgeNetworking {
@@ -35,54 +39,62 @@ final class NeoForgeNetworking {
             @Override
             public boolean canSend(
                     final ServerPlayer player,
-                    final CustomPacketPayload.Type<?> type
+                    final ResourceLocation type
             ) {
-                return player.connection.hasChannel(type);
+                return NetworkRegistry.getInstance().isConnected(player.connection, type);
             }
 
             @Override
-            public void send(final ServerPlayer player, final CustomPacketPayload payload) {
-                PacketDistributor.sendToPlayer(player, payload);
+            public void send(final ServerPlayer player, final ConfigPayload payload) {
+                PacketDistributor.PLAYER.with(player).send(payload);
             }
         });
-        modBus.addListener(RegisterPayloadHandlersEvent.class, NeoForgeNetworking::registerPayloads);
+        modBus.addListener(RegisterPayloadHandlerEvent.class, NeoForgeNetworking::registerPayloads);
     }
 
     static void installClientReceiver(final Consumer<CustomPacketPayload> receiver) {
         clientReceiver = Objects.requireNonNull(receiver, "receiver");
     }
 
-    private static void registerPayloads(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION).optional();
-        registrar.playToServer(
+    private static void registerPayloads(final RegisterPayloadHandlerEvent event) {
+        final IPayloadRegistrar registrar = event.registrar(SmartResourceDrops.MOD_ID)
+                .versioned(PROTOCOL_VERSION)
+                .optional();
+        registrar.play(
                 ConfigRequestPayload.TYPE,
-                ConfigRequestPayload.CODEC,
-                (payload, context) -> SmartDropsNetworking.handleRequest(
-                        payload,
-                        (ServerPlayer) context.player()));
-        registrar.playToServer(
+                ConfigRequestPayload::read,
+                builder -> builder.server((payload, context) -> context.workHandler().execute(() ->
+                        SmartDropsNetworking.handleRequest(
+                                payload,
+                                (ServerPlayer) context.player().orElseThrow()))));
+        registrar.play(
                 ConfigPatchPayload.TYPE,
-                ConfigPatchPayload.CODEC,
-                (payload, context) -> SmartDropsNetworking.handlePatch(
-                        payload,
-                        (ServerPlayer) context.player()));
-        registrar.playToServer(
+                ConfigPatchPayload::read,
+                builder -> builder.server((payload, context) -> context.workHandler().execute(() ->
+                        SmartDropsNetworking.handlePatch(
+                                payload,
+                                (ServerPlayer) context.player().orElseThrow()))));
+        registrar.play(
                 ConfigResetPayload.TYPE,
-                ConfigResetPayload.CODEC,
-                (payload, context) -> SmartDropsNetworking.handleReset(
-                        payload,
-                        (ServerPlayer) context.player()));
-        registrar.playToClient(
+                ConfigResetPayload::read,
+                builder -> builder.server((payload, context) -> context.workHandler().execute(() ->
+                        SmartDropsNetworking.handleReset(
+                                payload,
+                                (ServerPlayer) context.player().orElseThrow()))));
+        registrar.play(
                 ConfigSnapshotPayload.TYPE,
-                ConfigSnapshotPayload.CODEC,
-                (payload, context) -> clientReceiver.accept(payload));
-        registrar.playToClient(
+                ConfigSnapshotPayload::read,
+                builder -> builder.client((payload, context) -> context.workHandler().execute(() ->
+                        clientReceiver.accept(payload))));
+        registrar.play(
                 ConfigInvalidationPayload.TYPE,
-                ConfigInvalidationPayload.CODEC,
-                (payload, context) -> clientReceiver.accept(payload));
-        registrar.playToClient(
+                ConfigInvalidationPayload::read,
+                builder -> builder.client((payload, context) -> context.workHandler().execute(() ->
+                        clientReceiver.accept(payload))));
+        registrar.play(
                 ConfigMutationResultPayload.TYPE,
-                ConfigMutationResultPayload.CODEC,
-                (payload, context) -> clientReceiver.accept(payload));
+                ConfigMutationResultPayload::read,
+                builder -> builder.client((payload, context) -> context.workHandler().execute(() ->
+                        clientReceiver.accept(payload))));
     }
 }

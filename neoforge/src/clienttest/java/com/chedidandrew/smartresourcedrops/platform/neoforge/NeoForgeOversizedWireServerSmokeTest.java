@@ -2,32 +2,48 @@ package com.chedidandrew.smartresourcedrops.platform.neoforge;
 
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
 import com.chedidandrew.smartresourcedrops.config.ConfigManager;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.TickEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 /** Proves a malformed wire patch only disconnects its sender and cannot mutate server state. */
-@Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.DEDICATED_SERVER)
+@Mod.EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, value = Dist.DEDICATED_SERVER)
 public final class NeoForgeOversizedWireServerSmokeTest {
     private static final int HEALTH_CHECK_TICKS = 40;
-    private static final AtomicBoolean REGISTERED = new AtomicBoolean();
+    private static final NeoForgeOversizedWireServerSmokeTest INSTANCE =
+            new NeoForgeOversizedWireServerSmokeTest();
 
     private ServerPlayer attackedPlayer;
     private String baselineJson;
     private long baselineRevision;
     private int ticksAfterDisconnect = -1;
 
-    public NeoForgeOversizedWireServerSmokeTest() {
-        if (Boolean.getBoolean("smart_resource_drops.oversizedWireTest")
-                && REGISTERED.compareAndSet(false, true)) {
-            NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerLoggedInEvent.class, this::onPlayerLoggedIn);
-            NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerLoggedOutEvent.class, this::onPlayerLoggedOut);
-            NeoForge.EVENT_BUS.addListener(ServerTickEvent.Post.class, this::onServerTick);
+    private NeoForgeOversizedWireServerSmokeTest() {
+    }
+
+    @SubscribeEvent
+    public static void loggedIn(final PlayerEvent.PlayerLoggedInEvent event) {
+        if (Boolean.getBoolean("smart_resource_drops.oversizedWireTest")) {
+            INSTANCE.onPlayerLoggedIn(event);
+        }
+    }
+
+    @SubscribeEvent
+    public static void loggedOut(final PlayerEvent.PlayerLoggedOutEvent event) {
+        if (Boolean.getBoolean("smart_resource_drops.oversizedWireTest")) {
+            INSTANCE.onPlayerLoggedOut(event);
+        }
+    }
+
+    @SubscribeEvent
+    public static void tick(final TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END
+                && Boolean.getBoolean("smart_resource_drops.oversizedWireTest")) {
+            INSTANCE.onServerTick();
         }
     }
 
@@ -58,7 +74,7 @@ public final class NeoForgeOversizedWireServerSmokeTest {
                 "NeoForge oversized-wire server observed rejection; beginning post-disconnect health check");
     }
 
-    private void onServerTick(final ServerTickEvent.Post event) {
+    private void onServerTick() {
         if (this.baselineJson == null) {
             return;
         }
@@ -67,7 +83,8 @@ public final class NeoForgeOversizedWireServerSmokeTest {
             return;
         }
 
-        final MinecraftServer server = event.getServer();
+        final MinecraftServer server = net.neoforged.neoforge.server.ServerLifecycleHooks
+                .getCurrentServer();
         if (server.getCommands().getDispatcher().getRoot().getChild("smartdrops") == null) {
             throw new AssertionError("Smart Resource Multiplier command disappeared after hostile payload");
         }

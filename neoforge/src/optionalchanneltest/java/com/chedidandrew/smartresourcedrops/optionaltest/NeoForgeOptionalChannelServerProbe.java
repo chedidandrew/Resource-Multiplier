@@ -4,16 +4,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.DistExecutor;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.TickEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.network.registration.NetworkRegistry;
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
 /** Test-only server observer for the real optional-channel installation matrix. */
-@Mod(value = OptionalChannelIds.PROBE_MOD_ID, dist = Dist.DEDICATED_SERVER)
+@Mod(OptionalChannelIds.PROBE_MOD_ID)
 public final class NeoForgeOptionalChannelServerProbe {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final AtomicBoolean REGISTERED = new AtomicBoolean();
@@ -26,6 +28,9 @@ public final class NeoForgeOptionalChannelServerProbe {
     private boolean observedUnavailableChannels;
 
     public NeoForgeOptionalChannelServerProbe() {
+        DistExecutor.unsafeRunWhenOn(
+                Dist.CLIENT,
+                () -> NeoForgeOptionalServerOnlyClientSmokeTest::register);
         this.mode = System.getProperty("smart_resource_drops.optionalChannelTest", "");
         if (!this.mode.isEmpty() && REGISTERED.compareAndSet(false, true)) {
             final boolean productionLoaded = ModList.get().isLoaded(OptionalChannelIds.PRODUCTION_MOD_ID);
@@ -41,7 +46,11 @@ public final class NeoForgeOptionalChannelServerProbe {
             NeoForge.EVENT_BUS.addListener(
                     PlayerEvent.PlayerLoggedOutEvent.class,
                     this::onPlayerLoggedOut);
-            NeoForge.EVENT_BUS.addListener(ServerTickEvent.Post.class, this::onServerTick);
+            NeoForge.EVENT_BUS.addListener((TickEvent.ServerTickEvent event) -> {
+                if (event.phase == TickEvent.Phase.END) {
+                    this.onServerTick();
+                }
+            });
         }
     }
 
@@ -58,7 +67,7 @@ public final class NeoForgeOptionalChannelServerProbe {
         LOGGER.info("NeoForge optional-channel {} client connected", this.mode);
     }
 
-    private void onServerTick(final ServerTickEvent.Post event) {
+    private void onServerTick() {
         if (this.player == null || this.observedUnavailableChannels) {
             return;
         }
@@ -69,10 +78,10 @@ public final class NeoForgeOptionalChannelServerProbe {
                 ? OptionalChannelIds.clientToServer()
                 : OptionalChannelIds.serverToClient();
         for (var type : unavailableTypes) {
-            if (this.player.connection.hasChannel(type)) {
+            if (NetworkRegistry.getInstance().isConnected(this.player.connection, type)) {
                 throw new AssertionError(
                         "Optional Smart Resource Multiplier destination channel unexpectedly available in "
-                                + this.mode + " mode: " + type.id());
+                                + this.mode + " mode: " + type);
             }
         }
         this.observedUnavailableChannels = true;

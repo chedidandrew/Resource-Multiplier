@@ -104,8 +104,8 @@ public final class ShearingRuleResolver {
                     1,
                     ShearingRuleTrace.RuleSource.UNKNOWN_SAFETY,
                     standardTagged
-                            ? "Minecraft 1.21.1 supports final-output multiplication for sheep only; other standard-resource tag members remain vanilla 1x"
-                            : "unknown shearables are fixed at vanilla 1x on Minecraft 1.21.1");
+                            ? "Minecraft 1.20.4 supports final-output multiplication for sheep only; other standard-resource tag members remain vanilla 1x"
+                            : "unknown shearables are fixed at vanilla 1x on Minecraft 1.20.4");
         }
         if (!config.enabled) {
             return result(

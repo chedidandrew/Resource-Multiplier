@@ -1,7 +1,6 @@
 package com.chedidandrew.smartresourcedrops.optionaltest;
 
 import java.util.List;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
 /** Loader-independent identifiers used without loading the production mod. */
@@ -12,22 +11,21 @@ final class OptionalChannelIds {
     private OptionalChannelIds() {
     }
 
-    static List<CustomPacketPayload.Type<?>> clientToServer() {
+    static List<ResourceLocation> clientToServer() {
         return List.of(
                 type("config_request"),
                 type("config_patch"),
                 type("config_reset"));
     }
 
-    static List<CustomPacketPayload.Type<?>> serverToClient() {
+    static List<ResourceLocation> serverToClient() {
         return List.of(
                 type("config_snapshot"),
                 type("config_invalidation"),
                 type("config_mutation_result"));
     }
 
-    private static CustomPacketPayload.Type<?> type(final String path) {
-        return new CustomPacketPayload.Type<>(
-                ResourceLocation.fromNamespaceAndPath(PRODUCTION_MOD_ID, path));
+    private static ResourceLocation type(final String path) {
+        return new ResourceLocation(PRODUCTION_MOD_ID, path);
     }
 }

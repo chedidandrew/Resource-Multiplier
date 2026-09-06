@@ -9,6 +9,7 @@ def javaVersionValue = providers.gradleProperty('java_version').get().toInteger(
 def loaderVersionValue = providers.gradleProperty('loader_version').get()
 def fabricVersionValue = providers.gradleProperty('fabric_version').get()
 def modMenuVersionValue = providers.gradleProperty('modmenu_version').get()
+def javaMetadataVersionValue = providers.gradleProperty('java_version').get()
 def archivesBaseNameValue = providers.gradleProperty('archives_base_name').get()
 def mavenGroupValue = providers.gradleProperty('maven_group').get()
 def junitVersionValue = providers.gradleProperty('junit_version').get()
@@ -138,7 +139,7 @@ loom {
     runs {
         clientSmoke {
             client()
-            name = 'Fabric 1.21.1 client GUI smoke'
+            name = 'Fabric 1.20.4 client GUI smoke'
             source clientTestSourceSet
             runDir 'build/fabric-client-smoke'
             property 'smart_resource_drops.fabricClientSmoke', 'true'
@@ -147,7 +148,7 @@ loom {
         }
         multiplayerServerSmoke {
             server()
-            name = 'Fabric 1.21.1 multiplayer authority server smoke'
+            name = 'Fabric 1.20.4 multiplayer authority server smoke'
             source clientTestSourceSet
             runDir 'build/fabric-multiplayer-smoke/server'
             property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
@@ -155,7 +156,7 @@ loom {
         }
         multiplayerClientSmoke {
             client()
-            name = 'Fabric 1.21.1 multiplayer authority client smoke'
+            name = 'Fabric 1.20.4 multiplayer authority client smoke'
             source clientTestSourceSet
             runDir 'build/fabric-multiplayer-smoke/client'
             property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
@@ -164,7 +165,7 @@ loom {
         }
         persistenceMarkServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence mark/save smoke'
+            name = 'Fabric 1.20.4 placement persistence mark/save smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'mark'
@@ -174,7 +175,7 @@ loom {
         }
         persistenceRemoveServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence remove/save smoke'
+            name = 'Fabric 1.20.4 placement persistence remove/save smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'remove'
@@ -184,7 +185,7 @@ loom {
         }
         persistenceVerifyAbsentServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence verify-absent smoke'
+            name = 'Fabric 1.20.4 placement persistence verify-absent smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'verify_absent'
@@ -212,6 +213,10 @@ repositories {
     maven {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
+    }
+    maven {
+        name = 'Nucleoid'
+        url = 'https://maven.nucleoid.xyz/'
     }
 }
 
@@ -241,6 +246,7 @@ processResources {
     inputs.property 'loader_version', loaderVersionValue
     inputs.property 'fabric_version', fabricVersionValue
     inputs.property 'modmenu_version', modMenuVersionValue
+    inputs.property 'java_version', javaMetadataVersionValue
 
     filesMatching('fabric.mod.json') {
         expand(
@@ -248,7 +254,8 @@ processResources {
             minecraft_version: minecraftVersionValue,
             loader_version: loaderVersionValue,
             fabric_version: fabricVersionValue,
-            modmenu_version: modMenuVersionValue
+            modmenu_version: modMenuVersionValue,
+            java_version: javaMetadataVersionValue
         )
     }
 }
@@ -286,6 +293,9 @@ tasks.named('runClientSmoke') {
             line.contains('/ERROR]')
                     && !line.contains('Error while loading the narrator')
                     && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+                    && !line.contains('Failed to fetch user properties')
+                    && !line.contains('Failed to fetch Realms feature flags')
+                    && !line.contains("Couldn't connect to realms")
         }
         if (!logFile.isFile()
                 || !unexpectedErrors.isEmpty()
@@ -312,9 +322,9 @@ tasks.named('runGameTest') {
         }
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
-                '64 tests are now running',
-                '64 GAME TESTS COMPLETE',
-                'All 64 required tests passed',
+                '63 tests are now running',
+                '63 GAME TESTS COMPLETE',
+                'All 63 required tests passed',
                 'Game test server shutting down']) {
             if (!log.contains(evidence)) {
                 throw new GradleException(
@@ -418,6 +428,8 @@ java {
 }
 
 jar {
+    // Keep the conventional root license entry for launchers and hosting-site scanners.
+    from('LICENSE')
     from('LICENSE') {
         rename { licenseName -> "${licenseName}_${archivesBaseNameValue}" }
     }

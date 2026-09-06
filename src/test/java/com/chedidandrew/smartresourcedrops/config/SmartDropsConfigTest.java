@@ -573,7 +573,7 @@ final class SmartDropsConfigTest {
         ConfigLoadDiagnostics malformedDiagnostics = ConfigManager.validationSnapshot().loadDiagnostics();
         assertTrue(malformedDiagnostics.malformedFileRecovered());
         assertEquals(1, malformedDiagnostics.backupFileNames().size());
-        assertFalse(malformedDiagnostics.backupFileNames().getFirst().contains(directory.toString()));
+        assertFalse(malformedDiagnostics.backupFileNames().get(0).contains(directory.toString()));
         try (var files = Files.list(directory)) {
             Path backup = files
                     .filter(candidate -> candidate.getFileName().toString().startsWith("smart_resource_drops.broken-"))

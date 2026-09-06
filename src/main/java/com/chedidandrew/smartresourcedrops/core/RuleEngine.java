@@ -49,7 +49,7 @@ public final class RuleEngine {
                 && config.smartPlacementProtection
                 && input.playerPlaced());
 
-        Category category = matchedCategories.getFirst();
+        Category category = matchedCategories.get(0);
         int multiplier = config.globalMultiplier;
         RuleResolutionTrace.RuleSource selectedRule = RuleResolutionTrace.RuleSource.GLOBAL;
 

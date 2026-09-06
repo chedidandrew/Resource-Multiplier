@@ -10,7 +10,7 @@ import java.util.Set;
 /** Data-pack controlled certification and permanent-safety tags for shearable entities. */
 public final class ShearingTags {
     /**
-     * Minecraft 1.21.1 has no generic final-output shearing boundary. Sheep is the only vanilla
+     * Minecraft 1.20.4 has no generic final-output shearing boundary. Sheep is the only vanilla
      * type whose completed item emissions can be intercepted without touching transformation or
      * equipment semantics. Extra standard-resource tag members therefore fail closed on this
      * backport instead of displaying a multiplier that runtime cannot apply.

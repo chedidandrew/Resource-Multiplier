@@ -4,7 +4,6 @@ import com.chedidandrew.smartresourcedrops.config.ConfigManager;
 import com.chedidandrew.smartresourcedrops.provenance.PlacementTracker;
 import com.chedidandrew.smartresourcedrops.provenance.ProtectedPistonMovement;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -75,17 +74,15 @@ abstract class PistonMovingBlockEntityMixin implements ProtectedPistonMovement {
     @Inject(method = "saveAdditional", at = @At("TAIL"))
     private void smartResourceDrops$savePistonProvenance(
             CompoundTag output,
-            HolderLookup.Provider registries,
             CallbackInfo callback
     ) {
         output.putBoolean(SMART_RESOURCE_DROPS_CAPTURED, smartResourceDrops$captured);
         output.putBoolean(SMART_RESOURCE_DROPS_PROTECT_DESTINATION, smartResourceDrops$protectDestination);
     }
 
-    @Inject(method = "loadAdditional", at = @At("TAIL"))
+    @Inject(method = "load", at = @At("TAIL"))
     private void smartResourceDrops$loadPistonProvenance(
             CompoundTag input,
-            HolderLookup.Provider registries,
             CallbackInfo callback
     ) {
         smartResourceDrops$captured = input.getBoolean(SMART_RESOURCE_DROPS_CAPTURED);

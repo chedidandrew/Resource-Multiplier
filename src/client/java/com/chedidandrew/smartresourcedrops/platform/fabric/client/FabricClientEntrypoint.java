@@ -14,6 +14,7 @@ import com.chedidandrew.smartresourcedrops.config.ConfigScreenOpenPolicy;
 import com.chedidandrew.smartresourcedrops.core.client.util.ClientCommandQueue;
 import com.chedidandrew.smartresourcedrops.network.ConfigInvalidationPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigMutationResultPayload;
+import com.chedidandrew.smartresourcedrops.network.ConfigPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigSnapshotPayload;
 
 import net.fabricmc.api.ClientModInitializer;
@@ -22,11 +23,13 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
 /** Fabric client bootstrap for shared GUI, tag discovery, and config networking. */
 public final class FabricClientEntrypoint implements ClientModInitializer {
@@ -37,26 +40,36 @@ public final class FabricClientEntrypoint implements ClientModInitializer {
         ClientModResources.install(FabricClientEntrypoint::findResources);
         ClientNetworkBridge.install(new ClientNetworkBridge.Transport() {
             @Override
-            public boolean canSend(final CustomPacketPayload.Type<?> type) {
+            public boolean canSend(final ResourceLocation type) {
                 return ClientPlayNetworking.canSend(type);
             }
 
             @Override
-            public void send(final CustomPacketPayload payload) {
-                ClientPlayNetworking.send(payload);
+            public void send(final ConfigPayload payload) {
+                final FriendlyByteBuf buffer = PacketByteBufs.create();
+                payload.write(buffer);
+                ClientPlayNetworking.send(payload.id(), buffer);
             }
         });
 
         ClientCommandQueue.initialize();
         ClientTickEvents.END_CLIENT_TICK.register(ClientCommandQueue::tick);
-        ClientPlayNetworking.registerGlobalReceiver(ConfigSnapshotPayload.TYPE, (payload, context) -> {
+        ClientPlayNetworking.registerGlobalReceiver(ConfigSnapshotPayload.TYPE,
+                (client, handler, buffer, responseSender) -> {
+            final ConfigSnapshotPayload payload = ConfigSnapshotPayload.read(buffer);
             SmartResourceDrops.LOGGER.debug("Received config snapshot #{} on the client", payload.requestId());
-            context.client().execute(() -> ClientConfigState.accept(payload, context.client()));
+            client.execute(() -> ClientConfigState.accept(payload, client));
         });
-        ClientPlayNetworking.registerGlobalReceiver(ConfigInvalidationPayload.TYPE, (payload, context) ->
-                context.client().execute(() -> ClientConfigState.acceptInvalidation(payload, context.client())));
-        ClientPlayNetworking.registerGlobalReceiver(ConfigMutationResultPayload.TYPE, (payload, context) ->
-                context.client().execute(() -> ClientConfigState.acceptMutationResult(payload, context.client())));
+        ClientPlayNetworking.registerGlobalReceiver(ConfigInvalidationPayload.TYPE,
+                (client, handler, buffer, responseSender) -> {
+                    final ConfigInvalidationPayload payload = ConfigInvalidationPayload.read(buffer);
+                    client.execute(() -> ClientConfigState.acceptInvalidation(payload, client));
+                });
+        ClientPlayNetworking.registerGlobalReceiver(ConfigMutationResultPayload.TYPE,
+                (client, handler, buffer, responseSender) -> {
+                    final ConfigMutationResultPayload payload = ConfigMutationResultPayload.read(buffer);
+                    client.execute(() -> ClientConfigState.acceptMutationResult(payload, client));
+                });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             ClientCommandQueue.clear();
             ClientConfigState.onDisconnect(client, handler.getConnection());

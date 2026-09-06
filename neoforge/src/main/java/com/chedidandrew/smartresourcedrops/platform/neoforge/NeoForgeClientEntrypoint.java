@@ -14,26 +14,26 @@ import com.chedidandrew.smartresourcedrops.config.ConfigScreenOpenPolicy;
 import com.chedidandrew.smartresourcedrops.core.client.util.ClientCommandQueue;
 import com.chedidandrew.smartresourcedrops.network.ConfigInvalidationPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigMutationResultPayload;
+import com.chedidandrew.smartresourcedrops.network.ConfigPayload;
 import com.chedidandrew.smartresourcedrops.network.ConfigSnapshotPayload;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.client.ConfigScreenHandler;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.TickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
 /** Physical-client-only NeoForge bootstrap. */
-@Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.CLIENT)
 public final class NeoForgeClientEntrypoint {
     private static final String OPEN_CONFIG_QUEUE_KEY = "smart_resource_drops:open_config_gui";
 
@@ -41,29 +41,32 @@ public final class NeoForgeClientEntrypoint {
         ClientModResources.install(NeoForgeClientEntrypoint::findResources);
         ClientNetworkBridge.install(new ClientNetworkBridge.Transport() {
             @Override
-            public boolean canSend(final CustomPacketPayload.Type<?> type) {
+            public boolean canSend(final ResourceLocation type) {
                 final var listener = Minecraft.getInstance().getConnection();
-                return listener != null && listener.hasChannel(type);
+                return listener != null && NetworkRegistry.getInstance().isConnected(listener, type);
             }
 
             @Override
-            public void send(final CustomPacketPayload payload) {
-                PacketDistributor.sendToServer(payload);
+            public void send(final ConfigPayload payload) {
+                PacketDistributor.SERVER.noArg().send(payload);
             }
         });
         NeoForgeNetworking.installClientReceiver(NeoForgeClientEntrypoint::handleClientPayload);
         NeoForge.EVENT_BUS.addListener(
                 RegisterClientCommandsEvent.class,
                 NeoForgeClientEntrypoint::registerClientCommands);
-        NeoForge.EVENT_BUS.addListener(
-                ClientTickEvent.Post.class,
-                event -> ClientCommandQueue.tick(Minecraft.getInstance()));
+        NeoForge.EVENT_BUS.addListener((TickEvent.ClientTickEvent event) -> {
+            if (event.phase == TickEvent.Phase.END) {
+                ClientCommandQueue.tick(Minecraft.getInstance());
+            }
+        });
         NeoForge.EVENT_BUS.addListener(
                 ClientPlayerNetworkEvent.LoggingOut.class,
                 NeoForgeClientEntrypoint::onLoggingOut);
         container.registerExtensionPoint(
-                IConfigScreenFactory.class,
-                (ignoredContainer, parent) -> SmartDropsConfigScreens.create(parent));
+                ConfigScreenHandler.ConfigScreenFactory.class,
+                () -> new ConfigScreenHandler.ConfigScreenFactory(
+                        (minecraft, parent) -> SmartDropsConfigScreens.create(parent)));
     }
 
     private static void handleClientPayload(final CustomPacketPayload payload) {
@@ -75,7 +78,7 @@ public final class NeoForgeClientEntrypoint {
         } else if (payload instanceof ConfigMutationResultPayload result) {
             ClientConfigState.acceptMutationResult(result, Minecraft.getInstance());
         } else {
-            SmartResourceDrops.LOGGER.warn("Ignored unexpected client payload type {}", payload.type().id());
+            SmartResourceDrops.LOGGER.warn("Ignored unexpected client payload type {}", payload.id());
         }
     }
 

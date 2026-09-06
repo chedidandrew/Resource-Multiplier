@@ -4,14 +4,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
-import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.navigation.CommonInputs;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * A centered, responsive selection list for structured configuration rows.
@@ -35,9 +35,9 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
     private int preferredRowWidth;
     private List<Row> rows = List.of();
-    private List<net.minecraft.util.FormattedCharSequence> pendingTooltip;
-    private int pendingTooltipX;
-    private int pendingTooltipY;
+    private Component deferredTooltip;
+    private int deferredTooltipX;
+    private int deferredTooltipY;
 
     /**
      * @param screenWidth the full screen width; the list centers itself within it
@@ -73,7 +73,6 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
         this.rows = List.copyOf(newRows);
         replaceEntries(rows.stream().map(row -> new Entry(row)).toList());
         setScrollAmount(0.0);
-        clampScrollAmount();
     }
 
     public List<Row> rows() {
@@ -86,7 +85,7 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
     public void setPreferredRowWidth(final int preferredRowWidth) {
         this.preferredRowWidth = Math.max(1, preferredRowWidth);
-        updateSizeAndPosition(getWidth(), getHeight(), getY());
+        updateResponsiveBounds(getWidth(), getHeight(), getY());
     }
 
     public int getPreferredRowWidth() {
@@ -97,20 +96,6 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
      * Centers the list, retaining an eight-pixel screen margin on compact
      * windows and a small gutter for the vanilla scrollbar on larger windows.
      */
-    public void updateResponsiveBounds(final int screenWidth, final int height, final int y) {
-        updateSizeAndPosition(screenWidth, height, y);
-    }
-
-    @Override
-    public int getRowWidth() {
-        return Math.max(1, Math.min(preferredRowWidth, getWidth() - 24));
-    }
-
-    /** Compatibility accessor matching the newer selection-list API used by the shared screens. */
-    public double scrollAmount() {
-        return getScrollAmount();
-    }
-
     @Override
     public void renderWidget(
             final GuiGraphics graphics,
@@ -118,15 +103,44 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
             final int mouseY,
             final float partialTick
     ) {
-        pendingTooltip = null;
+        deferredTooltip = null;
         super.renderWidget(graphics, mouseX, mouseY, partialTick);
-        if (pendingTooltip != null) {
-            graphics.renderTooltip(
-                    minecraft.font,
-                    pendingTooltip,
-                    pendingTooltipX,
-                    pendingTooltipY);
+    }
+
+    /** Draws the hovered row tooltip after every screen widget has rendered. */
+    public void renderDeferredTooltip(final GuiGraphics graphics) {
+        if (deferredTooltip == null) {
+            return;
         }
+        final Font font = this.minecraft.font;
+        graphics.renderTooltip(
+                font,
+                font.split(deferredTooltip, Math.max(1, Math.min(320, this.width - 16))),
+                deferredTooltipX,
+                deferredTooltipY);
+    }
+
+    /** Centers the list while keeping its scrollbar on the actual right edge. */
+    public void updateResponsiveBounds(final int screenWidth, final int height, final int y) {
+        final int availableWidth = Math.max(1, screenWidth - LIST_SIDE_MARGIN * 2);
+        final int listWidth = Math.min(availableWidth, preferredRowWidth + 24);
+        final int x = (screenWidth - listWidth) / 2;
+        setRectangle(listWidth, height, x, y);
+    }
+
+    /** Compatibility name retained for screens shared with newer Minecraft versions. */
+    public double scrollAmount() {
+        return getScrollAmount();
+    }
+
+    @Override
+    public int getRowWidth() {
+        return Math.max(1, Math.min(preferredRowWidth, getWidth() - 24));
+    }
+
+    @Override
+    protected int getScrollbarPosition() {
+        return getRowRight() + 4;
     }
 
     /**
@@ -227,10 +241,11 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
                     || rightDetail.truncated();
             if (hovered && (!row.tooltip().getString().isEmpty() || truncated)) {
                 Component tooltip = hoverText(truncated);
-                StructuredConfigList.this.pendingTooltip =
-                        Tooltip.splitTooltip(StructuredConfigList.this.minecraft, tooltip);
-                StructuredConfigList.this.pendingTooltipX = mouseX;
-                StructuredConfigList.this.pendingTooltipY = mouseY;
+                if (!tooltip.getString().isEmpty()) {
+                    StructuredConfigList.this.deferredTooltip = tooltip;
+                    StructuredConfigList.this.deferredTooltipX = mouseX;
+                    StructuredConfigList.this.deferredTooltipY = mouseY;
+                }
             }
         }
 
@@ -245,7 +260,7 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
         @Override
         public boolean keyPressed(final int keyCode, final int scanCode, final int modifiers) {
-            if (CommonInputs.selected(keyCode)) {
+            if (keyCode == 257 || keyCode == 335 || keyCode == 32) {
                 activate();
                 return true;
             }
@@ -268,46 +283,65 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
          * field is shown first and supplemental details follow on new lines.
          */
         private Component hoverText(final boolean truncated) {
-            final MutableComponent text = Component.empty();
-            if (truncated) {
-                appendTooltipPart(text, row.primary());
-                appendTooltipPart(text, row.secondary());
-                appendTooltipPart(text, row.leftDetail());
-                appendTooltipPart(text, row.rightDetail());
-            }
-            appendTooltipPart(text, row.tooltip());
-            return text;
+            return composeHoverText(row, truncated);
         }
 
         private Component fullRowText() {
-            MutableComponent text = Component.empty();
-            appendNarrationPart(text, row.primary());
-            appendNarrationPart(text, row.secondary());
-            appendNarrationPart(text, row.leftDetail());
-            appendNarrationPart(text, row.rightDetail());
-            appendNarrationPart(text, row.tooltip());
-            return text;
+            return composeNarrationText(row);
         }
     }
 
-    private static void appendTooltipPart(final MutableComponent target, final Component part) {
-        if (part.getString().isEmpty()) {
-            return;
+    static Component composeHoverText(final Row row, final boolean truncated) {
+        final MutableComponent text = Component.empty();
+        final Set<String> seen = new HashSet<>();
+        if (truncated) {
+            appendUniquePart(text, seen, row.primary(), "\n");
+            appendUniquePart(text, seen, row.secondary(), "\n");
+            appendUniquePart(text, seen, row.leftDetail(), "\n");
+            appendUniquePart(text, seen, row.rightDetail(), "\n");
+        } else {
+            rememberPart(seen, row.primary());
+            rememberPart(seen, row.secondary());
+            rememberPart(seen, row.leftDetail());
+            rememberPart(seen, row.rightDetail());
         }
-        if (!target.getString().isEmpty()) {
-            target.append(Component.literal("\n"));
-        }
-        target.append(part);
+        appendUniquePart(text, seen, row.tooltip(), "\n");
+        return text;
     }
 
-    private static void appendNarrationPart(final MutableComponent target, final Component part) {
-        if (part.getString().isEmpty()) {
-            return;
+    static Component composeNarrationText(final Row row) {
+        final MutableComponent text = Component.empty();
+        final Set<String> seen = new HashSet<>();
+        appendUniquePart(text, seen, row.primary(), ", ");
+        appendUniquePart(text, seen, row.secondary(), ", ");
+        appendUniquePart(text, seen, row.leftDetail(), ", ");
+        appendUniquePart(text, seen, row.rightDetail(), ", ");
+        appendUniquePart(text, seen, row.tooltip(), ", ");
+        return text;
+    }
+
+    private static void rememberPart(final Set<String> seen, final Component part) {
+        part.getString().lines()
+                .map(String::strip)
+                .filter(line -> !line.isEmpty())
+                .forEach(seen::add);
+    }
+
+    private static void appendUniquePart(
+            final MutableComponent target,
+            final Set<String> seen,
+            final Component part,
+            final String separator
+    ) {
+        for (String line : part.getString().lines().map(String::strip).filter(value -> !value.isEmpty()).toList()) {
+            if (!seen.add(line)) {
+                continue;
+            }
+            if (!target.getString().isEmpty()) {
+                target.append(Component.literal(separator));
+            }
+            target.append(Component.literal(line));
         }
-        if (!target.getString().isEmpty()) {
-            target.append(Component.literal(", "));
-        }
-        target.append(part);
     }
 
     private static ClippedText clip(final Font font, final Component component, final int maximumWidth) {

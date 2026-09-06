@@ -8,35 +8,30 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Locale;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.TickEvent;
 
 /** Three-JVM proof that native NeoForge placement data survives save and removal. */
-@Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.DEDICATED_SERVER)
+@Mod.EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, value = Dist.DEDICATED_SERVER)
 public final class NeoForgePlacementPersistenceSmokeTest {
     private static final String PHASE_PROPERTY = "smart_resource_drops.persistenceTestPhase";
     private static final String DIRECTORY_PROPERTY = "smart_resource_drops.persistenceTestDirectory";
     private static final BlockPos TEST_POSITION = new BlockPos(8, 70, 8);
-    private static final AtomicBoolean REGISTERED = new AtomicBoolean();
+    private static final NeoForgePlacementPersistenceSmokeTest INSTANCE =
+            new NeoForgePlacementPersistenceSmokeTest();
 
     private final Phase phase;
     private final Path testDirectory;
     private boolean executed;
 
-    public NeoForgePlacementPersistenceSmokeTest() {
+    private NeoForgePlacementPersistenceSmokeTest() {
         final String configuredPhase = System.getProperty(PHASE_PROPERTY);
         if (configuredPhase == null || configuredPhase.isBlank()) {
-            this.phase = null;
-            this.testDirectory = null;
-            return;
-        }
-        if (!REGISTERED.compareAndSet(false, true)) {
             this.phase = null;
             this.testDirectory = null;
             return;
@@ -47,19 +42,25 @@ public final class NeoForgePlacementPersistenceSmokeTest {
             throw new IllegalStateException("Missing native persistence test directory");
         }
         this.testDirectory = Path.of(configuredDirectory).toAbsolutePath().normalize();
-        NeoForge.EVENT_BUS.addListener(ServerTickEvent.Post.class, this::onServerTick);
     }
 
-    private void onServerTick(final ServerTickEvent.Post event) {
+    @SubscribeEvent
+    public static void tick(final TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
+            INSTANCE.onServerTick();
+        }
+    }
+
+    private void onServerTick() {
         if (this.executed || this.phase == null) {
             return;
         }
         this.executed = true;
         try {
             switch (this.phase) {
-                case MARK -> markAndSave(event.getServer());
-                case REMOVE -> verifyRemoveAndSave(event.getServer());
-                case VERIFY_ABSENT -> verifyAbsent(event.getServer());
+                case MARK -> markAndSave(server());
+                case REMOVE -> verifyRemoveAndSave(server());
+                case VERIFY_ABSENT -> verifyAbsent(server());
             }
         } catch (Throwable failure) {
             SmartResourceDrops.LOGGER.error(
@@ -70,6 +71,10 @@ public final class NeoForgePlacementPersistenceSmokeTest {
                     ? error
                     : new AssertionError("NeoForge native placement persistence smoke failed", failure);
         }
+    }
+
+    private static MinecraftServer server() {
+        return net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
     }
 
     private void markAndSave(final MinecraftServer server) throws IOException {

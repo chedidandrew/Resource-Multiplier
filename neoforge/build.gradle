@@ -13,9 +13,28 @@ base {
 
 repositories {
     mavenCentral()
+    exclusiveContent {
+        forRepository {
+            mavenCentral()
+        }
+        filter {
+            includeGroup 'org.apache.logging.log4j'
+        }
+    }
     maven {
         name = 'Fabric'
         url = 'https://maven.fabricmc.net/'
+    }
+}
+
+// NeoForge 20.4's legacy unsafe helper declares Log4j as 2.11.+. Pin the
+// newest member of that range for the NeoForm tooling classpath so builds do
+// not depend on mutable Maven metadata (and do not affect the game runtime).
+configurations.configureEach {
+    if (name == 'neoFormRuntimeDependenciesRuntimeClasspath') {
+        resolutionStrategy.force(
+                'org.apache.logging.log4j:log4j-api:2.11.2',
+                'org.apache.logging.log4j:log4j-core:2.11.2')
     }
 }
 
@@ -38,6 +57,18 @@ gameTestSourceSet.resources {
     setSrcDirs(['../src/gametest/resources', 'src/gametest/resources'])
     exclude('fabric.mod.json')
     exclude('smart_resource_drops_gametest.mixins.json')
+}
+
+tasks.named(gameTestSourceSet.processResourcesTaskName, ProcessResources) {
+    // The checked-in binary structure came from the newer singular data-pack
+    // layout. Minecraft 1.20.4 discovers GameTest templates under structures/.
+    eachFile { details ->
+        if (details.path.startsWith('data/smart_resource_drops_gametest/structure/')) {
+            details.path = details.path.replace(
+                    'data/smart_resource_drops_gametest/structure/',
+                    'data/smart_resource_drops_gametest/structures/')
+        }
+    }
 }
 
 def clientTestSourceSet = sourceSets.create('clienttest')
@@ -463,15 +494,11 @@ neoForge {
     addModdingDependenciesTo(clientTestSourceSet)
     addModdingDependenciesTo(optionalChannelTestSourceSet)
     addModdingDependenciesTo(packagedProbeSourceSet)
+    addModdingDependenciesTo(sourceSets.test)
 
-    unitTest {
-        enable()
-        testedMod = mods."${mod_id}"
-        // Test fixtures are folded into testedMod by ModDevGradle. Loading every
-        // run-only model here repeats the same main output under multiple mod keys
-        // and makes the JUnit worker lose its test classes.
-        loadedMods.set([mods."${mod_id}"])
-    }
+    // NeoForge 20.4 does not publish ModDevGradle's newer `junit` run type.
+    // The mapped JUnit suite is therefore executed by Gradle's ordinary Test
+    // task, matching the established 1.20.1 backport harness.
 }
 
 tasks.named('runPersistenceMarkServerTest') {
@@ -499,7 +526,7 @@ tasks.named('runGameTestServer') {
         }
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
-                'Registered exactly 64 NeoForge 1.21.1 GameTests',
+                'Registered exactly 64 NeoForge 1.20.4 GameTests',
                 '64 tests are now running',
                 '64 GAME TESTS COMPLETE',
                 'All 64 required tests passed',
@@ -530,6 +557,9 @@ tasks.named('runClientCategoryTest') {
             line.contains('/ERROR]')
                     && !line.contains('Error while loading the narrator')
                     && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+                    && !line.contains('Failed to fetch user properties')
+                    && !line.contains('Failed to fetch Realms feature flags')
+                    && !line.contains("Couldn't connect to realms")
         }
         if (!logFile.isFile()
                 || !unexpectedErrors.isEmpty()
@@ -578,8 +608,8 @@ tasks.named('runPackagedServerTest') {
         final String log = logFile.getText('UTF-8')
         for (String evidence : [
                 'Done (',
-                'Smart Resource Multiplier 1.3.1+mc1.21.1',
-                'Packaged NeoForge server candidate Smart Resource Multiplier 1.3.1+mc1.21.1 passed exact version, code-source, config, status, and validation checks']) {
+                'Smart Resource Multiplier 1.3.2+mc1.20.4',
+                'Packaged NeoForge server candidate Smart Resource Multiplier 1.3.2+mc1.20.4 passed exact version, code-source, config, status, and validation checks']) {
             if (!log.contains(evidence)) {
                 throw new GradleException("Packaged server log is missing: ${evidence}")
             }
@@ -602,6 +632,9 @@ tasks.named('runPackagedClientTest') {
             line.contains('/ERROR]')
                     && !line.contains('Error while loading the narrator')
                     && !line.contains('Error starting SoundSystem. Turning off sounds & music')
+                    && !line.contains('Failed to fetch user properties')
+                    && !line.contains('Failed to fetch Realms feature flags')
+                    && !line.contains("Couldn't connect to realms")
         }
         if (!logFile.isFile()
                 || !unexpectedErrors.isEmpty()
@@ -669,6 +702,8 @@ tasks.named('test', Test) {
 }
 
 jar {
+    // Keep the conventional root license entry for launchers and hosting-site scanners.
+    from('../LICENSE')
     from('../LICENSE') {
         rename { "LICENSE_${archives_base_name}" }
     }

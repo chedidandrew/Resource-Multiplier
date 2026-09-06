@@ -8,6 +8,8 @@
 
 <h1 align="center">Smart Resource Multiplier</h1>
 
+> **Branch release:** This source snapshot builds Smart Resource Multiplier `1.3.2` for Minecraft `1.20.4` on Fabric and NeoForge. Minecraft `26.2` remains the newest release and the default `main` branch.
+
 <p align="center">
   Configurable multipliers for block drops, mob loot, and supported shearing,<br>
   with persistent anti-duplication protection.

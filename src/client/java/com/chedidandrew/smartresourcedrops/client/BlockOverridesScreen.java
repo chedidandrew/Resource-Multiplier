@@ -119,7 +119,7 @@ final class BlockOverridesScreen extends SmartDropsSubScreen {
                     this.session.effectiveBlockValue(info.id());
             final String category = info.categories().isEmpty()
                     ? Category.MISCELLANEOUS.key()
-                    : info.categories().getFirst().key();
+                    : info.categories().get(0).key();
             final Component action = Component.translatable(this.session.editable()
                     ? "smart_resource_drops.gui.configure"
                     : "smart_resource_drops.gui.view_details");

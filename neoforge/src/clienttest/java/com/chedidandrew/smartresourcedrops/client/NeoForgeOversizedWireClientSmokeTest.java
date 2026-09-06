@@ -7,27 +7,28 @@ import com.chedidandrew.smartresourcedrops.network.ConfigRequestPayload;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.Connection;
+import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.PacketEncoder;
 import net.minecraft.network.VarInt;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.TickEvent;
+import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
 /** Sends a deliberately malformed play payload below the normal typed encoder. */
-@Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, value = Dist.CLIENT)
 public final class NeoForgeOversizedWireClientSmokeTest {
     private static final int TIMEOUT_TICKS = 6_000;
     private static final int SETTLE_TICKS = 40;
     private static final int ATTACK_REQUEST_ID = 0x53524D;
     private static final int OVERSIZED_JSON_LENGTH = ConfigPatch.MAX_JSON_LENGTH + 1;
-    private static final AtomicBoolean REGISTERED = new AtomicBoolean();
+    private static final NeoForgeOversizedWireClientSmokeTest INSTANCE =
+            new NeoForgeOversizedWireClientSmokeTest();
 
     private int ticks;
     private int connectedTicks;
@@ -36,14 +37,18 @@ public final class NeoForgeOversizedWireClientSmokeTest {
     private Connection attackedConnection;
     private boolean attackScheduled;
 
-    public NeoForgeOversizedWireClientSmokeTest() {
-        if (Boolean.getBoolean("smart_resource_drops.oversizedWireTest")
-                && REGISTERED.compareAndSet(false, true)) {
-            NeoForge.EVENT_BUS.addListener(ClientTickEvent.Post.class, this::onClientTick);
+    private NeoForgeOversizedWireClientSmokeTest() {
+    }
+
+    @SubscribeEvent
+    public static void tick(final TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END
+                && Boolean.getBoolean("smart_resource_drops.oversizedWireTest")) {
+            INSTANCE.onClientTick();
         }
     }
 
-    private void onClientTick(final ClientTickEvent.Post event) {
+    private void onClientTick() {
         final Minecraft minecraft = Minecraft.getInstance();
         try {
             if (++this.ticks > TIMEOUT_TICKS) {
@@ -80,7 +85,7 @@ public final class NeoForgeOversizedWireClientSmokeTest {
             this.connectedTicks = 0;
             return;
         }
-        if (!listener.hasChannel(ConfigPatchPayload.TYPE)) {
+        if (!NetworkRegistry.getInstance().isConnected(listener, ConfigPatchPayload.TYPE)) {
             throw new AssertionError("NeoForge config-patch channel was not negotiated");
         }
         if (++this.connectedTicks < SETTLE_TICKS) {
@@ -95,11 +100,10 @@ public final class NeoForgeOversizedWireClientSmokeTest {
     private void writeHostilePayload(final Connection connection) {
         final Channel channel = connection.channel();
         channel.eventLoop().execute(() -> {
-            ByteBuf encodedProbe = null;
             ByteBuf hostilePacket = null;
             try {
                 final ChannelHandlerContext encoderContext = channel.pipeline().context("encoder");
-                if (encoderContext == null || !(encoderContext.handler() instanceof PacketEncoder<?> packetEncoder)) {
+                if (encoderContext == null) {
                     throw new IllegalStateException("Active play packet encoder was not available");
                 }
 
@@ -107,14 +111,15 @@ public final class NeoForgeOversizedWireClientSmokeTest {
                 // then deliberately bypass the typed ConfigPatchPayload encoder. This keeps
                 // the test resilient to Minecraft packet-ID changes while proving the server's
                 // decoder, rather than the ordinary client guard, enforces the size boundary.
-                encodedProbe = channel.alloc().buffer();
-                encodeProbe(packetEncoder, encodedProbe);
-                final int customPayloadPacketId = VarInt.read(encodedProbe);
+                final var codec = ConnectionProtocol.PLAY.codec(PacketFlow.SERVERBOUND);
+                final int customPayloadPacketId = codec.packetId(
+                        new ServerboundCustomPayloadPacket(
+                                new ConfigRequestPayload(ATTACK_REQUEST_ID)));
 
                 hostilePacket = channel.alloc().buffer(OVERSIZED_JSON_LENGTH + 128);
                 VarInt.write(hostilePacket, customPayloadPacketId);
                 final FriendlyByteBuf payload = new FriendlyByteBuf(hostilePacket);
-                payload.writeResourceLocation(ConfigPatchPayload.TYPE.id());
+                payload.writeResourceLocation(ConfigPatchPayload.TYPE);
                 payload.writeVarInt(ATTACK_REQUEST_ID);
                 payload.writeVarLong(0L);
                 payload.writeVarInt(OVERSIZED_JSON_LENGTH);
@@ -138,19 +143,7 @@ public final class NeoForgeOversizedWireClientSmokeTest {
                     hostilePacket.release();
                 }
                 this.wireWriteFailure = failure;
-            } finally {
-                if (encodedProbe != null) {
-                    encodedProbe.release();
-                }
             }
         });
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static void encodeProbe(final PacketEncoder<?> packetEncoder, final ByteBuf output) {
-        final StreamCodec codec = packetEncoder.getProtocolInfo().codec();
-        codec.encode(
-                output,
-                new ServerboundCustomPayloadPacket(new ConfigRequestPayload(ATTACK_REQUEST_ID)));
     }
 }

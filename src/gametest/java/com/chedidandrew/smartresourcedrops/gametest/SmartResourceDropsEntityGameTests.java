@@ -20,7 +20,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.network.chat.Component;
@@ -254,7 +253,7 @@ public final class SmartResourceDropsEntityGameTests {
             assertItemTotal(helper, 16, Items.ROTTEN_FLESH, 3, "tamed kill in owner-enabled mode");
 
             final Wolf offlineOwner = helper.spawnWithNoFreeWill(EntityType.WOLF, new BlockPos(19, 2, 2));
-            offlineOwner.setTame(true, false);
+            offlineOwner.setTame(true);
             offlineOwner.setOwnerUUID(UUID.fromString(
                     "00000000-0000-0000-0000-000000000123"));
             final Mob offlineOwnerVictim = spawn(helper, GameTestEntityFixtures.HOSTILE, 19);
@@ -429,7 +428,7 @@ public final class SmartResourceDropsEntityGameTests {
                 EntityDeathContext.wrapStandardLootConsumer(player, playerDrops::add)
                         .accept(new ItemStack(Items.DIAMOND));
             }
-            helper.assertTrue(playerDrops.size() == 1 && playerDrops.getFirst().getCount() == 1,
+            helper.assertTrue(playerDrops.size() == 1 && playerDrops.get(0).getCount() == 1,
                     "Runtime player-death context did not preserve vanilla output");
         } finally {
             restoreEntityConfiguration(previous);
@@ -446,10 +445,7 @@ public final class SmartResourceDropsEntityGameTests {
 
             configureEntityTest(config -> exactMultiplier(config, GameTestEntityFixtures.LOOTING_FINAL, 3));
             final ItemStack lootingSword = new ItemStack(Items.DIAMOND_SWORD);
-            lootingSword.enchant(
-                    helper.getLevel().registryAccess().lookupOrThrow(
-                            net.minecraft.core.registries.Registries.ENCHANTMENT).getOrThrow(Enchantments.LOOTING),
-                    3);
+            lootingSword.enchant(Enchantments.MOB_LOOTING, 3);
             player.setItemSlot(EquipmentSlot.MAINHAND, lootingSword);
             killByPlayer(helper, spawn(helper, GameTestEntityFixtures.LOOTING_FINAL, 1), player);
             assertItemTotal(helper, 1, Items.GOLD_NUGGET, 21,
@@ -466,7 +462,7 @@ public final class SmartResourceDropsEntityGameTests {
 
             configureEntityTest(config -> exactMultiplier(config, GameTestEntityFixtures.COOKED_FINAL, 2));
             final Mob cooked = spawn(helper, GameTestEntityFixtures.COOKED_FINAL, 5);
-            cooked.igniteForSeconds(10.0F);
+            cooked.setSecondsOnFire(10);
             killByPlayer(helper, cooked, player);
             assertItemTotal(helper, 5, Items.COOKED_BEEF, 2, "final cooked death-table item");
             assertItemTotal(helper, 5, Items.BEEF, 0, "raw item after final furnace-smelt function");
@@ -716,7 +712,7 @@ public final class SmartResourceDropsEntityGameTests {
                     "Entity inspection spawned experience output");
 
             player.setPos(target.getX(), target.getY() + 8.0, target.getZ());
-            player.absRotateTo(player.getYRot(), -90.0F);
+            player.absMoveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), -90.0F);
             final CapturingCommandSource miss = new CapturingCommandSource();
             helper.assertTrue(
                     executeCommand(
@@ -792,7 +788,7 @@ public final class SmartResourceDropsEntityGameTests {
         final double horizontal = Math.sqrt(xDelta * xDelta + zDelta * zDelta);
         final float yaw = (float) Math.toDegrees(Math.atan2(zDelta, xDelta)) - 90.0F;
         final float pitch = (float) -Math.toDegrees(Math.atan2(target.y - eye.y, horizontal));
-        player.absRotateTo(yaw, pitch);
+        player.absMoveTo(player.getX(), player.getY(), player.getZ(), yaw, pitch);
     }
 
     private static int executeCommand(
@@ -879,15 +875,13 @@ public final class SmartResourceDropsEntityGameTests {
         for (ItemEntity drop : itemDrops(helper, x, Items.DIAMOND)) {
             final ItemStack stack = drop.getItem();
             helper.assertTrue(
-                    stack.get(DataComponents.CUSTOM_NAME) != null
-                            && GameTestEntityFixtures.COMPONENT_MARKER.equals(
-                                    stack.get(DataComponents.CUSTOM_NAME).getString()),
+                    stack.hasCustomHoverName()
+                            && GameTestEntityFixtures.COMPONENT_MARKER.equals(stack.getHoverName().getString()),
                     scenario + " lost its custom name component");
             helper.assertTrue(
-                    stack.get(DataComponents.CUSTOM_DATA) != null
+                    stack.getTag() != null
                             && GameTestEntityFixtures.COMPONENT_MARKER.equals(
-                                    stack.get(DataComponents.CUSTOM_DATA).copyTag()
-                                            .getString("fixture")),
+                                    stack.getTag().getString("fixture")),
                     scenario + " lost its custom data component");
         }
     }

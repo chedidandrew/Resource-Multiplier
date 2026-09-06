@@ -20,7 +20,7 @@ import java.util.Set;
 
 /** Title-screen fallback for the bundled, datapack-extensible entity category tags. */
 final class ClientEntityCategoryTagIndex {
-    private static final String TAG_ROOT = "data/%s/tags/entity_type/%s.json";
+    private static final String TAG_ROOT = "data/%s/tags/entity_types/%s.json";
 
     private ClientEntityCategoryTagIndex() {
     }

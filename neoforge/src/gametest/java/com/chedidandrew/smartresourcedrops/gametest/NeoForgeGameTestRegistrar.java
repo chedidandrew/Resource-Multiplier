@@ -15,11 +15,13 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.StructureUtils;
 import net.minecraft.gametest.framework.TestFunction;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 
 /** Registers the shared test methods through NeoForge 21.1's pre-registry GameTest event. */
-@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@Mod.EventBusSubscriber(
+        modid = SmartResourceDrops.MOD_ID,
+        bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class NeoForgeGameTestRegistrar {
     public static final int EXPECTED_TEST_COUNT = 64;
     private static final String STRUCTURE = "smart_resource_drops_gametest:wide";
@@ -60,14 +62,14 @@ public final class NeoForgeGameTestRegistrar {
                     "Expected " + EXPECTED_TEST_COUNT + " NeoForge GameTests, discovered " + discovered);
         }
         SmartResourceDrops.LOGGER.info(
-                "Registered exactly {} NeoForge 1.21.1 GameTests",
+                "Registered exactly {} NeoForge 1.20.4 GameTests",
                 discovered);
     }
 
     /**
-     * NeoForge 21.1 prefixes ordinary test templates with the declaring class.
+     * NeoForge 20.4 prefixes ordinary test templates with the declaring class.
      * A generator preserves Fabric's full-ID annotations while binding every
-     * shared method to one explicit binary 1.21.1 structure.
+     * shared method to one explicit binary 1.20.4 structure.
      */
     @GameTestGenerator
     public static Collection<TestFunction> generatedSharedTests() {
@@ -84,10 +86,8 @@ public final class NeoForgeGameTestRegistrar {
                     annotation.timeoutTicks(),
                     annotation.setupTicks(),
                     annotation.required(),
-                    annotation.manualOnly(),
                     annotation.requiredSuccesses(),
                     annotation.attempts(),
-                    annotation.skyAccess(),
                     helper -> invoke(method, helper)));
         }
         return List.copyOf(tests);

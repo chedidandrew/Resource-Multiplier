@@ -136,7 +136,7 @@ final class SmartDropsCommandsTest {
                 .filter(line -> line.getString().startsWith("  ID: "))
                 .findFirst()
                 .orElseThrow();
-        Component idValue = idLine.getSiblings().getLast();
+        Component idValue = idLine.getSiblings().get(idLine.getSiblings().size() - 1);
         assertTrue(idValue.getString().length() <= 96, idValue.getString());
         assertTrue(idValue.getString().endsWith("…"), idValue.getString());
         assertFalse(idValue.getString().contains(longId));

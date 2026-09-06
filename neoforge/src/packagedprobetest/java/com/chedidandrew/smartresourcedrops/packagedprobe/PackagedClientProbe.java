@@ -5,33 +5,35 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.TickEvent;
 
 /** Physical-client reflection probe that cannot compile against production source outputs. */
-@Mod(value = "smart_resource_drops_packaged_probe", dist = Dist.CLIENT)
 public final class PackagedClientProbe {
-    private static final AtomicBoolean REGISTERED = new AtomicBoolean();
     private int ticks;
     private Screen productionScreen;
     private int navigationPhase;
 
-    public PackagedClientProbe() {
-        if (Boolean.getBoolean("smart_resource_drops.packagedClientProbe")
-                && REGISTERED.compareAndSet(false, true)) {
-            NeoForge.EVENT_BUS.addListener(ClientTickEvent.Post.class, this::onClientTick);
+    private PackagedClientProbe() {
+    }
+
+    static void register() {
+        if (Boolean.getBoolean("smart_resource_drops.packagedClientProbe")) {
+            final PackagedClientProbe probe = new PackagedClientProbe();
+            NeoForge.EVENT_BUS.addListener((TickEvent.ClientTickEvent event) -> {
+                if (event.phase == TickEvent.Phase.END) {
+                    probe.onClientTick();
+                }
+            });
         }
     }
 
-    private void onClientTick(final ClientTickEvent.Post event) {
+    private void onClientTick() {
         final Minecraft minecraft = Minecraft.getInstance();
         try {
             if (minecraft.getOverlay() != null) {

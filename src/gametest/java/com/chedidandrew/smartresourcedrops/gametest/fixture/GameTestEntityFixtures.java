@@ -5,7 +5,6 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -27,7 +26,6 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootParams;
@@ -59,9 +57,9 @@ public final class GameTestEntityFixtures {
     public static EntityType<FixtureMonster> EMPTY;
     public static EntityType<FixtureMonster> UNSTACKABLE;
 
-    public static final ResourceKey<LootTable> COMPONENT_RICH_LOOT = lootTable("component_rich");
-    public static final ResourceKey<LootTable> NESTED_OUTER_LOOT = lootTable("nested_outer");
-    public static final ResourceKey<LootTable> EXCEPTION_LOOT = lootTable("exception");
+    public static final ResourceLocation COMPONENT_RICH_LOOT = lootTable("component_rich");
+    public static final ResourceLocation NESTED_OUTER_LOOT = lootTable("nested_outer");
+    public static final ResourceLocation EXCEPTION_LOOT = lootTable("exception");
     public static final AtomicInteger COMPONENT_MODIFIER_INVOCATIONS = new AtomicInteger();
 
     private static LivingEntity nestedTarget;
@@ -134,8 +132,8 @@ public final class GameTestEntityFixtures {
             final ItemStack stack = new ItemStack(Items.DIAMOND);
             final CompoundTag marker = new CompoundTag();
             marker.putString("fixture", COMPONENT_MARKER);
-            stack.set(DataComponents.CUSTOM_NAME, Component.literal(COMPONENT_MARKER));
-            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(marker));
+            stack.setTag(marker);
+            stack.setHoverName(Component.literal(COMPONENT_MARKER));
             drops.add(stack);
         }
 
@@ -149,7 +147,7 @@ public final class GameTestEntityFixtures {
         }
     }
 
-    /** Applies Fabric's 1.21.1 GameTest sentinels before production sees final output. */
+    /** Applies Fabric's 1.20.4 GameTest sentinels before production sees final output. */
     public static void acceptFabricFinalDrop(
             final ItemStack stack,
             final LootParams params,
@@ -160,8 +158,8 @@ public final class GameTestEntityFixtures {
             final ItemStack componentStack = new ItemStack(Items.DIAMOND);
             final CompoundTag marker = new CompoundTag();
             marker.putString("fixture", COMPONENT_MARKER);
-            componentStack.set(DataComponents.CUSTOM_NAME, Component.literal(COMPONENT_MARKER));
-            componentStack.set(DataComponents.CUSTOM_DATA, CustomData.of(marker));
+            componentStack.setTag(marker);
+            componentStack.setHoverName(Component.literal(COMPONENT_MARKER));
             downstream.accept(componentStack);
             return;
         }
@@ -202,10 +200,8 @@ public final class GameTestEntityFixtures {
         COMPONENT_MODIFIER_INVOCATIONS.set(0);
     }
 
-    private static ResourceKey<LootTable> lootTable(final String entityPath) {
-        return ResourceKey.create(
-                Registries.LOOT_TABLE,
-                ResourceLocation.fromNamespaceAndPath(MOD_ID, "entities/" + entityPath));
+    private static ResourceLocation lootTable(final String entityPath) {
+        return new ResourceLocation(MOD_ID, "entities/" + entityPath);
     }
 
     private static <T extends Mob> EntityType<T> register(
@@ -213,7 +209,7 @@ public final class GameTestEntityFixtures {
             final String path,
             final MobCategory category,
             final EntityType.EntityFactory<T> factory) {
-        final ResourceLocation id = ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+        final ResourceLocation id = new ResourceLocation(MOD_ID, path);
         final ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, id);
         final EntityType<T> type = EntityType.Builder.of(factory, category)
                 .sized(0.6F, 1.8F)
@@ -279,7 +275,7 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        public int getExperienceReward() {
             // 7x and its 3x result (17 + 3 + 1) use distinct vanilla orb values, so the
             // fixture can total getValue() without undercounting randomly count-merged orbs.
             return 7;
@@ -300,7 +296,7 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        public int getExperienceReward() {
             return 5;
         }
     }
@@ -331,7 +327,7 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        public int getExperienceReward() {
             return 5;
         }
 
@@ -354,16 +350,16 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        public int getExperienceReward() {
             return 5;
         }
 
         @Override
         protected void dropCustomDeathLoot(
-                final ServerLevel level,
                 final DamageSource source,
+                final int lootingLevel,
                 final boolean recentlyHitByPlayer) {
-            super.dropCustomDeathLoot(level, source, recentlyHitByPlayer);
+            super.dropCustomDeathLoot(source, lootingLevel, recentlyHitByPlayer);
             spawnAtLocation(new ItemStack(Items.EMERALD));
         }
     }
@@ -377,7 +373,7 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        public int getExperienceReward() {
             return 5;
         }
 

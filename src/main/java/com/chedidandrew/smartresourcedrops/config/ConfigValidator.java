@@ -363,7 +363,7 @@ public final class ConfigValidator {
                 report.add(ValidationIssue.at(
                         ValidationSeverity.WARNING,
                         ValidationCode.UNSAFE_SHEARING_OVERRIDE,
-                        "Minecraft 1.21.1 can safely multiply final shearing output for sheep only; this preserved override remains inactive.",
+                        "Minecraft 1.20.4 can safely multiply final shearing output for sheep only; this preserved override remains inactive.",
                         identifier,
                         "shearingEntityMultipliers"));
             }

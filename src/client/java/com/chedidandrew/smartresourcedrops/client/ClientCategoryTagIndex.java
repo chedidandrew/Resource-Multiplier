@@ -28,7 +28,7 @@ import java.util.Set;
  */
 final class ClientCategoryTagIndex {
     private static final String CATEGORY_NAMESPACE = SmartResourceDrops.MOD_ID;
-    private static final String TAG_ROOT = "data/%s/tags/block/%s.json";
+    private static final String TAG_ROOT = "data/%s/tags/blocks/%s.json";
 
     private ClientCategoryTagIndex() {
     }

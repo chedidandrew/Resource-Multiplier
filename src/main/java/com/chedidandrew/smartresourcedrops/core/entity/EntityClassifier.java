@@ -2,7 +2,6 @@ package com.chedidandrew.smartresourcedrops.core.entity;
 
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
@@ -51,9 +50,6 @@ public final class EntityClassifier {
 
         if (isKnownBossType(entityId)) {
             add(evidence, EntityCategory.BOSSES, EntityClassification.MatchSource.KNOWN_VANILLA_TYPE);
-        }
-        if (typeHolder.is(EntityTypeTags.AQUATIC)) {
-            add(evidence, EntityCategory.AQUATIC, EntityClassification.MatchSource.VANILLA_ENTITY_TYPE_TAG);
         }
         if (entity instanceof AbstractVillager || entity instanceof Npc) {
             add(evidence, EntityCategory.VILLAGERS_NPCS, EntityClassification.MatchSource.VANILLA_CLASS);
@@ -127,7 +123,7 @@ public final class EntityClassifier {
                 return category;
             }
         }
-        return matches.getFirst();
+        return matches.get(0);
     }
 
     private static void addMobCategoryEvidence(

@@ -1,26 +1,30 @@
 package com.chedidandrew.smartresourcedrops.network;
 
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
 /** Tells open editors that a newer authoritative configuration has been published. */
-public record ConfigInvalidationPayload(long revision, ChangeKind changeKind) implements CustomPacketPayload {
-    public static final Type<ConfigInvalidationPayload> TYPE =
-            new Type<>(SmartResourceDrops.id("config_invalidation"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, ConfigInvalidationPayload> CODEC = StreamCodec.of(
-            (buffer, payload) -> {
-                buffer.writeVarLong(payload.revision());
-                buffer.writeVarInt(payload.changeKind().ordinal());
-            },
-            buffer -> new ConfigInvalidationPayload(
-                    buffer.readVarLong(),
-                    ChangeKind.fromOrdinal(buffer.readVarInt())));
+public record ConfigInvalidationPayload(long revision, ChangeKind changeKind) implements ConfigPayload {
+    public static final ResourceLocation TYPE = SmartResourceDrops.id("config_invalidation");
+
+    public static ConfigInvalidationPayload read(final FriendlyByteBuf buffer) {
+        final ConfigInvalidationPayload payload = new ConfigInvalidationPayload(
+                buffer.readVarLong(),
+                ChangeKind.fromOrdinal(buffer.readVarInt()));
+        ConfigPayload.requireFullyRead(buffer, "config invalidation");
+        return payload;
+    }
 
     @Override
-    public Type<ConfigInvalidationPayload> type() {
+    public ResourceLocation id() {
         return TYPE;
+    }
+
+    @Override
+    public void write(final FriendlyByteBuf buffer) {
+        buffer.writeVarLong(revision);
+        buffer.writeVarInt(changeKind.ordinal());
     }
 
     public enum ChangeKind {

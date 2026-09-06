@@ -8,6 +8,9 @@ import com.chedidandrew.smartresourcedrops.platform.PlatformPlayerSupport;
 import com.chedidandrew.smartresourcedrops.provenance.PlacementTracker;
 
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.DistExecutor;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.common.NeoForge;
@@ -15,12 +18,12 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.TickEvent;
 
 /** Physical-server-safe NeoForge bootstrap. */
 @Mod(SmartResourceDrops.MOD_ID)
 public final class NeoForgeEntrypoint {
-    public NeoForgeEntrypoint(final IEventBus modBus) {
+    public NeoForgeEntrypoint(final IEventBus modBus, final ModContainer container) {
         ConfigManager.configureConfigDirectory(FMLPaths.CONFIGDIR.get());
         PlatformPlayerSupport.installFakePlayerPredicate(player -> player instanceof FakePlayer);
 
@@ -34,8 +37,15 @@ public final class NeoForgeEntrypoint {
                 SmartDropsNetworking.serverStarted(event.getServer()));
         NeoForge.EVENT_BUS.addListener(ServerStoppedEvent.class, event ->
                 SmartDropsNetworking.serverStopped(event.getServer()));
-        NeoForge.EVENT_BUS.addListener(ServerTickEvent.Post.class, event ->
-                SmartDropsNetworking.serverTick());
+        NeoForge.EVENT_BUS.addListener((TickEvent.ServerTickEvent event) -> {
+            if (event.phase == TickEvent.Phase.END) {
+                SmartDropsNetworking.serverTick();
+            }
+        });
+
+        DistExecutor.unsafeRunWhenOn(
+                Dist.CLIENT,
+                () -> () -> new NeoForgeClientEntrypoint(modBus, container));
 
         SmartResourceDrops.initializeCommon();
     }

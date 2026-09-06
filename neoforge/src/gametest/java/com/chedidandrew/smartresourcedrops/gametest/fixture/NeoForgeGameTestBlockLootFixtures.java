@@ -1,21 +1,23 @@
 package com.chedidandrew.smartresourcedrops.gametest.fixture;
 
 import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
-import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
 import net.neoforged.neoforge.common.loot.LootModifier;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 /** NeoForge adapter for the shared pathological block-loot fixture state. */
-@EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@Mod.EventBusSubscriber(
+        modid = SmartResourceDrops.MOD_ID,
+        bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class NeoForgeGameTestBlockLootFixtures {
     private NeoForgeGameTestBlockLootFixtures() {
     }
@@ -29,8 +31,8 @@ public final class NeoForgeGameTestBlockLootFixtures {
     }
 
     public static final class PathologicalBlockLootModifier extends LootModifier {
-        public static final MapCodec<PathologicalBlockLootModifier> CODEC =
-                RecordCodecBuilder.mapCodec(instance -> codecStart(instance)
+        public static final Codec<PathologicalBlockLootModifier> CODEC =
+                RecordCodecBuilder.create(instance -> codecStart(instance)
                         .apply(instance, PathologicalBlockLootModifier::new));
 
         public PathologicalBlockLootModifier(final LootItemCondition[] conditions) {
@@ -43,14 +45,13 @@ public final class NeoForgeGameTestBlockLootFixtures {
                 final LootContext context
         ) {
             GameTestBlockLootFixtures.appendPathologicalDropsIfArmed(
-                    context.getQueriedLootTableId().equals(
-                            GameTestBlockLootFixtures.DIRT_LOOT.location()),
+                    context.getQueriedLootTableId().equals(GameTestBlockLootFixtures.DIRT_LOOT),
                     generatedLoot);
             return generatedLoot;
         }
 
         @Override
-        public MapCodec<? extends IGlobalLootModifier> codec() {
+        public Codec<? extends IGlobalLootModifier> codec() {
             return CODEC;
         }
     }

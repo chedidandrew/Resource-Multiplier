@@ -14,8 +14,6 @@ import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.dispenser.BlockSource;
-import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.network.chat.Component;
@@ -29,7 +27,6 @@ import net.minecraft.world.entity.animal.MushroomCow;
 import net.minecraft.world.entity.animal.SnowGolem;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.monster.Bogged;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -329,10 +326,10 @@ public final class SmartResourceDropsShearingGameTests {
 
             final ItemStack shears = dispenseShears(helper, DISPENSER_POS, Direction.EAST);
             helper.assertTrue(sheep.isLeashed(),
-                    "Minecraft 1.21.1 unexpectedly removed the leash while dispensing shears");
+                    "Minecraft 1.20.4 unexpectedly removed the leash while dispensing shears");
             helper.assertTrue(sheep.isSheared(),
-                    "Minecraft 1.21.1 did not shear a ready leashed sheep");
-            assertItemTotal(helper, ENTITY_POS, Items.LEAD, 0, "1.21.1 leashed sheep lead");
+                    "Minecraft 1.20.4 did not shear a ready leashed sheep");
+            assertItemTotal(helper, ENTITY_POS, Items.LEAD, 0, "1.20.4 leashed sheep lead");
             final int wool = itemTotal(helper, ENTITY_POS, Items.WHITE_WOOL);
             helper.assertTrue(wool >= 64 && wool <= 192 && wool % 64 == 0,
                     "Leashed sheep output did not preserve 1-3 vanilla wool emissions at 64x");
@@ -374,25 +371,6 @@ public final class SmartResourceDropsShearingGameTests {
             shearWithPlayer(helper, golem, new ItemStack(Items.SHEARS));
             helper.assertFalse(golem.hasPumpkin(), "Snow golem retained its carved pumpkin");
             assertItemTotal(helper, ENTITY_POS, Items.CARVED_PUMPKIN, 1, "special snow golem");
-        } finally {
-            restoreConfiguration(previous);
-        }
-        helper.succeed();
-    }
-
-    @GameTest(template = "smart_resource_drops_gametest:wide")
-    public void boggedMushroomRemovalRemainsFixedVanillaOutput(final GameTestHelper helper) {
-        final SmartDropsConfig previous = ConfigManager.snapshot();
-        try {
-            prepareSpecialOverride(helper, "minecraft:bogged");
-            final Bogged bogged = helper.spawnWithNoFreeWill(EntityType.BOGGED, ENTITY_POS);
-            bogged.setSheared(false);
-            shearWithPlayer(helper, bogged, new ItemStack(Items.SHEARS));
-            helper.assertFalse(bogged.readyForShearing(), "Bogged stayed ready after shearing");
-            final int mushrooms = itemTotal(helper, ENTITY_POS, Items.RED_MUSHROOM)
-                    + itemTotal(helper, ENTITY_POS, Items.BROWN_MUSHROOM);
-            helper.assertTrue(mushrooms == 2,
-                    "Special bogged produced " + mushrooms + " mushrooms instead of vanilla 2");
         } finally {
             restoreConfiguration(previous);
         }
@@ -453,10 +431,10 @@ public final class SmartResourceDropsShearingGameTests {
         config.manualShearingDropsEnabled = true;
         config.defaultShearingMultiplier = 64;
         config.inheritDefaultShearingMultiplier = false;
+        // Bogged shearing is intentionally absent: bogged was introduced after Minecraft 1.20.4.
         final List<EntityType<?>> specialTypes = List.of(
                 EntityType.MOOSHROOM,
-                EntityType.SNOW_GOLEM,
-                EntityType.BOGGED);
+                EntityType.SNOW_GOLEM);
         for (EntityType<?> type : specialTypes) {
             final ShearingRuleTrace trace = ShearingRuleResolver.trace(
                     config,
@@ -588,7 +566,7 @@ public final class SmartResourceDropsShearingGameTests {
         helper.assertTrue(result.fits(), "Exact 1024-item output was rejected");
         helper.assertTrue(result.multipliedItems() == 1_024L,
                 "Exact item-boundary plan counted the wrong output");
-        helper.assertTrue(total(result.outputBatches().getFirst()) == 1_024,
+        helper.assertTrue(total(result.outputBatches().get(0)) == 1_024,
                 "Exact item-boundary plan materialized the wrong count");
         helper.succeed();
     }
@@ -1016,11 +994,14 @@ public final class SmartResourceDropsShearingGameTests {
         final DispenserBlockEntity blockEntity = (DispenserBlockEntity) helper.getLevel()
                 .getBlockEntity(dispenserPos);
         helper.assertTrue(blockEntity != null, "Could not create the real dispenser block entity");
-        final DispenseItemBehavior behavior = DispenserBlock.DISPENSER_REGISTRY.get(Items.SHEARS);
-        helper.assertTrue(behavior != null, "Vanilla shears dispenser behavior was not registered");
         final ItemStack shears = new ItemStack(Items.SHEARS);
-        behavior.dispense(new BlockSource(helper.getLevel(), dispenserPos, state, blockEntity), shears);
-        return shears;
+        blockEntity.setItem(0, shears);
+        ((DispenserBlock) Blocks.DISPENSER).tick(
+                state,
+                helper.getLevel(),
+                dispenserPos,
+                helper.getLevel().getRandom());
+        return blockEntity.getItem(0);
     }
 
     private static int executeCommand(
@@ -1042,7 +1023,7 @@ public final class SmartResourceDropsShearingGameTests {
         final double horizontal = Math.sqrt(xDelta * xDelta + zDelta * zDelta);
         final float yaw = (float) Math.toDegrees(Math.atan2(zDelta, xDelta)) - 90.0F;
         final float pitch = (float) -Math.toDegrees(Math.atan2(target.y - eye.y, horizontal));
-        player.absRotateTo(yaw, pitch);
+        player.absMoveTo(player.getX(), player.getY(), player.getZ(), yaw, pitch);
     }
 
     private static void assertWoolMultiple(

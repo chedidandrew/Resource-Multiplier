@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
@@ -17,31 +16,34 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.TickEvent;
 
 /** Test-run-only check for NeoForge resource discovery and the formerly blank category screen. */
-@Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, value = Dist.CLIENT)
 public final class NeoForgeClientCategorySmokeTest {
     private static final int TIMEOUT_TICKS = 2_400;
-    private static final AtomicBoolean REGISTERED = new AtomicBoolean();
+    private static final NeoForgeClientCategorySmokeTest INSTANCE =
+            new NeoForgeClientCategorySmokeTest();
     private int ticks;
     private int phase;
     private SmartDropsConfigScreen root;
     private EntityCategoryScreen categoryScreen;
     private ConfigEditorSession session;
 
-    public NeoForgeClientCategorySmokeTest() {
-        if (Boolean.getBoolean("smart_resource_drops.clientCategoryTest")
-                && REGISTERED.compareAndSet(false, true)) {
-            NeoForge.EVENT_BUS.addListener(
-                    ClientTickEvent.Post.class,
-                    this::onClientTick);
+    private NeoForgeClientCategorySmokeTest() {
+    }
+
+    @SubscribeEvent
+    public static void tick(final TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END
+                && Boolean.getBoolean("smart_resource_drops.clientCategoryTest")) {
+            INSTANCE.onClientTick();
         }
     }
 
-    private void onClientTick(final ClientTickEvent.Post event) {
+    private void onClientTick() {
         final Minecraft minecraft = Minecraft.getInstance();
         try {
             if (minecraft.getOverlay() != null) {
@@ -179,7 +181,7 @@ public final class NeoForgeClientCategorySmokeTest {
             throw new AssertionError("Not all entity-category tags were resolved");
         }
         for (EntityCategory category : EntityCategory.values()) {
-            final String path = "data/smart_resource_drops/tags/entity_type/categories/"
+            final String path = "data/smart_resource_drops/tags/entity_types/categories/"
                     + category.key() + ".json";
             final List<ClientModResources.Resource> resources = ClientModResources.findAll(path);
             if (resources.isEmpty()) {
@@ -229,7 +231,7 @@ public final class NeoForgeClientCategorySmokeTest {
             throw new AssertionError(
                     "Expected one structured list on " + screen.getClass().getSimpleName());
         }
-        return lists.getFirst();
+        return lists.get(0);
     }
 
     private static StructuredConfigList.Row rowWithPrimary(

@@ -77,7 +77,6 @@ final class PresetPreviewScreen extends SmartDropsSubScreen {
         return false;
     }
 
-    @Override
     protected void setInitialFocus() {
         if (stageButton != null && stageButton.active) {
             setInitialFocus(stageButton);

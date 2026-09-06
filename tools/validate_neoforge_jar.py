@@ -16,8 +16,9 @@ ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_NAME = "Smart Resource Multiplier"
 MOD_ID = "smart_resource_drops"
 ICON_ENTRY = "assets/smart_resource_drops/icon.png"
-METADATA_ENTRY = "META-INF/neoforge.mods.toml"
+METADATA_ENTRY = "META-INF/mods.toml"
 LICENSE_ENTRY = "LICENSE_smart-resource-multiplier-neoforge"
+ROOT_LICENSE_ENTRY = "LICENSE"
 MIXIN_CONFIGS = {
     "smart_resource_drops.mixins.json",
     "smart_resource_drops.neoforge.mixins.json",
@@ -193,6 +194,7 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
                 METADATA_ENTRY,
                 ICON_ENTRY,
                 LICENSE_ENTRY,
+                ROOT_LICENSE_ENTRY,
             }
             missing = sorted(required.difference(names))
             if missing:
@@ -222,8 +224,8 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
                 errors.append("NeoForge metadata does not declare the MIT license")
             if metadata.get("modLoader") != "javafml":
                 errors.append("NeoForge metadata must use the FML 4 javafml loader")
-            if metadata.get("loaderVersion") != "[4,)":
-                errors.append("NeoForge metadata must declare loaderVersion='[4,)'")
+            if metadata.get("loaderVersion") != "[2,)":
+                errors.append("NeoForge 20.4 metadata must declare loaderVersion='[2,)'")
 
             expected_properties = properties(ROOT / "neoforge/gradle.properties")
             dependencies = metadata.get("dependencies", {}).get(MOD_ID, []) \
@@ -239,7 +241,7 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
             } if isinstance(dependencies, list) else {}
             if actual_dependencies != expected_dependencies:
                 errors.append(
-                    "NeoForge metadata dependencies differ from the exact 1.21.1/21.1.249 target: "
+                    "NeoForge metadata dependencies differ from the exact 1.20.4/20.4.251 target: "
                     f"{actual_dependencies!r}"
                 )
             declared_mixins = metadata.get("mixins")
@@ -267,6 +269,13 @@ def validate(jar_path: Path, expected_version: str) -> tuple[int, str]:
             else:
                 if embedded_license != (ROOT / "LICENSE").read_bytes():
                     errors.append("embedded license differs from the repository license")
+            try:
+                root_license = archive.read(ROOT_LICENSE_ENTRY)
+            except KeyError:
+                pass
+            else:
+                if root_license != (ROOT / "LICENSE").read_bytes():
+                    errors.append("root LICENSE differs from the repository license")
             try:
                 embedded_icon = archive.read(ICON_ENTRY)
             except KeyError:
