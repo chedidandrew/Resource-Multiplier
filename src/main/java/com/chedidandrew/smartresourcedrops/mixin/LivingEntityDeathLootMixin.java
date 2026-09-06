@@ -36,15 +36,18 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
     private EntityKillAttribution.Kind smartResourceDrops$rememberedKillOrigin =
             EntityKillAttribution.Kind.NONE;
 
-    @WrapMethod(method = "dropAllDeathLoot(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;)V")
+    @WrapMethod(method = "dropAllDeathLoot(Lnet/minecraft/world/damagesource/DamageSource;)V")
     private void smartResourceDrops$scopeStandardDeathLoot(
-            final ServerLevel level,
             final DamageSource source,
             final Operation<Void> original
     ) {
         final LivingEntity self = (LivingEntity) (Object) this;
+        if (!(self.level() instanceof ServerLevel level)) {
+            original.call(source);
+            return;
+        }
         try (EntityDeathContext.Scope ignored = EntityDeathContext.begin(self, level, source)) {
-            original.call(level, source);
+            original.call(source);
         }
     }
 
@@ -66,7 +69,7 @@ abstract class LivingEntityDeathLootMixin implements EntityKillOriginAccess {
     }
 
     @WrapOperation(
-            method = "dropExperience(Lnet/minecraft/world/entity/Entity;)V",
+            method = "dropExperience()V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V"),
             require = 1,
             expect = 1)

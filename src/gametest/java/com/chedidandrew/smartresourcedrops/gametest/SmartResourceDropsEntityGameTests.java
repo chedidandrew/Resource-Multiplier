@@ -446,10 +446,7 @@ public final class SmartResourceDropsEntityGameTests {
 
             configureEntityTest(config -> exactMultiplier(config, GameTestEntityFixtures.LOOTING_FINAL, 3));
             final ItemStack lootingSword = new ItemStack(Items.DIAMOND_SWORD);
-            lootingSword.enchant(
-                    helper.getLevel().registryAccess().lookupOrThrow(
-                            net.minecraft.core.registries.Registries.ENCHANTMENT).getOrThrow(Enchantments.LOOTING),
-                    3);
+            lootingSword.enchant(Enchantments.LOOTING, 3);
             player.setItemSlot(EquipmentSlot.MAINHAND, lootingSword);
             killByPlayer(helper, spawn(helper, GameTestEntityFixtures.LOOTING_FINAL, 1), player);
             assertItemTotal(helper, 1, Items.GOLD_NUGGET, 21,
@@ -466,7 +463,7 @@ public final class SmartResourceDropsEntityGameTests {
 
             configureEntityTest(config -> exactMultiplier(config, GameTestEntityFixtures.COOKED_FINAL, 2));
             final Mob cooked = spawn(helper, GameTestEntityFixtures.COOKED_FINAL, 5);
-            cooked.igniteForSeconds(10.0F);
+            cooked.igniteForSeconds(10);
             killByPlayer(helper, cooked, player);
             assertItemTotal(helper, 5, Items.COOKED_BEEF, 2, "final cooked death-table item");
             assertItemTotal(helper, 5, Items.BEEF, 0, "raw item after final furnace-smelt function");
@@ -716,7 +713,7 @@ public final class SmartResourceDropsEntityGameTests {
                     "Entity inspection spawned experience output");
 
             player.setPos(target.getX(), target.getY() + 8.0, target.getZ());
-            player.absRotateTo(player.getYRot(), -90.0F);
+            player.absMoveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), -90.0F);
             final CapturingCommandSource miss = new CapturingCommandSource();
             helper.assertTrue(
                     executeCommand(
@@ -792,7 +789,7 @@ public final class SmartResourceDropsEntityGameTests {
         final double horizontal = Math.sqrt(xDelta * xDelta + zDelta * zDelta);
         final float yaw = (float) Math.toDegrees(Math.atan2(zDelta, xDelta)) - 90.0F;
         final float pitch = (float) -Math.toDegrees(Math.atan2(target.y - eye.y, horizontal));
-        player.absRotateTo(yaw, pitch);
+        player.absMoveTo(player.getX(), player.getY(), player.getZ(), yaw, pitch);
     }
 
     private static int executeCommand(

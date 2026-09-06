@@ -1,0 +1,23 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="MIT"
+
+[[mods]]
+modId="smart_resource_drops_packaged_probe"
+version="1.0.0"
+displayName="Smart Resource Multiplier Packaged-JAR Probe"
+description='''Test-only packaged-JAR observer. Never included in release artifacts.'''
+
+[[dependencies.smart_resource_drops_packaged_probe]]
+modId="neoforge"
+type="required"
+versionRange="[20.5.21-beta,20.6)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.smart_resource_drops_packaged_probe]]
+modId="minecraft"
+type="required"
+versionRange="[1.20.5]"
+ordering="NONE"
+side="BOTH"

@@ -28,6 +28,6 @@ final class OptionalChannelIds {
 
     private static CustomPacketPayload.Type<?> type(final String path) {
         return new CustomPacketPayload.Type<>(
-                ResourceLocation.fromNamespaceAndPath(PRODUCTION_MOD_ID, path));
+                new ResourceLocation(PRODUCTION_MOD_ID, path));
     }
 }

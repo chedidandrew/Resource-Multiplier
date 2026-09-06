@@ -10,7 +10,7 @@ import net.minecraft.world.level.ItemLike;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-/** Multiplies only Sheep's vanilla final wool emissions on Minecraft 1.21.1. */
+/** Multiplies only Sheep's vanilla final wool emissions on Minecraft 1.20.5-1.20.6. */
 @Mixin(Sheep.class)
 abstract class SheepShearingLootMixin {
     @WrapOperation(

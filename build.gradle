@@ -5,6 +5,7 @@ plugins {
 
 def modVersionValue = providers.gradleProperty('mod_version').get()
 def minecraftVersionValue = providers.gradleProperty('minecraft_version').get()
+def minecraftVersionRangeValue = providers.gradleProperty('minecraft_version_range').get()
 def javaVersionValue = providers.gradleProperty('java_version').get().toInteger()
 def loaderVersionValue = providers.gradleProperty('loader_version').get()
 def fabricVersionValue = providers.gradleProperty('fabric_version').get()
@@ -12,6 +13,7 @@ def modMenuVersionValue = providers.gradleProperty('modmenu_version').get()
 def archivesBaseNameValue = providers.gradleProperty('archives_base_name').get()
 def mavenGroupValue = providers.gradleProperty('maven_group').get()
 def junitVersionValue = providers.gradleProperty('junit_version').get()
+def packagedCandidateJarProperty = providers.gradleProperty('packaged_candidate_jar')
 
 version = modVersionValue
 group = mavenGroupValue
@@ -138,7 +140,7 @@ loom {
     runs {
         clientSmoke {
             client()
-            name = 'Fabric 1.21.1 client GUI smoke'
+            name = 'Fabric 1.20.5-1.20.6 client GUI smoke'
             source clientTestSourceSet
             runDir 'build/fabric-client-smoke'
             property 'smart_resource_drops.fabricClientSmoke', 'true'
@@ -147,7 +149,7 @@ loom {
         }
         multiplayerServerSmoke {
             server()
-            name = 'Fabric 1.21.1 multiplayer authority server smoke'
+            name = 'Fabric 1.20.5-1.20.6 multiplayer authority server smoke'
             source clientTestSourceSet
             runDir 'build/fabric-multiplayer-smoke/server'
             property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
@@ -155,7 +157,7 @@ loom {
         }
         multiplayerClientSmoke {
             client()
-            name = 'Fabric 1.21.1 multiplayer authority client smoke'
+            name = 'Fabric 1.20.5-1.20.6 multiplayer authority client smoke'
             source clientTestSourceSet
             runDir 'build/fabric-multiplayer-smoke/client'
             property 'smart_resource_drops.fabricMultiplayerSmoke', 'true'
@@ -164,7 +166,7 @@ loom {
         }
         persistenceMarkServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence mark/save smoke'
+            name = 'Fabric 1.20.5-1.20.6 placement persistence mark/save smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'mark'
@@ -174,7 +176,7 @@ loom {
         }
         persistenceRemoveServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence remove/save smoke'
+            name = 'Fabric 1.20.5-1.20.6 placement persistence remove/save smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'remove'
@@ -184,7 +186,7 @@ loom {
         }
         persistenceVerifyAbsentServerSmoke {
             server()
-            name = 'Fabric 1.21.1 placement persistence verify-absent smoke'
+            name = 'Fabric 1.20.5-1.20.6 placement persistence verify-absent smoke'
             source clientTestSourceSet
             runDir 'build/fabric-persistence-smoke'
             property 'smart_resource_drops.fabricPersistenceTestPhase', 'verify_absent'
@@ -238,6 +240,7 @@ dependencies {
 processResources {
     inputs.property 'version', modVersionValue
     inputs.property 'minecraft_version', minecraftVersionValue
+    inputs.property 'minecraft_version_range', minecraftVersionRangeValue
     inputs.property 'loader_version', loaderVersionValue
     inputs.property 'fabric_version', fabricVersionValue
     inputs.property 'modmenu_version', modMenuVersionValue
@@ -245,7 +248,7 @@ processResources {
     filesMatching('fabric.mod.json') {
         expand(
             version: modVersionValue,
-            minecraft_version: minecraftVersionValue,
+            minecraft_version: minecraftVersionRangeValue,
             loader_version: loaderVersionValue,
             fabric_version: fabricVersionValue,
             modmenu_version: modMenuVersionValue
@@ -271,6 +274,28 @@ tasks.named('processClienttestResources') {
 
 tasks.named('runClientSmoke') {
     dependsOn prepareClientSmoke
+    if (packagedCandidateJarProperty.isPresent()) {
+        final File configuredCandidate = new File(packagedCandidateJarProperty.get())
+        if (!configuredCandidate.isAbsolute()) {
+            throw new GradleException('packaged_candidate_jar must be an absolute path')
+        }
+        final File candidate = configuredCandidate.canonicalFile
+        if (!candidate.isFile()) {
+            throw new GradleException("External packaged candidate does not exist: ${candidate}")
+        }
+
+        // Exercise the immutable remapped JAR rather than Loom's main/client
+        // output directories while retaining the separate run-only GUI driver.
+        final Set<File> productionOutputs = (
+                sourceSets.main.output.files + sourceSets.client.output.files)
+                .collect { it.canonicalFile } as Set<File>
+        classpath = classpath.filter { entry ->
+            !productionOutputs.contains(entry.canonicalFile)
+        }
+        systemProperty 'fabric.addMods', candidate.absolutePath
+        systemProperty 'smart_resource_drops.packagedCandidateJar', candidate.absolutePath
+        systemProperty 'smart_resource_drops.packagedExpectedVersion', modVersionValue
+    }
     doLast {
         final File marker = file('build/fabric-client-smoke/client-smoke.success')
         if (!marker.isFile()) {

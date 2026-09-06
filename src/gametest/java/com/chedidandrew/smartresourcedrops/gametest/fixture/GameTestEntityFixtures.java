@@ -149,7 +149,7 @@ public final class GameTestEntityFixtures {
         }
     }
 
-    /** Applies Fabric's 1.21.1 GameTest sentinels before production sees final output. */
+    /** Applies Fabric's 1.20.5-1.20.6 GameTest sentinels before production sees final output. */
     public static void acceptFabricFinalDrop(
             final ItemStack stack,
             final LootParams params,
@@ -205,7 +205,7 @@ public final class GameTestEntityFixtures {
     private static ResourceKey<LootTable> lootTable(final String entityPath) {
         return ResourceKey.create(
                 Registries.LOOT_TABLE,
-                ResourceLocation.fromNamespaceAndPath(MOD_ID, "entities/" + entityPath));
+                new ResourceLocation(MOD_ID, "entities/" + entityPath));
     }
 
     private static <T extends Mob> EntityType<T> register(
@@ -213,7 +213,7 @@ public final class GameTestEntityFixtures {
             final String path,
             final MobCategory category,
             final EntityType.EntityFactory<T> factory) {
-        final ResourceLocation id = ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+        final ResourceLocation id = new ResourceLocation(MOD_ID, path);
         final ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, id);
         final EntityType<T> type = EntityType.Builder.of(factory, category)
                 .sized(0.6F, 1.8F)
@@ -279,7 +279,7 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        public int getExperienceReward() {
             // 7x and its 3x result (17 + 3 + 1) use distinct vanilla orb values, so the
             // fixture can total getValue() without undercounting randomly count-merged orbs.
             return 7;
@@ -300,7 +300,7 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        public int getExperienceReward() {
             return 5;
         }
     }
@@ -331,7 +331,7 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        public int getExperienceReward() {
             return 5;
         }
 
@@ -354,16 +354,16 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        public int getExperienceReward() {
             return 5;
         }
 
         @Override
         protected void dropCustomDeathLoot(
-                final ServerLevel level,
                 final DamageSource source,
+                final int lootingLevel,
                 final boolean recentlyHitByPlayer) {
-            super.dropCustomDeathLoot(level, source, recentlyHitByPlayer);
+            super.dropCustomDeathLoot(source, lootingLevel, recentlyHitByPlayer);
             spawnAtLocation(new ItemStack(Items.EMERALD));
         }
     }
@@ -377,7 +377,7 @@ public final class GameTestEntityFixtures {
         }
 
         @Override
-        protected int getBaseExperienceReward() {
+        public int getExperienceReward() {
             return 5;
         }
 

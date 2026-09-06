@@ -8,6 +8,11 @@ out/
 
 # Generated release artifacts
 dist/
+compat/
+
+# Nested loader development/runtime data
+runs/
+.gradle-agent-home/
 
 # Minecraft development/runtime data
 run/

@@ -1,0 +1,377 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.gradle.userdev' version "${neogradle_version}"
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = archives_base_name
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'Fabric'
+        url = 'https://maven.fabricmc.net/'
+    }
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version as int)
+    withSourcesJar()
+}
+
+def gameTestSourceSet = sourceSets.create('gametest')
+gameTestSourceSet.java {
+    setSrcDirs(['../src/gametest/java', '../neoforge/src/gametest/java'])
+    exclude('**/SmartDropsClientGameTest.java')
+    exclude('**/mixin/client/**')
+    exclude('**/fixture/FabricGameTestEntityFixtures.java')
+    exclude('**/fixture/FabricGameTestBlockLootFixtures.java')
+    exclude('**/FabricAutomationAuthorityGameTests.java')
+    exclude('**/FabricMixinAuditGameTests.java')
+}
+gameTestSourceSet.resources {
+    setSrcDirs(['../src/gametest/resources', '../neoforge/src/gametest/resources'])
+    exclude('fabric.mod.json')
+    exclude('smart_resource_drops_gametest.mixins.json')
+}
+
+def generatedClientTestSources = layout.buildDirectory.dir('generated/clienttest/java')
+def generateClientCategorySmokeSource = tasks.register('generateClientCategorySmokeSource') {
+    def original = layout.projectDirectory.file(
+            '../neoforge/src/clienttest/java/com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.java')
+    def generated = generatedClientTestSources.map { directory ->
+        directory.file('com/chedidandrew/smartresourcedrops/client/NeoForgeClientCategorySmokeTest.java')
+    }
+    inputs.file original
+    inputs.property('neoforge1205ClientTransformRevision', 2)
+    outputs.file generated
+    doLast {
+        File target = generated.get().asFile
+        target.parentFile.mkdirs()
+        target.setText(original.asFile.getText('UTF-8')
+                .replace('import net.neoforged.api.distmarker.Dist;\n', '')
+                .replace('import net.neoforged.fml.common.Mod;\n', '')
+                .replace(
+                        '@Mod(value = SmartResourceDrops.MOD_ID, dist = Dist.CLIENT)',
+                        ''), 'UTF-8')
+    }
+}
+def clientTestSourceSet = sourceSets.create('clienttest')
+clientTestSourceSet.java.srcDir generatedClientTestSources
+clientTestSourceSet.resources.setSrcDirs([])
+tasks.named(clientTestSourceSet.compileJavaTaskName).configure {
+    dependsOn generateClientCategorySmokeSource
+}
+
+// NeoForge 20.5's @Mod annotation does not yet expose the dist member used by
+// the shared 1.20.6 packaged probes. Generate an exact-endpoint probe module
+// that delegates to those same server/client checks through FMLEnvironment.
+def generatedPackagedProbeSources = layout.buildDirectory.dir('generated/packagedprobetest/java')
+def generatePackagedProbeSources = tasks.register('generatePackagedProbeSources') {
+    def originals = layout.projectDirectory.dir('../neoforge/src/packagedprobetest/java')
+    inputs.dir originals
+    inputs.property('neoforge1205PackagedProbeTransformRevision', 1)
+    outputs.dir generatedPackagedProbeSources
+    doLast {
+        final File outputRoot = generatedPackagedProbeSources.get().asFile
+        project.delete(outputRoot)
+        fileTree(originals).matching { include '**/*.java' }.files.each { source ->
+            final String relative = originals.asFile.toPath().relativize(source.toPath()).toString()
+            final File target = new File(outputRoot, relative)
+            target.parentFile.mkdirs()
+            target.setText(source.getText('UTF-8')
+                    .replace('import net.neoforged.api.distmarker.Dist;\n', '')
+                    .replace('import net.neoforged.fml.common.Mod;\n', '')
+                    .replace('@Mod(value = "smart_resource_drops_packaged_probe", dist = Dist.DEDICATED_SERVER)\n', '')
+                    .replace('@Mod(value = "smart_resource_drops_packaged_probe", dist = Dist.CLIENT)\n', ''), 'UTF-8')
+        }
+        final File entrypoint = new File(outputRoot,
+                'com/chedidandrew/smartresourcedrops/packagedprobe/PackagedProbeEntrypoint.java')
+        entrypoint.parentFile.mkdirs()
+        entrypoint.setText('''\
+package com.chedidandrew.smartresourcedrops.packagedprobe;
+
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLEnvironment;
+
+@Mod("smart_resource_drops_packaged_probe")
+public final class PackagedProbeEntrypoint {
+    public PackagedProbeEntrypoint() {
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            System.setProperty("smart_resource_drops.packagedClientProbe", "true");
+            new PackagedClientProbe();
+        } else {
+            System.setProperty("smart_resource_drops.packagedServerProbe", "true");
+            new PackagedServerProbe();
+        }
+    }
+}
+''', 'UTF-8')
+    }
+}
+def packagedProbeSourceSet = sourceSets.create('packagedprobetest')
+packagedProbeSourceSet.java.srcDir generatedPackagedProbeSources
+packagedProbeSourceSet.resources.setSrcDirs(['src/packagedprobetest/resources'])
+tasks.named(packagedProbeSourceSet.compileJavaTaskName).configure {
+    dependsOn generatePackagedProbeSources
+}
+
+// NeoForge 20.5 predates the ModDev bundle consumed by the 1.20.6 project.
+// The official 1.20.5 MDK uses NeoGradle userdev, so this exact-endpoint
+// project reuses the canonical sources while retaining the supported toolchain.
+sourceSets.main.java {
+    setSrcDirs([
+            '../src/main/java',
+            '../src/client/java',
+            '../neoforge/src/main/java',
+            'src/main/java'])
+    exclude('**/platform/fabric/**')
+    exclude { details ->
+        details.file.absolutePath.contains("${File.separator}neoforge${File.separator}src${File.separator}main${File.separator}java")
+                && (details.file.name == 'NeoForgeEntrypoint.java'
+                || details.file.name == 'NeoForgeClientEntrypoint.java'
+                || details.file.name == 'ServerPlayerGameModeMixin.java')
+    }
+}
+sourceSets.main.resources {
+    setSrcDirs([
+            '../src/main/resources',
+            '../neoforge/src/main/resources',
+            '../neoforge/src/main/templates'])
+    exclude('fabric.mod.json')
+}
+
+dependencies {
+    implementation "net.neoforged:neoforge:${neo_version}"
+    compileOnly 'org.jspecify:jspecify:1.0.0'
+    compileOnly(annotationProcessor('io.github.llamalad7:mixinextras-common:0.5.4'))
+    jarJar(implementation('io.github.llamalad7:mixinextras-neoforge:0.5.4')) {
+        version {
+            strictly '[0.5.4,)'
+            prefer '0.5.4'
+        }
+    }
+    runtimeOnly 'io.github.llamalad7:mixinextras-neoforge:0.5.4'
+
+    gametestImplementation sourceSets.main.output
+    clienttestImplementation sourceSets.main.output
+    packagedprobetestImplementation "net.neoforged:neoforge:${neo_version}"
+
+    testImplementation platform("org.junit:junit-bom:${junit_version}")
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+configurations {
+    gametestImplementation.extendsFrom implementation
+    gametestCompileOnly.extendsFrom compileOnly
+    gametestAnnotationProcessor.extendsFrom annotationProcessor
+    gametestRuntimeOnly.extendsFrom runtimeOnly
+    clienttestImplementation.extendsFrom implementation
+    clienttestCompileOnly.extendsFrom compileOnly
+    clienttestAnnotationProcessor.extendsFrom annotationProcessor
+    clienttestRuntimeOnly.extendsFrom runtimeOnly
+}
+
+def gameTestDirectory = layout.buildDirectory.dir('gametest')
+def clientCategoryTestDirectory = layout.buildDirectory.dir('client-category-test')
+def packagedServerTestDirectory = layout.buildDirectory.dir('packaged-jar-test/server')
+def packagedClientTestDirectory = layout.buildDirectory.dir('packaged-jar-test/client')
+def packagedCandidateJarProperty = providers.gradleProperty('packaged_candidate_jar')
+def packagedCandidateJarName = "${archives_base_name}-${mod_version}.jar"
+def resolvePackagedCandidateJar = {
+    if (!packagedCandidateJarProperty.isPresent()) {
+        throw new GradleException('packaged_candidate_jar is required for the NeoForge 1.20.5 packaged tests')
+    }
+    final File candidate = new File(packagedCandidateJarProperty.get())
+    if (!candidate.isAbsolute()) {
+        throw new GradleException('packaged_candidate_jar must be an absolute path')
+    }
+    if (!candidate.isFile()) {
+        throw new GradleException("External packaged candidate does not exist: ${candidate}")
+    }
+    return candidate.canonicalFile
+}
+def prepareClientCategoryTest = tasks.register('prepareClientCategoryTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        File directory = clientCategoryTestDirectory.get().asFile
+        project.delete(directory)
+        directory.mkdirs()
+    }
+}
+def preparePackagedServerTest = tasks.register('preparePackagedServerTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = packagedServerTestDirectory.get().asFile
+        project.delete(directory)
+        final File modsDirectory = new File(directory, 'mods')
+        modsDirectory.mkdirs()
+        final File sourceJar = resolvePackagedCandidateJar()
+        final File copiedJar = new File(modsDirectory, packagedCandidateJarName)
+        java.nio.file.Files.copy(sourceJar.toPath(), copiedJar.toPath())
+        if (java.nio.file.Files.mismatch(sourceJar.toPath(), copiedJar.toPath()) != -1L) {
+            throw new GradleException('Packaged server candidate copy is not byte-identical')
+        }
+        new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
+        new File(directory, 'server.properties').setText('''\
+online-mode=false
+server-port=0
+level-name=packaged-server-world
+gamemode=creative
+difficulty=peaceful
+spawn-protection=0
+view-distance=2
+simulation-distance=2
+motd=Smart Resource Multiplier packaged JAR server test
+''', 'UTF-8')
+    }
+}
+def preparePackagedClientTest = tasks.register('preparePackagedClientTest') {
+    outputs.upToDateWhen { false }
+    doLast {
+        final File directory = packagedClientTestDirectory.get().asFile
+        project.delete(directory)
+        final File modsDirectory = new File(directory, 'mods')
+        modsDirectory.mkdirs()
+        final File sourceJar = resolvePackagedCandidateJar()
+        final File copiedJar = new File(modsDirectory, packagedCandidateJarName)
+        java.nio.file.Files.copy(sourceJar.toPath(), copiedJar.toPath())
+        if (java.nio.file.Files.mismatch(sourceJar.toPath(), copiedJar.toPath()) != -1L) {
+            throw new GradleException('Packaged client candidate copy is not byte-identical')
+        }
+        new File(directory, 'options.txt').setText('''\
+onboardAccessibility:false
+maxFps:20
+enableVsync:false
+renderDistance:2
+simulationDistance:5
+''', 'UTF-8')
+    }
+}
+
+runs {
+    client {
+        modSource sourceSets.main
+        modSource clientTestSourceSet
+        workingDirectory clientCategoryTestDirectory
+        systemProperty 'smart_resource_drops.clientCategoryTest', 'true'
+        systemProperty 'smart_resource_drops.clientCategoryTestDirectory',
+                clientCategoryTestDirectory.get().asFile.absolutePath
+    }
+    server {
+        modSource sourceSets.main
+        argument '--nogui'
+    }
+    gameTestServer {
+        modSources {
+            add('smartResourceDropsGameTest', gameTestSourceSet, sourceSets.main)
+        }
+        workingDirectory gameTestDirectory
+        systemProperty 'neoforge.enabledGameTestNamespaces', 'smart_resource_drops_gametest'
+    }
+    packagedServerTest {
+        runType 'server'
+        modSource packagedProbeSourceSet
+        workingDirectory packagedServerTestDirectory
+        systemProperty 'smart_resource_drops.packagedServerProbe', 'true'
+        systemProperty 'smart_resource_drops.packagedTestDirectory',
+                packagedServerTestDirectory.get().asFile.absolutePath
+        systemProperty 'smart_resource_drops.packagedCandidateJar',
+                new File(packagedServerTestDirectory.get().asFile,
+                        "mods/${packagedCandidateJarName}").absolutePath
+        systemProperty 'smart_resource_drops.expectedVersion', mod_version
+        argument '--nogui'
+    }
+    packagedClientTest {
+        runType 'client'
+        modSource packagedProbeSourceSet
+        workingDirectory packagedClientTestDirectory
+        systemProperty 'smart_resource_drops.packagedClientProbe', 'true'
+        systemProperty 'smart_resource_drops.packagedTestDirectory',
+                packagedClientTestDirectory.get().asFile.absolutePath
+        systemProperty 'smart_resource_drops.packagedCandidateJar',
+                new File(packagedClientTestDirectory.get().asFile,
+                        "mods/${packagedCandidateJarName}").absolutePath
+        systemProperty 'smart_resource_drops.expectedVersion', mod_version
+    }
+}
+
+tasks.matching { task -> task.name == 'runClient' }.configureEach {
+    dependsOn prepareClientCategoryTest
+    doLast {
+        File marker = new File(clientCategoryTestDirectory.get().asFile, 'client-category.success')
+        if (!marker.isFile()) {
+            throw new GradleException("NeoForge 1.20.5 category client exited without success marker ${marker}")
+        }
+    }
+}
+
+tasks.matching { task -> task.name == 'runPackagedServerTest' }.configureEach {
+    dependsOn preparePackagedServerTest
+    doLast {
+        final File marker = new File(packagedServerTestDirectory.get().asFile, 'packaged-server.success')
+        if (!marker.isFile()) {
+            throw new GradleException("Packaged server exited without success marker ${marker}")
+        }
+    }
+}
+
+tasks.matching { task -> task.name == 'runPackagedClientTest' }.configureEach {
+    dependsOn preparePackagedClientTest
+    doLast {
+        final File marker = new File(packagedClientTestDirectory.get().asFile, 'packaged-client.success')
+        if (!marker.isFile()) {
+            throw new GradleException("Packaged client exited without success marker ${marker}")
+        }
+    }
+}
+
+tasks.named('processResources', ProcessResources) {
+    def replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            neo_version_range      : neo_version_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+    ]
+    inputs.properties replaceProperties
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand replaceProperties
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = java_version as int
+    options.encoding = 'UTF-8'
+    options.compilerArgs.add('-Xlint:deprecation')
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+}
+
+jar {
+    from('../LICENSE') {
+        rename { "LICENSE_${archives_base_name}" }
+    }
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifactId = archives_base_name
+            from components.java
+        }
+    }
+}

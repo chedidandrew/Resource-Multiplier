@@ -16,7 +16,7 @@ public final class GameTestBlockLootFixtures {
     public static final int ITEMS_PER_STACK = 64;
     public static final ResourceKey<LootTable> DIRT_LOOT = ResourceKey.create(
             Registries.LOOT_TABLE,
-            ResourceLocation.fromNamespaceAndPath("minecraft", "blocks/dirt"));
+            new ResourceLocation("minecraft", "blocks/dirt"));
 
     private static final AtomicBoolean ARMED = new AtomicBoolean();
 

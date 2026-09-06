@@ -329,10 +329,10 @@ public final class SmartResourceDropsShearingGameTests {
 
             final ItemStack shears = dispenseShears(helper, DISPENSER_POS, Direction.EAST);
             helper.assertTrue(sheep.isLeashed(),
-                    "Minecraft 1.21.1 unexpectedly removed the leash while dispensing shears");
+                    "Minecraft 1.20.5-1.20.6 unexpectedly removed the leash while dispensing shears");
             helper.assertTrue(sheep.isSheared(),
-                    "Minecraft 1.21.1 did not shear a ready leashed sheep");
-            assertItemTotal(helper, ENTITY_POS, Items.LEAD, 0, "1.21.1 leashed sheep lead");
+                    "Minecraft 1.20.5-1.20.6 did not shear a ready leashed sheep");
+            assertItemTotal(helper, ENTITY_POS, Items.LEAD, 0, "1.20.5-1.20.6 leashed sheep lead");
             final int wool = itemTotal(helper, ENTITY_POS, Items.WHITE_WOOL);
             helper.assertTrue(wool >= 64 && wool <= 192 && wool % 64 == 0,
                     "Leashed sheep output did not preserve 1-3 vanilla wool emissions at 64x");
@@ -381,7 +381,7 @@ public final class SmartResourceDropsShearingGameTests {
     }
 
     @GameTest(template = "smart_resource_drops_gametest:wide")
-    public void boggedMushroomRemovalRemainsFixedVanillaOutput(final GameTestHelper helper) {
+    public void boggedMushroomRemovalMatchesDefaultDataPackOutput(final GameTestHelper helper) {
         final SmartDropsConfig previous = ConfigManager.snapshot();
         try {
             prepareSpecialOverride(helper, "minecraft:bogged");
@@ -391,8 +391,10 @@ public final class SmartResourceDropsShearingGameTests {
             helper.assertFalse(bogged.readyForShearing(), "Bogged stayed ready after shearing");
             final int mushrooms = itemTotal(helper, ENTITY_POS, Items.RED_MUSHROOM)
                     + itemTotal(helper, ENTITY_POS, Items.BROWN_MUSHROOM);
-            helper.assertTrue(mushrooms == 2,
-                    "Special bogged produced " + mushrooms + " mushrooms instead of vanilla 2");
+            // In 1.20.5-1.20.6, the default shearing/bogged table is intentionally empty.
+            // The bundled update_1_21 experimental data pack replaces it with two mushrooms.
+            helper.assertTrue(mushrooms == 0,
+                    "Default-data-pack bogged produced " + mushrooms + " mushrooms instead of vanilla 0");
         } finally {
             restoreConfiguration(previous);
         }
@@ -1042,7 +1044,7 @@ public final class SmartResourceDropsShearingGameTests {
         final double horizontal = Math.sqrt(xDelta * xDelta + zDelta * zDelta);
         final float yaw = (float) Math.toDegrees(Math.atan2(zDelta, xDelta)) - 90.0F;
         final float pitch = (float) -Math.toDegrees(Math.atan2(target.y - eye.y, horizontal));
-        player.absRotateTo(yaw, pitch);
+        player.absMoveTo(player.getX(), player.getY(), player.getZ(), yaw, pitch);
     }
 
     private static void assertWoolMultiple(

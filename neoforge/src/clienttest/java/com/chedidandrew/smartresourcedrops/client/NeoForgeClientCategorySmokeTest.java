@@ -179,7 +179,7 @@ public final class NeoForgeClientCategorySmokeTest {
             throw new AssertionError("Not all entity-category tags were resolved");
         }
         for (EntityCategory category : EntityCategory.values()) {
-            final String path = "data/smart_resource_drops/tags/entity_type/categories/"
+            final String path = "data/smart_resource_drops/tags/entity_types/categories/"
                     + category.key() + ".json";
             final List<ClientModResources.Resource> resources = ClientModResources.findAll(path);
             if (resources.isEmpty()) {

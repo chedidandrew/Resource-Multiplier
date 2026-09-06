@@ -18,10 +18,10 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 
-/** Registers the shared test methods through NeoForge 21.1's pre-registry GameTest event. */
+/** Registers the shared test methods through NeoForge 20.5-20.6's pre-registry GameTest event. */
 @EventBusSubscriber(modid = SmartResourceDrops.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public final class NeoForgeGameTestRegistrar {
-    public static final int EXPECTED_TEST_COUNT = 64;
+    public static final int EXPECTED_TEST_COUNT = 65;
     private static final String STRUCTURE = "smart_resource_drops_gametest:wide";
     private static final List<Class<?>> SHARED_TEST_CLASSES = List.of(
             SmartResourceDropsGameTests.class,
@@ -60,14 +60,14 @@ public final class NeoForgeGameTestRegistrar {
                     "Expected " + EXPECTED_TEST_COUNT + " NeoForge GameTests, discovered " + discovered);
         }
         SmartResourceDrops.LOGGER.info(
-                "Registered exactly {} NeoForge 1.21.1 GameTests",
+                "Registered exactly {} NeoForge 1.20.5-1.20.6 GameTests",
                 discovered);
     }
 
     /**
-     * NeoForge 21.1 prefixes ordinary test templates with the declaring class.
+     * NeoForge 20.5-20.6 prefixes ordinary test templates with the declaring class.
      * A generator preserves Fabric's full-ID annotations while binding every
-     * shared method to one explicit binary 1.21.1 structure.
+     * shared method to one explicit binary 1.20.5-1.20.6 structure.
      */
     @GameTestGenerator
     public static Collection<TestFunction> generatedSharedTests() {
