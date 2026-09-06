@@ -23,7 +23,7 @@ import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.chunk.PalettedContainerFactory;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.UpgradeData;
-import net.minecraft.world.level.chunk.storage.RegionFileStorage;
+import net.minecraft.world.level.chunk.storage.IOWorker;
 import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
 import net.minecraft.world.level.chunk.storage.SerializableChunkData;
 import net.neoforged.neoforge.attachment.AttachmentHolder;
@@ -141,14 +141,14 @@ final class LegacyFabricProvenanceMigrationTest {
                 "fabric-migration-fixture",
                 Level.OVERWORLD,
                 "chunk");
-        try (RegionFileStorage storage = new RegionFileStorage(storageInfo, regionDirectory, true)) {
-            storage.write(FABRIC_CHUNK_POS, neoForgeSavedChunk);
-            storage.flush();
+        try (TestIOWorker storage = new TestIOWorker(storageInfo, regionDirectory, true)) {
+            storage.store(FABRIC_CHUNK_POS, neoForgeSavedChunk).join();
+            storage.synchronize(true).join();
         }
 
         final CompoundTag reopenedChunk;
-        try (RegionFileStorage storage = new RegionFileStorage(storageInfo, regionDirectory, true)) {
-            reopenedChunk = storage.read(FABRIC_CHUNK_POS);
+        try (TestIOWorker storage = new TestIOWorker(storageInfo, regionDirectory, true)) {
+            reopenedChunk = storage.loadAsync(FABRIC_CHUNK_POS).join().orElse(null);
         }
         assertTrue(reopenedChunk != null, "Native chunk disappeared after region close and reopen");
         assertFalse(reopenedChunk.contains(LegacyFabricProvenanceMigration.FABRIC_ATTACHMENT_ROOT));
@@ -229,5 +229,16 @@ final class LegacyFabricProvenanceMigrationTest {
         final PlacedBlockData data = new PlacedBlockData();
         data.add(packedPosition);
         return data;
+    }
+
+    /** Exposes Minecraft 26.1.x's protected region-I/O constructor to this test only. */
+    private static final class TestIOWorker extends IOWorker {
+        private TestIOWorker(
+                final RegionStorageInfo storageInfo,
+                final Path regionDirectory,
+                final boolean sync
+        ) {
+            super(storageInfo, regionDirectory, sync);
+        }
     }
 }

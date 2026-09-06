@@ -70,7 +70,7 @@ final class ShearingDropsScreen extends SmartDropsSubScreen {
                 Component.empty(),
                 this.readOnlyValue(defaultValue),
                 Component.translatable("smart_resource_drops.gui.shearing_default_multiplier_tooltip"),
-                () -> this.minecraft.gui.setScreen(new ShearingRuleEditScreen(
+                () -> this.minecraft.setScreen(new ShearingRuleEditScreen(
                         this.root,
                         this,
                         this.session,
@@ -82,7 +82,7 @@ final class ShearingDropsScreen extends SmartDropsSubScreen {
                 Component.empty(),
                 Component.translatable("smart_resource_drops.gui.view_details"),
                 Component.translatable("smart_resource_drops.gui.shearing_overrides_tooltip"),
-                () -> this.minecraft.gui.setScreen(new ShearingOverridesScreen(
+                () -> this.minecraft.setScreen(new ShearingOverridesScreen(
                         this.root,
                         this,
                         this.session))));
@@ -125,7 +125,7 @@ final class ShearingDropsScreen extends SmartDropsSubScreen {
 
     private void rebuildPreservingScroll() {
         this.preservedScroll = this.optionList.scrollAmount();
-        this.minecraft.gui.setScreen(this);
+        this.minecraft.setScreen(this);
     }
 
     @FunctionalInterface

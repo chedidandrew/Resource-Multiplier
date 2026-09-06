@@ -77,7 +77,7 @@ final class RuleEditScreen extends SmartDropsSubScreen {
         if (hasCategoryView) {
             this.addRenderableWidget(Button.builder(
                             Component.translatable("smart_resource_drops.gui.view_category_blocks"),
-                            button -> this.minecraft.gui.setScreen(new BlockOverridesScreen(
+                            button -> this.minecraft.setScreen(new BlockOverridesScreen(
                                     this.root,
                                     this,
                                     this.session,

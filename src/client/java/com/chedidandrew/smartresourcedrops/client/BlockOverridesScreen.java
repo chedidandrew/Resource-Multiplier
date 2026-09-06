@@ -134,7 +134,7 @@ final class BlockOverridesScreen extends SmartDropsSubScreen {
                             .append("  ")
                             .append(action),
                     Component.literal(info.displayName() + "\n" + info.id()),
-                    () -> this.minecraft.gui.setScreen(new RuleEditScreen(
+                    () -> this.minecraft.setScreen(new RuleEditScreen(
                             this.root,
                             this,
                             this.session,

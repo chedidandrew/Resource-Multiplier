@@ -39,14 +39,14 @@ public final class NeoForgeClientCategorySmokeTest {
     private void onClientTick(final ClientTickEvent.Post event) {
         final Minecraft minecraft = Minecraft.getInstance();
         try {
-            if (minecraft.gui.overlay() != null) {
+            if (minecraft.getOverlay() != null) {
                 return;
             }
             if (++this.ticks > TIMEOUT_TICKS) {
                 throw new AssertionError("Timed out waiting for the NeoForge category smoke test");
             }
             if (this.categoryScreen == null) {
-                final Screen initialMenu = minecraft.gui.screen();
+                final Screen initialMenu = minecraft.screen;
                 if (!(initialMenu instanceof TitleScreen)
                         && !(initialMenu instanceof AccessibilityOnboardingScreen)) {
                     return;
@@ -58,10 +58,10 @@ public final class NeoForgeClientCategorySmokeTest {
                 }
                 this.session = root.editorSession();
                 this.categoryScreen = new EntityCategoryScreen(root, root, this.session);
-                minecraft.gui.setScreen(this.categoryScreen);
+                minecraft.setScreen(this.categoryScreen);
                 return;
             }
-            if (minecraft.gui.screen() != this.categoryScreen) {
+            if (minecraft.screen != this.categoryScreen) {
                 return;
             }
 

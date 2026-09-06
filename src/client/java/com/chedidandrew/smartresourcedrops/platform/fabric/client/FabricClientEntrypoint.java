@@ -66,9 +66,9 @@ public final class FabricClientEntrypoint implements ClientModInitializer {
                 dispatcher.register(ClientCommands.literal("smartdropsgui").executes(context -> {
                     final Minecraft minecraft = Minecraft.getInstance();
                     final Object connection = minecraft.getConnection();
-                    final Screen originatingScreen = minecraft.gui.screen();
+                    final Screen originatingScreen = minecraft.screen;
                     return ClientCommandQueue.runCoalesced(OPEN_CONFIG_QUEUE_KEY, () -> {
-                        final Screen currentScreen = minecraft.gui.screen();
+                        final Screen currentScreen = minecraft.screen;
                         if (!ConfigScreenOpenPolicy.canOpenDelayedCommand(
                                 connection,
                                 minecraft.getConnection(),
@@ -76,7 +76,7 @@ public final class FabricClientEntrypoint implements ClientModInitializer {
                                 currentScreen)) {
                             return;
                         }
-                        minecraft.gui.setScreen(SmartDropsConfigScreens.create(currentScreen));
+                        minecraft.setScreen(SmartDropsConfigScreens.create(currentScreen));
                     }) ? 1 : 0;
                 })));
     }

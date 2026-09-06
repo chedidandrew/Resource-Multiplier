@@ -183,7 +183,7 @@ public final class SmartDropsConfigLoadingScreen extends Screen {
             final long revision,
             final String status
     ) {
-        this.minecraft.gui.setScreen(new SmartDropsConfigScreen(
+        this.minecraft.setScreen(new SmartDropsConfigScreen(
                 this.resultParent,
                 snapshot,
                 editable,
@@ -283,13 +283,13 @@ public final class SmartDropsConfigLoadingScreen extends Screen {
                 return;
             }
             if (this.minecraft.getConnection() != null) {
-                this.minecraft.gui.setScreen(new SmartDropsConfigLoadingScreen(this.resultParent));
+                this.minecraft.setScreen(new SmartDropsConfigLoadingScreen(this.resultParent));
             } else {
-                this.minecraft.gui.setScreen(this.resultParent);
+                this.minecraft.setScreen(this.resultParent);
             }
             return;
         }
-        this.minecraft.gui.setScreen(this.returnScreen);
+        this.minecraft.setScreen(this.returnScreen);
     }
 
     @Override

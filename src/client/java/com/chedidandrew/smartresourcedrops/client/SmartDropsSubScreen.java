@@ -156,7 +156,7 @@ public abstract class SmartDropsSubScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.gui.setScreen(this.backScreen);
+        this.minecraft.setScreen(this.backScreen);
     }
 
     @Override

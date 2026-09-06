@@ -82,7 +82,7 @@ final class EntityCategoryScreen extends SmartDropsSubScreen {
                             .append(ConfigUiText.effective(effective.multiplier())),
                     safety,
                     tooltip,
-                    () -> this.minecraft.gui.setScreen(new EntityRuleEditScreen(
+                    () -> this.minecraft.setScreen(new EntityRuleEditScreen(
                             this.root,
                             this,
                             this.session,

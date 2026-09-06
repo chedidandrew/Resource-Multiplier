@@ -18,7 +18,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.storage.RegionFileStorage;
+import net.minecraft.world.level.chunk.storage.IOWorker;
 import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.Mod;
@@ -153,8 +153,8 @@ public final class NeoForgeMigrationRestartSmokeTest {
                 "fabric-migration-server-smoke",
                 Level.OVERWORLD,
                 "chunk");
-        try (RegionFileStorage storage = new RegionFileStorage(storageInfo, regionDirectory, true)) {
-            final CompoundTag chunk = storage.read(FABRIC_CHUNK_POS);
+        try (TestIOWorker storage = new TestIOWorker(storageInfo, regionDirectory, true)) {
+            final CompoundTag chunk = storage.loadAsync(FABRIC_CHUNK_POS).join().orElse(null);
             if (chunk == null) {
                 throw new AssertionError("Migration fixture chunk is missing from " + regionDirectory);
             }
@@ -189,6 +189,17 @@ public final class NeoForgeMigrationRestartSmokeTest {
     private static void require(final boolean condition, final String message) {
         if (!condition) {
             throw new AssertionError(message);
+        }
+    }
+
+    /** Exposes Minecraft 26.1.x's protected region-I/O constructor to this test only. */
+    private static final class TestIOWorker extends IOWorker {
+        private TestIOWorker(
+                final RegionStorageInfo storageInfo,
+                final Path regionDirectory,
+                final boolean sync
+        ) {
+            super(storageInfo, regionDirectory, sync);
         }
     }
 

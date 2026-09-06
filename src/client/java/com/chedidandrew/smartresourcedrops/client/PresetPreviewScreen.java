@@ -91,7 +91,7 @@ final class PresetPreviewScreen extends SmartDropsSubScreen {
             return;
         }
         session.applyPreset(preset);
-        minecraft.gui.setScreen(backScreen);
+        minecraft.setScreen(backScreen);
     }
 
     static Component presetName(final SmartDropsConfig.Preset preset) {

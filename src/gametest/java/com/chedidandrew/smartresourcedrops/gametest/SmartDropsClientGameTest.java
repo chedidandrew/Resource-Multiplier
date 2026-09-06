@@ -27,7 +27,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestDedicatedServerConnection;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestDedicatedServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -253,7 +253,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
             context.clickScreenButton(RESET_KEY);
             context.waitForScreen(ResetAllSettingsConfirmScreen.class);
             takeRequiredScreenshot(context, "smart-drops-reset-confirmation");
-            final Screen confirmation = context.computeOnClient(client -> client.gui.screen());
+            final Screen confirmation = context.computeOnClient(client -> client.screen);
             require("Reset Smart Resource Multiplier?".equals(confirmation.getTitle().getString()),
                     "Reset confirmation had an unexpected public title");
             require(hasWidgetLabel(confirmation, RESET_EVERYTHING_KEY)
@@ -288,7 +288,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
 
             context.clickScreenButton(RESET_KEY);
             context.waitForScreen(ResetAllSettingsConfirmScreen.class);
-            context.runOnClient(client -> client.gui.screen().keyPressed(
+            context.runOnClient(client -> client.screen.keyPressed(
                     new KeyEvent(InputConstants.KEY_ESCAPE, 0, 0)));
             context.waitForScreen(SmartDropsConfigScreen.class);
             require(currentConfigScreen(context) == root && root.editorSession() == session,
@@ -327,7 +327,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         try (TestSingleplayerContext singleplayer = context.worldBuilder()
                 .setUseConsistentSettings(true)
                 .create()) {
-            singleplayer.getConnection().waitForChunksRender(false);
+            singleplayer.getClientLevel().waitForChunksRender(false);
             openAuthoritativeScreen(context);
             SmartDropsConfigScreen root = currentConfigScreen(context);
             assertGeneralRoot(root, true);
@@ -442,8 +442,8 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
             final int queuedValue = immediateValue == 8 ? 9 : 8;
             final int unauthorizedValue = original == 5 ? 6 : 5;
             try {
-                try (TestDedicatedServerConnection connection = server.connect()) {
-                    connection.waitForChunksRender(false);
+                try (TestServerConnection connection = server.connect()) {
+                    connection.getClientLevel().waitForChunksRender(false);
 
                     openAuthoritativeScreen(context);
                     SmartDropsConfigScreen root = currentConfigScreen(context);
@@ -466,8 +466,9 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                     sendGlobalPatch(context, 10_002, unauthorizedRevision, unauthorizedValue);
                     context.waitTicks(2);
 
-                    final String playerName = server.computeOnServer(ignored ->
-                            connection.getServerPlayer().getScoreboardName());
+                    final String playerName = context.computeOnClient(client ->
+                            Objects.requireNonNull(client.player, "Dedicated test client has no player")
+                                    .getScoreboardName());
                     server.runCommand("op " + playerName);
                     context.waitTicks(22);
                     require(
@@ -475,7 +476,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                             "A patch sent while unauthorized was retained and applied after promotion");
                     // Exit through the production button so the cached read-only snapshot is invalidated.
                     context.clickScreenButton(DONE_KEY);
-                    context.waitFor(client -> client.gui.screen() == null);
+                    context.waitFor(client -> client.screen == null);
                     openAuthoritativeScreen(context);
                     root = currentConfigScreen(context);
                     assertGeneralRoot(root, true);
@@ -738,7 +739,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         waitForSimpleScreen(context, "EntityDropsScreen", "Entity and Mob Drops");
 
         context.runOnClient(client -> rowWithPrimary(
-                onlyList(client.gui.screen()),
+                onlyList(client.screen),
                 "Entity Overrides").action().run());
         final Screen entityOverrides = waitForSimpleScreen(
                 context, "EntityOverridesScreen", "Entity Overrides");
@@ -754,7 +755,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         waitForSimpleScreen(context, "EntityDropsScreen", "Entity and Mob Drops");
 
         context.runOnClient(client -> rowWithPrimary(
-                onlyList(client.gui.screen()),
+                onlyList(client.screen),
                 "Entity Filters").action().run());
         waitForSimpleScreen(context, "EntityFilterScreen", "Entity Filters");
         final ConfigEditorSession.FilterEntryState originalCowFilter =
@@ -777,7 +778,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                     "Could not disable death loot before testing the independent Shearing route");
         }
         context.runOnClient(client -> rowWithPrimary(
-                onlyList(client.gui.screen()),
+                onlyList(client.screen),
                 SHEARING_DROPS_KEY).action().run());
         final Screen shearingDrops = waitForSimpleScreen(
                 context,
@@ -799,7 +800,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                     "Inherited shearing default did not display its effective Global value");
         }
         context.runOnClient(client -> rowWithPrimary(
-                onlyList(client.gui.screen()),
+                onlyList(client.screen),
                 "Default Shearing Multiplier").action().run());
         waitForSimpleScreen(
                 context,
@@ -816,18 +817,18 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 "Default Shearing multiplier could not be restored after Back");
         final boolean originalManualShearing = session.manualShearingDropsEnabled();
         context.runOnClient(client -> rowWithPrimary(
-                onlyList(client.gui.screen()),
+                onlyList(client.screen),
                 "Manual Shearing").action().run());
         require(session.manualShearingDropsEnabled() != originalManualShearing,
                 "Manual Shearing row did not stage through the shared editor session");
         context.runOnClient(client -> rowWithPrimary(
-                onlyList(client.gui.screen()),
+                onlyList(client.screen),
                 "Manual Shearing").action().run());
         require(session.manualShearingDropsEnabled() == originalManualShearing,
                 "Manual Shearing row could not restore its original staged value");
 
         context.runOnClient(client -> rowWithPrimary(
-                onlyList(client.gui.screen()),
+                onlyList(client.screen),
                 SHEARING_OVERRIDES_KEY).action().run());
         final Screen shearingOverrides = waitForSimpleScreen(
                 context,
@@ -861,7 +862,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         context.clickScreenButton(BACK_KEY);
         waitForSimpleScreen(context, "ShearingOverridesScreen", SHEARING_OVERRIDES_KEY);
 
-        final Screen restoredShearingOverrides = context.computeOnClient(client -> client.gui.screen());
+        final Screen restoredShearingOverrides = context.computeOnClient(client -> client.screen);
         context.runOnClient(client -> onlySearchBox(restoredShearingOverrides).setValue("mooshroom"));
         final StructuredConfigList.Row mooshroomRow = onlyList(restoredShearingOverrides).rows().stream()
                 .filter(row -> "minecraft:mooshroom".equals(row.secondary().getString()))
@@ -872,7 +873,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 "Mooshroom was not fixed behind special shearing safety");
         final Screen beforeSpecialAction = restoredShearingOverrides;
         context.runOnClient(client -> mooshroomRow.action().run());
-        require(context.computeOnClient(client -> client.gui.screen()) == beforeSpecialAction,
+        require(context.computeOnClient(client -> client.screen) == beforeSpecialAction,
                 "Special Mooshroom unexpectedly opened an editable multiplier screen");
         require(!session.setShearingEntityMultiplier("minecraft:mooshroom", 4)
                         && !session.setShearingEntityMultiplier("minecraft:cow", 4),
@@ -970,8 +971,8 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         context.runOnClient(client -> discard.onPress(
                 new KeyEvent(InputConstants.KEY_RETURN, 0, 0)));
         context.waitFor(client -> session.originalParent() == null
-                ? client.gui.screen() instanceof TitleScreen
-                : client.gui.screen() == session.originalParent());
+                ? client.screen instanceof TitleScreen
+                : client.screen == session.originalParent());
         context.setScreen(() -> SmartDropsConfigScreens.create(null));
         context.waitForScreen(SmartDropsConfigScreen.class);
         final SmartDropsConfigScreen refreshed = currentConfigScreen(context);
@@ -1050,7 +1051,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         require(session.entityDropsEnabled() == entityDropsEnabled && !session.isDirty(),
                 "Read-only Entity and Mob Drops screen accepted a staged mutation");
         context.runOnClient(client -> rowWithPrimary(
-                onlyList(client.gui.screen()),
+                onlyList(client.screen),
                 SHEARING_DROPS_KEY).action().run());
         final Screen shearing = waitForSimpleScreen(
                 context,
@@ -1675,10 +1676,10 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
             final String expectedTitle
     ) {
         context.clickScreenButton(navigationKey);
-        context.waitFor(client -> client.gui.screen() != null
-                && simpleClassName.equals(client.gui.screen().getClass().getSimpleName()));
+        context.waitFor(client -> client.screen != null
+                && simpleClassName.equals(client.screen.getClass().getSimpleName()));
         return context.computeOnClient(client -> {
-            final Screen screen = client.gui.screen();
+            final Screen screen = client.screen;
             require(screen != null && simpleClassName.equals(screen.getClass().getSimpleName()),
                     "Expected " + simpleClassName + ", found "
                             + (screen == null ? "null" : screen.getClass().getName()));
@@ -1693,10 +1694,10 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
             final String simpleClassName,
             final String expectedTitle
     ) {
-        context.waitFor(client -> client.gui.screen() != null
-                && simpleClassName.equals(client.gui.screen().getClass().getSimpleName()));
+        context.waitFor(client -> client.screen != null
+                && simpleClassName.equals(client.screen.getClass().getSimpleName()));
         return context.computeOnClient(client -> {
-            final Screen screen = client.gui.screen();
+            final Screen screen = client.screen;
             require(screen != null && simpleClassName.equals(screen.getClass().getSimpleName()),
                     "Expected " + simpleClassName + ", found "
                             + (screen == null ? "null" : screen.getClass().getName()));
@@ -1862,10 +1863,10 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
     private static SmartDropsConfigScreen currentConfigScreen(final ClientGameTestContext context) {
         return context.computeOnClient(client -> {
             require(
-                    client.gui.screen() instanceof SmartDropsConfigScreen,
+                    client.screen instanceof SmartDropsConfigScreen,
                     "Expected SmartDropsConfigScreen, found "
-                            + (client.gui.screen() == null ? "null" : client.gui.screen().getClass().getName()));
-            return (SmartDropsConfigScreen)client.gui.screen();
+                            + (client.screen == null ? "null" : client.screen.getClass().getName()));
+            return (SmartDropsConfigScreen)client.screen;
         });
     }
 

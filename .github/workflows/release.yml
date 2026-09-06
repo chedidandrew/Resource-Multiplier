@@ -2,7 +2,9 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
+    # This workflow belongs to the historical 26.2 release on main.
+    # Backports are published from their verified local artifacts.
+    tags: ['v1.3.0']
   workflow_dispatch:
 
 permissions:

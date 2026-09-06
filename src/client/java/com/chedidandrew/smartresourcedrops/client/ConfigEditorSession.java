@@ -18,7 +18,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -1571,8 +1570,8 @@ public final class ConfigEditorSession {
             final EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(identifier);
             if (type == null
                     || "minecraft:player".equals(id)
-                    || type == EntityTypes.ARMOR_STAND
-                    || type == EntityTypes.MANNEQUIN
+                    || type == EntityType.ARMOR_STAND
+                    || type == EntityType.MANNEQUIN
                     || type.getDefaultLootTable().isEmpty()) {
                 continue;
             }

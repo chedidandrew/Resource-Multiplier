@@ -143,7 +143,7 @@ final class EntityOverridesScreen extends SmartDropsSubScreen {
                                     .append(Component.translatable(
                                             "smart_resource_drops.gui.entity_category_estimated_tooltip"))
                             : Component.literal(info.displayName() + "\n" + info.id()),
-                    () -> this.minecraft.gui.setScreen(new EntityRuleEditScreen(
+                    () -> this.minecraft.setScreen(new EntityRuleEditScreen(
                             this.root,
                             this,
                             this.session,

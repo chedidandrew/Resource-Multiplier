@@ -2,7 +2,8 @@ name: Build and verify
 
 on:
   push:
-    branches: ['**']
+    # Backport release branches are verified locally from exact tested artifacts.
+    branches: ['main']
   pull_request:
   workflow_dispatch:
 

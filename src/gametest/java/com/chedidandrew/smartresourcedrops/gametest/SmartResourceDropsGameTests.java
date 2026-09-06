@@ -25,7 +25,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.PermissionSet;
 import net.minecraft.world.Container;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.item.ItemStack;
@@ -73,9 +73,9 @@ public final class SmartResourceDropsGameTests {
         assertPreserved(
             helper,
             new BlockPos(3, 2, 1),
-            Blocks.COPPER_BLOCK.weathering().unaffected(),
-            Blocks.COPPER_BLOCK.weathering().exposed());
-        assertPreserved(helper, new BlockPos(4, 2, 1), Blocks.CONCRETE_POWDER.white(), Blocks.CONCRETE.white());
+            Blocks.COPPER_BLOCK,
+            Blocks.EXPOSED_COPPER);
+        assertPreserved(helper, new BlockPos(4, 2, 1), Blocks.WHITE_CONCRETE_POWDER, Blocks.WHITE_CONCRETE);
 
         final BlockPos unrelated = helper.absolutePos(new BlockPos(5, 2, 1));
         helper.getLevel().setBlock(unrelated, Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
@@ -366,7 +366,7 @@ public final class SmartResourceDropsGameTests {
             helper.assertFalse(consoleMessages.text().contains(privatePlayerId),
                     "Validation output exposed a stored player UUID");
 
-            final ServerPlayer operator = (ServerPlayer) helper.makeMockServerPlayer(GameType.CREATIVE);
+            final ServerPlayer operator = GameTestPlayers.withGameMode(helper, GameType.CREATIVE);
             final CapturingCommandSource verboseMessages = new CapturingCommandSource();
             helper.assertTrue(executeCommand(
                             helper,
@@ -381,7 +381,7 @@ public final class SmartResourceDropsGameTests {
                             && verboseMessages.text().contains("No configuration or world data was changed."),
                     "Verbose validation omitted expected bounded details or its read-only statement");
 
-            final ServerPlayer normalPlayer = (ServerPlayer) helper.makeMockServerPlayer(GameType.SURVIVAL);
+            final ServerPlayer normalPlayer = GameTestPlayers.withGameMode(helper, GameType.SURVIVAL);
             helper.assertTrue(commandIsRejected(
                             helper,
                             "smartdrops validate",
@@ -601,7 +601,7 @@ public final class SmartResourceDropsGameTests {
 
     private static List<ItemEntity> dropsNear(final GameTestHelper helper, final BlockPos absolutePos) {
         return helper.getLevel().getEntities(
-                EntityTypes.ITEM,
+                EntityType.ITEM,
                 new AABB(absolutePos).inflate(1.0),
                 ItemEntity::isAlive);
     }

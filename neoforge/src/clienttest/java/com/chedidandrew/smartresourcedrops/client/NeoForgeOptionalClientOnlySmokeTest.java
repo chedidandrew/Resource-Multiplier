@@ -53,8 +53,8 @@ public final class NeoForgeOptionalClientOnlySmokeTest {
                 throw new AssertionError(
                         "Client-only config request did not fail closed with CHANNEL_UNAVAILABLE");
             }
-            minecraft.gui.setScreen(SmartDropsConfigScreens.create(null));
-            if (!(minecraft.gui.screen() instanceof SmartDropsConfigLoadingScreen)) {
+            minecraft.setScreen(SmartDropsConfigScreens.create(null));
+            if (!(minecraft.screen instanceof SmartDropsConfigLoadingScreen)) {
                 throw new AssertionError(
                         "Connected client-only config route fell back to local defaults");
             }
@@ -64,7 +64,7 @@ public final class NeoForgeOptionalClientOnlySmokeTest {
         if (++this.connectedTicks < OBSERVATION_TICKS) {
             return;
         }
-        if (!(minecraft.gui.screen() instanceof SmartDropsConfigLoadingScreen)) {
+        if (!(minecraft.screen instanceof SmartDropsConfigLoadingScreen)) {
             throw new AssertionError("Unavailable-server error route did not remain on the loading bridge");
         }
 

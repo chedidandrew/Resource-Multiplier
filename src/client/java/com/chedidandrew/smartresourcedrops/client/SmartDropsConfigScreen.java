@@ -271,33 +271,33 @@ public final class SmartDropsConfigScreen extends Screen {
         final int secondRow = y + buttonHeight + 2;
         this.addRenderableWidget(Button.builder(
                         Component.translatable("smart_resource_drops.gui.root_block_categories"),
-                        button -> this.minecraft.gui.setScreen(new RuleListScreen(
+                        button -> this.minecraft.setScreen(new RuleListScreen(
                                 this, this.session, RuleListScreen.Kind.CATEGORY)))
                 .bounds(left, y, columnWidth, buttonHeight).build());
         this.addRenderableWidget(Button.builder(
                         Component.translatable("smart_resource_drops.gui.block_overrides"),
-                        button -> this.minecraft.gui.setScreen(new BlockOverridesScreen(this, this.session)))
+                        button -> this.minecraft.setScreen(new BlockOverridesScreen(this, this.session)))
                 .bounds(second, y, columnWidth, buttonHeight).build());
         this.addRenderableWidget(Button.builder(
                         Component.translatable("smart_resource_drops.gui.dimensions"),
-                        button -> this.minecraft.gui.setScreen(new RuleListScreen(
+                        button -> this.minecraft.setScreen(new RuleListScreen(
                                 this, this.session, RuleListScreen.Kind.DIMENSION)))
                 .tooltip(Tooltip.create(Component.translatable(
                         "smart_resource_drops.gui.root_dimensions_tooltip")))
                 .bounds(third, y, columnWidth, buttonHeight).build());
         this.addRenderableWidget(Button.builder(
                         Component.translatable("smart_resource_drops.gui.root_block_filters"),
-                        button -> this.minecraft.gui.setScreen(new FilterConfigScreen(this, this.session)))
+                        button -> this.minecraft.setScreen(new FilterConfigScreen(this, this.session)))
                 .bounds(left, secondRow, columnWidth, buttonHeight).build());
         this.addRenderableWidget(Button.builder(
                         Component.translatable("smart_resource_drops.gui.advanced"),
-                        button -> this.minecraft.gui.setScreen(new AdvancedConfigScreen(this, this.session)))
+                        button -> this.minecraft.setScreen(new AdvancedConfigScreen(this, this.session)))
                 .tooltip(Tooltip.create(Component.translatable(
                         "smart_resource_drops.gui.root_advanced_tooltip")))
                 .bounds(second, secondRow, columnWidth, buttonHeight).build());
         this.addRenderableWidget(Button.builder(
                         Component.translatable("smart_resource_drops.gui.entity_drops"),
-                        button -> this.minecraft.gui.setScreen(new EntityDropsScreen(this, this.session)))
+                        button -> this.minecraft.setScreen(new EntityDropsScreen(this, this.session)))
                 .tooltip(Tooltip.create(Component.translatable(
                         "smart_resource_drops.gui.root_entity_drops_tooltip")))
                 .bounds(third, secondRow, columnWidth, buttonHeight).build());
@@ -397,7 +397,7 @@ public final class SmartDropsConfigScreen extends Screen {
         }
         if (this.session.authority() == ConfigScreenOpenPolicy.Authority.LOCAL_DEFAULTS) {
             if (ConfigManager.applyLocalPatch(patch, this.session.revision())) {
-                this.minecraft.gui.setScreen(forLocalDefaults(
+                this.minecraft.setScreen(forLocalDefaults(
                         this.session.originalParent(),
                         ConfigManager.snapshotForClient(),
                         Component.translatable(
@@ -408,7 +408,7 @@ public final class SmartDropsConfigScreen extends Screen {
             }
             return;
         }
-        this.minecraft.gui.setScreen(new SmartDropsConfigLoadingScreen(
+        this.minecraft.setScreen(new SmartDropsConfigLoadingScreen(
                 this,
                 this.session.originalParent(),
                 patch,
@@ -428,19 +428,19 @@ public final class SmartDropsConfigScreen extends Screen {
             this.refreshControlState();
             return;
         }
-        this.minecraft.gui.setScreen(new ResetAllSettingsConfirmScreen(this));
+        this.minecraft.setScreen(new ResetAllSettingsConfirmScreen(this));
     }
 
     /** Shared callback for the Cancel button, Escape, and the destructive confirmation. */
     void handleResetConfirmation(final boolean confirmed) {
         if (!confirmed) {
-            this.minecraft.gui.setScreen(this);
+            this.minecraft.setScreen(this);
             return;
         }
         if (!this.session.editable()) {
             this.session.setStatus(Component.translatable(
                     "smart_resource_drops.gui.reset_no_permission").getString());
-            this.minecraft.gui.setScreen(this);
+            this.minecraft.setScreen(this);
             return;
         }
 
@@ -448,12 +448,12 @@ public final class SmartDropsConfigScreen extends Screen {
             if (this.minecraft.getConnection() != null || this.minecraft.hasSingleplayerServer()) {
                 this.session.setStatus(Component.translatable(
                         "smart_resource_drops.gui.session_changed").getString());
-                this.minecraft.gui.setScreen(this);
+                this.minecraft.setScreen(this);
                 return;
             }
             ClientConfigState.invalidatePendingMutations();
             if (ConfigManager.reset(this.session.revision())) {
-                this.minecraft.gui.setScreen(forLocalDefaults(
+                this.minecraft.setScreen(forLocalDefaults(
                         this.session.originalParent(),
                         ConfigManager.snapshotForClient(),
                         Component.translatable(
@@ -462,7 +462,7 @@ public final class SmartDropsConfigScreen extends Screen {
             } else {
                 this.session.setStatus(Component.translatable(
                         "smart_resource_drops.gui.reset_local_rejected").getString());
-                this.minecraft.gui.setScreen(this);
+                this.minecraft.setScreen(this);
             }
             return;
         }
@@ -470,17 +470,17 @@ public final class SmartDropsConfigScreen extends Screen {
         if (this.minecraft.getConnection() == null) {
             this.session.setStatus(Component.translatable(
                     "smart_resource_drops.gui.not_connected").getString());
-            this.minecraft.gui.setScreen(this);
+            this.minecraft.setScreen(this);
             return;
         }
         if (!this.session.belongsToCurrentConnection(this.minecraft)) {
             this.session.setStatus(Component.translatable(
                     "smart_resource_drops.gui.session_changed").getString());
-            this.minecraft.gui.setScreen(this);
+            this.minecraft.setScreen(this);
             return;
         }
         ClientConfigState.invalidatePendingMutations();
-        this.minecraft.gui.setScreen(SmartDropsConfigLoadingScreen.forReset(
+        this.minecraft.setScreen(SmartDropsConfigLoadingScreen.forReset(
                 this,
                 this.session.originalParent(),
                 this.session.revision()));
@@ -595,7 +595,7 @@ public final class SmartDropsConfigScreen extends Screen {
         if (this.session.authority() == ConfigScreenOpenPolicy.Authority.CONNECTED_SERVER) {
             ClientConfigState.invalidateCachedSnapshot();
         }
-        this.minecraft.gui.setScreen(this.session.originalParent());
+        this.minecraft.setScreen(this.session.originalParent());
     }
 
     @Override

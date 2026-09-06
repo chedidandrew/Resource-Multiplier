@@ -107,7 +107,7 @@ final class ShearingOverridesScreen extends SmartDropsSubScreen {
                             .append(action),
                     tooltipFor(info),
                     standard
-                            ? () -> this.minecraft.gui.setScreen(new ShearingRuleEditScreen(
+                            ? () -> this.minecraft.setScreen(new ShearingRuleEditScreen(
                                     this.root,
                                     this,
                                     this.session,
