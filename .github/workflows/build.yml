@@ -2,7 +2,8 @@ name: Build and verify Minecraft 1.20.1
 
 on:
   push:
-    branches: ['**']
+    # Backport release branches are verified locally from exact tested artifacts.
+    branches: ['main']
   pull_request:
   workflow_dispatch:
 
