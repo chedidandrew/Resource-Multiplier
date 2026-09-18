@@ -12,6 +12,9 @@ import com.chedidandrew.smartresourcedrops.network.ConfigSnapshotPayload;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -335,19 +338,19 @@ public final class NeoForgeMultiplayerClientSmokeTest {
                 minecraft,
                 EntityDropsScreen.class,
                 "Entity Drops root child");
-        rowWithPrimary(onlyList(entityDrops), "Entity Drops").action().run();
+        clickRow(minecraft.gui.screen(), rowWithPrimary(onlyList(entityDrops), "Entity Drops"));
         entityDrops = requireScreen(minecraft, EntityDropsScreen.class, "enabled Entity Drops child");
         if (!root.editorSession().entityDropsEnabled()) {
             throw new AssertionError("Entity Drops row did not stage through the connected screen");
         }
 
-        rowWithPrimary(onlyList(entityDrops), "Entity Overrides").action().run();
+        clickRow(minecraft.gui.screen(), rowWithPrimary(onlyList(entityDrops), "Entity Overrides"));
         final EntityOverridesScreen overrides = requireScreen(
                 minecraft,
                 EntityOverridesScreen.class,
                 "Entity Overrides child");
         onlySearchBox(overrides).setValue("minecraft:cow");
-        rowWithSecondary(onlyList(overrides), "minecraft:cow").action().run();
+        clickRow(minecraft.gui.screen(), rowWithSecondary(onlyList(overrides), "minecraft:cow"));
         final EntityRuleEditScreen cowEditor = requireScreen(
                 minecraft,
                 EntityRuleEditScreen.class,
@@ -363,13 +366,13 @@ public final class NeoForgeMultiplayerClientSmokeTest {
                 "Entity Overrides after Cow edit"), "Back"));
         entityDrops = requireScreen(minecraft, EntityDropsScreen.class, "Entity Drops after override");
 
-        rowWithPrimary(onlyList(entityDrops), "Entity Filters").action().run();
+        clickRow(minecraft.gui.screen(), rowWithPrimary(onlyList(entityDrops), "Entity Filters"));
         final EntityFilterScreen filters = requireScreen(
                 minecraft,
                 EntityFilterScreen.class,
                 "Entity Filters child");
         onlySearchBox(filters).setValue("minecraft:cow");
-        rowWithSecondary(onlyList(filters), "minecraft:cow").action().run();
+        clickRow(minecraft.gui.screen(), rowWithSecondary(onlyList(filters), "minecraft:cow"));
         if (root.editorSession().entityFilterState("minecraft:cow")
                 != ConfigEditorSession.FilterEntryState.BLACKLIST) {
             throw new AssertionError("Cow filter row did not stage the active blacklist state");
@@ -377,18 +380,18 @@ public final class NeoForgeMultiplayerClientSmokeTest {
         press(buttonWithLabel(filters, "Back"));
         entityDrops = requireScreen(minecraft, EntityDropsScreen.class, "Entity Drops after filter");
 
-        rowWithPrimary(onlyList(entityDrops), "Shearing Drops").action().run();
+        clickRow(minecraft.gui.screen(), rowWithPrimary(onlyList(entityDrops), "Shearing Drops"));
         ShearingDropsScreen shearing = requireScreen(
                 minecraft,
                 ShearingDropsScreen.class,
                 "Shearing Drops child");
-        rowWithPrimary(onlyList(shearing), "Manual Shearing").action().run();
+        clickRow(minecraft.gui.screen(), rowWithPrimary(onlyList(shearing), "Manual Shearing"));
         shearing = requireScreen(minecraft, ShearingDropsScreen.class, "updated Shearing Drops child");
         if (root.editorSession().manualShearingDropsEnabled()) {
             throw new AssertionError("Manual Shearing row did not stage OFF");
         }
 
-        rowWithPrimary(onlyList(shearing), "Default Shearing Multiplier").action().run();
+        clickRow(minecraft.gui.screen(), rowWithPrimary(onlyList(shearing), "Default Shearing Multiplier"));
         final ShearingRuleEditScreen defaultShearing = requireScreen(
                 minecraft,
                 ShearingRuleEditScreen.class,
@@ -400,13 +403,13 @@ public final class NeoForgeMultiplayerClientSmokeTest {
         press(buttonWithLabel(defaultShearing, "Back"));
         shearing = requireScreen(minecraft, ShearingDropsScreen.class, "Shearing Drops after default");
 
-        rowWithPrimary(onlyList(shearing), "Shearing Entity Overrides").action().run();
+        clickRow(minecraft.gui.screen(), rowWithPrimary(onlyList(shearing), "Shearing Entity Overrides"));
         final ShearingOverridesScreen shearingOverrides = requireScreen(
                 minecraft,
                 ShearingOverridesScreen.class,
                 "Shearing Entity Overrides child");
         onlySearchBox(shearingOverrides).setValue("minecraft:sheep");
-        rowWithSecondary(onlyList(shearingOverrides), "minecraft:sheep").action().run();
+        clickRow(minecraft.gui.screen(), rowWithSecondary(onlyList(shearingOverrides), "minecraft:sheep"));
         final ShearingRuleEditScreen sheepEditor = requireScreen(
                 minecraft,
                 ShearingRuleEditScreen.class,
@@ -439,6 +442,24 @@ public final class NeoForgeMultiplayerClientSmokeTest {
         if (!ClientCommandHandler.runCommand("smartdropsgui")) {
             throw new AssertionError("NeoForge did not register the production /smartdropsgui command");
         }
+    }
+
+    private static void clickRow(final Screen screen, final StructuredConfigList.Row row) {
+        final StructuredConfigList list = onlyList(screen);
+        final int index = java.util.stream.IntStream.range(0, list.rowCount())
+                .filter(i -> list.rows().get(i).primary().equals(row.primary())
+                        && java.util.Objects.equals(list.rows().get(i).secondary(), row.secondary()))
+                .findFirst().orElse(-1);
+        if (index < 0) throw new AssertionError("Clicked row must belong to the current screen");
+        list.setScrollAmount(list.scrollAmount() + list.getRowTop(index) - list.getY());
+        final double x = list.getRowLeft() + list.getRowWidth() / 2.0;
+        final double y = (list.getRowTop(index) + list.getRowBottom(index)) / 2.0;
+        final MouseButtonEvent click = new MouseButtonEvent(x, y,
+                new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, 0));
+        if (!screen.mouseClicked(click, false)) {
+            throw new AssertionError("Screen rejected left click on " + row.primary().getString());
+        }
+        screen.mouseReleased(click);
     }
 
     private static StructuredConfigList onlyList(final Screen screen) {

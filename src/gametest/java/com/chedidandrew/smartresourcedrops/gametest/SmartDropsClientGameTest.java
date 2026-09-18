@@ -44,6 +44,8 @@ import net.minecraft.client.gui.screens.inventory.tooltip.MenuTooltipPositioner;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import org.joml.Vector2ic;
@@ -574,7 +576,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 .orElseThrow(() -> new AssertionError("Categories omitted Logs / Wood"));
         final Screen categoryList = child;
         context.runOnClient(client -> onlySearchBox(categoryList).setValue("logs"));
-        context.runOnClient(client -> logsRow.action().run());
+        context.runOnClient(client -> clickRow(client.gui.screen(), logsRow));
         Screen editor = waitForSimpleScreen(context, "RuleEditScreen", "Logs / Wood");
         takeRequiredScreenshot(context, "smart-drops-category-editor");
         context.clickScreenButton("View Blocks in Category");
@@ -631,7 +633,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 .filter(row -> "minecraft:diamond_ore".equals(row.secondary().getString()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Diamond Ore row disappeared"));
-        context.runOnClient(client -> diamondRow.action().run());
+        context.runOnClient(client -> clickRow(client.gui.screen(), diamondRow));
         editor = waitForSimpleScreen(context, "RuleEditScreen", "Diamond Ore");
         takeRequiredScreenshot(context, "smart-drops-block-editor-diamond-ore");
         context.clickScreenButton(BACK_KEY);
@@ -675,7 +677,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 ? ConfigEditorSession.FilterEntryState.BLACKLIST
                 : ConfigEditorSession.FilterEntryState.WHITELIST;
         final StructuredConfigList.Row addFilterRow = filterRow;
-        context.runOnClient(client -> addFilterRow.action().run());
+        context.runOnClient(client -> clickRow(client.gui.screen(), addFilterRow));
         require(session.filterState(unconfiguredFilterId) == activeFilter && session.isDirty(),
                 "Filter row did not stage the active filter mode");
         filterRow = onlyList(filters).rows().stream()
@@ -683,7 +685,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Staged filter row disappeared"));
         final StructuredConfigList.Row removeFilterRow = filterRow;
-        context.runOnClient(client -> removeFilterRow.action().run());
+        context.runOnClient(client -> clickRow(client.gui.screen(), removeFilterRow));
         require(session.filterState(unconfiguredFilterId) == ConfigEditorSession.FilterEntryState.NONE
                         && !session.isDirty(),
                 "Removing the staged filter did not restore a clean session");
@@ -696,7 +698,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         assertBoundedChild(child, 16);
         takeRequiredScreenshot(context, "smart-drops-advanced");
         final StructuredConfigList.Row presetRow = advanced.rows().get(8);
-        context.runOnClient(client -> presetRow.action().run());
+        context.runOnClient(client -> clickRow(client.gui.screen(), presetRow));
         final Screen preview = waitForSimpleScreen(
                 context,
                 "PresetPreviewScreen",
@@ -722,7 +724,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         takeRequiredScreenshot(context, "smart-drops-entity-drops");
 
         final Integer originalEntityCategory = session.entityCategoryMultiplier(EntityCategory.PASSIVE);
-        context.runOnClient(client -> rowWithPrimary(entityDrops, "Entity Categories").action().run());
+        context.runOnClient(client -> clickRow(client.gui.screen(), rowWithPrimary(entityDrops, "Entity Categories")));
         final Screen entityCategories = waitForSimpleScreen(
                 context, "EntityCategoryScreen", "Entity Categories");
         final StructuredConfigList entityCategoryList = onlyList(entityCategories);
@@ -738,9 +740,9 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         context.clickScreenButton(BACK_KEY);
         waitForSimpleScreen(context, "EntityDropsScreen", "Entity and Mob Drops");
 
-        context.runOnClient(client -> rowWithPrimary(
+        context.runOnClient(client -> clickRow(client.gui.screen(), rowWithPrimary(
                 onlyList(client.gui.screen()),
-                "Entity Overrides").action().run());
+                "Entity Overrides")));
         final Screen entityOverrides = waitForSimpleScreen(
                 context, "EntityOverridesScreen", "Entity Overrides");
         final Integer originalCow = session.entityMultiplier("minecraft:cow");
@@ -754,9 +756,9 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         context.clickScreenButton(BACK_KEY);
         waitForSimpleScreen(context, "EntityDropsScreen", "Entity and Mob Drops");
 
-        context.runOnClient(client -> rowWithPrimary(
+        context.runOnClient(client -> clickRow(client.gui.screen(), rowWithPrimary(
                 onlyList(client.gui.screen()),
-                "Entity Filters").action().run());
+                "Entity Filters")));
         waitForSimpleScreen(context, "EntityFilterScreen", "Entity Filters");
         final ConfigEditorSession.FilterEntryState originalCowFilter =
                 session.entityFilterState("minecraft:cow");
@@ -777,9 +779,9 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
             require(session.setEntityDropsEnabled(false),
                     "Could not disable death loot before testing the independent Shearing route");
         }
-        context.runOnClient(client -> rowWithPrimary(
+        context.runOnClient(client -> clickRow(client.gui.screen(), rowWithPrimary(
                 onlyList(client.gui.screen()),
-                SHEARING_DROPS_KEY).action().run());
+                SHEARING_DROPS_KEY)));
         final Screen shearingDrops = waitForSimpleScreen(
                 context,
                 "ShearingDropsScreen",
@@ -799,9 +801,9 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                             .rightDetail().getString().contains("Inherit -> "),
                     "Inherited shearing default did not display its effective Global value");
         }
-        context.runOnClient(client -> rowWithPrimary(
+        context.runOnClient(client -> clickRow(client.gui.screen(), rowWithPrimary(
                 onlyList(client.gui.screen()),
-                "Default Shearing Multiplier").action().run());
+                "Default Shearing Multiplier")));
         waitForSimpleScreen(
                 context,
                 "ShearingRuleEditScreen",
@@ -816,20 +818,20 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         require(session.setDefaultShearingMultiplier(configuredShearingDefault),
                 "Default Shearing multiplier could not be restored after Back");
         final boolean originalManualShearing = session.manualShearingDropsEnabled();
-        context.runOnClient(client -> rowWithPrimary(
+        context.runOnClient(client -> clickRow(client.gui.screen(), rowWithPrimary(
                 onlyList(client.gui.screen()),
-                "Manual Shearing").action().run());
+                "Manual Shearing")));
         require(session.manualShearingDropsEnabled() != originalManualShearing,
                 "Manual Shearing row did not stage through the shared editor session");
-        context.runOnClient(client -> rowWithPrimary(
+        context.runOnClient(client -> clickRow(client.gui.screen(), rowWithPrimary(
                 onlyList(client.gui.screen()),
-                "Manual Shearing").action().run());
+                "Manual Shearing")));
         require(session.manualShearingDropsEnabled() == originalManualShearing,
                 "Manual Shearing row could not restore its original staged value");
 
-        context.runOnClient(client -> rowWithPrimary(
+        context.runOnClient(client -> clickRow(client.gui.screen(), rowWithPrimary(
                 onlyList(client.gui.screen()),
-                SHEARING_OVERRIDES_KEY).action().run());
+                SHEARING_OVERRIDES_KEY)));
         final Screen shearingOverrides = waitForSimpleScreen(
                 context,
                 "ShearingOverridesScreen",
@@ -857,7 +859,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 "Staged Sheep shearing rule did not become effective");
         require(session.setShearingEntityMultiplier("minecraft:sheep", originalSheep),
                 "Certified Sheep override could not be restored");
-        context.runOnClient(client -> sheepRow.action().run());
+        context.runOnClient(client -> clickRow(client.gui.screen(), sheepRow));
         waitForSimpleScreen(context, "ShearingRuleEditScreen", "Sheep");
         context.clickScreenButton(BACK_KEY);
         waitForSimpleScreen(context, "ShearingOverridesScreen", SHEARING_OVERRIDES_KEY);
@@ -872,7 +874,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                         == ShearingClassification.SPECIAL,
                 "Mooshroom was not fixed behind special shearing safety");
         final Screen beforeSpecialAction = restoredShearingOverrides;
-        context.runOnClient(client -> mooshroomRow.action().run());
+        context.runOnClient(client -> clickRow(client.gui.screen(), mooshroomRow));
         require(context.computeOnClient(client -> client.gui.screen()) == beforeSpecialAction,
                 "Special Mooshroom unexpectedly opened an editable multiplier screen");
         require(!session.setShearingEntityMultiplier("minecraft:mooshroom", 4)
@@ -913,7 +915,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 .filter(row -> Category.ORES.key().equals(row.tooltip().getString()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Categories omitted Ores"));
-        context.runOnClient(client -> oresRow.action().run());
+        context.runOnClient(client -> clickRow(client.gui.screen(), oresRow));
         final Screen categoryEditor = waitForSimpleScreen(context, "RuleEditScreen", "Ores");
         assertUnsavedChangesIndicator(categoryEditor, false,
                 "A clean focused category editor showed unsaved changes");
@@ -1035,7 +1037,7 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         context.runOnClient(client -> assertAdvancedTooltips(client, advanced, true));
         final SmartDropsConfig beforeAdvancedActions = session.workingSnapshot();
         context.runOnClient(client -> advanced.rows().subList(0, 8)
-                .forEach(row -> row.action().run()));
+                .forEach(row -> clickRow(client.gui.screen(), row)));
         require(sameConfiguration(beforeAdvancedActions, session.workingSnapshot())
                         && !session.isDirty(),
                 "Read-only Advanced rows accepted a staged mutation");
@@ -1047,24 +1049,24 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 "EntityDropsScreen",
                 "Entity and Mob Drops");
         final boolean entityDropsEnabled = session.entityDropsEnabled();
-        context.runOnClient(client -> onlyList(entityDrops).rows().getFirst().action().run());
+        context.runOnClient(client -> clickRow(client.gui.screen(), onlyList(entityDrops).rows().getFirst()));
         require(session.entityDropsEnabled() == entityDropsEnabled && !session.isDirty(),
                 "Read-only Entity and Mob Drops screen accepted a staged mutation");
-        context.runOnClient(client -> rowWithPrimary(
+        context.runOnClient(client -> clickRow(client.gui.screen(), rowWithPrimary(
                 onlyList(client.gui.screen()),
-                SHEARING_DROPS_KEY).action().run());
+                SHEARING_DROPS_KEY)));
         final Screen shearing = waitForSimpleScreen(
                 context,
                 "ShearingDropsScreen",
                 SHEARING_DROPS_KEY);
         final boolean manualShearing = session.manualShearingDropsEnabled();
         final boolean automatedShearing = session.automatedShearingDropsEnabled();
-        context.runOnClient(client -> rowWithPrimary(
+        context.runOnClient(client -> clickRow(client.gui.screen(), rowWithPrimary(
                 onlyList(shearing),
-                "Manual Shearing").action().run());
-        context.runOnClient(client -> rowWithPrimary(
+                "Manual Shearing")));
+        context.runOnClient(client -> clickRow(client.gui.screen(), rowWithPrimary(
                 onlyList(shearing),
-                "Automated Shearing").action().run());
+                "Automated Shearing")));
         require(session.manualShearingDropsEnabled() == manualShearing
                         && session.automatedShearingDropsEnabled() == automatedShearing
                         && !session.setDefaultShearingMultiplier(4)
@@ -1762,6 +1764,22 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
                 "Compact unsaved-changes indicator overlapped child content");
         require(layout.y() + layout.height() <= back.getY(),
                 "Compact unsaved-changes indicator overlapped Back");
+    }
+
+    private static void clickRow(final Screen screen, final StructuredConfigList.Row row) {
+        final StructuredConfigList list = onlyList(screen);
+        final int index = java.util.stream.IntStream.range(0, list.rowCount())
+                .filter(i -> list.rows().get(i).primary().equals(row.primary())
+                        && java.util.Objects.equals(list.rows().get(i).secondary(), row.secondary()))
+                .findFirst().orElse(-1);
+        require(index >= 0, "Clicked row must belong to the current screen");
+        list.setScrollAmount(list.scrollAmount() + list.getRowTop(index) - list.getY());
+        final double x = list.getRowLeft() + list.getRowWidth() / 2.0;
+        final double y = (list.getRowTop(index) + list.getRowBottom(index)) / 2.0;
+        final MouseButtonEvent click = new MouseButtonEvent(x, y,
+                new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, 0));
+        require(screen.mouseClicked(click, false), "Screen rejected left click on " + row.primary().getString());
+        screen.mouseReleased(click);
     }
 
     private static StructuredConfigList onlyList(final Screen screen) {

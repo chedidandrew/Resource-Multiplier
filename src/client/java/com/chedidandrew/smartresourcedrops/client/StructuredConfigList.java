@@ -1,5 +1,7 @@
 package com.chedidandrew.smartresourcedrops.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -209,7 +211,7 @@ public final class StructuredConfigList extends ObjectSelectionList<StructuredCo
 
         @Override
         public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
-            if (event.button() != 0) {
+            if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) {
                 return false;
             }
             activate();

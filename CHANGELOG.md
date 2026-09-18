@@ -5,6 +5,7 @@ All notable changes are documented here.
 ## 1.4.0-beta.1 - Minecraft 26.3 port - 2026-09-18
 
 - Target Minecraft 26.3 for Fabric and NeoForge with Java 25 and Gradle 9.6.0.
+- Fix unresponsive configuration list clicks by using Minecraft 26.3's named left-button constant. Exercise Fabric and NeoForge rows through screen mouse dispatch instead of directly invoking actions.
 - Use Fabric Loader 0.19.5, Fabric API 0.160.7+26.3, Loom 1.17.21, optional Mod Menu 21.0.0-beta.1, NeoForge 26.3.0.4-beta, and ModDevGradle 2.0.147.
 - Retarget falling-block landing protection to Minecraft's `setBlockAndUpdate` call. Keep all multiplier rules, configuration fields/defaults, commands, payloads, and remaining gameplay hooks unchanged.
 - Add a real falling-sand regression proving protected provenance transfers to the landed block while natural sand stays unmarked.
