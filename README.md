@@ -24,9 +24,9 @@
 </p>
 
 > [!IMPORTANT]
-> **Current stable release:** Smart Resource Multiplier `1.3.0` for Minecraft Java Edition 26.2, available as separate Fabric and NeoForge files with the same gameplay, configuration schema, commands, and GUI.
+> **Current stable release:** Smart Resource Multiplier `1.4.0` for Minecraft Java Edition 26.3, available as separate Fabric and NeoForge files with the same gameplay, configuration schema, commands, and GUI.
 
-> **Minecraft 26.3 source:** `1.4.0-beta.1` ports both loaders while preserving the 1.3.0 gameplay and configuration. Maintainer testing is complete on both loaders, including confirmation of the corrected submenu clicks (September 18, 2026). This beta is not a storefront release. See [26.3 validation and build instructions](docs/releases/1.4.0-beta.1.md).
+> **Minecraft 26.3 release:** `1.4.0` ports both loaders while preserving the 1.3.0 gameplay and configuration. Maintainer testing is complete on both loaders, including confirmation of the corrected submenu clicks (September 18, 2026). The tested builds are marked stable and ready for storefront upload. See [26.3 validation and build instructions](docs/releases/1.4.0.md).
 
 > [!NOTE]
 > Fabric and NeoForge store placed-block provenance in loader-specific chunk-data envelopes. Migration from Fabric to NeoForge is supported and validated, but it is intentionally one-way; back up a world before changing loaders and do not repeatedly switch the same world between them.

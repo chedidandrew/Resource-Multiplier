@@ -2,7 +2,7 @@
 
 ## Minecraft 26.3 port
 
-Current source is `1.4.0-beta.1`, with release publication locked. Run the same dual-loader commands below against the current 26.3 dependencies; prior release counts and hashes remain historical. The new falling-block GameTest exercises real sand landing for protected and natural origins. Current measured results are in [the 26.3 record](releases/1.4.0-beta.1.md).
+Current source is `1.4.0`, marked stable with `release_ready=true` after completed maintainer testing. Run the same dual-loader commands below against the current 26.3 dependencies; prior release counts and hashes remain historical. The new falling-block GameTest exercises real sand landing for protected and natural origins. Current measured results are in [the 26.3 record](releases/1.4.0.md).
 
 ## 1.3.0 stable Fabric and NeoForge release
 

@@ -1,12 +1,12 @@
 # Build status
 
-## Current source: Minecraft 26.3, 1.4.0-beta.1
+## Current stable build: Minecraft 26.3, 1.4.0
 
 The current Fabric and NeoForge source targets Minecraft 26.3. Production Java changes retarget the falling-block landing call and update structured menu rows to Minecraft 26.3's named left-mouse-button constant. Configuration schema 3, defaults, multiplier rules, commands, networking, and intended GUI behavior are preserved.
 
 On September 18, 2026, the maintainer confirmed the corrected menus work on both Fabric and NeoForge and declared manual testing complete. Automated screen-click regressions also pass for both loaders.
 
-The beta uses Java 25, Gradle 9.6.0, Fabric Loader 0.19.5/API 0.160.7+26.3/Loom 1.17.21, optional Mod Menu 21.0.0-beta.1, and NeoForge 26.3.0.4-beta/ModDevGradle 2.0.147. `release_ready=false` prevents automatic release publication. See [the 26.3 record](docs/releases/1.4.0-beta.1.md) for current test results and artifact hashes. The 1.3.0 evidence below is historical and applies only to Minecraft 26.2.
+The release uses Java 25, Gradle 9.6.0, Fabric Loader 0.19.5/API 0.160.7+26.3/Loom 1.17.21, optional Mod Menu 21.0.0-beta.1, and NeoForge 26.3.0.4-beta/ModDevGradle 2.0.147. `release_ready=true` marks this build ready for release. Tagged GitHub publication is a separate step. See [the 26.3 record](docs/releases/1.4.0.md) for current test results and artifact hashes. The 1.3.0 evidence below is historical and applies only to Minecraft 26.2.
 
 ## Previous stable release: Smart Resource Multiplier 1.3.0
 

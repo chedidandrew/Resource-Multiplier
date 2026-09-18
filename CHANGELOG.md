@@ -2,7 +2,7 @@
 
 All notable changes are documented here.
 
-## 1.4.0-beta.1 - Minecraft 26.3 port - 2026-09-18
+## 1.4.0 - Minecraft 26.3 port - 2026-09-18
 
 - Target Minecraft 26.3 for Fabric and NeoForge with Java 25 and Gradle 9.6.0.
 - Fix unresponsive configuration list clicks by using Minecraft 26.3's named left-button constant. Exercise Fabric and NeoForge rows through screen mouse dispatch instead of directly invoking actions.
@@ -11,7 +11,7 @@ All notable changes are documented here.
 - Add a real falling-sand regression proving protected provenance transfers to the landed block while natural sand stays unmarked.
 - Migrate development-only loot fixtures, damage cooldown, narration, and GameTest registration to 26.3 APIs without lowering existing expected loot counts.
 - Make the dedicated test servers' whitelist setting explicit so physical client/server validation can connect on 26.3. Production server settings are not modified.
-- Keep `release_ready=false`; this commit updates GitHub source and build artifacts without publishing a storefront release. See `docs/releases/1.4.0-beta.1.md` for measured validation and compatibility limits.
+- Promote the tested dual-loader build to stable `1.4.0` with `release_ready=true`, ready for storefront upload. See `docs/releases/1.4.0.md` for measured validation and compatibility limits.
 
 - Maintainer confirmed the corrected menus work on Fabric and NeoForge and completed manual testing on September 18, 2026.
 

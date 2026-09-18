@@ -379,7 +379,7 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
-    "mod_version": "1.4.0-beta.1",
+    "mod_version": "1.4.0",
     "minecraft_version": "26.3",
     "loader_version": "0.19.5",
     "loom_version": "1.17.21",
@@ -390,8 +390,8 @@ expected_properties = {
 for key, expected in expected_properties.items():
     if properties.get(key) != expected:
         fail(f"gradle.properties {key} must be {expected!r}, found {properties.get(key)!r}")
-if properties.get("release_ready") != "false":
-    fail("The Minecraft 26.3 beta source must keep release_ready=false")
+if properties.get("release_ready") != "true":
+    fail("The Minecraft 26.3 stable release must set release_ready=true")
 
 neoforge_properties: dict[str, str] = {}
 for raw_line in (ROOT / "neoforge/gradle.properties").read_text(encoding="utf-8").splitlines():
