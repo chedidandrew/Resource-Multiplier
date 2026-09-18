@@ -13,6 +13,8 @@ All notable changes are documented here.
 - Make the dedicated test servers' whitelist setting explicit so physical client/server validation can connect on 26.3. Production server settings are not modified.
 - Keep `release_ready=false`; this commit updates GitHub source and build artifacts without publishing a storefront release. See `docs/releases/1.4.0-beta.1.md` for measured validation and compatibility limits.
 
+- Maintainer confirmed the corrected menus work on Fabric and NeoForge and completed manual testing on September 18, 2026.
+
 ## Unreleased
 
 ## 1.3.0 - 2026-09-01
