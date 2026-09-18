@@ -107,12 +107,12 @@ def write_minimum_release_entries(
         },
         "mixins": ["smart_resource_drops.mixins.json"],
         "depends": {
-            "fabricloader": ">=0.19.3",
-            "minecraft": "~26.2",
+            "fabricloader": ">=0.19.5",
+            "minecraft": "~26.3",
             "java": ">=25",
-            "fabric-api": ">=0.158.0+26.2",
+            "fabric-api": ">=0.160.7+26.3",
         },
-        "suggests": {"modmenu": ">=20.0.0"},
+        "suggests": {"modmenu": ">=21.0.0-beta.1"},
     }
     if metadata_overrides is not None:
         metadata.update(metadata_overrides)

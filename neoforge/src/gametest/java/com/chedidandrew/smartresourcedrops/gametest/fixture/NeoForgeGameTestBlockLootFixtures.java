@@ -4,6 +4,8 @@ import com.chedidandrew.smartresourcedrops.SmartResourceDrops;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import java.util.Optional;
+import net.minecraft.core.Holder;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
@@ -34,7 +36,7 @@ public final class NeoForgeGameTestBlockLootFixtures {
                         .apply(instance, PathologicalBlockLootModifier::new));
 
         public PathologicalBlockLootModifier(
-                final LootItemCondition[] conditions,
+                final Optional<Holder<LootItemCondition>> conditions,
                 final int priority
         ) {
             super(conditions, priority);

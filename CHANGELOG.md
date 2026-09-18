@@ -2,6 +2,16 @@
 
 All notable changes are documented here.
 
+## 1.4.0-beta.1 - Minecraft 26.3 port - 2026-09-18
+
+- Target Minecraft 26.3 for Fabric and NeoForge with Java 25 and Gradle 9.6.0.
+- Use Fabric Loader 0.19.5, Fabric API 0.160.7+26.3, Loom 1.17.21, optional Mod Menu 21.0.0-beta.1, NeoForge 26.3.0.4-beta, and ModDevGradle 2.0.147.
+- Retarget falling-block landing protection to Minecraft's `setBlockAndUpdate` call. Keep all multiplier rules, configuration fields/defaults, commands, payloads, and remaining gameplay hooks unchanged.
+- Add a real falling-sand regression proving protected provenance transfers to the landed block while natural sand stays unmarked.
+- Migrate development-only loot fixtures, damage cooldown, narration, and GameTest registration to 26.3 APIs without lowering existing expected loot counts.
+- Make the dedicated test servers' whitelist setting explicit so physical client/server validation can connect on 26.3. Production server settings are not modified.
+- Keep `release_ready=false`; this commit updates GitHub source and build artifacts without publishing a storefront release. See `docs/releases/1.4.0-beta.1.md` for measured validation and compatibility limits.
+
 ## Unreleased
 
 ## 1.3.0 - 2026-09-01

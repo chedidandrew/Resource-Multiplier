@@ -379,19 +379,19 @@ for raw_line in (ROOT / "gradle.properties").read_text(encoding="utf-8").splitli
         properties[key.strip()] = value.strip()
 
 expected_properties = {
-    "mod_version": "1.3.0",
-    "minecraft_version": "26.2",
-    "loader_version": "0.19.3",
-    "loom_version": "1.17.20",
-    "fabric_version": "0.158.0+26.2",
+    "mod_version": "1.4.0-beta.1",
+    "minecraft_version": "26.3",
+    "loader_version": "0.19.5",
+    "loom_version": "1.17.21",
+    "fabric_version": "0.160.7+26.3",
     "maven_group": "com.chedidandrew",
     "archives_base_name": "smart-resource-multiplier",
 }
 for key, expected in expected_properties.items():
     if properties.get(key) != expected:
         fail(f"gradle.properties {key} must be {expected!r}, found {properties.get(key)!r}")
-if properties.get("release_ready") != "true":
-    fail("The stable Smart Resource Multiplier 1.3.0 source must keep release_ready=true")
+if properties.get("release_ready") != "false":
+    fail("The Minecraft 26.3 beta source must keep release_ready=false")
 
 neoforge_properties: dict[str, str] = {}
 for raw_line in (ROOT / "neoforge/gradle.properties").read_text(encoding="utf-8").splitlines():
@@ -405,9 +405,9 @@ if neoforge_properties.get("mod_version") != properties["mod_version"]:
         f"{properties['mod_version']!r} and {neoforge_properties.get('mod_version')!r}"
     )
 expected_neoforge_properties = {
-    "minecraft_version": "26.2",
-    "neo_version": "26.2.0.72",
-    "moddev_version": "2.0.144",
+    "minecraft_version": "26.3",
+    "neo_version": "26.3.0.4-beta",
+    "moddev_version": "2.0.147",
     "mod_id": "smart_resource_drops",
     "mod_name": "Smart Resource Multiplier",
     "archives_base_name": "smart-resource-multiplier-neoforge",

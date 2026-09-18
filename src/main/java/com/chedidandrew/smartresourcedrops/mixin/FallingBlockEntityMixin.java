@@ -55,14 +55,13 @@ abstract class FallingBlockEntityMixin implements ProtectedFallingBlock {
             method = "tick",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/Level;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
+                    target = "Lnet/minecraft/world/level/Level;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
     private boolean smartResourceDrops$trackLanding(
             Level level,
             BlockPos pos,
-            BlockState state,
-            int updateFlags
+            BlockState state
     ) {
-        boolean placed = level.setBlock(pos, state, updateFlags);
+        boolean placed = level.setBlockAndUpdate(pos, state);
         if (placed && smartResourceDrops$protectedOrigin && level instanceof ServerLevel serverLevel) {
             PlacementTracker.mark(serverLevel, pos);
             smartResourceDrops$protectedOrigin = false;

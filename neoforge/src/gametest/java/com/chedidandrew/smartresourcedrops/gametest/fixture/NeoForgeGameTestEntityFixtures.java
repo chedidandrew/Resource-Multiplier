@@ -9,6 +9,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import java.util.Optional;
+import net.minecraft.core.Holder;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.loot.LootContext;
@@ -16,7 +18,7 @@ import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.LootItemFunction;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
-import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
+import net.minecraft.world.level.storage.loot.providers.number.ints.ConstantValue;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
@@ -58,7 +60,7 @@ public final class NeoForgeGameTestEntityFixtures {
         }
         event.getTable().addPool(LootPool.lootPool()
                 .name("smart_resource_drops_gametest_exception_trigger")
-                .setRolls(ConstantValue.exactly(1.0F))
+                .setRolls(Holder.direct(new ConstantValue(1)))
                 .add(LootItem.lootTableItem(Items.STONE))
                 .apply(() -> ExceptionTrigger.INSTANCE)
                 .build());
@@ -70,7 +72,7 @@ public final class NeoForgeGameTestEntityFixtures {
                         .apply(instance, FinalLootModifier::new));
 
         public FinalLootModifier(
-                final LootItemCondition[] conditions,
+                final Optional<Holder<LootItemCondition>> conditions,
                 final int priority
         ) {
             super(conditions, priority);

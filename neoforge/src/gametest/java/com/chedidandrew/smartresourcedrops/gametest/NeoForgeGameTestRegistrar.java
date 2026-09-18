@@ -25,7 +25,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
-/** Registers the loader-neutral Fabric GameTest bodies with NeoForge's 26.2 registry API. */
+/** Registers the loader-neutral Fabric GameTest bodies with NeoForge's 26.3 registry API. */
 @EventBusSubscriber(modid = SmartResourceDrops.MOD_ID)
 public final class NeoForgeGameTestRegistrar {
     private static final String TEST_NAMESPACE = "smart_resource_drops_gametest";
@@ -57,7 +57,7 @@ public final class NeoForgeGameTestRegistrar {
             final ResourceKey<Consumer<GameTestHelper>> functionKey =
                     ResourceKey.create(Registries.TEST_FUNCTION, spec.id());
             final TestData<Holder<TestEnvironmentDefinition<?>>> data = new TestData<>(
-                    environment, EMPTY_STRUCTURE, 20, 0, true, Rotation.NONE,
+                    environment, net.minecraft.world.level.Level.OVERWORLD, EMPTY_STRUCTURE, 20, 0, true, Rotation.NONE,
                     false, 1, 1, false, spec.padding());
             event.registerTest(spec.id(), new FunctionGameTestInstance(functionKey, data));
         }

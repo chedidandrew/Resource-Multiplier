@@ -83,6 +83,7 @@ def prepareMultiplayerServerTest = tasks.register('prepareMultiplayerServerTest'
         new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
         new File(directory, 'server.properties').setText('''\
 online-mode=false
+white-list=false
 server-port=25578
 level-name=multiplayer-smoke-world
 gamemode=creative
@@ -114,6 +115,7 @@ def prepareOptionalClientOnlyServerTest = tasks.register('prepareOptionalClientO
         new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
         new File(directory, 'server.properties').setText('''\
 online-mode=false
+white-list=false
 server-port=25580
 level-name=optional-client-only-world
 gamemode=creative
@@ -143,6 +145,7 @@ def prepareOptionalServerOnlyServerTest = tasks.register('prepareOptionalServerO
         new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
         new File(directory, 'server.properties').setText('''\
 online-mode=false
+white-list=false
 server-port=25581
 level-name=optional-server-only-world
 gamemode=creative
@@ -172,6 +175,7 @@ def prepareOversizedWireServerTest = tasks.register('prepareOversizedWireServerT
         new File(directory, 'eula.txt').setText('eula=true\n', 'UTF-8')
         new File(directory, 'server.properties').setText('''\
 online-mode=false
+white-list=false
 server-port=25579
 level-name=oversized-wire-smoke-world
 gamemode=creative
@@ -217,6 +221,7 @@ def prepareMigrationServerTest = tasks.register('prepareMigrationServerTest') {
                 testRoot.resolve('server.properties'),
                 '''\
 online-mode=false
+white-list=false
 server-port=0
 level-name=migration-smoke-world
 gamemode=creative

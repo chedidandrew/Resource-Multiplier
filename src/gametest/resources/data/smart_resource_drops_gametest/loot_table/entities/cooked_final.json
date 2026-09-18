@@ -7,16 +7,18 @@
         {
           "type": "minecraft:item",
           "name": "minecraft:beef",
-          "functions": [
+          "modifier": [
             {
-              "function": "minecraft:furnace_smelt",
-              "conditions": [
-                {
-                  "condition": "minecraft:entity_properties",
-                  "entity": "this",
-                  "predicate": {"minecraft:flags": {"is_on_fire": true}}
+              "type": "minecraft:furnace_smelt",
+              "condition": {
+                "type": "minecraft:entity_properties",
+                "entity": "this",
+                "predicate": {
+                  "minecraft:flags": {
+                    "is_on_fire": true
+                  }
                 }
-              ]
+              }
             }
           ]
         }

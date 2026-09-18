@@ -223,7 +223,8 @@ public final class SmartResourceDropsEntityGameTests {
                             helper.getLevel().damageSources().playerAttack(player),
                             1.0F),
                     "Could not establish player credit before untamed-wolf damage");
-            playerCreditedAfterUntamedWolf.invulnerableTime = 0;
+            // 26.3 separates damage cooldown from general entity invulnerability.
+            playerCreditedAfterUntamedWolf.damageCooldownTime = 0;
             final Wolf untamedWolf = helper.spawnWithNoFreeWill(
                     EntityTypes.WOLF,
                     new BlockPos(25, 2, 2));

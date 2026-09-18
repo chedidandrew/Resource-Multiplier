@@ -1,5 +1,9 @@
 # Smart Resource Multiplier testing and verification
 
+## Minecraft 26.3 port
+
+Current source is `1.4.0-beta.1`, with release publication locked. Run the same dual-loader commands below against the current 26.3 dependencies; prior release counts and hashes remain historical. The new falling-block GameTest exercises real sand landing for protected and natural origins. Current measured results are in [the 26.3 record](releases/1.4.0-beta.1.md).
+
 ## 1.3.0 stable Fabric and NeoForge release
 
 The stable `1.3.0` source provides separate Fabric and NeoForge 26.2 artifacts with `release_ready=true`. The loaders share the production gameplay, schema 3 configuration, commands, payload policy, and GUI, with thin loader-specific entrypoints, networking, and provenance-storage adapters.

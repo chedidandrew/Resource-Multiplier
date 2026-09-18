@@ -140,7 +140,7 @@ public final class GameTestEntityFixtures {
         if (nestedOuter && nestedTarget != null) {
             final LivingEntity target = nestedTarget;
             nestedTarget = null;
-            final DamageSource source = context.getOptionalParameter(LootContextParams.DAMAGE_SOURCE);
+            final DamageSource source = context.getOptional(LootContextParams.DAMAGE_SOURCE);
             if (source != null) {
                 target.hurtServer(context.getLevel(), source, Float.MAX_VALUE);
             }

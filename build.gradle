@@ -126,9 +126,9 @@ tasks.named('test', Test) {
 }
 
 tasks.named('wrapper', Wrapper) {
-    gradleVersion = '9.5.1'
+    gradleVersion = '9.6.0'
     distributionType = Wrapper.DistributionType.BIN
-    distributionSha256Sum = 'bafc141b619ad6350fd975fc903156dd5c151998cc8b058e8c1044ab5f7b031f'
+    distributionSha256Sum = 'bbaeb2fef8710818cf0e261201dab964c572f92b942812df0c3620d62a529a01'
 }
 
 java {

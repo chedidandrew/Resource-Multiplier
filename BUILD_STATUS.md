@@ -1,6 +1,12 @@
 # Build status
 
-## Smart Resource Multiplier 1.3.0 dual-loader release
+## Current source: Minecraft 26.3, 1.4.0-beta.1
+
+The current Fabric and NeoForge source targets Minecraft 26.3. The only production Java change retargets the falling-block landing call so existing placed-block anti-duplication protection continues to work. Configuration schema 3, defaults, multiplier rules, commands, networking, and GUI are unchanged.
+
+The beta uses Java 25, Gradle 9.6.0, Fabric Loader 0.19.5/API 0.160.7+26.3/Loom 1.17.21, optional Mod Menu 21.0.0-beta.1, and NeoForge 26.3.0.4-beta/ModDevGradle 2.0.147. `release_ready=false` prevents automatic release publication. See [the 26.3 record](docs/releases/1.4.0-beta.1.md) for current test results and artifact hashes. The 1.3.0 evidence below is historical and applies only to Minecraft 26.2.
+
+## Previous stable release: Smart Resource Multiplier 1.3.0
 
 Smart Resource Multiplier `1.3.0` is the stable Minecraft Java Edition 26.2 release for both Fabric and NeoForge. Both builds use Java 25, share the same gameplay/configuration/GUI implementation, and keep small loader-specific adapters for lifecycle, networking, commands, and placed-block provenance.
 

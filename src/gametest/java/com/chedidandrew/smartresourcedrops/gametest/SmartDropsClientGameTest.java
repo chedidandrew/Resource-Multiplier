@@ -38,6 +38,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.narration.NarrationTrigger;
 import net.minecraft.client.gui.narration.NarrationThunk;
 import net.minecraft.client.gui.screens.inventory.tooltip.MenuTooltipPositioner;
 import net.minecraft.client.gui.screens.Screen;
@@ -1942,6 +1943,11 @@ public final class SmartDropsClientGameTest implements FabricClientGameTest {
         @Override
         public NarrationElementOutput nest() {
             return this;
+        }
+
+        @Override
+        public NarrationTrigger narrationTrigger() {
+            return NarrationTrigger.KEYBOARD;
         }
     }
 

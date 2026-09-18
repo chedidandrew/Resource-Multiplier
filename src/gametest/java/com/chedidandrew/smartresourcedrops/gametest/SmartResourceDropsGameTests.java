@@ -67,6 +67,39 @@ public final class SmartResourceDropsGameTests {
     }
 
     @GameTest
+    public void fallingBlocksPreserveOnlyProtectedOriginsOnLanding(final GameTestHelper helper) {
+        for (int x : new int[] {1, 3}) {
+            final boolean protectedOrigin = x == 1;
+            final BlockPos support = helper.absolutePos(new BlockPos(x, 1, 1));
+            final BlockPos landing = support.above();
+            final BlockPos origin = support.above(3);
+            final BlockState sand = Blocks.SAND.defaultBlockState();
+            helper.getLevel().setBlockAndUpdate(support, Blocks.STONE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(origin, sand);
+            if (protectedOrigin) {
+                PlacementTracker.mark(helper.getLevel(), origin);
+            }
+            final FallingBlockEntity falling = FallingBlockEntity.fall(helper.getLevel(), origin, sand);
+            helper.assertTrue(((ProtectedFallingBlock) falling).smartResourceDrops$isProtectedOrigin()
+                            == protectedOrigin,
+                    "Falling entity did not inherit exactly its origin's protection");
+            helper.assertFalse(PlacementTracker.isMarked(helper.getLevel(), origin),
+                    "Falling origin kept a stale provenance marker");
+            // Exercise the real 26.3 tick/landing call, not only mixin class loading.
+            for (int tick = 0; tick < 80 && falling.isAlive(); tick++) {
+                falling.tick();
+            }
+            helper.assertTrue(helper.getLevel().getBlockState(landing).is(Blocks.SAND),
+                    "Falling sand did not land on the fixture's support");
+            helper.assertTrue(PlacementTracker.isMarked(helper.getLevel(), landing) == protectedOrigin,
+                    "Landing lost protected provenance or marked naturally falling sand");
+            helper.assertFalse(((ProtectedFallingBlock) falling).smartResourceDrops$isProtectedOrigin(),
+                    "Successful landing did not consume the carried protection");
+        }
+        helper.succeed();
+    }
+
+    @GameTest
     public void levelMixinPreservesTransformsAndClearsUnrelatedReplacements(final GameTestHelper helper) {
         assertPreserved(helper, new BlockPos(1, 2, 1), Blocks.DIRT, Blocks.FARMLAND);
         assertPreserved(helper, new BlockPos(2, 2, 1), Blocks.OAK_LOG, Blocks.STRIPPED_OAK_LOG);
